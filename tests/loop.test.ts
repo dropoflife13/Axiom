@@ -91,13 +91,13 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
     expect(result.success).toBe(true);
     expect(result.attempt).toBe(1);
     expect(result.tier0Applied).toBeDefined();
-    expect(result.tier0Applied).toContain('truncated DEVOPS to DEVOP');
+    expect(result.tier0Applied).toContain('[TIER 0] Truncated prefix DEVOPS → DEVOP');
     // Advisor was NOT called because Tier 0 fixed the error directly!
     expect(mockAdvisor).not.toHaveBeenCalled();
     expect(mockHeavy).not.toHaveBeenCalled();
   });
 
-  it('escalates to Tier 3 on attempt 3 for semantic/structural failures', async () => {
+  it('calls the Advisor when facing a structural error (A3) and escalates to Tier 3 on attempt 3', async () => {
     let callCount = 0;
     const mockExecutor = vi.fn().mockImplementation(async () => {
       callCount++;
@@ -108,10 +108,7 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
     });
 
     const mockAdvisor = vi.fn().mockResolvedValue('Ensure all 6 sections are present.');
-    const mockHeavy = vi.fn().mockResolvedValue({
-      markdown: VALID_AGENT_COMPLIANT,
-      rawResponse: VALID_AGENT_COMPLIANT,
-    });
+    const mockHeavy = vi.fn().mockResolvedValue(VALID_AGENT_COMPLIANT);
 
     const result = await runReflexionLoop({
       task: 'Test Semantic Escalation',
@@ -133,16 +130,13 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
     expect(mockHeavy).toHaveBeenCalledTimes(1);
   });
 
-  it('halts and writes to quarantine.json when all attempts fail', async () => {
+  it('halts and writes to quarantine.json when all 3 attempts fail', async () => {
     const mockExecutor = vi.fn().mockResolvedValue({
       markdown: BROKEN_STRUCTURAL_AGENT,
       rawResponse: BROKEN_STRUCTURAL_AGENT,
     });
     const mockAdvisor = vi.fn().mockResolvedValue('Fix missing sections.');
-    const mockHeavy = vi.fn().mockResolvedValue({
-      markdown: BROKEN_STRUCTURAL_AGENT,
-      rawResponse: BROKEN_STRUCTURAL_AGENT,
-    });
+    const mockHeavy = vi.fn().mockResolvedValue(BROKEN_STRUCTURAL_AGENT);
 
     const result = await runReflexionLoop({
       task: 'Persistent Failure Task',
@@ -160,7 +154,7 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
 
     const quarantineData = JSON.parse(fs.readFileSync(TEST_QUARANTINE_FILE, 'utf-8'));
     expect(quarantineData.task).toBe('Persistent Failure Task');
-    expect(quarantineData.attempts).toBe(3);
-    expect(quarantineData.errors.length).toBeGreaterThan(0);
+    expect(quarantineData.attempts.length).toBe(3);
+    expect(quarantineData.finalErrors.length).toBeGreaterThan(0);
   });
 });

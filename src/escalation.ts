@@ -1,8 +1,13 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-const HEAVY_SYSTEM_PROMPT = `You are a Principal Software Architect and elite Axiom Specification Compiler.
-Your job is to generate a fully compliant, production-grade agent specification in Markdown format.
+export interface VerifierError {
+  code: string;
+  line?: number;
+  detail?: string;
+}
+
+const HEAVY_SYSTEM_PROMPT = `You are an expert Cortex Agent generator. The fast model failed to produce a valid agent after 2 attempts. Study these lessons carefully and produce a Markdown agent that EXACTLY follows the format. Do not deviate.
 
 The specification MUST strictly adhere to the following 6 H2 sections in exact order:
 1. "## 1. Identity & Scope"
@@ -25,25 +30,28 @@ Output ONLY the raw markdown without any wrapping code fences (\`\`\`).`;
 
 export async function callHeavyModel(
   task: string,
-  errors: string[],
-  lessons?: string
-): Promise<{ markdown: string; rawResponse: string }> {
+  errors: VerifierError[],
+  lessons: string
+): Promise<string> {
   const geminiKey = process.env.GEMINI_API_KEY;
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
-  const groqKey = process.env.GROQ_API_KEY;
+
+  if ((!geminiKey || geminiKey === 'your_key_here') && (!anthropicKey || anthropicKey === 'your_key_here')) {
+    throw new Error('Tier 3 escalation requires GEMINI_API_KEY or ANTHROPIC_API_KEY');
+  }
 
   let prompt = `Task: ${task}\n\n`;
   if (errors.length > 0) {
-    prompt += `PREVIOUS ATTEMPT ERRORS (MUST ALL BE RESOLVED):\n${errors.join('\n')}\n\n`;
+    prompt += `PREVIOUS ATTEMPT ERRORS (MUST ALL BE RESOLVED):\n${errors.map((e) => `[${e.code}] ${e.detail || ''}`).join('\n')}\n\n`;
   }
   if (lessons) {
     prompt += `CRITICAL ARCHITECTURAL LESSONS:\n${lessons}\n\n`;
   }
   prompt += 'Generate the complete, compliant agent specification markdown now:';
 
-  // 1. Gemini Argon / Flash path
+  // 1. Gemini path
   if (geminiKey && geminiKey !== 'your_key_here') {
-    const model = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
@@ -63,15 +71,17 @@ export async function callHeavyModel(
       }
     );
 
-    if (response.ok) {
-      const data: any = await response.json();
-      const content = data.choices[0].message.content.trim();
-      const cleaned = content.replace(/^```markdown\s*/i, '').replace(/```$/g, '').trim();
-      return { markdown: cleaned, rawResponse: content };
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Gemini heavy model API error ${response.status}: ${errorBody}`);
     }
+
+    const data: any = await response.json();
+    const content = data.choices[0].message.content.trim();
+    return content.replace(/^```markdown\s*/i, '').replace(/```$/g, '').trim();
   }
 
-  // 2. Anthropic Claude path
+  // 2. Anthropic path
   if (anthropicKey && anthropicKey !== 'your_key_here') {
     const model = process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-20250219';
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -90,43 +100,15 @@ export async function callHeavyModel(
       }),
     });
 
-    if (response.ok) {
-      const data: any = await response.json();
-      const content = data.content[0].text.trim();
-      const cleaned = content.replace(/^```markdown\s*/i, '').replace(/```$/g, '').trim();
-      return { markdown: cleaned, rawResponse: content };
-    }
-  }
-
-  // 3. Groq Heavy Fallback
-  if (groqKey && groqKey !== 'your_key_here') {
-    const model = process.env.GROQ_MODEL || 'openai/gpt-oss-120b';
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${groqKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: HEAVY_SYSTEM_PROMPT },
-          { role: 'user', content: prompt },
-        ],
-        temperature: 0.05,
-      }),
-    });
-
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Heavy model (Groq fallback) API error ${response.status}: ${errorBody}`);
+      throw new Error(`Anthropic heavy model API error ${response.status}: ${errorBody}`);
     }
 
     const data: any = await response.json();
-    const content = data.choices[0].message.content.trim();
-    const cleaned = content.replace(/^```markdown\s*/i, '').replace(/```$/g, '').trim();
-    return { markdown: cleaned, rawResponse: content };
+    const content = data.content[0].text.trim();
+    return content.replace(/^```markdown\s*/i, '').replace(/```$/g, '').trim();
   }
 
-  throw new Error('No API key available for heavy model escalation (checked GEMINI_API_KEY, ANTHROPIC_API_KEY, GROQ_API_KEY)');
+  throw new Error('Tier 3 escalation requires GEMINI_API_KEY or ANTHROPIC_API_KEY');
 }

@@ -17,7 +17,7 @@ export function tryDeterministicFix(
   const applied: string[] = [];
   const errorCodes = new Set(errors.map((e) => e.code));
 
-  // A5: Truncate prefixes longer than 5 letters (e.g. DEVOPS-01 -> DEVOP-01)
+  // 1. A5: Truncate prefixes longer than 5 letters (e.g. DEVOPS-01 -> DEVOP-01)
   if (errorCodes.has('A5')) {
     const longPrefixRegex = /-\s*\*\*([A-Z]{6,})-(\d{2,3})\*\*/g;
     const prefixesToTruncate = new Set<string>();
@@ -32,17 +32,17 @@ export function tryDeterministicFix(
       // Replace in rule declarations and in checklist citations
       const replaceRegex = new RegExp(`\\b${oldPrefix}-(\\d{2,3})\\b`, 'g');
       fixed = fixed.replace(replaceRegex, `${newPrefix}-$1`);
-      applied.push(`truncated ${oldPrefix} to ${newPrefix}`);
+      applied.push(`[TIER 0] Truncated prefix ${oldPrefix} → ${newPrefix}`);
     }
   }
 
-  // A7: Append missing | conf: N (1..5) to rule lines
+  // 2. A7: Append missing | conf: N (1..5) to rule lines
   if (errorCodes.has('A7')) {
     const lines = fixed.split('\n');
     let modifiedA7 = false;
 
     const newLines = lines.map((line) => {
-      // If line is a rule line in Section 3 with WHEN and -> DO, but lacks | conf: N
+      // If line is a rule line with WHEN and -> DO, but lacks | conf: N
       if (
         line.trim().startsWith('- **') &&
         line.includes('WHEN') &&
@@ -50,6 +50,9 @@ export function tryDeterministicFix(
       ) {
         if (!/\|\s*conf:\s*[1-5]\s*$/i.test(line.trim())) {
           modifiedA7 = true;
+          const ruleIdMatch = line.match(/-\s*\*\*([A-Z0-9_-]+)\*\*/);
+          const ruleId = ruleIdMatch ? ruleIdMatch[1] : 'rule';
+          applied.push(`[TIER 0] Appended conf: 3 to rule ${ruleId}`);
           return `${line.trimEnd()} | conf: 3`;
         }
       }
@@ -58,11 +61,10 @@ export function tryDeterministicFix(
 
     if (modifiedA7) {
       fixed = newLines.join('\n');
-      applied.push('appended missing | conf: 3 to rule lines lacking conf tag');
     }
   }
 
-  // A9: Ensure Section 5 contains GATE: PASS, GATE: FAIL, and INSIGHT
+  // 3. A9: Ensure Section 5 contains GATE: PASS, GATE: FAIL, and INSIGHT
   if (errorCodes.has('A9')) {
     const sec5Match = fixed.match(/(## 5\.[^\n]*\n)([\s\S]*?)(?=(## 6\.|\n#|$))/i);
     if (sec5Match) {
@@ -80,8 +82,45 @@ export function tryDeterministicFix(
 
         const newSec5 = `${sec5Header}${standardGateText}`;
         fixed = fixed.replace(sec5Match[0], newSec5);
-        applied.push('appended standard GATE: PASS, GATE: FAIL, and INSIGHT definitions to section 5');
+        applied.push('[TIER 0] Appended missing Gate/Insight block');
       }
+    }
+  }
+
+  // 4. A8: Remove checklist items that cite non-existent rule IDs
+  if (errorCodes.has('A8')) {
+    // Collect all valid rule IDs defined in Section 3
+    const sec3Match = fixed.match(/## 3\.[^\n]*\n([\s\S]*?)(?=## 4\.|\n#|$)/i);
+    const validSection3Ids = new Set<string>();
+    if (sec3Match) {
+      const ruleMatches = sec3Match[1].matchAll(/-\s*\*\*([A-Z]{1,5}-\d{2,3})\*\*/g);
+      for (const m of ruleMatches) {
+        validSection3Ids.add(m[1]);
+      }
+    }
+
+    const sec4Match = fixed.match(/(## 4\.[^\n]*\n)([\s\S]*?)(?=(## 5\.|\n#|$))/i);
+    if (sec4Match) {
+      const sec4Header = sec4Match[1];
+      const sec4Lines = sec4Match[2].split('\n');
+      const filteredLines: string[] = [];
+
+      for (const line of sec4Lines) {
+        if (line.trim().startsWith('- [')) {
+          const idMatch = line.match(/\b([A-Z]{1,5}-\d{2,3})\b/);
+          if (idMatch) {
+            const citedId = idMatch[1];
+            if (!validSection3Ids.has(citedId)) {
+              applied.push(`[TIER 0] Removed unresolved checklist reference to ${citedId}`);
+              continue; // Drop unresolved checklist item
+            }
+          }
+        }
+        filteredLines.push(line);
+      }
+
+      const newSec4 = `${sec4Header}${filteredLines.join('\n')}`;
+      fixed = fixed.replace(sec4Match[0], newSec4);
     }
   }
 
@@ -90,6 +129,6 @@ export function tryDeterministicFix(
 
   return {
     fixed,
-    applied
+    applied,
   };
 }
