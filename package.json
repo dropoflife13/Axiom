@@ -6,7 +6,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "benchmark": "tsx src/benchmark.ts"
+    "benchmark": "tsx src/benchmark.ts",
+    "harvest": "tsx src/harvest-cli.ts"
   },
   "dependencies": {
     "dotenv": "^18.0.9",

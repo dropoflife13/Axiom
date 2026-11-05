@@ -3,6 +3,7 @@ import path from 'node:path';
 import YAML from 'yaml';
 import type { VerificationResult, VerificationIssue, VerificationWarning, VerificationContext } from '../schema/types.js';
 import { validateCrossReferences } from './reference-extractor.js';
+import { CONSTITUTIONAL_ROOT_TARGETS } from './vault-index.js';
 
 const AGENT_PREFIXES = new Set(['PM', 'UX', 'GR', 'SD', 'IR', 'DB', 'SEC', 'RS']);
 const VALID_STATUSES = new Set(['candidate', 'active', 'superseded', 'retired']);
@@ -229,6 +230,9 @@ export function verifyDomain(fileText: string, ctx: VerificationContext): Verifi
       const wikilinkMatches = ev.matchAll(/\[\[([^\]#|]+)(?:#[^\]]+)?\]\]/g);
       for (const wm of wikilinkMatches) {
         const target = wm[1].trim();
+        if (CONSTITUTIONAL_ROOT_TARGETS.has(target)) {
+          continue;
+        }
         if (ctx.repoRoot) {
           const possiblePaths = [
             path.join(ctx.repoRoot, `${target}.md`),

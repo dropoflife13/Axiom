@@ -2,6 +2,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { VaultRuleLocation } from '../schema/types.js';
 
+export const CONSTITUTIONAL_ROOT_TARGETS = new Set([
+  'OPERATING-PRINCIPLES',
+  'HEURISTICS',
+]);
+
 export function buildVaultIndex(root: string): Map<string, VaultRuleLocation> {
   const vaultIndex = new Map<string, VaultRuleLocation>();
   const rulePattern = /^\s*-\s*\*\*([A-Z]{1,5}-\d+)\*\*/;
