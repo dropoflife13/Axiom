@@ -1,0 +1,248 @@
+{
+  "version": "1.2.0",
+  "description": "40-prompt calibrated evaluation split (20 train / 20 held-out) across 4 operational domains for Axiom learning ablation.",
+  "train": [
+    {
+      "id": "T-01",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the K8s Cluster Agent. It governs pod disruption budgets, node taints, and memory request limits. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-02",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Edge CDN Cache Agent. It governs cache-control headers, stale-while-revalidate policies, and cache key normalization. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-03",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Terraform State Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing state locking, remote backend encryption, and module pinning. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-04",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Postgres Index Agent. It governs lock timeouts, concurrent index creation, and connection pool bounds. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-05",
+      "split": "train",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Payroll Ledger Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing gross-to-net calculations, tax withholding tables, and immutable pay run approvals. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-06",
+      "split": "train",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the GraphQL Schema Agent. It governs query depth limits, persisted query allowlists, and pagination cursors. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-07",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the HTTP2 Proxy Agent. It governs stream multiplexing limits, HPACK header table bounds, and upstream connection draining. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-08",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the OAuth2 Token Agent. It governs PKCE code verifiers, refresh token rotation, and short-lived access token lifetimes. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-09",
+      "split": "train",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the SLA Escalation Agent. It governs P1 acknowledgement timers, customer status updates, and breach postmortem tracking. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-10",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Prometheus Alerting Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing cardinality budgets, scrape intervals, and alert runbook links. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-11",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Schema Migration Agent. It governs expand-and-contract column migrations, backfill batch sizes, and rollback scripts. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-12",
+      "split": "train",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Fleet Dispatch Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing vehicle maintenance checks, driver shift limits, and cold-chain telemetry. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-13",
+      "split": "train",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the Design Token Agent. It governs semantic color scales, dark-mode contrast ratios, and spacing token usage. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-14",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Secret Rotation Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing dual-key grace windows, automated key rollover, and zero-downtime secret reload. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-15",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the IPv6 Firewall Agent. It governs neighbor discovery filtering, egress prefix lists, and ICMP rate limiting. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-16",
+      "split": "train",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Clinical Consent Agent. It governs informed consent versioning, witness signatures, and revocation audit logs. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-17",
+      "split": "train",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the HTML Sanitizer Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing DOMPurify allowlists, SVG script stripping, and CSP nonce enforcement. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-18",
+      "split": "train",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Tenant Guard Agent. It governs tenant_id session context binding, cross-tenant join blocks, and tenant scoped backups. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-19",
+      "split": "train",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Chaos Drill Agent. It governs blast-radius caps, automated abort triggers, and business-hours game days. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "T-20",
+      "split": "train",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Inventory Lot Agent. It governs FEFO lot picking, quarantine holds, and supplier recall tracing. Include 3 hard restriction rules and 3 checklist items."
+    }
+  ],
+  "heldOut": [
+    {
+      "id": "H-01",
+      "split": "held_out",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the S3 Bucket Agent. It governs block-public-access flags, server-side KMS encryption, and object lock retention. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-02",
+      "split": "held_out",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Vault Seal Agent. It governs dynamic credential leases, transit key rotation, and Shamir unseal policies. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-03",
+      "split": "held_out",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Procurement Bid Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing three-bid thresholds, conflict-of-interest disclosures, and purchase order sign-off. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-04",
+      "split": "held_out",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the List Viewport Agent. It governs DOM node virtualization, row height measurement, and scroll listener throttling. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-05",
+      "split": "held_out",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the X509 Certificate Agent. It governs mTLS leaf certificate validity, OCSP stapling, and CA bundle pinning. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-06",
+      "split": "held_out",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Dead-Letter Queue Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing max receive counts, poison pill quarantine, and replay idempotency. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-07",
+      "split": "held_out",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Escrow Ledger Agent. It governs double-entry balance checks, settlement holds, and dispute freeze locks. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-08",
+      "split": "held_out",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the Modal Focus Agent. It governs keyboard focus trapping, Escape key dismissal, and background scroll locking. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-09",
+      "split": "held_out",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Backup Restore Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing point-in-time recovery drills, WAL checksum verification, and cross-region replication. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-10",
+      "split": "held_out",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the L7 Ingress Agent. It governs WAF rate limiting, TLS termination ciphers, and request body size limits. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-11",
+      "split": "held_out",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Customs Tariff Agent. It governs harmonized system code validation, denied-party screening, and commercial invoice totals. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-12",
+      "split": "held_out",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the I18n Locale Agent. It governs ICU pluralization syntax, RTL layout mirroring, and fallback locale bundles. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-13",
+      "split": "held_out",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Sandbox Runtime Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing seccomp syscall filters, read-only root filesystems, and egress network blocks. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-14",
+      "split": "held_out",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Route Peering Agent. It governs RPKI origin validation, prefix announcements, and autonomous system path filtering. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-15",
+      "split": "held_out",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Cold-Chain Telemetry Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing temperature excursion alerts, sensor calibration windows, and shipment rejection logs. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-16",
+      "split": "held_out",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the Optimistic Mutation Agent. Write each hard restriction rule using 'WHEN <trigger> → DO <action>' syntax governing rollback snapshots, mutation queue ordering, and conflict resolution banners. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-17",
+      "split": "held_out",
+      "domain": "SEC_DB",
+      "prompt": "Create an agent Markdown file for the Audit Log Sink Agent. It governs WORM storage retention, cryptographic log chaining, and clock synchronization. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-18",
+      "split": "held_out",
+      "domain": "OPS_INFRA",
+      "prompt": "Create an agent Markdown file for the Canary Rollout Agent. It governs error-budget burn alerts, progressive traffic shifting, and automated rollback gates. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-19",
+      "split": "held_out",
+      "domain": "BIZ_OPS",
+      "prompt": "Create an agent Markdown file for the Grant Drawdown Agent. It governs allowable cost categories, matching fund ratios, and receipt documentation. Include 3 hard restriction rules and 3 checklist items."
+    },
+    {
+      "id": "H-20",
+      "split": "held_out",
+      "domain": "UI_FE",
+      "prompt": "Create an agent Markdown file for the WebSocket Client Agent. It governs exponential reconnect backoff, heartbeat ping timeouts, and sequence gap recovery. Include 3 hard restriction rules and 3 checklist items."
+    }
+  ]
+}

@@ -1,9 +1,7 @@
-// Violating client script: contains embedded RSA private key
+// Violating client script: contains embedded RSA private key header with FAKE_DATA
 export function getSigningCredentials() {
   const privateKey = `-----BEGIN RSA PRIVATE KEY-----
-MIIEowIBAAKCAQEA0mockKeyPayloadForTestingPurposesOnly1234567890abcdef
------END RSA PRIVATE KEY-----`;
+FAKE_DATA`;
 
   return { privateKey };
 }
-

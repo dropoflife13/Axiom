@@ -1,0 +1,1 @@
+npx tsx src/checks/l3/pre-commit-sec03.ts

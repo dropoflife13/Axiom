@@ -4,7 +4,7 @@ import path from 'node:path';
 import { generateAgentMarkdown } from './executor.js';
 import { verifyAgentMarkdown } from './verifier/agent-verifier.js';
 import { buildVaultIndex } from './verifier/vault-index.js';
-import { saveLesson, getRelevantLessons, hasLessonForCode } from './memory.js';
+import { saveLesson, getRelevantLessons, hasLessonForCode, Lesson } from './memory.js';
 import { generateLesson } from './advisor.js';
 import { tryDeterministicFix, VerifierError } from './fixer.js';
 import { callHeavyModel } from './escalation.js';
@@ -41,6 +41,7 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
   const isTestMockRun = Boolean(options.executorFn || options.advisorFn || options.heavyFn);
   const shouldPreloadMemory = Boolean(options.memoryPath) || !isTestMockRun;
   let lesson = shouldPreloadMemory ? getRelevantLessons([], options.memoryPath) : '';
+  let pendingLesson: Lesson | null = null;
   let lastErrors: VerifierError[] = [];
   let lastMarkdown = '';
   const attemptsTrace: Array<{ attempt: number; path: string; verdict: string; errors: any[] }> = [];
@@ -65,8 +66,22 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
       log(`Verdict: ${verdict.verdict}`);
 
       if (verdict.verdict === 'PASS') {
+        // Validate lesson utility before saving: only persist pendingLesson if Executor retry passed
+        if (pendingLesson) {
+          log(`[MEMORY PROVEN] Saving verified lesson for ${pendingLesson.errorCode}`);
+          saveLesson(pendingLesson, options.memoryPath);
+          pendingLesson = null;
+        }
         log(`✅ SUCCESS on attempt ${attempt}`);
-        return { success: true, attempt, markdown };
+        return { success: true, successViaTier0: false, attempt, markdown };
+      }
+
+      // If a pending lesson failed to make the Executor pass on retry, discard it
+      if (pendingLesson) {
+        log(
+          `[MEMORY DISCARDED] Candidate lesson for ${pendingLesson.errorCode} did not pass verification; discarding.`
+        );
+        pendingLesson = null;
       }
 
       lastErrors = verdict.errors;
@@ -89,7 +104,13 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
         if (recheck.verdict === 'PASS') {
           log('[TIER 0] Fix succeeded! Verification passed.');
           log(`✅ SUCCESS on attempt ${attempt} (via Tier 0)`);
-          return { success: true, attempt, markdown: fixResult.fixed, tier0Applied: fixResult.applied };
+          return {
+            success: true,
+            successViaTier0: true,
+            attempt,
+            markdown: fixResult.fixed,
+            tier0Applied: fixResult.applied,
+          };
         } else {
           log('[TIER 0] Fix applied but file still failed re-verification.');
           lastErrors = recheck.errors;
@@ -102,30 +123,42 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
       if (attempt < maxAttempts) {
         const firstError = lastErrors[0];
         if (firstError) {
-          // Only call Advisor LLM if we don't already have a lesson for this errorCode
-          // (Unless custom advisorFn mock is injected during unit tests)
           const isMockAdvisor = Boolean(options.advisorFn);
-          if (!isMockAdvisor && hasLessonForCode(firstError.code, options.memoryPath)) {
-            log(`[MEMORY HIT] Reusing existing lesson for ${firstError.code} ($0 Advisor skip)`);
-          } else {
-            log('Generating lesson for first error:', firstError.code);
-            const newLesson = await advisor(firstError.code, firstError.detail || '');
-            log('Lesson produced by Advisor:', newLesson);
-
-            saveLesson(
-              {
-                errorCode: firstError.code,
-                lesson: newLesson,
-                createdAt: new Date().toISOString(),
-              },
-              options.memoryPath
-            );
-          }
-
-          lesson = getRelevantLessons(
+          const storedLessons = getRelevantLessons(
             lastErrors.map((e) => e.code),
             options.memoryPath
           );
+
+          if (!isMockAdvisor && hasLessonForCode(firstError.code, options.memoryPath)) {
+            log(`[MEMORY HIT] Reusing existing lesson for ${firstError.code} ($0 Advisor skip)`);
+            lesson = storedLessons;
+          } else {
+            log('Generating lesson for first error:', firstError.code);
+            let newLesson: string;
+            try {
+              newLesson = await advisor(firstError.code, firstError.detail || '');
+            } catch (advisorErr: any) {
+              log(`[ADVISOR_FATAL_ERROR] Advisor failed on ${firstError.code}: ${advisorErr.message}`);
+              attemptsTrace.push({
+                attempt,
+                path: 'advisor',
+                verdict: 'ADVISOR_ERROR',
+                errors: [{ code: 'ADVISOR_ERROR', detail: advisorErr.message }],
+              });
+              throw new Error(`[ABORT_ADVISOR_FAILURE] ${advisorErr.message}`);
+            }
+
+            log('Lesson produced by Advisor (pending verification):', newLesson);
+            pendingLesson = {
+              errorCode: firstError.code,
+              lesson: newLesson,
+              createdAt: new Date().toISOString(),
+            };
+
+            const candidateLine = `[${pendingLesson.errorCode}] ${pendingLesson.lesson}`;
+            lesson = storedLessons ? `${storedLessons}\n${candidateLine}` : candidateLine;
+          }
+
           log('Cumulative lessons for next attempt:\n', lesson);
         }
       }
@@ -138,12 +171,13 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
         errors: [{ code: 'EXCEPTION', detail: err.message }],
       });
 
-      // Immediately abort loop if Billing Circuit Breaker or non-retryable auth/quota error tripped
+      // Immediately abort loop if Billing Circuit Breaker, Advisor Failure, or non-retryable error tripped
       if (
         err.message?.includes('[BILLING_CIRCUIT_BREAKER]') ||
-        err.message?.includes('[ABORT_NON_RETRYABLE]')
+        err.message?.includes('[ABORT_NON_RETRYABLE]') ||
+        err.message?.includes('[ABORT_ADVISOR_FAILURE]')
       ) {
-        log('🚨 Critical circuit breaker tripped. Aborting loop immediately.');
+        log('🚨 Critical error or circuit breaker tripped. Aborting loop immediately.');
         break;
       }
 
@@ -174,7 +208,7 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
     process.exit(1);
   }
 
-  return { success: false, attempts: maxAttempts, quarantined: true };
+  return { success: false, successViaTier0: false, attempts: maxAttempts, quarantined: true };
 }
 
 // Execute directly if run as CLI script

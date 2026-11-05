@@ -15,7 +15,7 @@ export async function generateLesson(
   }
 
   const systemPrompt =
-    'You are a terse syntax coach. Convert the verifier error into ONE concrete, actionable formatting rule under 18 words. State the exact required syntax or character limit (e.g., "Rule IDs must use a 2-5 uppercase letter prefix like DEVOP-01, never 6+ letters"). Do NOT reference any specific IDs, task names, or variable names from the error. FORBIDDEN: vague phrases like "adhere to the regular expression" or "mandatory formatting elements".';
+    'You are a terse syntax coach. Convert the verifier error into ONE concrete, actionable formatting rule under 24 words. State the exact required syntax or character limit (e.g., for A5: "Rule IDs must use a 1-5 uppercase letter prefix A-Z only with no digits or 6+ letters"; for A7: "Rules containing WHEN must include → DO and end with | conf: N where N is 1-5"; for A9: "Section 5 must explicitly contain all three literal strings: \'GATE: PASS\', \'GATE: FAIL\', and \'INSIGHT\'"). Do NOT reference any specific IDs, task names, or variable names from the error. Do not include task-specific acronyms or echo prefixes from the error detail. FORBIDDEN: vague phrases like "adhere to the regular expression" or "mandatory formatting elements".';
   const userPrompt = `Error code: ${errorCode}\nError detail: ${errorDetail}`;
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
 

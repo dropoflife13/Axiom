@@ -176,3 +176,4 @@ export function rejectCandidate(
   fs.writeFileSync(registryPath, JSON.stringify(registry, null, 2), 'utf-8');
   return { success: true, candidate };
 }
+

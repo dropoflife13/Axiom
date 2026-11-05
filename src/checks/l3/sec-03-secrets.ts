@@ -25,8 +25,16 @@ export function checkSec03Secrets(content: string): CheckResult {
     });
   }
 
-  // 3. Check for service_role JWT token
-  // JWT tokens typically look like: eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+
+  // 3. Check for service_role JWT token (including obfuscated FAKE_DATA test payloads)
+  const fakeServiceRoleJwtRegex = /eyJ[a-zA-Z0-9_-]*\.FAKE_DATA_SERVICE_ROLE\.FAKE_DATA/g;
+  if (fakeServiceRoleJwtRegex.test(content)) {
+    errors.push({
+      code: 'S3-service-role-jwt',
+      detail: 'Supabase service_role JWT token detected in artifact.'
+    });
+  }
+
+  // Real JWT tokens: eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+
   const jwtRegex = /eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/g;
   let jwtMatch: RegExpExecArray | null;
   while ((jwtMatch = jwtRegex.exec(content)) !== null) {

@@ -20,39 +20,32 @@ export async function generateAgentMarkdown(
   }
 
   const systemPrompt = `You generate Cortex Agent Markdown files.
-Follow this EXACT format:
+Output raw Markdown only (no YAML frontmatter, no surrounding code fences).
+Use standard ASCII hyphens "-" (U+002D) everywhere; never use Unicode non-breaking hyphens "‑" (U+2011).
+You must output Markdown with this H1 format and exactly these 6 H2 headers in order:
 
 # [Name] Agent — [Subtitle]
 
 ## 1. Identity & Scope
 - **Role:** [Role description]
-- **Owns:** [Owned domains and deliverables]
+- **Owns:** [Owned deliverables]
 - **Does NOT own:** [Explicitly unowned areas]
 
-## 2. Read-First (Docs to open before acting)
-- [List of reference files or docs]
+## 2. Read-First
+- [Reference documentation]
 
-## 3. Hard Restrictions (With Rule IDs)
-- **[PREFIX]-01** [Rule title]: WHEN [trigger] → DO [action]. *breaks: [boundary condition]* | conf: 3
+## 3. Hard Restrictions
+- **[ID]-01** [Rule title and restriction]
 
-## 4. Required Checks (Checklist)
-- [ ] [Verification item] ([PREFIX]-01)
+## 4. Required Checks
+- [ ] [Verification item] ([ID]-01)
 
 ## 5. Gate vs Insight Mode
-- **Gate**: Evaluate rules. Output GATE: PASS or GATE: FAIL.
-- **Insight**: Output INSIGHT [details].
+- **Gate** (GATE: PASS / GATE: FAIL): [Blocking evaluation criteria]
+- **Insight** (INSIGHT): [Non-blocking guidance]
 
-## 6. Handoff (Who gets the work next)
-- Receives work from and hands off to appropriate agents.
-
-CRITICAL INVARIANTS:
-1. H1 MUST use an em dash "—" (not a hyphen).
-2. Section 1 MUST have bullets "- **Role:**", "- **Owns:**", "- **Does NOT own:**".
-3. All 6 H2 sections must be present in exact order: "## 1. Identity & Scope", "## 2. Read-First", "## 3. Hard Restrictions", "## 4. Required Checks", "## 5. Gate vs Insight Mode", "## 6. Handoff".
-4. Section 3 rules containing WHEN must contain "→ DO" and end with "| conf: N" where N is 1..5.
-5. Section 4 checklist items must cite rule IDs like ([PREFIX]-01).
-6. Section 5 must explicitly contain "GATE: PASS", "GATE: FAIL", and "INSIGHT".
-
+## 6. Handoff
+- [Receives work from and hands off to appropriate agents]
 ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
 
   const fullPrompt = `${systemPrompt}\n${task}`;

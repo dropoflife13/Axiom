@@ -72,7 +72,7 @@ export function isNearDuplicate(a: string, b: string): boolean {
   const union = new Set([...wordsA, ...wordsB]).size;
   const jaccard = union === 0 ? 1 : intersection / union;
 
-  return jaccard >= 0.35;
+  return jaccard >= 0.60;
 }
 
 export function loadMemory(memoryFilePath: string = DEFAULT_MEMORY_FILE): Lesson[] {
