@@ -38,7 +38,9 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
   const ctx = { vaultIndex, repoRoot: root };
 
   // Preload top historical lessons for Attempt 1 so Executor starts with prior knowledge
-  let lesson = getRelevantLessons([], options.memoryPath);
+  const isTestMockRun = Boolean(options.executorFn || options.advisorFn || options.heavyFn);
+  const shouldPreloadMemory = Boolean(options.memoryPath) || !isTestMockRun;
+  let lesson = shouldPreloadMemory ? getRelevantLessons([], options.memoryPath) : '';
   let lastErrors: VerifierError[] = [];
   let lastMarkdown = '';
   const attemptsTrace: Array<{ attempt: number; path: string; verdict: string; errors: any[] }> = [];
