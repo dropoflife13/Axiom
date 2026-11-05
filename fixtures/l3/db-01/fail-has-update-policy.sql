@@ -38,3 +38,4 @@ CREATE TRIGGER trg_price_logs_append_only
   BEFORE UPDATE OR DELETE ON public.price_logs
   FOR EACH ROW
   EXECUTE FUNCTION public.prevent_modification_price_logs();
+

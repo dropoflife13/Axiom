@@ -8,3 +8,4 @@ export interface CheckResult {
   verdict: 'PASS' | 'FAIL';
   errors: L3CheckIssue[];
 }
+

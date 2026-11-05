@@ -21,3 +21,4 @@ CREATE POLICY "Allow read access"
 
 -- Missing Layer 3: No BEFORE UPDATE OR DELETE trigger raising an exception!
 -- RLS alone is insufficient because owners and service_role bypass RLS.
+

@@ -8,4 +8,4 @@ coverage/
 *.log
 out/
 memory.json
-
+quarantine.json
