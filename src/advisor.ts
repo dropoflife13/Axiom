@@ -25,7 +25,7 @@ export async function generateLesson(
         {
           role: 'system',
           content:
-            'You are a strict system architect. Analyze the error and write ONE sentence describing the rule that prevents it. Be specific and actionable.',
+            'You are a strict system architect. Analyze the error and write ONE sentence describing the general rule that prevents it. Do NOT reference any specific IDs, task names, or variable names from the error. The lesson must apply to ANY agent, not just this one.',
         },
         {
           role: 'user',
@@ -44,4 +44,3 @@ export async function generateLesson(
   const data: any = await response.json();
   return data.choices[0].message.content.trim();
 }
-
