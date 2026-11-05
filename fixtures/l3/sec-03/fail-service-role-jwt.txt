@@ -1,0 +1,2 @@
+# Leaked credential artifact
+SUPABASE_ADMIN_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJzZXJ2aWNlX3JvbGUifQ.mock_service_role_signature_here
