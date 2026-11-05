@@ -105,6 +105,7 @@ export function verifyAgent(rawFileText: string, ctx: VerificationContext): Veri
   // A5 & A6 & A7 & A11: Hard Restrictions
   const sec3 = getSectionLinesByPattern(/Hard\s*Restrictions/i);
   const foundRuleIds: { id: string; num: number; line: number }[] = [];
+  const localRuleIds = new Set<string>();
   const foundPrefixes = new Set<string>();
 
   if (sec3.start !== -1) {
@@ -124,6 +125,7 @@ export function verifyAgent(rawFileText: string, ctx: VerificationContext): Veri
         } else {
           const ruleId = `${m[1]}-${m[2]}`;
           foundPrefixes.add(m[1]);
+          localRuleIds.add(ruleId);
           const num = parseInt(m[2], 10);
           foundRuleIds.push({ id: ruleId, num, line: absoluteLine });
         }
@@ -226,7 +228,7 @@ export function verifyAgent(rawFileText: string, ctx: VerificationContext): Veri
           });
         } else {
           for (const id of ids) {
-            if (!ctx.vaultIndex.has(id)) {
+            if (!localRuleIds.has(id) && !ctx.vaultIndex.has(id)) {
               errors.push({
                 code: 'A8',
                 line: absoluteLine,
@@ -287,7 +289,17 @@ export function verifyAgent(rawFileText: string, ctx: VerificationContext): Veri
   }
 
   // Cross reference validation
-  const refIssues = validateCrossReferences(lines, 'agent', ctx);
+  const combinedVaultIndex = new Map(ctx.vaultIndex);
+  for (const r of foundRuleIds) {
+    combinedVaultIndex.set(r.id, {
+      id: r.id,
+      file: 'local',
+      line: r.line,
+      prefix: r.id.split('-')[0]
+    });
+  }
+  const localCtx = { ...ctx, vaultIndex: combinedVaultIndex };
+  const refIssues = validateCrossReferences(lines, 'agent', localCtx);
   errors.push(...refIssues);
 
   return {
@@ -296,3 +308,15 @@ export function verifyAgent(rawFileText: string, ctx: VerificationContext): Veri
     warnings
   };
 }
+
+export function verifyAgentMarkdown(
+  fileText: string,
+  ctx?: Partial<VerificationContext>
+): VerificationResult {
+  const fullCtx: VerificationContext = {
+    vaultIndex: ctx?.vaultIndex ?? new Map(),
+    repoRoot: ctx?.repoRoot ?? process.cwd()
+  };
+  return verifyAgent(fileText, fullCtx);
+}
+
