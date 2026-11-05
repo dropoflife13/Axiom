@@ -3,7 +3,7 @@ import path from 'node:path';
 import { generateAgentMarkdown } from './executor.js';
 import { verifyAgentMarkdown } from './verifier/agent-verifier.js';
 import { buildVaultIndex } from './verifier/vault-index.js';
-import { saveLesson, getRelevantLessons } from './memory.js';
+import { saveLesson, getRelevantLessons, STATE_DIR } from './memory.js';
 import { generateLesson } from './advisor.js';
 import { tryDeterministicFix, VerifierError } from './fixer.js';
 import { callHeavyModel } from './escalation.js';
@@ -22,7 +22,8 @@ export interface LoopOptions {
 export async function runReflexionLoop(options: LoopOptions = {}) {
   const task = options.task || process.env.TASK || 'Create a DevOps Agent that handles multi-cloud deployments.';
   const maxAttempts = options.maxAttempts ?? 3;
-  const quarantinePath = options.quarantinePath || path.join(process.cwd(), 'quarantine.json');
+  const defaultQuarantine = path.join(STATE_DIR, 'quarantine.json');
+  const quarantinePath = options.quarantinePath || defaultQuarantine;
   const exitOnError = options.exitOnError ?? false;
   const executor = options.executorFn || generateAgentMarkdown;
   const heavy = options.heavyFn || callHeavyModel;
@@ -128,6 +129,11 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
     finalMarkdown: lastMarkdown,
     timestamp: new Date().toISOString(),
   };
+
+  const qDir = path.dirname(quarantinePath);
+  if (!fs.existsSync(qDir)) {
+    fs.mkdirSync(qDir, { recursive: true });
+  }
 
   fs.writeFileSync(quarantinePath, JSON.stringify(quarantinePayload, null, 2), 'utf-8');
 

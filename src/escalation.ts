@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { assertBudgetAvailable } from './guardrails.js';
 dotenv.config();
 
 export interface VerifierError {
@@ -49,6 +50,9 @@ export async function callHeavyModel(
   }
   prompt += 'Generate the complete, compliant agent specification markdown now:';
 
+  const promptPayload = `${HEAVY_SYSTEM_PROMPT}\n${prompt}`;
+  const signal = assertBudgetAvailable('TIER_3', promptPayload);
+
   // 1. Gemini path
   if (geminiKey && geminiKey !== 'your_key_here') {
     const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
@@ -56,6 +60,7 @@ export async function callHeavyModel(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
         method: 'POST',
+        signal,
         headers: {
           Authorization: `Bearer ${geminiKey}`,
           'Content-Type': 'application/json',
@@ -86,6 +91,7 @@ export async function callHeavyModel(
     const model = process.env.ANTHROPIC_MODEL || 'claude-3-7-sonnet-20250219';
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal,
       headers: {
         'x-api-key': anthropicKey,
         'anthropic-version': '2023-06-01',

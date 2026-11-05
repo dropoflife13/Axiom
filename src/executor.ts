@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { assertBudgetAvailable } from './guardrails.js';
 dotenv.config();
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -54,56 +55,32 @@ CRITICAL INVARIANTS:
 
 ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
 
-  const MAX_RETRIES = 3;
-  let attempt = 0;
+  const promptPayload = `${systemPrompt}\n${task}`;
+  const signal = assertBudgetAvailable('EXECUTOR', promptPayload);
 
-  while (attempt < MAX_RETRIES) {
-    try {
-      const response = await fetch(GROQ_URL, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: task },
-          ],
-          temperature: 0.1,
-        }),
-      });
+  const response = await fetch(GROQ_URL, {
+    method: 'POST',
+    signal,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: task },
+      ],
+      temperature: 0.1,
+    }),
+  });
 
-      if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
-        const jitter = Math.random() * 1000;
-        const delay = retryAfter * 1000 + jitter;
-
-        console.warn(`[Executor] Rate limited (429). Retrying in ${delay.toFixed(0)}ms...`);
-        await new Promise((resolve) => setTimeout(resolve, delay));
-        attempt++;
-        continue;
-      }
-
-      if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`Groq API error ${response.status}: ${errorBody}`);
-      }
-
-      const data: any = await response.json();
-      const markdown = data.choices[0].message.content;
-      return { markdown, rawResponse: JSON.stringify(data) };
-    } catch (err: any) {
-      attempt++;
-      if (attempt >= MAX_RETRIES) {
-        throw err;
-      }
-      const backoffDelay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-      console.warn(`[Executor] Request failed: ${err.message}. Retrying in ${backoffDelay.toFixed(0)}ms...`);
-      await new Promise((resolve) => setTimeout(resolve, backoffDelay));
-    }
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Groq API error ${response.status}: ${errorBody}`);
   }
 
-  throw new Error(`[Executor] Failed after ${MAX_RETRIES} attempts.`);
+  const data: any = await response.json();
+  const markdown = data.choices[0].message.content;
+  return { markdown, rawResponse: JSON.stringify(data) };
 }
