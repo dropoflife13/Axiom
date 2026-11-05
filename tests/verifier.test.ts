@@ -108,7 +108,9 @@ describe('Verifier L1 Test Suite', () => {
       console.log(`\n=== D10 WIKILINK WARNING REPORT ===`);
       console.log(`Total D10 warnings: ${totalD10Warnings}`);
       console.log(`Unresolved wikilink targets:`, Object.fromEntries(unresolvedWikilinks));
-      expect(totalD10Warnings).toBeGreaterThan(0);
+      expect(totalD10Warnings).toBe(77);
+      expect(unresolvedWikilinks.get('OPERATING-PRINCIPLES')).toBe(75);
+      expect(unresolvedWikilinks.get('HEURISTICS')).toBe(2);
     });
   });
 
