@@ -43,21 +43,21 @@ describe('Circuit Breaker & Budget Guardrails', () => {
   it('halts when reaching maxTotalLlmCallsPerProcess', () => {
     BUDGET_GUARD.currentLlmCalls = BUDGET_GUARD.maxTotalLlmCallsPerProcess;
     expect(() => assertBudgetAvailable('EXECUTOR', 'Prompt')).toThrowError(
-      /BILLING CIRCUIT BREAKER.*Reached max LLM calls/
+      /\[BILLING_CIRCUIT_BREAKER\].*Reached max.*LLM calls/i
     );
   });
 
   it('halts when reaching maxTier3EscalationsPerProcess', () => {
     BUDGET_GUARD.currentTier3Calls = BUDGET_GUARD.maxTier3EscalationsPerProcess;
     expect(() => assertBudgetAvailable('TIER_3', 'Prompt')).toThrowError(
-      /BILLING CIRCUIT BREAKER.*Reached max Tier 3 heavy escalations/
+      /\[BILLING_CIRCUIT_BREAKER\].*Reached max Tier 3 heavy escalations/i
     );
   });
 
   it('halts when prompt length exceeds maxPromptChars to prevent prompt bloat billing', () => {
     const hugePrompt = 'x'.repeat(BUDGET_GUARD.maxPromptChars + 1);
     expect(() => assertBudgetAvailable('EXECUTOR', hugePrompt)).toThrowError(
-      /BILLING CIRCUIT BREAKER.*Prompt length.*exceeds safety cap/
+      /\[BILLING_CIRCUIT_BREAKER\].*exceeds safety cap/i
     );
   });
 });
