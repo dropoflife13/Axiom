@@ -19,7 +19,7 @@ export function tryDeterministicFix(
 
   // 1. A5: Truncate prefixes longer than 5 letters (e.g. DEVOPS-01 -> DEVOP-01)
   if (errorCodes.has('A5')) {
-    const longPrefixRegex = /-\s*\*\*([A-Z]{6,})-(\d{2,3})\*\*/g;
+    const longPrefixRegex = /-\s*\*\*([A-Z]{6,})-(\d{2,3})\b/g;
     const prefixesToTruncate = new Set<string>();
 
     let match: RegExpExecArray | null;
