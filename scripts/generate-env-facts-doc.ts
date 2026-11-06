@@ -23,6 +23,7 @@ const document = `# PostgreSQL Environment Facts Specification (generated)\n\n` 
   `| :--- | :--- | :--- | :--- | :--- |\n${rows}\n\n` +
   `## Experiment eligibility\n\n` +
   `- Facts in the primary experiment: ${activeFacts.length}\n` +
+  `- Unconfirmed facts: ${FACTS.filter(({ status }) => status === 'UNCONFIRMED').map(({ id }) => id).join(', ') || 'none'}\n` +
   `- Proposed facts: ${FACTS.filter(({ status }) => status === 'PROPOSED').map(({ id }) => id).join(', ') || 'none'}\n` +
   `- Dropped facts retained only for historical ID validation: ${FACTS.filter(({ status }) => status === 'DROPPED').map(({ id }) => id).join(', ') || 'none'}\n`;
 

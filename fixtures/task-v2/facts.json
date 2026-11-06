@@ -14,7 +14,7 @@
     { "id": "F-11", "statement": "IP address columns must use inet, never text or varchar.", "applicability": { "all": [] }, "check": "inet-columns", "status": "OWNER-ADOPTED" },
     { "id": "F-12", "statement": "Status or state columns must be text NOT NULL validated by a CHECK (col IN (...)) constraint.", "applicability": { "all": [{ "flag": "status", "equals": true }] }, "check": "status-check", "status": "CONFIRMED" },
     { "id": "F-13", "statement": "Table name must be snake_case plural in public schema and belong to the allow-list of task nouns.", "applicability": { "all": [] }, "check": "table-name", "status": "OWNER-ADOPTED" },
-    { "id": "F-14", "statement": "Primary key constraint named pk_<table>.", "applicability": { "never": true }, "check": "primary-key-name", "status": "PROPOSED" },
+    { "id": "F-14", "statement": "Primary key constraint named pk_<table>.", "applicability": { "never": true }, "check": "primary-key-name", "status": "UNCONFIRMED" },
     { "id": "F-15", "statement": "Foreign key columns must be named <singular_ref_table>_id (or supersedes_id for self-FK on append-only tables).", "applicability": { "all": [] }, "check": "foreign-key-column-name", "status": "OWNER-ADOPTED" },
     { "id": "F-16", "statement": "Foreign key constraints must be named fk_<table>_<column>.", "applicability": { "all": [] }, "check": "foreign-key-name", "status": "OWNER-ADOPTED" },
     { "id": "F-17", "statement": "Check constraints must be named chk_<table>_<column>.", "applicability": { "all": [] }, "check": "check-name", "status": "OWNER-ADOPTED" },
@@ -39,6 +39,6 @@
     { "id": "F-36", "statement": "Append-only tables must include a nullable self-referential foreign key supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT.", "applicability": { "all": [{ "flag": "append_only", "equals": true }] }, "check": "append-only-supersedes", "status": "CONFIRMED" },
     { "id": "F-37", "statement": "Ingestion tables must attach a BEFORE INSERT trigger forcing NEW.received_at = now() regardless of client input.", "applicability": { "all": [{ "flag": "ingestion", "equals": true }] }, "check": "received-at-trigger", "status": "CONFIRMED" },
     { "id": "F-38", "statement": "Observation tables must define a composite B-tree index on (<key>, observed_at DESC).", "applicability": { "all": [{ "flag": "latest_per_key", "equals": true }] }, "check": "latest-per-key-index", "status": "CONFIRMED" },
-    { "id": "F-39", "statement": "Exposed views must be created with WITH (security_invoker = true).", "applicability": { "all": [{ "flag": "tenant", "equals": true }] }, "check": "view-security-invoker", "status": "CONFIRMED" }
+    { "id": "F-39", "statement": "Exposed views must be created with WITH (security_invoker = true).", "applicability": { "all": [{ "flag": "view", "equals": true }] }, "check": "view-security-invoker", "status": "CONFIRMED" }
   ]
 }

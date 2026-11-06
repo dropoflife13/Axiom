@@ -48,7 +48,7 @@ const TRAIN_FAILURE_FREQUENCY: Record<string, number> = {
   'F-26': 18, // Tenant RLS scoping by app_metadata.tenant_id
   'F-36': 17, // Append-only nullable supersedes_id self-FK
   'F-39': 16, // View WITH (security_invoker = true)
-  'F-38': 15, // Tenant composite index (tenant_id, created_at DESC)
+  'F-38': 15, // Observation composite index (key, observed_at DESC)
   'F-32': 15, // Ingestion UNIQUE constraint on idempotency_key
   'F-34': 12, // Ingestion/counter CHECK (<col> >= 0) constraint
   'F-19': 28, // Universal REVOKE ALL FROM PUBLIC... and exact role grants

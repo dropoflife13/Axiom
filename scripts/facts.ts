@@ -1,7 +1,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-export type FactStatus = 'CONFIRMED' | 'OWNER-ADOPTED' | 'PROPOSED' | 'DROPPED';
+export type FactStatus =
+  | 'CONFIRMED'
+  | 'OWNER-ADOPTED'
+  | 'UNCONFIRMED'
+  | 'PROPOSED'
+  | 'DROPPED';
 export type FactFlags = Record<string, boolean | undefined>;
 
 export interface FactPredicate {
