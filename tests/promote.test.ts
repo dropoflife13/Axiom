@@ -6,7 +6,9 @@ import {
   promoteCandidate,
   rejectCandidate,
   StagedAxiomCandidate,
+  assertHarvesterWritePathAllowed,
 } from '../src/promote.js';
+import { tryDeterministicFix } from '../src/fixer.js';
 
 describe('Axiom Harvester & Promotion Gate (src/promote.ts)', () => {
   const testDir = path.join(process.cwd(), '.axiom-state', 'test-promote');
@@ -119,5 +121,60 @@ describe('Axiom Harvester & Promotion Gate (src/promote.ts)', () => {
     const missing = promoteCandidate('NON-EXISTENT', { registryPath });
     expect(missing.success).toBe(false);
   });
-});
 
+  it('carries Tier 0 provenance into candidate-registry and sets llmConf to null for any line Tier 0 touched', () => {
+    const agentMissingDal01Conf = validAgentContent.replace(
+      '*breaks: table has existing triggers* | conf: 5',
+      '*breaks: table has existing triggers*'
+    );
+
+    const fixResult = tryDeterministicFix(agentMissingDal01Conf, [{ code: 'A7' }]);
+    expect(fixResult.provenance).toHaveLength(1);
+    expect(fixResult.provenance[0].ruleId).toBe('DAL-01');
+
+    fs.writeFileSync(path.join(stagingDir, 'db-audit.md'), fixResult.fixed, 'utf-8');
+    fs.writeFileSync(
+      path.join(stagingDir, 'db-audit.md.provenance.json'),
+      JSON.stringify(fixResult.provenance, null, 2),
+      'utf-8'
+    );
+
+    const result = harvestCanaryOutputs(stagingDir, registryPath);
+    expect(result.harvested).toBe(2);
+
+    const dal01 = result.candidates.find((c: StagedAxiomCandidate) => c.id === 'DAL-01');
+    const dal02 = result.candidates.find((c: StagedAxiomCandidate) => c.id === 'DAL-02');
+
+    expect(dal01?.llmConf).toBeNull();
+    expect(dal01?.llmConfidence).toBeNull();
+    expect(dal01?.tier0Provenance).toEqual(fixResult.provenance);
+
+    expect(dal02?.llmConf).toBe(4);
+    expect(dal02?.llmConfidence).toBe(4);
+    expect(dal02?.tier0Provenance).toBeUndefined();
+  });
+
+  it('enforces that harvester writes only under .axiom-state\\ or out\\ and never under brain\\', () => {
+    fs.writeFileSync(path.join(stagingDir, 'db-audit.md'), validAgentContent, 'utf-8');
+
+    const illegalBrainPath = path.join(process.cwd(), 'brain', '06-raw', 'candidate-registry.json');
+    expect(() => harvestCanaryOutputs(stagingDir, illegalBrainPath)).toThrowError(
+      /\[HARVESTER_PATH_VIOLATION\].*never write under brain/i
+    );
+    expect(fs.existsSync(illegalBrainPath)).toBe(false);
+
+    const illegalAgentsPath = path.join(process.cwd(), 'agents', 'candidate-registry.json');
+    expect(() => assertHarvesterWritePathAllowed(illegalAgentsPath)).toThrowError(
+      /\[HARVESTER_PATH_VIOLATION\]/i
+    );
+
+    const outTestPath = path.join(process.cwd(), 'out', 'test-candidate-registry.json');
+    try {
+      const res = harvestCanaryOutputs(stagingDir, outTestPath);
+      expect(res.harvested).toBe(2);
+      expect(fs.existsSync(outTestPath)).toBe(true);
+    } finally {
+      fs.rmSync(outTestPath, { force: true });
+    }
+  });
+});

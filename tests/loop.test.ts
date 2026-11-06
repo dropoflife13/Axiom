@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'node:path';
 import fsReal from 'node:fs';
 import path from 'node:path';
-import { runReflexionLoop } from '../src/loop.js';
+import { runReflexionLoop, DEFAULT_QUARANTINE_PATH } from '../src/loop.js';
 import { saveLesson } from '../src/memory.js';
 
 const TEST_QUARANTINE_FILE = path.join(process.cwd(), 'fixtures', 'test-quarantine.json');
@@ -102,6 +102,9 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
     expect(result.attempt).toBe(1);
     expect(result.tier0Applied).toBeDefined();
     expect(result.tier0Applied).toContain('[TIER 0] Truncated prefix DEVOPS → DEVOP');
+    expect(result.tier0Provenance).toBeDefined();
+    expect(result.tier0Provenance?.some((p) => p.code === 'A5' && p.ruleId === 'DEVOP-01')).toBe(true);
+    expect(result.trace?.[0].tier0Provenance).toEqual(result.tier0Provenance);
     // Advisor was NOT called because Tier 0 fixed the error directly!
     expect(mockAdvisor).not.toHaveBeenCalled();
     expect(mockHeavy).not.toHaveBeenCalled();
@@ -224,9 +227,64 @@ describe('Tier 0 + Tier 3 Reflexion Loop Architecture', () => {
     expect(result.quarantined).toBe(true);
     expect(fsReal.existsSync(TEST_QUARANTINE_FILE)).toBe(true);
 
-    const quarantineData = JSON.parse(fsReal.readFileSync(TEST_QUARANTINE_FILE, 'utf-8'));
+    const quarantineData = JSON.parse(fsReal.readFileSync(TEST_QUARANTINE_FILE, 'utf-8').trim());
     expect(quarantineData.task).toBe('Persistent Failure Task');
     expect(quarantineData.attempts.length).toBe(3);
     expect(quarantineData.finalErrors.length).toBeGreaterThan(0);
+  });
+
+  it('never routes to the heavy model when maxAttempts=1 or maxAttempts=2 (only on attempt === 3 explicitly)', async () => {
+    const mockExecutor = vi.fn().mockResolvedValue({
+      markdown: BROKEN_STRUCTURAL_AGENT,
+      rawResponse: BROKEN_STRUCTURAL_AGENT,
+    });
+    const mockAdvisor = vi.fn().mockResolvedValue('Ensure all 6 sections are present.');
+    const mockHeavy = vi.fn().mockResolvedValue(VALID_AGENT_COMPLIANT);
+
+    const res1 = await runReflexionLoop({
+      task: 'MaxAttempts 1 Task',
+      maxAttempts: 1,
+      quarantinePath: TEST_QUARANTINE_FILE,
+      memoryPath: TEST_MEMORY_FILE,
+      executorFn: mockExecutor,
+      advisorFn: mockAdvisor,
+      heavyFn: mockHeavy,
+      silent: true,
+    });
+
+    expect(res1.success).toBe(false);
+    expect(mockExecutor).toHaveBeenCalledTimes(1);
+    expect(mockAdvisor).toHaveBeenCalledTimes(0);
+    expect(mockHeavy).not.toHaveBeenCalled();
+
+    mockExecutor.mockClear();
+    mockAdvisor.mockClear();
+    mockHeavy.mockClear();
+
+    const res2 = await runReflexionLoop({
+      task: 'MaxAttempts 2 Task',
+      maxAttempts: 2,
+      quarantinePath: TEST_QUARANTINE_FILE,
+      memoryPath: TEST_MEMORY_FILE,
+      executorFn: mockExecutor,
+      advisorFn: mockAdvisor,
+      heavyFn: mockHeavy,
+      silent: true,
+    });
+
+    expect(res2.success).toBe(false);
+    expect(mockExecutor).toHaveBeenCalledTimes(2);
+    expect(mockAdvisor).toHaveBeenCalledTimes(1);
+    expect(mockHeavy).not.toHaveBeenCalled();
+
+    // Verify both failures were appended as JSONL records (2 lines total)
+    expect(DEFAULT_QUARANTINE_PATH.endsWith(path.join('.axiom-state', 'quarantine.jsonl'))).toBe(true);
+    const jsonlLines = fsReal
+      .readFileSync(TEST_QUARANTINE_FILE, 'utf-8')
+      .split('\n')
+      .filter((l) => l.trim().length > 0);
+    expect(jsonlLines).toHaveLength(2);
+    expect(JSON.parse(jsonlLines[0]).task).toBe('MaxAttempts 1 Task');
+    expect(JSON.parse(jsonlLines[1]).task).toBe('MaxAttempts 2 Task');
   });
 });

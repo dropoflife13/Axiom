@@ -2,7 +2,7 @@
 
 ## 1. Purpose
 
-Axiom is a self-healing engine designed to generate, verify, and refine architectural axioms (rules and constraints) across software domains. It mechanizes the discovery and formalization of architectural wisdom while maintaining strict epistemic boundaries and verification standards.
+Axiom is a deterministic verifier and reflexion test harness for Cortex agent and rule files, with two executable checks (DB-01, SEC-03) and an evaluation harness for LLM-generated rules.
 
 ## 2. Core Architecture
 
@@ -10,9 +10,9 @@ The system consists of decoupled components:
 
 ```
                   ┌──────────────────┐
-                  │     Executor     │  (Swappable OpenAI-compatible LLM client)
+                  │     Executor     │  (OpenAI-compatible LLM client with SHA-256 disk cache)
                   └────────┬─────────┘
-                           │ candidate rule stream
+                           │ candidate agent/rule markdown
                            ▼
                   ┌──────────────────┐
                   │     Verifier     │  (Deterministic: L1, L2, L3)
@@ -20,46 +20,36 @@ The system consists of decoupled components:
                            │ failed traces & diagnostics
                            ▼
                   ┌──────────────────┐
-                  │     Advisor      │  (Lesson generation & validation)
+                  │     Advisor      │  (Lesson generation & verification)
                   └──────────────────┘
 ```
 
 ### 2.1 Executor
-- Generates proposed candidate axioms based on domain prompts and contextual inputs.
-- Built on top of a free LLM API behind a standard OpenAI-compatible client interface.
-- Completely swappable: any OpenAI-compatible endpoint or local/remote model can serve as the backend.
+- Generates candidate agent Markdown files from task prompts.
+- Caches responses on disk under `.axiom-cache/` keyed by `sha256(model + system + user + temperature)`.
 
 ### 2.2 Verifier
-- **Deterministic by construction:** strictly zero LLM, zero network calls, and zero randomness anywhere in `src/verifier`.
-- Evaluates rules at three distinct verification levels:
-  - **L1 (Grammar):** Structural and syntactic validity (rule line syntax, required metadata fields, casing, anchors, section headings, and field ordering).
-  - **L2 (Vault Consistency):** Internal consistency across the procedural vault (ID uniqueness, prefix validity, status invariants, reference resolution across agents and domains, cross-links).
-  - **L3 (Executable Checks):** Mechanizable validation testing candidates against paired compliant (positive) and violating (negative) test fixtures.
+- **Deterministic by construction:** zero LLM calls, zero network calls, and zero randomness anywhere in `src/verifier/`.
+- Evaluates files across three levels:
+  - **L1 (Grammar):** Structural and syntactic checks (`A1`–`A10` for agent files, `L1-01`–`L1-10` for domain rule files).
+  - **L2 (Vault Consistency):** Prefix registration, rule ID uniqueness, and cross-reference checks against the canonical vault index.
+  - **L3 (Executable Checks):** Two deterministic scanners (`DB-01` and `SEC-03`) tested against compliant and violating fixtures in `fixtures/l3/`.
 
-### 2.3 Advisor
-- **Conditional Learning:** Learns exclusively from traces where the Verifier produced a failure.
-- **Verification of Lessons:** A proposed lesson or guideline is only retained if re-running candidate generation with the lesson in context successfully enables the Verifier to pass.
-- Eliminates speculative or hallucinatory prompt drift.
+### 2.3 Advisor & Memory
+- Generates a single concise formatting rule under 24 words when an Executor attempt fails verification.
+- Candidate lessons are saved to `.axiom-state/memory.json` (one lesson per error code, atomic writes via temp file + rename, LRU eviction by `lastUsedAt`) only if the subsequent retry passes verification.
 
 ## 3. Staging & Candidate Quarantine Policy
 
-To ensure repository and vault integrity:
-- **Quarantine Location:** Generated axioms are exclusively output as candidates to `out/candidates.md`. They are **never** written directly into `brain/` or `agents/`.
-- **Promotion Protocol:** A separate, human-operated import step validates candidates and renumbers them into the next free sequential `CAND-nn` identifier in the vault inbox (`brain/06-raw/inbox.md`).
-- **Epistemic Invariant:** Automated systems never promote candidates to active status; promotion remains strictly a human practitioner decision.
+- **Quarantine & Staging Locations:** Failed reflexion traces are appended as JSONL records to `.axiom-state/quarantine.jsonl`. Harvested candidate rules are written only under `.axiom-state/` or `out/` and are **never** written under `brain/` or `agents/`.
+- **Tier 0 Provenance:** Every deterministic fix applied by `src/fixer.ts` records per-line provenance. Any rule line modified by Tier 0 has `llmConf` (`llmConfidence`) set to `null` in `candidate-registry.json`.
 
 ## 4. Confidence Policy
 
-Confidence scoring (`conf: 1..5`) is strictly bounded by verification rigor:
-- **`conf <= 2`:** Candidates that have passed only Level 1 (Grammar) and Level 2 (Vault Consistency) checks.
-- **`conf: 3` (Maximum Automated Rating):** Candidates that have passed Level 1, Level 2, and Level 3 (Executable Checks with compliant/violating fixtures).
-- **`conf > 3` (4 or 5):** Never granted automatically. High confidence levels require human production validation, empirical incident evidence, and human practitioner ratification.
+- **`conf <= 2`:** Harvested candidates are clamped to `enforcedConf <= 2` while in candidate status.
+- **`conf: 3`:** Maximum automated confidence for rules backed by executable checks.
+- **`conf > 3` (4 or 5):** Reserved for human review and promotion.
 
-## 5. Evaluation Framework
+## 5. Evaluation Harness
 
-Axiom measures generation accuracy and learning efficacy using an empirical benchmark:
-- **Leave-One-Out Regeneration:** Existing mechanizable rules are withheld, and the system attempts to regenerate equivalent rules against human-authored test fixtures.
-- **Baselines & Controls:**
-  - *No-Learning Baseline:* Generation performance without prior advisor feedback or accumulated lessons.
-  - *Placebo-Lesson Control:* Generation tested with unrelated or randomized lessons to verify that performance gains are causally driven by targeted failure remediation.
-
+- Evaluates Executor outputs across controlled conditions (baseline, static hints, advisor memory, placebo memory, and Tier 0 auto-fix) on held-out task prompts.

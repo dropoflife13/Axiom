@@ -10,3 +10,4 @@ coverage/
 out/
 memory.json
 quarantine.json
+probe-output.txt

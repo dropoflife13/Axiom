@@ -6,7 +6,7 @@ import { verifyAgentMarkdown } from './verifier/agent-verifier.js';
 import { buildVaultIndex } from './verifier/vault-index.js';
 import { saveLesson, getRelevantLessons, hasLessonForCode, Lesson } from './memory.js';
 import { generateLesson } from './advisor.js';
-import { tryDeterministicFix, VerifierError } from './fixer.js';
+import { tryDeterministicFix, VerifierError, LineProvenance } from './fixer.js';
 import { callHeavyModel } from './escalation.js';
 
 export interface LoopOptions {
@@ -21,7 +21,15 @@ export interface LoopOptions {
   silent?: boolean;
 }
 
-const DEFAULT_QUARANTINE_PATH = path.join(process.cwd(), '.axiom-state', 'quarantine.json');
+export interface AttemptTraceEntry {
+  attempt: number;
+  path: string;
+  verdict: string;
+  errors: any[];
+  tier0Provenance?: LineProvenance[];
+}
+
+export const DEFAULT_QUARANTINE_PATH = path.join(process.cwd(), '.axiom-state', 'quarantine.jsonl');
 
 export async function runReflexionLoop(options: LoopOptions = {}) {
   const task = options.task || process.env.TASK || 'Create a DevOps Agent that handles multi-cloud deployments.';
@@ -44,16 +52,17 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
   let pendingLesson: Lesson | null = null;
   let lastErrors: VerifierError[] = [];
   let lastMarkdown = '';
-  const attemptsTrace: Array<{ attempt: number; path: string; verdict: string; errors: any[] }> = [];
+  const attemptsTrace: AttemptTraceEntry[] = [];
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // Never route to heavy model unless attempt === 3 explicitly (even when maxAttempts < 3)
     const isHeavyAttempt = attempt === 3;
     log(`\n=== ATTEMPT ${attempt} (${isHeavyAttempt ? 'TIER 3 HEAVY' : 'FAST PATH'}) ===`);
 
     try {
       let markdown = '';
 
-      if (isHeavyAttempt) {
+      if (attempt === 3) {
         log('[TIER 3] Escalating to heavy model...');
         markdown = await heavy(task, lastErrors, lesson);
       } else {
@@ -66,14 +75,27 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
       log(`Verdict: ${verdict.verdict}`);
 
       if (verdict.verdict === 'PASS') {
-        // Validate lesson utility before saving: only persist pendingLesson if Executor retry passed
         if (pendingLesson) {
           log(`[MEMORY PROVEN] Saving verified lesson for ${pendingLesson.errorCode}`);
           saveLesson(pendingLesson, options.memoryPath);
           pendingLesson = null;
         }
+        attemptsTrace.push({
+          attempt,
+          path: isHeavyAttempt ? 'tier3-heavy' : 'fast-path',
+          verdict: 'PASS',
+          errors: [],
+          tier0Provenance: [],
+        });
         log(`✅ SUCCESS on attempt ${attempt}`);
-        return { success: true, successViaTier0: false, attempt, markdown };
+        return {
+          success: true,
+          successViaTier0: false,
+          attempt,
+          markdown,
+          tier0Provenance: [] as LineProvenance[],
+          trace: attemptsTrace,
+        };
       }
 
       // If a pending lesson failed to make the Executor pass on retry, discard it
@@ -86,15 +108,17 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
 
       lastErrors = verdict.errors;
       log('Errors:', verdict.errors.map((e) => `[${e.code}] line ${e.line}: ${e.detail}`));
+
+      // Tier 0: Deterministic Auto-Fix
+      const fixResult = tryDeterministicFix(markdown, verdict.errors);
+
       attemptsTrace.push({
         attempt,
         path: isHeavyAttempt ? 'tier3-heavy' : 'fast-path',
         verdict: 'FAIL',
         errors: verdict.errors,
+        tier0Provenance: fixResult.provenance,
       });
-
-      // Tier 0: Deterministic Auto-Fix
-      const fixResult = tryDeterministicFix(markdown, verdict.errors);
 
       if (fixResult.applied.length > 0) {
         for (const logLine of fixResult.applied) {
@@ -110,6 +134,8 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
             attempt,
             markdown: fixResult.fixed,
             tier0Applied: fixResult.applied,
+            tier0Provenance: fixResult.provenance,
+            trace: attemptsTrace,
           };
         } else {
           log('[TIER 0] Fix applied but file still failed re-verification.');
@@ -119,8 +145,8 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
         log('[TIER 0] Skipped (errors need semantic fix)');
       }
 
-      // If fast attempt (< maxAttempts), consult Advisor (or cached memory)
-      if (attempt < maxAttempts) {
+      // If fast attempt (< maxAttempts and < 3), consult Advisor (or cached memory)
+      if (attempt < maxAttempts && attempt < 3) {
         const firstError = lastErrors[0];
         if (firstError) {
           const isMockAdvisor = Boolean(options.advisorFn);
@@ -187,8 +213,8 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
     }
   }
 
-  // Persistent failure: Quarantine & Halt
-  log(`\n❌ HALTED: Persistent failure. Trace saved to ${path.basename(quarantinePath)}`);
+  // Persistent failure: Quarantine & Halt (append JSONL record)
+  log(`\n❌ HALTED: Persistent failure. Trace appended to ${path.basename(quarantinePath)}`);
   const quarantineDir = path.dirname(quarantinePath);
   if (!fs.existsSync(quarantineDir)) {
     fs.mkdirSync(quarantineDir, { recursive: true });
@@ -202,13 +228,19 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
     timestamp: new Date().toISOString(),
   };
 
-  fs.writeFileSync(quarantinePath, JSON.stringify(quarantinePayload, null, 2), 'utf-8');
+  fs.appendFileSync(quarantinePath, JSON.stringify(quarantinePayload) + '\n', 'utf-8');
 
   if (exitOnError) {
     process.exit(1);
   }
 
-  return { success: false, successViaTier0: false, attempts: maxAttempts, quarantined: true };
+  return {
+    success: false,
+    successViaTier0: false,
+    attempts: maxAttempts,
+    quarantined: true,
+    trace: attemptsTrace,
+  };
 }
 
 // Execute directly if run as CLI script

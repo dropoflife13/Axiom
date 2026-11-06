@@ -5,6 +5,9 @@ dotenv.config();
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const MODEL = process.env.GROQ_ADVISOR_MODEL || 'qwen/qwen3.8-27b';
 
+export const ADVISOR_SYSTEM_PROMPT =
+  'You are a terse syntax coach. Convert the verifier error into one concrete rule under 24 words. Do NOT reference any specific IDs, task names, or variable names from the error.';
+
 export async function generateLesson(
   errorCode: string,
   errorDetail: string
@@ -14,8 +17,7 @@ export async function generateLesson(
     throw new Error('GROQ_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
   }
 
-  const systemPrompt =
-    'You are a terse syntax coach. Convert the verifier error into ONE concrete, actionable formatting rule under 24 words. State the exact required syntax or character limit (e.g., for A5: "Rule IDs must use a 1-5 uppercase letter prefix A-Z only with no digits or 6+ letters"; for A7: "Rules containing WHEN must include → DO and end with | conf: N where N is 1-5"; for A9: "Section 5 must explicitly contain all three literal strings: \'GATE: PASS\', \'GATE: FAIL\', and \'INSIGHT\'"). Do NOT reference any specific IDs, task names, or variable names from the error. Do not include task-specific acronyms or echo prefixes from the error detail. FORBIDDEN: vague phrases like "adhere to the regular expression" or "mandatory formatting elements".';
+  const systemPrompt = ADVISOR_SYSTEM_PROMPT;
   const userPrompt = `Error code: ${errorCode}\nError detail: ${errorDetail}`;
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
 

@@ -40,6 +40,13 @@ describe('Tier 0: Deterministic Auto-Fixer', () => {
     expect(result.fixed).toContain('(DEVOP-01)');
     expect(result.fixed).toContain('(DEVOP-02)');
     expect(result.fixed).not.toContain('DEVOPS-01');
+    expect(result.provenance).toHaveLength(4);
+    expect(result.provenance[0]).toMatchObject({
+      line: 12,
+      code: 'A5',
+      ruleId: 'DEVOP-01',
+      action: 'modified',
+    });
   });
 
   it('appends | conf: 3 to a rule with no conf tag (A7)', () => {
@@ -78,6 +85,15 @@ describe('Tier 0: Deterministic Auto-Fixer', () => {
     expect(result.fixed).toContain(
       '- **TST-02** Rate Limit: WHEN limit exceeded → DO return 429. *breaks: bypass* | conf: 5'
     );
+    expect(result.provenance).toHaveLength(1);
+    expect(result.provenance[0]).toEqual({
+      line: 12,
+      code: 'A7',
+      ruleId: 'TST-01',
+      action: 'modified',
+      before: '- **TST-01** Validation: WHEN request is made → DO check auth. *breaks: auth error*',
+      after: '- **TST-01** Validation: WHEN request is made → DO check auth. *breaks: auth error* | conf: 3',
+    });
   });
 
   it('appends Gate/Insight block when A9 fires (A9)', () => {
@@ -111,6 +127,8 @@ This section just says pass or fail without the required tokens.
     expect(result.fixed).toContain('GATE: PASS');
     expect(result.fixed).toContain('GATE: FAIL');
     expect(result.fixed).toContain('INSIGHT');
+    expect(result.provenance.length).toBeGreaterThanOrEqual(2);
+    expect(result.provenance[0].code).toBe('A9');
   });
 
   it('removes unresolved checklist reference when A8 fires (A8)', () => {
@@ -145,6 +163,14 @@ This section just says pass or fail without the required tokens.
     expect(result.applied).toContain('[TIER 0] Removed unresolved checklist reference to GHOST-99');
     expect(result.fixed).toContain('- [ ] Check rule (TST-01)');
     expect(result.fixed).not.toContain('GHOST-99');
+    expect(result.provenance).toHaveLength(1);
+    expect(result.provenance[0]).toMatchObject({
+      code: 'A8',
+      ruleId: 'GHOST-99',
+      action: 'deleted',
+      before: '- [ ] Phantom check (GHOST-99)',
+      after: '',
+    });
   });
 
   it('returns empty applied array when the error is A3 (structural)', () => {
@@ -155,6 +181,7 @@ Just raw text without H2 sections.
     const result = tryDeterministicFix(input, errors);
 
     expect(result.applied).toHaveLength(0);
+    expect(result.provenance).toHaveLength(0);
     expect(result.fixed).toBe(input);
   });
 });
