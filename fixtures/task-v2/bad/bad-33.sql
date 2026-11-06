@@ -1,4 +1,4 @@
--- META: {"table":"subscriptions","tenant":true,"append_only":false,"ingestion":false,"expectedFailedFacts":["F-38"],"mutationDescription":"Composite index on (plan_code, observed_at) uses ASC instead of DESC"}
+-- META: {"table":"subscriptions","tenant":true,"append_only":false,"ingestion":false,"latest_per_key":true,"expectedFailedFacts":["F-38"],"mutationDescription":"Composite index on (plan_code, observed_at) uses ASC instead of DESC"}
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
