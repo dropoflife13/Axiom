@@ -2,12 +2,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  FACT_STATEMENTS,
-  getApplicableFacts,
   startPostgresContainer,
   stopPostgresContainer,
   evaluateMigrationSqlInContainer,
 } from './oracle.js';
+import { FACT_STATEMENTS, getApplicableFacts } from './facts.js';
 import {
   Lesson,
   FeatureFlags,

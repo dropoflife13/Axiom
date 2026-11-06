@@ -2,12 +2,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {
-  FACT_STATEMENTS,
-  getApplicableFacts,
   startPostgresContainer,
   stopPostgresContainer,
   evaluateMigrationSqlInContainer,
 } from './oracle.js';
+import { FACT_STATEMENTS, getApplicableFacts } from './facts.js';
 
 interface TaskFeatures {
   tenant: boolean;
@@ -41,26 +40,22 @@ interface CachedReport {
   };
 }
 
-const DISCRIMINATING_FACTS = new Set([
-  'F-03', // ON DELETE RESTRICT (55%)
-  'F-05', // created_at timestamptz now() (65%)
-  'F-06', // updated_at on mutable / absent on append-only (75%)
-  'F-10', // deleted_at on mutable / absent on append-only (60%)
-  'F-12', // Status CHECK constraint (house rule)
-  'F-16', // fk_<table>_<col> naming (52.5%)
-  'F-17', // chk_<table>_<col> naming (75%)
-  'F-18', // idx_<table>_<col> naming (70%)
-  'F-19', // Append-only revoke UPDATE/DELETE/TRUNCATE from PUBLIC, app, readonly
-  'F-20', // Append-only trigger message 'Update/Delete operation rejected on audit log' (15%)
-  'F-21', // BEFORE UPDATE trigger advances updated_at (70%)
-  'F-25', // FORCE ROW LEVEL SECURITY (15%)
-  'F-26', // app_metadata vs user_metadata (0%)
-  'F-31', // SECURITY DEFINER search_path = '' (22.5%)
-  'F-36', // supersedes_id self-FK (25%)
-  'F-37', // BEFORE INSERT forces received_at = now() (25%)
-  'F-38', // idx_<table>_<key>_observed_at (<key>, observed_at DESC)
-  'F-39', // WITH (security_invoker = true) (15%)
-]);
+function loadDiscriminatingFacts(): Set<string> {
+  const reportPath = path.resolve('out/condition-a-dev-rescored.json');
+  const report = JSON.parse(fs.readFileSync(reportPath, 'utf-8')) as {
+    perFactStats?: Array<{ factId: string; passRate: number }>;
+  };
+
+  if (!report.perFactStats) {
+    throw new Error('Missing perFactStats in ' + reportPath + '; run the initial rescore first.');
+  }
+
+  return new Set(
+    report.perFactStats
+      .filter(({ passRate }) => passRate >= 0.1 && passRate <= 0.8)
+      .map(({ factId }) => factId)
+  );
+}
 
 function hashString(str: string): number {
   let hash = 2166136261;
@@ -84,11 +79,12 @@ function seededShuffle<T>(array: T[], seed: number): T[] {
 
 export function selectBoundFactsForTask(
   taskId: string,
-  applicableFacts: string[]
+  applicableFacts: string[],
+  discriminatingFacts: ReadonlySet<string>
 ): string[] {
   const seed = hashString(taskId);
-  const discriminating = applicableFacts.filter((f) => DISCRIMINATING_FACTS.has(f));
-  const nonDiscriminating = applicableFacts.filter((f) => !DISCRIMINATING_FACTS.has(f));
+  const discriminating = applicableFacts.filter((f) => discriminatingFacts.has(f));
+  const nonDiscriminating = applicableFacts.filter((f) => !discriminatingFacts.has(f));
 
   const shuffledDisc = seededShuffle(discriminating, seed);
   const shuffledNonDisc = seededShuffle(nonDiscriminating, seed ^ 0xabcdef);
@@ -158,6 +154,7 @@ async function runRescore() {
     fs.readFileSync(path.resolve('out/condition-a-dev-calibration.json'), 'utf-8')
   );
   const cachedReports: CachedReport[] = cachedData.taskReports;
+  const discriminatingFacts = loadDiscriminatingFacts();
 
   const cachedMap = new Map<string, CachedReport>();
   for (const r of cachedReports) {
@@ -211,7 +208,11 @@ async function runRescore() {
         status: hasStatus,
       });
 
-      const boundFacts = selectBoundFactsForTask(task.id, applicableFacts);
+      const boundFacts = selectBoundFactsForTask(
+        task.id,
+        applicableFacts,
+        discriminatingFacts
+      );
 
       const oracleReport = evaluateMigrationSqlInContainer(
         containerName,
@@ -331,7 +332,7 @@ async function runRescore() {
         failedCount: counts.failed,
         passRate: Number(rate.toFixed(4)),
         passRatePct: `${(rate * 100).toFixed(1)}%`,
-        isDiscriminating: DISCRIMINATING_FACTS.has(factId),
+        isDiscriminating: discriminatingFacts.has(factId),
         statusBand,
       });
     }

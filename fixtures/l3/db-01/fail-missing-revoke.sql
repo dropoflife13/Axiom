@@ -15,7 +15,7 @@ ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow read access to price logs"
   ON public.price_logs
   FOR SELECT
-  TO authenticated
+  TO application
   USING (true);
 
 -- Layer 3: BEFORE UPDATE OR DELETE trigger

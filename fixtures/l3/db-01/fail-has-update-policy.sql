@@ -8,7 +8,7 @@ CREATE TABLE public.price_logs (
 );
 
 -- Layer 1: REVOKE
-REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM anon, authenticated, service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM PUBLIC, application, readonly_user;
 
 -- Layer 2: RLS Policies with forbidden UPDATE policy!
 ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
@@ -16,14 +16,14 @@ ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow read access"
   ON public.price_logs
   FOR SELECT
-  TO authenticated
+  TO application
   USING (true);
 
 -- VIOLATION: Append-only entities must never define an UPDATE policy!
 CREATE POLICY "Admins can update price logs"
   ON public.price_logs
   FOR UPDATE
-  TO authenticated
+  TO application
   USING (auth.jwt() ->> 'role' = 'admin');
 
 -- Layer 3: BEFORE UPDATE OR DELETE trigger

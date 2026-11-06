@@ -2,14 +2,18 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync, spawnSync } from 'node:child_process';
+import { FACT_BY_ID, FACT_STATEMENTS } from './facts.js';
 
 export interface MigrationMeta {
   table: string;
   tenant: boolean;
   append_only: boolean;
   ingestion: boolean;
-  expectedFailedFacts?: string[];
+  targetFact?: string;
   mutationDescription?: string;
+  latest_per_key?: boolean;
+  status?: boolean;
+  sec_definer?: boolean;
 }
 
 export interface OracleReport {
@@ -18,109 +22,14 @@ export interface OracleReport {
   details: string;
 }
 
-export const FACT_STATEMENTS: Record<string, string> = {
-  'F-01': 'Primary key column id must be uuid NOT NULL with default gen_random_uuid().',
-  'F-02': 'Multi-tenant tables must include tenant_id uuid NOT NULL.',
-  'F-03': 'Every foreign key constraint must use ON DELETE RESTRICT.',
-  'F-04': 'Monetary and decimal columns must use numeric (never float, real, double precision, or money).',
-  'F-05': 'Every table must include created_at timestamptz NOT NULL DEFAULT now().',
-  'F-06': 'Mutable tables must include updated_at timestamptz NOT NULL DEFAULT now(); append-only tables must omit updated_at.',
-  'F-07': 'All timestamp columns must use timestamptz, never timestamp without time zone.',
-  'F-08': 'Text columns must use text rather than varchar(n) or char(n).',
-  'F-09': 'JSON columns must use jsonb NOT NULL, never json.',
-  'F-10': 'Mutable tables must include nullable deleted_at timestamptz; append-only tables must omit deleted_at.',
-  'F-11': 'IP address columns must use inet, never text or varchar.',
-  'F-12': 'Status or state columns must be text NOT NULL validated by a CHECK (col IN (...)) constraint.',
-  'F-13': 'Table name must be snake_case plural in public schema and belong to the allow-list of task nouns.',
-  'F-15': 'Foreign key columns must be named <singular_ref_table>_id (or supersedes_id for self-FK on append-only tables).',
-  'F-16': 'Foreign key constraints must be named fk_<table>_<column>.',
-  'F-17': 'Check constraints must be named chk_<table>_<column>.',
-  'F-18': 'Explicit non-constraint indexes must be named idx_<table>_<column> (skipping constraint-backed indexes).',
-  'F-19': 'Append-only tables must revoke UPDATE, DELETE, and TRUNCATE from PUBLIC, application, and readonly_user.',
-  'F-20': 'Append-only tables must have a BEFORE UPDATE OR DELETE trigger that raises Update/Delete operation rejected on audit log.',
-  'F-21': 'Mutable tables must have a BEFORE UPDATE trigger that advances updated_at.',
-  'F-22': 'Every foreign key column must be covered as the leading column of an index.',
-  'F-23': 'Multi-tenant tables must index tenant_id as the leading column of an index.',
-  'F-24': 'Unique business keys on soft-deletable mutable tables must use a partial unique index with WHERE deleted_at IS NULL.',
-  'F-25': 'Multi-tenant tables must have ENABLE ROW LEVEL SECURITY and FORCE ROW LEVEL SECURITY.',
-  'F-26': 'Tenant RLS policies must scope rows by app_metadata.tenant_id for application and grant zero access to user_metadata.tenant_id.',
-  'F-27': 'Append-only tables must define zero FOR UPDATE, FOR DELETE, or FOR ALL RLS policies.',
-  'F-30': 'Write RLS policies must never use tautological USING (true) or WITH CHECK (true).',
-  'F-31': 'SECURITY DEFINER functions must explicitly set SET search_path = \'\'.',
-  'F-32': 'Ingestion tables must enforce a UNIQUE constraint on idempotency_key (scoped by tenant_id when tenant = true).',
-  'F-34': 'Counter and quota columns must enforce a non-negative CHECK (<col> >= 0) constraint against underflow.',
-  'F-36': 'Append-only tables must include a nullable self-referential foreign key supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT.',
-  'F-37': 'Ingestion tables must attach a BEFORE INSERT trigger forcing NEW.received_at = now() regardless of client input.',
-  'F-38': 'Observation tables must define a composite B-tree index on (<key>, observed_at DESC).',
-  'F-39': 'Exposed views must be created with WITH (security_invoker = true).',
-};
-
-/**
- * Returns the full list of applicable facts for a table given its features.
- * Note: F-19, F-20, F-27, F-36 apply to EXACTLY the same tasks (append_only = true).
- */
-export function getApplicableFacts(flags: {
-  tenant: boolean;
-  append_only: boolean;
-  ingestion: boolean;
-  status?: boolean;
-  latest_per_key?: boolean;
-  sec_definer?: boolean;
-}): string[] {
-  const facts: string[] = [
-    // Universal facts (always checked on every table)
-    'F-01',
-    'F-03',
-    'F-04',
-    'F-05',
-    'F-07',
-    'F-08',
-    'F-11',
-    'F-13',
-    'F-15',
-    'F-16',
-    'F-17',
-    'F-18',
-    'F-22',
-  ];
-
-  if (flags.status) {
-    facts.push('F-12');
-  }
-
-  if (flags.sec_definer) {
-    facts.push('F-31');
-  }
-
-  if (flags.tenant) {
-    facts.push('F-02', 'F-23', 'F-25', 'F-26', 'F-30', 'F-39');
-    if (!flags.append_only) {
-      facts.push('F-24');
-    }
-  }
-
-  if (flags.append_only) {
-    // F-19, F-20, F-27, F-36 apply to EXACTLY the same tasks (append_only = true)
-    facts.push('F-19', 'F-20', 'F-27', 'F-36');
-  } else {
-    facts.push('F-06', 'F-10', 'F-21');
-  }
-
-  if (flags.ingestion) {
-    facts.push('F-09', 'F-32', 'F-34', 'F-37');
-  }
-
-  if (flags.latest_per_key) {
-    facts.push('F-38');
-  }
-
-  return Array.from(new Set(facts)).sort();
-}
-
 export function parseMigrationMeta(sql: string, filePath: string): MigrationMeta {
   const match = sql.match(/^--\s*META:\s*(\{.*\})/m);
   if (match) {
-    return JSON.parse(match[1]) as MigrationMeta;
+    const meta = JSON.parse(match[1]) as MigrationMeta;
+    if (meta.targetFact && !FACT_BY_ID.has(meta.targetFact)) {
+      throw new Error(`Unknown targetFact ${meta.targetFact} in ${filePath}`);
+    }
+    return meta;
   }
   const tableMatch = sql.match(/CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:public\.)?([a-z0-9_]+)/i);
   const table = tableMatch ? tableMatch[1] : path.basename(filePath, '.sql');
@@ -229,6 +138,7 @@ function buildOracleProbeSql(meta: MigrationMeta): string {
   const isTenant = meta.tenant ? 'true' : 'false';
   const isAppendOnly = meta.append_only ? 'true' : 'false';
   const isIngestion = meta.ingestion ? 'true' : 'false';
+  const isLatestPerKey = meta.latest_per_key ? 'true' : 'false';
 
   return `
 -- 1. Run deterministic structural catalog probes + seed rows + F-37 & F-21 probes
@@ -238,6 +148,7 @@ DECLARE
   v_tenant boolean := ${isTenant};
   v_append_only boolean := ${isAppendOnly};
   v_ingestion boolean := ${isIngestion};
+  v_latest_per_key boolean := ${isLatestPerKey};
   v_relid oid;
   v_cnt int;
   v_rec record;
@@ -640,10 +551,8 @@ BEGIN
     END IF;
   END IF;
 
-  -- F-38: Observation tables with observed_at must define a composite B-tree index on (<key>, observed_at DESC)
-  IF EXISTS (
-    SELECT 1 FROM pg_attribute WHERE attrelid = v_relid AND attname = 'observed_at' AND NOT attisdropped
-  ) THEN
+  -- F-38: Observation tables flagged latest_per_key must define a composite B-tree index on (<key>, observed_at DESC)
+  IF v_latest_per_key THEN
     SELECT count(*) INTO v_cnt
     FROM pg_index i
     JOIN pg_attribute a2 ON a2.attrelid = i.indrelid AND a2.attnum = i.indkey[1] AND a2.attname = 'observed_at'

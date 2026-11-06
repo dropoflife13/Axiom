@@ -9,7 +9,7 @@ CREATE TABLE public.price_logs (
 );
 
 -- Layer 1: REVOKE UPDATE, DELETE, TRUNCATE
-REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM anon, authenticated, service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM PUBLIC, application, readonly_user;
 
 -- Layer 2: RLS Policies (SELECT and INSERT only)
 ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
@@ -17,13 +17,13 @@ ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow read access to price logs"
   ON public.price_logs
   FOR SELECT
-  TO authenticated
+  TO application
   USING (true);
 
 CREATE POLICY "Allow insert access to price logs"
   ON public.price_logs
   FOR INSERT
-  TO authenticated
+  TO application
   WITH CHECK (true);
 
 -- Layer 3: BEFORE UPDATE OR DELETE trigger raising exception

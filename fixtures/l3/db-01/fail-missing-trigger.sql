@@ -8,7 +8,7 @@ CREATE TABLE public.price_logs (
 );
 
 -- Layer 1: REVOKE
-REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM anon, authenticated, service_role;
+REVOKE UPDATE, DELETE, TRUNCATE ON TABLE public.price_logs FROM PUBLIC, application, readonly_user;
 
 -- Layer 2: RLS Policies (read/insert only)
 ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
@@ -16,7 +16,7 @@ ALTER TABLE public.price_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow read access"
   ON public.price_logs
   FOR SELECT
-  TO authenticated
+  TO application
   USING (true);
 
 -- Missing Layer 3: No BEFORE UPDATE OR DELETE trigger raising an exception!
