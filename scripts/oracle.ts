@@ -1083,12 +1083,8 @@ function runValidationSuite() {
   startPostgresContainer(containerName);
 
   try {
-    const goodDir = fs.existsSync(path.resolve('fixtures/oracle/good'))
-      ? path.resolve('fixtures/oracle/good')
-      : path.resolve('fixtures/task-v2/good');
-    const badDir = fs.existsSync(path.resolve('fixtures/oracle/bad'))
-      ? path.resolve('fixtures/oracle/bad')
-      : path.resolve('fixtures/task-v2/bad');
+    const goodDir = path.resolve('fixtures/task-v2/good');
+    const badDir = path.resolve('fixtures/task-v2/bad');
 
     const goodFiles = fs.readdirSync(goodDir).filter((f) => f.endsWith('.sql')).sort();
     const badFiles = fs.readdirSync(badDir).filter((f) => f.endsWith('.sql')).sort();
