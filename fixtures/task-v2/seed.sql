@@ -32,7 +32,7 @@ GRANT EXECUTE ON FUNCTION auth.jwt() TO PUBLIC, deployer, application, readonly_
 
 -- Default privileges so missing REVOKE statements are deterministically caught by F-19
 ALTER DEFAULT PRIVILEGES FOR ROLE deployer IN SCHEMA public
-  GRANT ALL ON TABLES TO PUBLIC, application, readonly_user;
+  GRANT ALL ON TABLES TO application, PUBLIC;
 
 SET ROLE deployer;
 
@@ -69,4 +69,3 @@ INSERT INTO public.customers (id, tenant_id) VALUES
   ('33333333-3333-3333-3333-333333333333', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
   ('44444444-4444-4444-4444-444444444444', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')
 ON CONFLICT DO NOTHING;
-
