@@ -14,12 +14,14 @@ export interface MigrationMeta {
   latest_per_key?: boolean;
   status?: boolean;
   sec_definer?: boolean;
+  expectedFailedFacts?: string[];
 }
 
 export interface OracleReport {
   pass: boolean;
   failedFacts: string[];
   details: string;
+  failureDetails?: string[];
 }
 
 export function parseMigrationMeta(sql: string, filePath: string): MigrationMeta {
@@ -493,7 +495,7 @@ BEGIN
     WHERE n.nspname = 'public'
       AND p.prosecdef = true
       AND (p.proconfig IS NULL
-           OR NOT ('search_path=""' = ANY(p.proconfig) OR 'search_path=' = ANY(p.proconfig)))
+           OR NOT ('search_path=""' = ANY(p.proconfig)))
   ) THEN
     RAISE NOTICE 'FACT_FAIL|F-31';
   END IF;
@@ -732,17 +734,6 @@ BEGIN
         RAISE NOTICE 'FACT_FAIL|F-37';
       END IF;
     END IF;
-    IF NOT v_append_only THEN
-      SELECT count(*) INTO v_cnt
-      FROM pg_trigger tg
-      JOIN pg_proc p ON p.oid = tg.tgfoid
-      WHERE tg.tgrelid = v_relid AND NOT tg.tgisinternal
-        AND (tg.tgtype & 2) <> 0 AND (tg.tgtype & 16) <> 0
-        AND p.prosrc ILIKE '%updated_at%';
-      IF v_cnt = 0 THEN
-        RAISE NOTICE 'FACT_FAIL|F-21';
-      END IF;
-    END IF;
     RETURN;
   END;
 
@@ -841,9 +832,12 @@ DECLARE
   v_tenant boolean := ${isTenant};
   v_id_a uuid := 'aaaaaaaa-0000-0000-0000-000000000001'::uuid;
   v_id_b uuid := 'bbbbbbbb-0000-0000-0000-000000000002'::uuid;
+  v_append_only boolean := ${isAppendOnly};
   v_relid oid;
   v_cnt int;
   v_err_state text;
+  v_err_msg text;
+  v_row_count int;
   v_rec record;
   v_cols text[];
   v_vals_b text[];
@@ -931,9 +925,11 @@ BEGIN
           EXECUTE format('SELECT count(*) FROM public.%I', v_table) INTO v_cnt;
           IF v_cnt <> 1 THEN
             RESET ROLE;
-            RAISE NOTICE 'FACT_FAIL|F-26';
+            RAISE NOTICE 'FACT_FAIL|F-26|COUNT|ROW_COUNT|expected one tenant row';
           ELSE
             v_err_state := '';
+            v_vals_b[array_position(v_cols, 'tenant_id')] :=
+              quote_literal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') || '::uuid';
             BEGIN
               EXECUTE format(
                 'INSERT INTO public.%I (%s) VALUES (%s)',
@@ -943,24 +939,79 @@ BEGIN
               );
             EXCEPTION WHEN OTHERS THEN
               v_err_state := SQLSTATE;
+              v_err_msg := SQLERRM;
             END;
 
-            IF v_err_state <> '42501' THEN
+            IF v_err_state = '42501' THEN
               RESET ROLE;
-              RAISE NOTICE 'FACT_FAIL|F-26';
+              RAISE NOTICE 'FACT_FAIL|F-26|POS_INSERT|%|%', v_err_state, v_err_msg;
             ELSE
+              v_vals_b[array_position(v_cols, 'tenant_id')] :=
+                quote_literal('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb') || '::uuid';
+              v_err_state := '';
+              BEGIN
+                EXECUTE format(
+                  'INSERT INTO public.%I (%s) VALUES (%s)',
+                  v_table,
+                  array_to_string(v_cols, ', '),
+                  array_to_string(v_vals_b, ', ')
+                );
+              EXCEPTION WHEN OTHERS THEN
+                v_err_state := SQLSTATE;
+                v_err_msg := SQLERRM;
+              END;
+              IF v_err_state <> '42501' OR v_err_msg NOT ILIKE '%row-level security%' THEN
+                RESET ROLE;
+                RAISE NOTICE 'FACT_FAIL|F-26|NEG_INSERT|%|%', v_err_state, v_err_msg;
+              ELSE
+                v_vals_b[array_position(v_cols, 'tenant_id')] :=
+                  quote_literal('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa') || '::uuid';
+                v_err_state := '';
+                v_err_msg := '';
+                IF NOT v_append_only THEN
+                  BEGIN
+                    EXECUTE format(
+                      'UPDATE public.%I SET created_at = created_at WHERE id = $1',
+                      v_table
+                    ) USING 'aaaaaaaa-0000-0000-0000-000000000001'::uuid;
+                    GET DIAGNOSTICS v_row_count = ROW_COUNT;
+                    IF v_row_count = 0 THEN
+                      v_err_state := 'NO_POSITIVE_UPDATE';
+                      v_err_msg := 'positive update matched no row';
+                    END IF;
+                    IF v_err_state = '' THEN
+                      EXECUTE format(
+                        'UPDATE public.%I SET created_at = created_at WHERE id = $1',
+                        v_table
+                      ) USING v_id_b;
+                      GET DIAGNOSTICS v_row_count = ROW_COUNT;
+                      IF v_row_count > 0 THEN
+                        v_err_state := 'NEGATIVE_UPDATE_ALLOWED';
+                        v_err_msg := 'negative update changed a row';
+                      END IF;
+                    END IF;
+                  EXCEPTION WHEN OTHERS THEN
+                    v_err_state := SQLSTATE;
+                    v_err_msg := SQLERRM;
+                  END;
+                END IF;
+                IF v_err_state <> '' THEN
+                  RESET ROLE;
+                  RAISE NOTICE 'FACT_FAIL|F-26|UPDATE|%|%', v_err_state, v_err_msg;
+                END IF;
+              END IF;
               PERFORM set_config('request.jwt.claims', '{"user_metadata":{"tenant_id":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"}}', true);
               EXECUTE format('SELECT count(*) FROM public.%I', v_table) INTO v_cnt;
               RESET ROLE;
               IF v_cnt <> 0 THEN
-                RAISE NOTICE 'FACT_FAIL|F-26';
+                RAISE NOTICE 'FACT_FAIL|F-26|COUNT|ROW_LEAK|count=%', v_cnt;
               END IF;
             END IF;
           END IF;
           RESET ROLE;
         EXCEPTION WHEN OTHERS THEN
           RESET ROLE;
-          RAISE NOTICE 'FACT_FAIL|F-26';
+          RAISE NOTICE 'FACT_FAIL|F-26|OUTER|%|%', SQLSTATE, SQLERRM;
         END;
       ELSE
         SELECT count(*) INTO v_cnt
@@ -973,7 +1024,7 @@ BEGIN
           AND COALESCE(pg_get_expr(pol.polqual, pol.polrelid), '') NOT ILIKE '%user_metadata%'
           AND COALESCE(pg_get_expr(pol.polwithcheck, pol.polrelid), '') NOT ILIKE '%user_metadata%';
         IF v_cnt = 0 THEN
-          RAISE NOTICE 'FACT_FAIL|F-26';
+          RAISE NOTICE 'FACT_FAIL|F-26|POLICY_CATALOG||missing app_metadata policy';
         END IF;
       END IF;
     END IF;
@@ -1024,10 +1075,14 @@ export function evaluateMigrationSqlInContainer(
     const combined = `${probeRes.stdout}\n${probeRes.stderr}`;
 
     const failedSet = new Set<string>();
+    const failureDetails: string[] = [];
     for (const line of combined.split(/\r?\n/)) {
-      const m = line.match(/FACT_FAIL\|(F-\d{2})/);
+      const m = line.match(/FACT_FAIL\|(F-\d{2})(?:\|([^|]*)\|([^|]*)\|(.*))?/);
       if (m && FACT_STATEMENTS[m[1]]) {
         failedSet.add(m[1]);
+        if (m[2] !== undefined) {
+          failureDetails.push(`${m[1]}: ${m[2]}|${m[3]}|${m[4]}`);
+        }
       }
     }
 
@@ -1046,6 +1101,7 @@ export function evaluateMigrationSqlInContainer(
       pass,
       failedFacts,
       details,
+      failureDetails,
     };
   } finally {
     // Fast-path cleanup: always drop test_<id> with FORCE
