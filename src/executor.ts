@@ -9,10 +9,41 @@ dotenv.config();
 const NVIDIA_BASE_URL =
   process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
-const MODEL = process.env.NVIDIA_CODE_MODEL || 'google/gemma-4-31b-it';
+export const REQUIRED_EXECUTOR_MODEL = 'google/gemma-4-31b-it';
 export const PROVIDER = 'nvidia';
 
-export function getProviderProvenance(requestedModel: string, returnedModel: string) {
+export function resolveExecutorModel(explicitModel?: string): string {
+  const resolved = (explicitModel ?? process.env.NVIDIA_EXECUTOR_MODEL ?? '').trim();
+  if (!resolved) {
+    throw new Error(
+      `[ABORT_NON_RETRYABLE] Executor model is an explicit required setting (${REQUIRED_EXECUTOR_MODEL}) with no silent default. Pass options.model or set NVIDIA_EXECUTOR_MODEL=${REQUIRED_EXECUTOR_MODEL}.`
+    );
+  }
+  if (resolved !== REQUIRED_EXECUTOR_MODEL) {
+    throw new Error(
+      `[ABORT_NON_RETRYABLE] Executor model must equal "${REQUIRED_EXECUTOR_MODEL}", got "${resolved}".`
+    );
+  }
+  return resolved;
+}
+
+export function assertModelMatch(requestedModel: string, returnedModel: string): void {
+  if (requestedModel !== REQUIRED_EXECUTOR_MODEL) {
+    throw new Error(
+      `[ABORT_NON_RETRYABLE] Requested model "${requestedModel}" does not equal required model "${REQUIRED_EXECUTOR_MODEL}".`
+    );
+  }
+  if (returnedModel !== requestedModel) {
+    throw new Error(
+      `[ABORT_NON_RETRYABLE] Returned model "${returnedModel}" does not match requested model "${requestedModel}".`
+    );
+  }
+}
+
+export function getProviderProvenance(
+  requestedModel: string,
+  returnedModel: string = requestedModel
+) {
   const factsPath = path.resolve('fixtures/task-v2/facts.json');
   return {
     provider: PROVIDER,
@@ -81,7 +112,7 @@ export async function generateAgentMarkdown(
   lesson?: string,
   options?: ExecutorOptions
 ): Promise<ExecutorResult> {
-  const model = options?.model || MODEL;
+  const model = resolveExecutorModel(options?.model);
   const temperature = options?.temperature ?? 0.1;
   const cacheDir = options?.cacheDir ?? DEFAULT_EXECUTOR_CACHE_DIR;
 
@@ -232,6 +263,8 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
   throw new Error(`[Executor] Failed after ${MAX_RETRIES} attempts.`);
 }
 
+export type GenerationStatus = 'ok' | 'empty' | 'length' | 'other';
+
 export interface SqlExecutorResult {
   sql: string;
   rawResponse: string;
@@ -240,11 +273,153 @@ export interface SqlExecutorResult {
   requestedModel: string;
   returnedModel: string;
   finishReason: string;
+  generationStatus?: GenerationStatus;
   usage?: {
     promptTokens: number;
     completionTokens: number;
     totalTokens: number;
   };
+}
+
+export function classifyGenerationStatus(
+  finishReason?: string,
+  sql?: string,
+  explicitStatus?: GenerationStatus
+): GenerationStatus {
+  if (
+    explicitStatus === 'ok' ||
+    explicitStatus === 'empty' ||
+    explicitStatus === 'length' ||
+    explicitStatus === 'other'
+  ) {
+    return explicitStatus;
+  }
+  const reason = (finishReason ?? '').trim().toLowerCase();
+  if (reason === 'length' || reason === 'max_tokens') {
+    return 'length';
+  }
+  if (reason === 'empty') {
+    return 'empty';
+  }
+  if (
+    reason.length > 0 &&
+    reason !== 'stop' &&
+    reason !== 'end_turn' &&
+    reason !== 'unknown'
+  ) {
+    return 'other';
+  }
+  if (!sql || !sql.trim()) {
+    return 'empty';
+  }
+  return 'ok';
+}
+
+export function coerceDeterministicGenerationFailure(
+  err: unknown,
+  requestedModel: string = REQUIRED_EXECUTOR_MODEL
+): SqlExecutorResult | null {
+  const message =
+    err && typeof err === 'object' && typeof (err as any).message === 'string'
+      ? (err as any).message
+      : String(err ?? '');
+  const errObj = (err && typeof err === 'object' ? err : {}) as Record<string, any>;
+  const returnedModel =
+    typeof errObj.returnedModel === 'string' && errObj.returnedModel.trim()
+      ? errObj.returnedModel
+      : requestedModel;
+  const usage =
+    errObj.usage && typeof errObj.usage === 'object'
+      ? errObj.usage
+      : { promptTokens: 0, completionTokens: 0, totalTokens: 0 };
+
+  if (
+    errObj.generationStatus === 'length' ||
+    errObj.finishReason === 'length' ||
+    /finish_reason\s*=\s*length|stopped at token limit/i.test(message)
+  ) {
+    return {
+      sql: '',
+      rawResponse: '',
+      fromCache: false,
+      requestedModel,
+      returnedModel,
+      finishReason: typeof errObj.finishReason === 'string' ? errObj.finishReason : 'length',
+      generationStatus: 'length',
+      usage,
+    };
+  }
+  if (
+    errObj.generationStatus === 'other' ||
+    errObj.finishReason === 'content_filter' ||
+    /content[_-\s]?filter/i.test(message)
+  ) {
+    return {
+      sql: '',
+      rawResponse: '',
+      fromCache: false,
+      requestedModel,
+      returnedModel,
+      finishReason:
+        typeof errObj.finishReason === 'string' ? errObj.finishReason : 'content_filter',
+      generationStatus: 'other',
+      usage,
+    };
+  }
+  if (
+    errObj.generationStatus === 'empty' ||
+    errObj.finishReason === 'empty' ||
+    /contained no final content|empty response/i.test(message)
+  ) {
+    return {
+      sql: '',
+      rawResponse: '',
+      fromCache: false,
+      requestedModel,
+      returnedModel,
+      finishReason: typeof errObj.finishReason === 'string' ? errObj.finishReason : 'stop',
+      generationStatus: 'empty',
+      usage,
+    };
+  }
+  return null;
+}
+
+export async function executeSqlWithPolicy(
+  executorFn: typeof generateSqlMigration,
+  taskPrompt: string,
+  table: string,
+  features: { tenant: boolean; append_only: boolean; ingestion: boolean },
+  lesson?: string,
+  options?: ExecutorOptions
+): Promise<SqlExecutorResult & { generationStatus: GenerationStatus }> {
+  const requestedModel = resolveExecutorModel(options?.model);
+  try {
+    const res = await executorFn(taskPrompt, table, features, lesson, options);
+    assertModelMatch(res.requestedModel, res.returnedModel);
+    const generationStatus = classifyGenerationStatus(
+      res.finishReason,
+      res.sql,
+      res.generationStatus
+    );
+    const sql = generationStatus === 'ok' ? res.sql : '';
+    return {
+      ...res,
+      sql,
+      generationStatus,
+    };
+  } catch (err) {
+    const coerced = coerceDeterministicGenerationFailure(err, requestedModel);
+    if (coerced) {
+      assertModelMatch(coerced.requestedModel, coerced.returnedModel);
+      return {
+        ...coerced,
+        sql: '',
+        generationStatus: coerced.generationStatus ?? 'other',
+      };
+    }
+    throw err;
+  }
 }
 
 export function stripSqlFences(raw: string): string {
@@ -265,7 +440,7 @@ export async function generateSqlMigration(
   lesson?: string,
   options?: ExecutorOptions
 ): Promise<SqlExecutorResult> {
-  const model = options?.model || MODEL;
+  const model = resolveExecutorModel(options?.model);
   const temperature = options?.temperature ?? 0;
   const cacheDir = options?.cacheDir ?? DEFAULT_EXECUTOR_CACHE_DIR;
 
@@ -293,6 +468,7 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
         cached.baseUrl === NVIDIA_BASE_URL &&
         cached.requestedModel === model
       ) {
+        assertModelMatch(cached.requestedModel, cached.returnedModel);
         let usage: SqlExecutorResult['usage'] | undefined;
         try {
           const parsedRaw = JSON.parse(cached.rawResponse);
@@ -306,18 +482,27 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
         } catch {
           // ignore
         }
+        const cachedStatus = classifyGenerationStatus(
+          cached.finishReason,
+          cached.sql,
+          cached.generationStatus
+        );
         return {
-          sql: cached.sql,
+          sql: cachedStatus === 'ok' ? cached.sql : '',
           rawResponse: cached.rawResponse,
           fromCache: true,
           cacheKey,
           requestedModel: cached.requestedModel,
           returnedModel: cached.returnedModel,
           finishReason: cached.finishReason ?? 'unknown',
+          generationStatus: cachedStatus,
           usage,
         };
       }
-    } catch {
+    } catch (err: any) {
+      if (err.message?.includes('[ABORT_NON_RETRYABLE]')) {
+        throw err;
+      }
       // Fall through and recompute if cache file is unreadable
     }
   }
@@ -381,11 +566,19 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       }
 
       const data: any = await response.json();
-      const finishReason = data.choices?.[0]?.finish_reason;
-      const rawContent = finalMessageContent(data.choices?.[0], 'SQL executor');
-      const sql = stripSqlFences(rawContent);
+      const choice = data.choices?.[0];
+      const finishReason: string = choice?.finish_reason ?? 'unknown';
+      const rawContent = typeof choice?.message?.content === 'string' ? choice.message.content : '';
+      const strippedContent = rawContent
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/<think>[\s\S]*$/gi, '')
+        .trim();
+      const candidateSql = stripSqlFences(strippedContent);
+      const generationStatus = classifyGenerationStatus(finishReason, candidateSql);
+      const sql = generationStatus === 'ok' ? candidateSql : '';
       const rawResponse = JSON.stringify(data);
-      const returnedModel = data.model || effectiveModel;
+      const returnedModel = data.model || '';
+      assertModelMatch(model, returnedModel);
       const provenance = getProviderProvenance(model, returnedModel);
       const usage = data.usage
         ? {
@@ -400,12 +593,31 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
           fs.mkdirSync(cacheDir, { recursive: true });
         }
         const tmpCachePath = `${cacheFilePath}.tmp.${process.pid}.${Date.now()}`;
-        fs.writeFileSync(
-          tmpCachePath,
-          JSON.stringify({ cacheKey, model, temperature, sql, rawResponse, finishReason, ...provenance }, null, 2),
-          'utf-8'
+        const cachePayload = JSON.stringify(
+          {
+            cacheKey,
+            model,
+            temperature,
+            sql,
+            rawResponse,
+            finishReason,
+            generationStatus,
+            ...provenance,
+          },
+          null,
+          2
         );
-        fs.renameSync(tmpCachePath, cacheFilePath);
+        fs.writeFileSync(tmpCachePath, cachePayload, 'utf-8');
+        try {
+          fs.renameSync(tmpCachePath, cacheFilePath);
+        } catch {
+          fs.writeFileSync(cacheFilePath, cachePayload, 'utf-8');
+          try {
+            fs.unlinkSync(tmpCachePath);
+          } catch {
+            // ignore cleanup error
+          }
+        }
       }
 
       return {
@@ -417,6 +629,7 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
         requestedModel: model,
         returnedModel,
         finishReason,
+        generationStatus,
       };
     } catch (err: any) {
       if (

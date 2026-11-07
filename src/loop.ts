@@ -104,6 +104,7 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
           `[MEMORY DISCARDED] Candidate lesson for ${pendingLesson.errorCode} did not pass verification; discarding.`
         );
         pendingLesson = null;
+        lesson = '';
       }
 
       lastErrors = verdict.errors;
@@ -165,12 +166,6 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
               newLesson = await advisor(firstError.code, firstError.detail || '');
             } catch (advisorErr: any) {
               log(`[ADVISOR_FATAL_ERROR] Advisor failed on ${firstError.code}: ${advisorErr.message}`);
-              attemptsTrace.push({
-                attempt,
-                path: 'advisor',
-                verdict: 'ADVISOR_ERROR',
-                errors: [{ code: 'ADVISOR_ERROR', detail: advisorErr.message }],
-              });
               throw new Error(`[ABORT_ADVISOR_FAILURE] ${advisorErr.message}`);
             }
 
@@ -190,11 +185,12 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
       }
     } catch (err: any) {
       log(`Error during attempt ${attempt}:`, err.message);
+      const advisorFailure = err.message?.includes('[ABORT_ADVISOR_FAILURE]');
       attemptsTrace.push({
         attempt,
         path: isHeavyAttempt ? 'tier3-heavy' : 'fast-path',
-        verdict: 'ERROR',
-        errors: [{ code: 'EXCEPTION', detail: err.message }],
+        verdict: advisorFailure ? 'ADVISOR_ERROR' : 'ERROR',
+        errors: [{ code: advisorFailure ? 'ADVISOR_ERROR' : 'EXCEPTION', detail: err.message }],
       });
 
       // Immediately abort loop if Billing Circuit Breaker, Advisor Failure, or non-retryable error tripped
@@ -237,6 +233,7 @@ export async function runReflexionLoop(options: LoopOptions = {}) {
   return {
     success: false,
     successViaTier0: false,
+    attempt: maxAttempts,
     attempts: maxAttempts,
     quarantined: true,
     trace: attemptsTrace,
@@ -249,7 +246,5 @@ if (
   path.resolve(process.argv[1]) ===
     path.resolve(new URL(import.meta.url).pathname.replace(/^\/([A-Z]:)/, '$1'))
 ) {
-  runReflexionLoop({ exitOnError: true });
-} else if (process.argv[1]?.endsWith('loop.ts') || process.argv[1]?.endsWith('loop.js')) {
   runReflexionLoop({ exitOnError: true });
 }

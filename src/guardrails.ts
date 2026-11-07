@@ -108,9 +108,19 @@ export function writeDailyBudgetAtomic(
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
+  const payload = JSON.stringify(state, null, 2);
   const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}`;
-  fs.writeFileSync(tmpPath, JSON.stringify(state, null, 2), 'utf-8');
-  fs.renameSync(tmpPath, filePath);
+  fs.writeFileSync(tmpPath, payload, 'utf-8');
+  try {
+    fs.renameSync(tmpPath, filePath);
+  } catch {
+    fs.writeFileSync(filePath, payload, 'utf-8');
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      // ignore cleanup error
+    }
+  }
 }
 
 export function resetBudgetGuard(): void {

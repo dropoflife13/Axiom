@@ -50,6 +50,7 @@ export async function generateLesson(
             { role: 'user', content: userPrompt },
           ],
           temperature: 0.3,
+          max_tokens: 4096,
         }),
         signal: abortSignal,
       });

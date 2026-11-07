@@ -1,4 +1,5 @@
 // src/memory.ts
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -16,6 +17,10 @@ export interface FeatureFlags {
   tenant: boolean;
   append_only: boolean;
   ingestion: boolean;
+  status?: boolean;
+  sec_definer?: boolean;
+  latest_per_key?: boolean;
+  view?: boolean;
 }
 
 export interface ObservedFeatures {
@@ -34,6 +39,7 @@ export interface Lesson {
   features?: FeatureFlags;
   observedFeatures?: ObservedFeatures;
   utilityScore?: number;
+  trainFailureRate?: number;
   tags?: string[];
   createdAt: string;
   lastUsedAt?: string;
@@ -78,9 +84,19 @@ function ensureDir(filePath: string): void {
 
 export function writeMemoryAtomic(filePath: string, data: Lesson[]): void {
   ensureDir(filePath);
+  const payload = JSON.stringify(data, null, 2);
   const tmpPath = `${filePath}.tmp.${process.pid}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}`;
-  fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8');
-  fs.renameSync(tmpPath, filePath);
+  fs.writeFileSync(tmpPath, payload, 'utf-8');
+  try {
+    fs.renameSync(tmpPath, filePath);
+  } catch {
+    fs.writeFileSync(filePath, payload, 'utf-8');
+    try {
+      fs.unlinkSync(tmpPath);
+    } catch {
+      // ignore cleanup error
+    }
+  }
 }
 
 export function sanitizeLessonText(raw: string): string {
@@ -312,14 +328,16 @@ export function computeFeatureOverlapScore(
 
 /**
  * Retrieves top-k lessons (default LESSON_TOP_K = 6) strictly by:
- * 1. Filtering out lessons whose feature prerequisites conflict with taskFeatures, and
+ * 1. Filtering to the task's applicable fact set (when provided) and compatible feature prerequisites, and
  * 2. Ranking compatible lessons by (utilityScore, featureMatchScore) descending.
  * Zero task text is inspected.
  */
 export function retrieveLessonsByFeatures(
   taskFeatures: FeatureFlags,
-  memoryOrPath: Lesson[] | string = DEFAULT_MEMORY_FILE,
-  topK: number = LESSON_TOP_K
+  memoryOrPath: readonly Lesson[] | Lesson[] | string = DEFAULT_MEMORY_FILE,
+  topK: number = LESSON_TOP_K,
+  applicableFactIds?: Iterable<string>,
+  readOnly: boolean = false
 ): Lesson[] {
   const isFilePath = typeof memoryOrPath === 'string';
   const memory = isFilePath ? loadMemory(memoryOrPath) : [...memoryOrPath];
@@ -332,10 +350,16 @@ export function retrieveLessonsByFeatures(
   }
   const uniqueLessons = Array.from(byCode.values());
 
-  // 1. Filter out lessons that are incompatible with taskFeatures
-  const compatible = uniqueLessons.filter((lesson) =>
-    isLessonCompatibleWithTask(taskFeatures, lesson)
-  );
+  const applicableSet = applicableFactIds ? new Set(applicableFactIds) : null;
+
+  // 1. Restrict to the task's applicable set (if provided) and filter out lessons incompatible with taskFeatures
+  const compatible = uniqueLessons.filter((lesson) => {
+    const factKey = lesson.factId ?? lesson.errorCode;
+    if (applicableSet && !applicableSet.has(factKey)) {
+      return false;
+    }
+    return isLessonCompatibleWithTask(taskFeatures, lesson);
+  });
 
   // 2. Score each compatible lesson by featureMatchScore and utilityScore
   const scored = compatible.map((lesson) => ({
@@ -344,11 +368,14 @@ export function retrieveLessonsByFeatures(
     utilityScore: lesson.utilityScore ?? 1,
   }));
 
-  // Rank compatible lessons by:
+  // Rank compatible lessons by observed train failure rate, then:
   // (a) whether utilityScore > 0 (lessons actually violated on Train beat unviolated baseline facts),
   // (b) featureMatchScore + utilityScore weighting,
   // (c) deterministic tie-breakers (lastUsedAt desc, errorCode asc).
   scored.sort((a, b) => {
+    const aFailureRate = a.lesson.trainFailureRate ?? 0;
+    const bFailureRate = b.lesson.trainFailureRate ?? 0;
+    if (bFailureRate !== aFailureRate) return bFailureRate - aFailureRate;
     const aActive = a.utilityScore > 0 ? 1 : 0;
     const bActive = b.utilityScore > 0 ? 1 : 0;
     if (bActive !== aActive) return bActive - aActive;
@@ -371,7 +398,7 @@ export function retrieveLessonsByFeatures(
 
   const selected = scored.slice(0, topK).map((s) => s.lesson);
 
-  if (isFilePath && selected.length > 0 && fs.existsSync(memoryOrPath)) {
+  if (!readOnly && isFilePath && selected.length > 0 && fs.existsSync(memoryOrPath)) {
     const now = new Date().toISOString();
     const injectedCodes = new Set(selected.map((b) => b.errorCode));
     let updated = false;
@@ -387,6 +414,35 @@ export function retrieveLessonsByFeatures(
   }
 
   return selected;
+}
+
+export function computeMemoryFileSha256(memoryFilePath: string = DEFAULT_MEMORY_FILE): string {
+  if (!fs.existsSync(memoryFilePath)) {
+    throw new Error(`Memory file not found at ${memoryFilePath}`);
+  }
+  const raw = fs.readFileSync(memoryFilePath);
+  return crypto.createHash('sha256').update(raw).digest('hex');
+}
+
+export function loadReadOnlyMemorySnapshot(memoryFilePath: string = DEFAULT_MEMORY_FILE): {
+  memory: readonly Lesson[];
+  sha256: string;
+} {
+  const sha256 = computeMemoryFileSha256(memoryFilePath);
+  const loaded = loadMemory(memoryFilePath);
+  const frozen = Object.freeze(
+    loaded.map((item) =>
+      Object.freeze({
+        ...item,
+        ...(item.features ? { features: Object.freeze({ ...item.features }) } : {}),
+        ...(item.observedFeatures
+          ? { observedFeatures: Object.freeze({ ...item.observedFeatures }) }
+          : {}),
+        ...(item.tags ? { tags: Object.freeze([...item.tags]) as unknown as string[] } : {}),
+      })
+    )
+  );
+  return { memory: frozen, sha256 };
 }
 
 export function formatRetrievedLessons(lessons: Lesson[]): string {
