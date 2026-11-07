@@ -140,10 +140,26 @@ function main(): void {
       throw new Error('Advisor distillation requires --confirm-llm; no proposal was written.');
     }
   }
-  void buildMemoryProposal(calibration, confirmLlm, generateLesson, tasksPath).then((lessons) => {
+  const proposalPath = path.resolve('out/proposed/memory.proposed.json');
+  const distilledCache = new Map<string, string>();
+  if (fs.existsSync(proposalPath)) {
+    try {
+      const prev = JSON.parse(fs.readFileSync(proposalPath, 'utf8')) as {
+        lessons?: Array<{ factId?: string; origin?: string; lesson?: string }>;
+      };
+      for (const item of prev.lessons ?? []) {
+        if (item.factId && item.origin === 'distilled' && item.lesson) {
+          distilledCache.set(item.factId, item.lesson);
+        }
+      }
+    } catch {
+      // ignore invalid partial cache
+    }
+  }
+  const writeProposalSnapshot = (lessons: unknown[]) => {
     fs.mkdirSync(path.resolve('out/proposed'), { recursive: true });
     fs.writeFileSync(
-      path.resolve('out/proposed/memory.proposed.json'),
+      proposalPath,
       JSON.stringify(
         {
           lessons,
@@ -157,6 +173,25 @@ function main(): void {
         2
       )
     );
+  };
+  const cachedDistill = async (factId: string, statement: string): Promise<string> => {
+    const cached = distilledCache.get(factId);
+    if (cached) {
+      return cached;
+    }
+    const text = await generateLesson(factId, statement);
+    distilledCache.set(factId, text);
+    writeProposalSnapshot(
+      Array.from(distilledCache.entries()).map(([id, lesson]) => ({
+        factId: id,
+        origin: 'distilled',
+        lesson,
+      }))
+    );
+    return text;
+  };
+  void buildMemoryProposal(calibration, confirmLlm, cachedDistill, tasksPath).then((lessons) => {
+    writeProposalSnapshot(lessons);
   });
 }
 

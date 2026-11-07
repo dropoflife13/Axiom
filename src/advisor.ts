@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { assertBudgetAvailable } from './guardrails.js';
+import { assertBudgetAvailable, BUDGET_GUARD } from './guardrails.js';
 dotenv.config();
 
 const NVIDIA_BASE_URL =
@@ -37,6 +37,8 @@ export async function generateLesson(
 
   while (attempt < MAX_RETRIES) {
     try {
+      const reqSignal =
+        attempt === 0 ? abortSignal : AbortSignal.timeout(BUDGET_GUARD.callTimeoutMs);
       const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
@@ -52,7 +54,7 @@ export async function generateLesson(
           temperature: 0.3,
           max_tokens: 4096,
         }),
-        signal: abortSignal,
+        signal: reqSignal,
       });
 
       if (response.status === 429 || response.status === 503) {
