@@ -57,44 +57,56 @@ The task set is frozen before evaluation:
 
 Each task includes a migration prompt, table and feature flags, applicable
 facts, and a deterministic set of three to five bound facts stored in
-`fixtures/task-v2/tasks.json`. Bound facts are selected using Condition A
-development-split pass rates by `loadDiscriminatingFacts` and
-`selectBoundFactsForTask` in
-[`scripts/rescore-condition-a.ts`](../scripts/rescore-condition-a.ts):
-`loadDiscriminatingFacts` reads `out/condition-a-dev-rescored.json` and defines
-discriminating facts as those with Condition A development `passRate` in
-`[0.1, 0.8]`, while `selectBoundFactsForTask` hashes `taskId` (FNV-1a) to set
-`targetTotal = (seed % 3) + 3` (`3`, `4`, or `5` bound facts) and deterministically
-samples `targetTotal - numNonDisc` facts from the task's discriminating
-applicable facts and at most one (`numNonDisc = 1` when `targetTotal > 3`) from
-its non-discriminating applicable facts (backfilling from non-discriminating
-facts if fewer than three are selected). All applicable facts remain available
-as secondary telemetry, but bound facts determine the primary task-level score.
+`fixtures/task-v2/tasks.json`. Bound facts are selected exclusively from
+Condition A training-split (`T-001`..`T-040`) pass rates by
+`candidateFactsForRule` and `selectBoundFacts` in
+[`scripts/propose-bound-facts.ts`](../scripts/propose-bound-facts.ts) under the
+committed `R2` rule (`--rule R2`) and applied via
+[`scripts/apply-bound-facts.ts`](../scripts/apply-bound-facts.ts):
+`candidateFactsForRule` reads `out/train-calibration.json` and defines bound-fact
+candidates as active Oracle-probed facts that are satisfied by validated golden
+SQL, have `applicableCount >= 3` on Train, and have Condition A training
+`passRate <= 0.80` (`trainFailureRate >= 0.20`, yielding 18 candidate facts: 11
+in `[0.10, 0.80]` and 7 house-convention floor facts at `0.00`). For each task,
+`selectBoundFacts` derives a deterministic seed from `SHA-256(task.id)` to set
+`target = 3 + (seed % 3)` (`3`, `4`, or `5` bound facts) and selects up to
+`target` facts from the task's applicable candidate facts (backfilling from
+remaining applicable facts only if fewer than three candidates apply; across all
+200 tasks, zero tasks require backfill). All applicable facts remain available
+as secondary telemetry, while bound facts determine the primary task-level score.
 
 Lessons are stored in `.axiom-state/memory.json`, which is loaded once in
 read-only mode at ablation startup and verified by SHA-256 before and after the
-run. Before the held-out run, `ensureSqlTrainMemory` in
-[`src/eval/ablation.ts`](../src/eval/ablation.ts) prepares lessons from the
-training split using the train-split failure counts loaded by
-`loadTrainFailureFrequency` from `out/train-calibration.json` (produced by
-[`scripts/calibrate-train-failure-frequency.ts`](../scripts/calibrate-train-failure-frequency.ts))
-and records observed feature flags from each training task's real flags
-(`tenant`, `append_only`, `ingestion`, `status`, `sec_definer`,
-`latest_per_key`, and `view`). When a fact has training exposure, the Advisor
-distills its canonical fact statement into a short lesson; otherwise the
-canonical statement is retained. For Conditions C and C0, retrieval first
-restricts candidate lessons to the task's applicable set (within the same
-eligible fact set Condition B uses), filters by feature-flag compatibility, and
-ranks up to `LESSON_TOP_K = 6` lessons.
+run. Before the held-out run, [`scripts/build-sql-memory.ts`](../scripts/build-sql-memory.ts)
+builds `.axiom-state/memory.json` exclusively from the training calibration
+(`out/train-calibration.json`) and records observed feature-flag coverage
+(`seenWhenTenantTrue/False`, `seenWhenAppendOnlyTrue/False`,
+`seenWhenIngestionTrue/False`) from each training task's real derived flags.
+When a training-applicable fact has at least one Condition A training failure
+(`failedCount > 0`), the Advisor distills its canonical statement into a single
+rule (`origin: 'distilled'`); when a training-applicable fact has zero training
+failures (`failedCount === 0`), its canonical statement is retained verbatim
+(`origin: 'verbatim'`). For Conditions C and C0, retrieval in
+[`src/eval/ablation.ts`](../src/eval/ablation.ts) and
+[`src/memory.ts`](../src/memory.ts) restricts candidate lessons to the task's
+applicable set (within the same 34-fact active eligible set Condition B uses),
+filters by structural feature-flag compatibility, and selects up to
+`SQL_RETRIEVAL_TOP_K = 10` lessons (chosen via the pre-registered Dev K-sweep in
+[`scripts/report-dev-k-sweep.ts`](../scripts/report-dev-k-sweep.ts), where
+$K = 10$ is the smallest budget in $\{6, 8, 10, 12, 15, 20\}$ achieving $\ge 0.80$
+mean retrievable bound-fact coverage on Dev under `R2`, reaching `0.8288`).
 
-The registry contains 39 facts, while the current persisted memory contains 32
-lessons: 14 are Advisor-distilled and 18 retain verbatim canonical statements.
-The remaining seven registry facts have no persisted lesson. When more than
-six compatible lessons match, retrieval orders them by positive utility
-(`utilityScore > 0`) first, then by `featureMatchScore * 10 + utilityScore`,
-then by feature-match score, utility score, `lastUsedAt` descending, and
-`errorCode` ascending. The first six in that deterministic ordering are
-injected.
+The registry contains 39 facts (34 active confirmed/owner-adopted facts and 5
+inactive `PROPOSED`/`UNCONFIRMED` facts), while the persisted SQL memory contains
+31 training-applicable lessons: 29 are Advisor-distilled (`failedCount > 0` on
+Train) and 2 (`F-09` and `F-34`) retain verbatim canonical statements
+(`failedCount === 0` on Train). Three active registry facts (`F-12`, `F-31`, and
+`F-38`) have zero applicable training tasks and therefore no persisted lesson.
+When more than `SQL_RETRIEVAL_TOP_K = 10` compatible applicable lessons match a
+task, retrieval orders them by `trainFailureRate` descending, then by positive
+utility (`utilityScore > 0`), then by `featureMatchScore * 10 + utilityScore`,
+feature-match score, utility score, `lastUsedAt` descending, and `errorCode`
+ascending. The first ten in that deterministic ordering are injected.
 
 ## Experimental Setup
 
@@ -105,21 +117,29 @@ once per test task:
 | Condition | Prompt treatment |
 |---|---|
 | A | No memory and no hints. |
-| B | Static injection of all eligible canonical fact statements. |
-| C | Retrieval and injection of up to six feature-matched memory lessons. |
-| C0 | The same retrieval as C, but each retrieved item is injected as the canonical Oracle fact statement verbatim rather than as an Advisor-distilled lesson. |
-| D | A placebo containing true but task-irrelevant PostgreSQL tips. |
+| B | Static injection of all 34 active eligible canonical fact statements. |
+| C | Retrieval and injection of up to ten (`SQL_RETRIEVAL_TOP_K = 10`) feature-compatible applicable memory lessons. |
+| C0 | The same retrieval and ordering as C, but each retrieved item is injected as the canonical Oracle fact statement verbatim rather than as an Advisor-distilled lesson. |
+| D | A placebo containing true but task-irrelevant PostgreSQL tips outside the task's applicable fact set. |
 | E_B | Condition B with the Tier 0 measurement path (`reusedFromCondition: 'B'`). SQL has no safe generic Tier 0 rewrite, so E_B reuses Condition B's cached generation and records its Oracle evaluation explicitly. |
 
 For each task-condition tuple in Conditions A, B, C, C0, and D, the NVIDIA NIM
 Executor generates one SQL migration at temperature 0, while Condition E_B
 reuses Condition B's generation (`reusedFromCondition: 'B'`), yielding 720
 scored trials from 600 independent generations (E_B reuses Condition B's
-generation). Each trial's migration is evaluated by the PostgreSQL Oracle.
-There is no in-trial retry and no Advisor call. The runner checkpoints
-completed tuples in `.axiom-state/ablation-v2-checkpoint.json` and waits
-between API calls so an interrupted run can resume without repeating completed
-tuples.
+generation). Transient provider errors (HTTP 429, 5xx, network/request timeouts)
+are retried with backoff and halt the process without recording an incomplete
+trial if retries are exhausted (preserving lossless checkpoint resumption).
+Deterministic generation failures—empty output (`generationStatus: 'empty'`),
+token-limit truncation (`finish_reason === 'length'`, `generationStatus: 'length'`),
+or content filtering / other non-stop completions (`generationStatus: 'other'`)—do
+not abort the run: the runner records the trial with `generatedSql: ""`, skips
+Oracle evaluation, and sets `boundFactFraction = 0`, `boundPassed = false`, and
+`failedFacts = []`. Each `generationStatus: 'ok'` trial's migration is evaluated
+by the PostgreSQL Oracle. There is no in-trial self-healing retry and no Advisor
+call during evaluation. The runner checkpoints completed tuples in
+`.axiom-state/ablation-v2-checkpoint.json` and waits between API calls so an
+interrupted run can resume without repeating completed tuples.
 
 The ablation Executor model is `google/gemma-4-31b-it`, configured as an
 explicit required setting with no silent default and verified by asserting
@@ -154,26 +174,48 @@ Oracle's failed set, the trial records `tableMissing = true` and counts all
 bound facts as failed (`boundPassed = false`, `boundFactFraction = 0`) while
 keeping the Oracle's reported `failedFacts` unchanged. Each trial also records
 `migrationExitNonZero` to indicate whether the migration's `psql` execution
-returned a non-zero exit status. Raw all-fact Pass@1 is diagnostic telemetry,
-not the primary metric.
+returned a non-zero exit status, as well as `generationStatus` (`'ok' | 'empty' | 'length' | 'other'`).
+Raw all-fact Pass@1 is diagnostic telemetry, not the primary metric.
 
-The runner reports Wilson 95% intervals for raw Pass@1 and bound-fact Pass@1.
-It reports paired McNemar statistics for Condition C against
-A, B, C0, and D, using both the raw and bound-fact binary outcomes. The current
-runner does not implement a continuous paired test for the primary metric or
-Holm correction; this document therefore makes no claim that those analyses
-are produced.
+The offline analysis pipeline in [`scripts/analyze-ablation-v2.ts`](../scripts/analyze-ablation-v2.ts)
+computes all confirmatory and exploratory statistics once the 720 held-out
+trials are complete:
 
-The report also includes failures by fact ID, average LLM calls per task,
-average tokens per task, retrieved fact IDs, and bound-fact fractions.
+1. **Primary Endpoint Inference:** For each of the four confirmatory contrasts
+   (`C_vs_A`, `C_vs_B`, `C_vs_C0`, and `C_vs_D`), the analyzer computes a
+   two-sided paired sign-flip randomization p-value (`signFlipPValue`, `100,000`
+   iterations, xorshift32 seed `20260101`) and a paired percentile bootstrap
+   95% confidence interval (`ci95`, `10,000` resamples) on task-paired
+   `boundFactFraction` differences across the 120 test tasks.
+2. **Secondary Endpoint Inference:** For each of the four confirmatory contrasts,
+   the analyzer computes the exact two-sided McNemar test on paired binary
+   `boundPassed` outcomes alongside Wilson 95% score intervals per condition.
+3. **Multiplicity Control:** Holm-Bonferroni step-down adjustment is applied
+   separately across the four primary sign-flip p-values (`holmPrimaryPValues`)
+   and the four secondary exact McNemar p-values (`holmSecondaryPValues`).
+4. **Exploratory Analyses (Outside the Holm Family):** The analyzer also reports
+   an exploratory sensitivity analysis (`sensitivityAnalysis`) excluding tasks
+   where either compared condition has `generationStatus !== 'ok'` or
+   `migrationExitNonZero === true`, an exploratory per-cell analysis
+   (`perCellAnalysis`) across the 8 `(tenant, append_only, ingestion)` feature
+   cells with equal-weight cell-stratified bootstrap 95% confidence intervals
+   and an exact cell-level sign-flip test over the 8 cell means, lesson-origin
+   splits (`lessonOriginAnalysis`), retrieval coverage (`retrievalOverlap`), and
+   per-fact retrieval stratification (`perFactRetrievalAnalysis`).
+
+The report also includes `generationStatus` counts per condition, failures by
+fact ID, average LLM calls per task, average tokens per task and prompt-token
+cost ratio (`meanPromptTokens_C / meanPromptTokens_B`), retrieved fact IDs, and
+bound-fact fractions.
 
 ## Limitations
 
 Each task-condition cell has one repeat at temperature 0, so provider-side
 nondeterminism remains possible. The study uses one model configuration.
 Bound facts limit per-task scoring to three to five facts. Retrieval is capped
-at six lessons, so a bound fact outside the retrieved set cannot be helped by
-Condition C or C0.
+at ten lessons (`SQL_RETRIEVAL_TOP_K = 10`, with $K = 6$ documented as a
+budget-matched secondary configuration), so a bound fact outside the retrieved
+top-ten set cannot be helped by Condition C or C0.
 
 ## Infrastructure and Provenance
 
@@ -182,21 +224,25 @@ canonical database state from the repository seed. The Executor and Advisor
 use NVIDIA NIM at `https://integrate.api.nvidia.com/v1`; credentials are read
 from environment variables and are never included in reports or source.
 
-Experiment cache entries and reports are required to record the provider, base
-URL, requested model, API-returned model, Oracle commit hash, and SHA-256 of
-`facts.json`. These fields prevent stale results from being treated as
-evidence for a different provider or repository state.
+Experiment cache entries, calibration artifacts, and trial reports record the
+provider, base URL, requested model, API-returned model, finish reason,
+generation status, Oracle commit hash, SHA-256 of `facts.json`, full-file
+`tasksSha256`, and bound-fact-invariant `taskContentSha256`. These fields
+prevent stale results from being treated as evidence for a different provider or
+repository state while allowing bound-fact proposals derived from Train
+calibration to be applied without invalidating calibration task-content hashes.
 
 Earlier Groq/Gemini attempts encountered provider rate limits and are not part
 of the NVIDIA experiment. Their outputs are not used for conclusions.
 
 ## Status
 
-The task definitions, 39-fact registry, Oracle contract, retrieval design, and
-six-condition evaluation protocol are defined in the repository. The active
-720-trial checkpoint is maintained separately from this paper. This document
-reports the implemented design and method only; it intentionally reports no
-held-out experimental results.
+The task definitions, 39-fact registry, Oracle contract, `R2` bound-fact
+assignments, $K = 10$ retrieval budget, and six-condition evaluation and
+analysis protocol are committed in the repository. The active 720-trial
+checkpoint is maintained separately from this paper. This document reports the
+implemented design and method only; it intentionally reports no held-out
+experimental results.
 
 ## Future Work
 

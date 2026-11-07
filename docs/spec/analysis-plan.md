@@ -10,21 +10,21 @@ This document specifies the pre-registered experimental design, hypotheses, endp
 
 The task benchmark comprises 200 PostgreSQL 16 migration tasks partitioned into three disjoint splits across eight structural feature cohorts (`C1`–`C8`):
 
-- **Train (`T-001`..`T-040`, 40 tasks):** Used exclusively for Condition A baseline failure-rate calibration, discriminating bound-fact identification, and memory lesson construction.
+- **Train (`T-001`..`T-040`, 40 tasks):** Used exclusively for Condition A baseline failure-rate calibration, bound-fact candidate identification, and memory lesson construction.
 - **Dev (`D-001`..`D-040`, 40 tasks):** Used exclusively to select the retrieval budget $K$ and verify pipeline readiness prior to held-out evaluation.
 - **Test (`H-001`..`H-120`, 120 tasks):** Held-out evaluation split on which all primary and secondary comparisons are conducted.
 
-Bound-fact selection uses Train calibration only. Candidate bound facts are restricted to active Oracle-probed facts that are applicable to the task, satisfied by the task's validated golden SQL, and fall within the Train Condition A pass-rate discrimination interval $[0.10, 0.80]$. Between three and five bound facts per task are assigned deterministically using a SHA-256 seed derived from the task identifier.
+Bound-fact selection uses Train calibration only (`out/train-calibration.json`) under the committed `R2` rule (`scripts/propose-bound-facts.ts --rule R2`). Candidate bound facts are restricted to active Oracle-probed facts that are applicable to the task, satisfied by the task's validated golden SQL (200/200 golden migrations pass), have `applicableCount >= 3` on Train, and have Condition A Train `passRate <= 0.80` (`trainFailureRate >= 0.20`, comprising 18 candidate facts: 11 facts in $[0.10, 0.80]$ and 7 house-convention floor facts at $0.00$, aligning the bound-fact candidate pool directly with the retrieval ranking). Between three and five bound facts per task are assigned deterministically using a SHA-256 seed derived from the task identifier.
 
 ### Conditions
 
 Each held-out Test task (`H-001`..`H-120`) is evaluated under six conditions at temperature `0` with one generation per `(task, condition)` pair (`720` total trials):
 
 - **Condition A (Zero-Shot Baseline):** Task prompt, target table name, and task feature flags without house-convention hints or retrieved lessons.
-- **Condition B (Full Static Spec Dump):** Task prompt augmented with all 32 eligible confirmed/owner-adopted house-convention facts injected verbatim into the system prompt.
-- **Condition C (Feature-Indexed Memory Retrieval — Distilled):** Task prompt augmented with up to $K$ applicable lessons retrieved from `.axiom-state/memory.json` by structural feature overlap and historical utility score, using Advisor-distilled rules for facts that failed during Train calibration and verbatim statements otherwise.
-- **Condition C0 (Feature-Indexed Memory Retrieval — Verbatim Control):** Identical retrieval ranking and top-$K$ selection as Condition C, but substituting canonical verbatim fact statements for every retrieved lesson to isolate the effect of Advisor distillation from feature-indexed retrieval.
-- **Condition D (Length-Matched Placebo Hints):** Task prompt augmented with generic PostgreSQL style tips containing no house-convention parameters.
+- **Condition B (Full Static Spec Dump):** Task prompt augmented with all 34 active eligible confirmed/owner-adopted house-convention facts injected verbatim into the system prompt.
+- **Condition C (Feature-Indexed Memory Retrieval — Distilled):** Task prompt augmented with up to $K = 10$ (`SQL_RETRIEVAL_TOP_K = 10`) applicable lessons retrieved from `.axiom-state/memory.json` by structural feature compatibility, Train failure-rate ranking, and historical utility score, using Advisor-distilled rules for facts that failed during Train calibration (29 lessons) and verbatim statements for facts with zero Train failures (2 lessons: `F-09`, `F-34`).
+- **Condition C0 (Feature-Indexed Memory Retrieval — Verbatim Control):** Identical retrieval ranking and top-$K$ ($K = 10$) selection as Condition C, but substituting canonical verbatim fact statements for every retrieved lesson to isolate the effect of Advisor distillation from feature-indexed retrieval.
+- **Condition D (Length-Matched Placebo Hints):** Task prompt augmented with generic PostgreSQL style tips outside the task's applicable fact set containing no house-convention parameters.
 - **Condition E_B (Post-Check Reference on Condition B):** Deterministic post-check evaluation reusing Condition B's cached generation (`reusedFromCondition = 'B'`).
 
 ### Trial Definition
@@ -64,13 +64,14 @@ All confirmatory comparisons pair trials by `taskId` across the $n = 120$ held-o
 
 Exploratory analyses are reported without multiplicity adjustment and are kept strictly outside the Holm-Bonferroni confirmatory family:
 
+- **Per-Cell Analysis (`perCellAnalysis`):** For each of the 8 `(tenant, append_only, ingestion)` structural feature cells, reports the paired mean difference (`C` vs. `A`, `B`, `C0`, `D`) on `boundFactFraction`, an equal-weight cell-stratified combined estimate (mean of the 8 cell means) with a within-cell bootstrap 95% confidence interval (`10,000` resamples, seed `20260101`), and an exact cell-level sign-flip randomization test ($2^m$ sign configurations across the $m \le 8$ populated cells) treating the 8 cell means as the exchangeability units.
 - **Lesson Origin Split (`lessonOriginAnalysis`):** Partitions tasks in the `C` vs. `C0` comparison into (a) tasks where at least one retrieved lesson has `distilled` origin and (b) tasks where all retrieved lessons have `verbatim` origin. The all-verbatim subset serves as an internal negative control because Conditions C and C0 inject identical lesson text on those tasks.
 - **Retrieval Overlap (`retrievalOverlap`):** Reports for Conditions C and C0 the distribution and mean fraction of a task's bound facts covered by the retrieved top-$K$ lesson set, alongside mean bound-fact compliance on full-overlap versus partial-overlap task subsets.
 - **Per-Fact Retrieval Analysis (`perFactRetrievalAnalysis`):** Stratifies `(task, boundFact)` pairs in Conditions C and C0 against Condition A into retrieved bound facts versus non-retrieved bound facts, where non-retrieved bound-fact pairs serve as a negative control.
 
 ## Retrieval Budget
 
-The retrieval budget $K$ is selected on the Dev split (`D-001`..`D-040`) prior to held-out Test execution as the smallest value in $\{6, 8, 10, 12, 15, 20\}$ for which the Dev mean retrievable bound-fact fraction, computed with the installed memory, reaches `0.80`. $K = 6$ is documented as the budget-matched secondary configuration.
+The retrieval budget $K$ is selected on the Dev split (`D-001`..`D-040`) prior to held-out Test execution as the smallest value in $\{6, 8, 10, 12, 15, 20\}$ for which the Dev mean retrievable bound-fact fraction, ranked by Train failure rate, reaches `0.80`. Under `R2`, the Dev K-sweep (`scripts/report-dev-k-sweep.ts`) yields mean retrievable bound-fact fractions of `0.5067` ($K = 6$), `0.6975` ($K = 8$), `0.8288` ($K = 10$, `18/40 = 45.0%` full coverage, vs. `0.4810` random-draw baseline), `0.9467` ($K = 12$), `0.9900` ($K = 15$), and `1.0000` ($K = 20$). Accordingly, $K = 10$ (`SQL_RETRIEVAL_TOP_K = 10`) is locked as the primary retrieval budget, and $K = 6$ is documented as the budget-matched secondary configuration.
 
 ## Data and Exclusions
 
