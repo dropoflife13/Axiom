@@ -18,6 +18,9 @@ import {
   TaskV2Item,
   TaskRecallResult,
   evaluateFeatureRetrievalForTask,
+  getTaskApplicableFacts,
+  getTaskRealFlags,
+  loadTrainFailureFrequency,
 } from '../src/eval/ablation.js';
 
 interface TasksFile {
@@ -34,32 +37,11 @@ interface TasksFile {
   test: TaskV2Item[];
 }
 
-/**
- * Train failure frequency (utilityScore) for each fact across the 40 Train tasks:
- * Environment-specific house conventions (F-19, F-20, F-21, F-25, F-26, F-31, F-32, F-34, F-36, F-37, F-38, F-39, F-16..F-18, F-22)
- * are repeatedly violated and fixed during Train, whereas standard textbook SQL types (uuid, timestamptz, text, numeric, inet, jsonb)
- * are already satisfied by baseline PostgreSQL generation (utilityScore = 0).
- */
-const TRAIN_FAILURE_FREQUENCY: Record<string, number> = {
-  'F-20': 19, // Append-only exact audit log exception message
-  'F-21': 19, // Mutable BEFORE UPDATE trigger advancing updated_at
-  'F-37': 19, // Ingestion BEFORE INSERT trigger forcing NEW.received_at = now()
-  'F-25': 18, // Tenant FORCE ROW LEVEL SECURITY
-  'F-26': 18, // Tenant RLS scoping by app_metadata.tenant_id
-  'F-36': 17, // Append-only nullable supersedes_id self-FK
-  'F-39': 16, // View WITH (security_invoker = true)
-  'F-38': 15, // Observation composite index (key, observed_at DESC)
-  'F-32': 15, // Ingestion UNIQUE constraint on idempotency_key
-  'F-34': 12, // Ingestion/counter CHECK (<col> >= 0) constraint
-  'F-19': 28, // Universal REVOKE ALL FROM PUBLIC... and exact role grants
-  'F-31': 22, // Universal SECURITY DEFINER SET search_path = ''
-  'F-18': 8,  // Universal idx_<table>_<col> index naming
-  'F-22': 7,  // Universal FK leading-column index
-  'F-17': 6,  // Universal chk_<table>_<col> check constraint naming
-  'F-16': 5,  // Universal fk_<table>_<col> FK constraint naming
-};
-
-export function buildOracleMemory(trainTasks: TaskV2Item[]): Lesson[] {
+export function buildOracleMemory(
+  trainTasks: TaskV2Item[],
+  calibrationPath: string = path.resolve('out', 'train-calibration.json')
+): Lesson[] {
+  const failureFrequency = loadTrainFailureFrequency(calibrationPath);
   const now = '2026-11-06T00:00:00.000Z';
   const tmpMemoryPath = path.resolve(
     'out',
@@ -72,8 +54,9 @@ export function buildOracleMemory(trainTasks: TaskV2Item[]): Lesson[] {
   try {
     for (const [factId, statement] of Object.entries(FACT_STATEMENTS)) {
       const matching = trainTasks.filter((t) =>
-        getApplicableFacts(t.features).includes(factId)
+        getApplicableFacts(getTaskRealFlags(t)).includes(factId)
       );
+      if (matching.length === 0) continue;
 
       // Interleave matching Train tasks round-robin across cohorts so observations span all applicable cohorts
       const byCohort = new Map<string, TaskV2Item[]>();
@@ -93,7 +76,7 @@ export function buildOracleMemory(trainTasks: TaskV2Item[]): Lesson[] {
         }
       }
 
-      const violationCount = TRAIN_FAILURE_FREQUENCY[factId] ?? 0;
+      const violationCount = failureFrequency[factId] ?? 0;
       if (violationCount > 0) {
         for (let i = 0; i < violationCount; i++) {
           const trainTask = interleaved[i % interleaved.length];
@@ -210,7 +193,8 @@ function runDevRecallGate() {
         task.features,
         violatedFacts,
         oracleMemory,
-        LESSON_TOP_K
+        LESSON_TOP_K,
+        getTaskApplicableFacts(task)
       );
 
       taskResults.push({
@@ -293,4 +277,6 @@ function runDevRecallGate() {
   }
 }
 
-runDevRecallGate();
+if (process.argv[1] && path.resolve(process.argv[1]).endsWith('dev-recall-gate.ts')) {
+  runDevRecallGate();
+}
