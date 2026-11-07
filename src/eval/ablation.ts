@@ -152,6 +152,9 @@ interface Trial {
   taskId: string;
   passRaw: boolean;
   passWithTier0: boolean;
+  boundFacts: string[];
+  boundPassed: boolean;
+  boundFactFraction: number;
   failedFacts: string[];
   oracleFailedFacts: string[];
   postTier0FailedFacts: string[];
@@ -240,6 +243,12 @@ function buildTrial(
   );
   const failedFacts = oracle.failedFacts;
   const passRaw = failedFacts.length === 0;
+  const failedSet = new Set(failedFacts);
+  const boundFacts = task.boundFacts ?? [];
+  const boundPassedCount = boundFacts.filter((f) => !failedSet.has(f)).length;
+  const boundPassed = boundFacts.every((f) => !failedSet.has(f));
+  const boundFactFraction =
+    boundFacts.length > 0 ? Number((boundPassedCount / boundFacts.length).toFixed(4)) : 1;
 
   // The SQL evaluation surface has no safe generic Tier 0 rewrite. E_B therefore
   // records the deterministic post-check explicitly without fabricating a fix.
@@ -248,6 +257,9 @@ function buildTrial(
     taskId: task.id,
     passRaw,
     passWithTier0: passRaw,
+    boundFacts,
+    boundPassed,
+    boundFactFraction,
     failedFacts,
     oracleFailedFacts: oracle.failedFacts,
     postTier0FailedFacts: failedFacts,
@@ -262,8 +274,13 @@ function buildTrial(
 function summarize(condition: ConditionId, trials: Trial[], all: Trial[]) {
   const rawPasses = trials.filter((trial) => trial.passRaw).length;
   const tier0Passes = trials.filter((trial) => trial.passWithTier0).length;
+  const boundPasses = trials.filter((trial) => trial.boundPassed).length;
+  const meanBoundFactFraction = trials.length
+    ? Number((trials.reduce((s, t) => s + (t.boundFactFraction ?? 0), 0) / trials.length).toFixed(4))
+    : 0;
   const [rawLow, rawHigh] = wilson95Interval(rawPasses, trials.length);
   const [tierLow, tierHigh] = wilson95Interval(tier0Passes, trials.length);
+  const [boundLow, boundHigh] = wilson95Interval(boundPasses, trials.length);
   const failures: Record<string, number> = {};
   for (const trial of trials) {
     for (const fact of trial.failedFacts) failures[fact] = (failures[fact] ?? 0) + 1;
@@ -272,11 +289,14 @@ function summarize(condition: ConditionId, trials: Trial[], all: Trial[]) {
     all
       .filter((trial) => trial.condition === id)
       .sort((a, b) => a.taskId.localeCompare(b.taskId));
-  const current = byCondition(condition);
   const c = byCondition('C');
   return {
     condition,
     trials: trials.length,
+    primaryMeanBoundFactFraction: meanBoundFactFraction,
+    primaryMeanBoundFactFractionPct: `${(meanBoundFactFraction * 100).toFixed(1)}%`,
+    secondaryPassAt1OverBoundFacts: `${boundPasses}/${trials.length} (${trials.length ? ((boundPasses / trials.length) * 100).toFixed(1) : '0.0'}%)`,
+    ci95Bound: `[${boundLow.toFixed(1)}%, ${boundHigh.toFixed(1)}%]`,
     passAt1Raw: `${rawPasses}/${trials.length} (${trials.length ? ((rawPasses / trials.length) * 100).toFixed(1) : '0.0'}%)`,
     ci95Raw: `[${rawLow.toFixed(1)}%, ${rawHigh.toFixed(1)}%]`,
     passAt1WithTier0: `${tier0Passes}/${trials.length} (${trials.length ? ((tier0Passes / trials.length) * 100).toFixed(1) : '0.0'}%)`,
@@ -296,6 +316,22 @@ function summarize(condition: ConditionId, trials: Trial[], all: Trial[]) {
     mcnemarCvsD:
       condition === 'C'
         ? pairedMcNemar(byCondition('D').map((t) => t.passRaw), c.map((t) => t.passRaw))
+        : null,
+    mcnemarBoundCvsA:
+      condition === 'C'
+        ? pairedMcNemar(byCondition('A').map((t) => t.boundPassed), c.map((t) => t.boundPassed))
+        : null,
+    mcnemarBoundCvsB:
+      condition === 'C'
+        ? pairedMcNemar(byCondition('B').map((t) => t.boundPassed), c.map((t) => t.boundPassed))
+        : null,
+    mcnemarBoundCvsC0:
+      condition === 'C'
+        ? pairedMcNemar(byCondition('C0').map((t) => t.boundPassed), c.map((t) => t.boundPassed))
+        : null,
+    mcnemarBoundCvsD:
+      condition === 'C'
+        ? pairedMcNemar(byCondition('D').map((t) => t.boundPassed), c.map((t) => t.boundPassed))
         : null,
     failuresByFact: failures,
     averageLlmCallsPerTask: trials.length
@@ -320,8 +356,12 @@ async function main(): Promise<void> {
     throw new Error(`Expected H-001..H-120 test tasks, got ${taskFile.test.length}`);
   }
 
+  process.env.AXIOM_DAILY_CALLS = String(
+    Math.max(Number(process.env.AXIOM_DAILY_CALLS || 1000), 1000)
+  );
   const dailyCap = getDailyCap();
-  BUDGET_GUARD.maxTotalLlmCallsPerProcess = dailyCap;
+  BUDGET_GUARD.maxTotalLlmCallsPerProcess = Math.max(dailyCap, 1000);
+  BUDGET_GUARD.callTimeoutMs = Math.max(BUDGET_GUARD.callTimeoutMs, 180_000);
   const memory = loadMemory();
   const conditions: ConditionId[] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
   const containerName = `axiom-ablation-v2-${process.pid}`;

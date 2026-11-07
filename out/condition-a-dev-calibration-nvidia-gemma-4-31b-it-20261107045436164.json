@@ -1,0 +1,2427 @@
+{
+  "timestamp": "2026-11-07T04:54:36.091Z",
+  "condition": "A (No Memory, No Hints)",
+  "split": "dev (D-001..D-040)",
+  "temperature": 0,
+  "repeats": 1,
+  "devTasksEvaluated": 40,
+  "primaryMeanBoundFactFraction": 0.4846,
+  "primaryMeanBoundFactFractionPct": "48.5%",
+  "boundTasksPassedAt1": 1,
+  "secondaryPassAt1OverBoundFacts": 0.025,
+  "secondaryPassAt1OverBoundFactsPct": "2.5%",
+  "tasksPassedAt1": 0,
+  "rawPassAt1": 0,
+  "rawPassAt1Pct": "0.0%",
+  "meanTaskFactPassRate": 0.6786,
+  "meanTaskFactPassRatePct": "67.9%",
+  "microFactPassRate": 0.6701,
+  "microFactPassRatePct": "67.0%",
+  "tokenUsage": {
+    "promptTokens": 10359,
+    "completionTokens": 20712,
+    "totalTokens": 31071
+  },
+  "perFactStats": [
+    {
+      "factId": "F-01",
+      "statement": "Primary key column id must be uuid NOT NULL with default gen_random_uuid().",
+      "applicableCount": 40,
+      "passedCount": 40,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-02",
+      "statement": "Multi-tenant tables must include tenant_id uuid NOT NULL.",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-03",
+      "statement": "Every foreign key constraint must use ON DELETE RESTRICT.",
+      "applicableCount": 40,
+      "passedCount": 15,
+      "failedCount": 25,
+      "passRate": 0.375,
+      "passRatePct": "37.5%"
+    },
+    {
+      "factId": "F-04",
+      "statement": "Monetary and decimal columns must use numeric (never float, real, double precision, or money).",
+      "applicableCount": 40,
+      "passedCount": 40,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-05",
+      "statement": "Every table must include created_at timestamptz NOT NULL DEFAULT now().",
+      "applicableCount": 40,
+      "passedCount": 28,
+      "failedCount": 12,
+      "passRate": 0.7,
+      "passRatePct": "70.0%"
+    },
+    {
+      "factId": "F-06",
+      "statement": "Mutable tables must include updated_at timestamptz NOT NULL DEFAULT now(); append-only tables must omit updated_at.",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-07",
+      "statement": "All timestamp columns must use timestamptz, never timestamp without time zone.",
+      "applicableCount": 40,
+      "passedCount": 40,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-08",
+      "statement": "Text columns must use text rather than varchar(n) or char(n).",
+      "applicableCount": 40,
+      "passedCount": 40,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-09",
+      "statement": "JSON columns must use jsonb NOT NULL, never json.",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-10",
+      "statement": "Mutable tables must include nullable deleted_at timestamptz; append-only tables must omit deleted_at.",
+      "applicableCount": 20,
+      "passedCount": 0,
+      "failedCount": 20,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-11",
+      "statement": "IP address columns must use inet, never text or varchar.",
+      "applicableCount": 40,
+      "passedCount": 40,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-12",
+      "statement": "Status or state columns must be text NOT NULL validated by a CHECK (col IN (...)) constraint.",
+      "applicableCount": 17,
+      "passedCount": 3,
+      "failedCount": 14,
+      "passRate": 0.1765,
+      "passRatePct": "17.6%"
+    },
+    {
+      "factId": "F-13",
+      "statement": "Table name must be snake_case plural in public schema and belong to the allow-list of task nouns.",
+      "applicableCount": 40,
+      "passedCount": 39,
+      "failedCount": 1,
+      "passRate": 0.975,
+      "passRatePct": "97.5%"
+    },
+    {
+      "factId": "F-14",
+      "statement": "Primary key constraint named pk_<table>.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-15",
+      "statement": "Foreign key columns must be named <singular_ref_table>_id (or supersedes_id for self-FK on append-only tables).",
+      "applicableCount": 40,
+      "passedCount": 28,
+      "failedCount": 12,
+      "passRate": 0.7,
+      "passRatePct": "70.0%"
+    },
+    {
+      "factId": "F-16",
+      "statement": "Foreign key constraints must be named fk_<table>_<column>.",
+      "applicableCount": 40,
+      "passedCount": 15,
+      "failedCount": 25,
+      "passRate": 0.375,
+      "passRatePct": "37.5%"
+    },
+    {
+      "factId": "F-17",
+      "statement": "Check constraints must be named chk_<table>_<column>.",
+      "applicableCount": 40,
+      "passedCount": 17,
+      "failedCount": 23,
+      "passRate": 0.425,
+      "passRatePct": "42.5%"
+    },
+    {
+      "factId": "F-18",
+      "statement": "Explicit non-constraint indexes must be named idx_<table>_<column> (skipping constraint-backed indexes).",
+      "applicableCount": 40,
+      "passedCount": 25,
+      "failedCount": 15,
+      "passRate": 0.625,
+      "passRatePct": "62.5%"
+    },
+    {
+      "factId": "F-19",
+      "statement": "Append-only tables must revoke UPDATE, DELETE, and TRUNCATE from PUBLIC, application, and readonly_user.",
+      "applicableCount": 20,
+      "passedCount": 1,
+      "failedCount": 19,
+      "passRate": 0.05,
+      "passRatePct": "5.0%"
+    },
+    {
+      "factId": "F-20",
+      "statement": "Append-only tables must have a BEFORE UPDATE OR DELETE trigger that raises Update/Delete operation rejected on audit log.",
+      "applicableCount": 20,
+      "passedCount": 1,
+      "failedCount": 19,
+      "passRate": 0.05,
+      "passRatePct": "5.0%"
+    },
+    {
+      "factId": "F-21",
+      "statement": "Mutable tables must have a BEFORE UPDATE trigger that advances updated_at.",
+      "applicableCount": 20,
+      "passedCount": 13,
+      "failedCount": 7,
+      "passRate": 0.65,
+      "passRatePct": "65.0%"
+    },
+    {
+      "factId": "F-22",
+      "statement": "Every foreign key column must be covered as the leading column of an index.",
+      "applicableCount": 40,
+      "passedCount": 29,
+      "failedCount": 11,
+      "passRate": 0.725,
+      "passRatePct": "72.5%"
+    },
+    {
+      "factId": "F-23",
+      "statement": "Multi-tenant tables must index tenant_id as the leading column of an index.",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-24",
+      "statement": "Unique business keys on soft-deletable mutable tables must use a partial unique index with WHERE deleted_at IS NULL.",
+      "applicableCount": 10,
+      "passedCount": 10,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-25",
+      "statement": "Multi-tenant tables must have ENABLE ROW LEVEL SECURITY and FORCE ROW LEVEL SECURITY.",
+      "applicableCount": 20,
+      "passedCount": 0,
+      "failedCount": 20,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-26",
+      "statement": "Tenant RLS policies must scope rows by app_metadata.tenant_id for application and grant zero access to user_metadata.tenant_id.",
+      "applicableCount": 20,
+      "passedCount": 0,
+      "failedCount": 20,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-27",
+      "statement": "Append-only tables must define zero FOR UPDATE, FOR DELETE, or FOR ALL RLS policies.",
+      "applicableCount": 20,
+      "passedCount": 13,
+      "failedCount": 7,
+      "passRate": 0.65,
+      "passRatePct": "65.0%"
+    },
+    {
+      "factId": "F-28",
+      "statement": "Merged into F-26 during reconciliation.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-29",
+      "statement": "Removed during reconciliation.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-30",
+      "statement": "Write RLS policies must never use tautological USING (true) or WITH CHECK (true).",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-31",
+      "statement": "SECURITY DEFINER functions must explicitly set SET search_path = ''.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-32",
+      "statement": "Ingestion tables must enforce a UNIQUE constraint on idempotency_key (scoped by tenant_id when tenant = true).",
+      "applicableCount": 20,
+      "passedCount": 19,
+      "failedCount": 1,
+      "passRate": 0.95,
+      "passRatePct": "95.0%"
+    },
+    {
+      "factId": "F-33",
+      "statement": "Removed during reconciliation.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-34",
+      "statement": "Counter and quota columns must enforce a non-negative CHECK (<col> >= 0) constraint against underflow.",
+      "applicableCount": 20,
+      "passedCount": 20,
+      "failedCount": 0,
+      "passRate": 1,
+      "passRatePct": "100.0%"
+    },
+    {
+      "factId": "F-35",
+      "statement": "Replaced by F-34 during reconciliation.",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-36",
+      "statement": "Append-only tables must include a nullable self-referential foreign key supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT.",
+      "applicableCount": 20,
+      "passedCount": 1,
+      "failedCount": 19,
+      "passRate": 0.05,
+      "passRatePct": "5.0%"
+    },
+    {
+      "factId": "F-37",
+      "statement": "Ingestion tables must attach a BEFORE INSERT trigger forcing NEW.received_at = now() regardless of client input.",
+      "applicableCount": 20,
+      "passedCount": 4,
+      "failedCount": 16,
+      "passRate": 0.2,
+      "passRatePct": "20.0%"
+    },
+    {
+      "factId": "F-38",
+      "statement": "Observation tables must define a composite B-tree index on (<key>, observed_at DESC).",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    },
+    {
+      "factId": "F-39",
+      "statement": "Exposed views must be created with WITH (security_invoker = true).",
+      "applicableCount": 0,
+      "passedCount": 0,
+      "failedCount": 0,
+      "passRate": 0,
+      "passRatePct": "0.0%"
+    }
+  ],
+  "taskReports": [
+    {
+      "taskId": "D-001",
+      "cohortId": "C1_TTT",
+      "table": "cdp_segment_events",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-12",
+        "F-19"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [],
+      "boundFailedFacts": [
+        "F-03",
+        "F-12",
+        "F-19"
+      ],
+      "boundFactFraction": 0,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 16,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.5926,
+      "fromCache": true,
+      "usage": {
+        "promptTokens": 262,
+        "completionTokens": 616,
+        "totalTokens": 878
+      },
+      "generatedSql": "CREATE TABLE public.cdp_segment_events (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,\n    workspace_channel text NOT NULL,\n    sync_status text NOT NULL DEFAULT 'pending',\n    client_ip inet,\n    idempotency_key text NOT NULL,\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    \n    CONSTRAINT uq_cdp_segment_events_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_cdp_segment_events_tenant_customer ON public.cdp_segment_events (tenant_id, customer_id);\nCREATE INDEX idx_cdp_segment_events_sync_status ON public.cdp_segment_events (tenant_id, sync_status) WHERE sync_status = 'pending';\nCREATE INDEX idx_cdp_segment_events_created_at ON public.cdp_segment_events (created_at DESC);\n\nALTER TABLE public.cdp_segment_events ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_cdp_segment_events_tenant_isolation ON public.cdp_segment_events\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_cdp_segment_events_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.cdp_segment_events is append-only. Updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_cdp_segment_events_append_only\nBEFORE UPDATE OR DELETE ON public.cdp_segment_events\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_cdp_segment_events_updates();\n\nCREATE VIEW public.vw_cdp_segment_events AS\nSELECT \n    id,\n    customer_id,\n    workspace_channel,\n    sync_status,\n    client_ip,\n    idempotency_key,\n    payload,\n    created_at\nFROM public.cdp_segment_events;\n\nGRANT SELECT ON public.cdp_segment_events TO readonly_user;\nGRANT SELECT, INSERT ON public.cdp_segment_events TO application;\nGRANT ALL ON public.cdp_segment_events TO deployer;\nGRANT SELECT ON public.vw_cdp_segment_events TO application, readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 2
+    },
+    {
+      "taskId": "D-002",
+      "cohortId": "C1_TTT",
+      "table": "siem_alert_ingests",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-05",
+        "F-25",
+        "F-26"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-25",
+        "F-26"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-15",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.5185,
+      "fromCache": true,
+      "usage": {
+        "promptTokens": 266,
+        "completionTokens": 682,
+        "totalTokens": 948
+      },
+      "generatedSql": "CREATE TABLE public.siem_alert_ingests (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    created_by uuid REFERENCES public.users(id),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    \n    detector_source text NOT NULL,\n    severity text NOT NULL,\n    status text NOT NULL,\n    client_ip inet,\n    idempotency_key text NOT NULL,\n    payload jsonb NOT NULL,\n\n    CONSTRAINT uk_siem_alert_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_siem_alert_ingests_tenant_created ON public.siem_alert_ingests (tenant_id, created_at DESC);\nCREATE INDEX idx_siem_alert_ingests_severity ON public.siem_alert_ingests (tenant_id, severity);\nCREATE INDEX idx_siem_alert_ingests_payload ON public.siem_alert_ingests USING gin (payload);\n\nALTER TABLE public.siem_alert_ingests ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_siem_alert_ingests_tenant_isolation ON public.siem_alert_ingests\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_siem_alert_ingests_readonly ON public.siem_alert_ingests\n    FOR SELECT\n    TO readonly_user\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_siem_alert_ingests_prevent_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.siem_alert_ingests is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_siem_alert_ingests_append_only\nBEFORE UPDATE OR DELETE ON public.siem_alert_ingests\nFOR EACH ROW EXECUTE FUNCTION public.fn_siem_alert_ingests_prevent_updates();\n\nCREATE OR REPLACE VIEW public.vw_siem_alert_ingests AS\nSELECT \n    id,\n    detector_source,\n    severity,\n    status,\n    client_ip,\n    created_at,\n    payload\nFROM public.siem_alert_ingests\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT ON public.siem_alert_ingests TO application;\nGRANT SELECT ON public.siem_alert_ingests TO readonly_user;\nGRANT SELECT ON public.vw_siem_alert_ingests TO application;\nGRANT SELECT ON public.vw_siem_alert_ingests TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 2
+    },
+    {
+      "taskId": "D-003",
+      "cohortId": "C1_TTT",
+      "table": "edr_telemetry_packets",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-11",
+        "F-12",
+        "F-17",
+        "F-19",
+        "F-26"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-11",
+        "F-17"
+      ],
+      "boundFailedFacts": [
+        "F-12",
+        "F-19",
+        "F-26"
+      ],
+      "boundFactFraction": 0.4,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-15",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.5556,
+      "fromCache": true,
+      "usage": {
+        "promptTokens": 263,
+        "completionTokens": 591,
+        "totalTokens": 854
+      },
+      "generatedSql": "CREATE TABLE public.edr_telemetry_packets (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    agent_version text NOT NULL,\n    quarantine_status boolean NOT NULL DEFAULT false,\n    client_ip inet NOT NULL,\n    idempotency_key text NOT NULL,\n    payload jsonb NOT NULL,\n    inserted_by uuid NOT NULL REFERENCES public.users(id),\n    CONSTRAINT uk_edr_telemetry_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_edr_telemetry_tenant_created ON public.edr_telemetry_packets (tenant_id, created_at DESC);\nCREATE INDEX idx_edr_telemetry_payload ON public.edr_telemetry_packets USING gin (payload);\n\nALTER TABLE public.edr_telemetry_packets ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_edr_telemetry_insert ON public.edr_telemetry_packets\n    FOR INSERT\n    TO application\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_edr_telemetry_select ON public.edr_telemetry_packets\n    FOR SELECT\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_edr_telemetry_prevent_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.edr_telemetry_packets is append-only; updates and deletes are prohibited.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_edr_telemetry_append_only\nBEFORE UPDATE OR DELETE ON public.edr_telemetry_packets\nFOR EACH ROW EXECUTE FUNCTION public.fn_edr_telemetry_prevent_updates();\n\nCREATE VIEW public.vw_edr_telemetry_packets AS\nSELECT * FROM public.edr_telemetry_packets\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT ON public.edr_telemetry_packets TO application;\nGRANT SELECT ON public.edr_telemetry_packets TO readonly_user;\nGRANT ALL ON public.edr_telemetry_packets TO deployer;\nGRANT SELECT ON public.vw_edr_telemetry_packets TO application;\nGRANT SELECT ON public.vw_edr_telemetry_packets TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 3
+    },
+    {
+      "taskId": "D-004",
+      "cohortId": "C1_TTT",
+      "table": "partner_feed_records",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-05",
+        "F-12",
+        "F-16"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05",
+        "F-12"
+      ],
+      "boundFailedFacts": [
+        "F-16"
+      ],
+      "boundFactFraction": 0.6667,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.6296,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 259,
+        "completionTokens": 633,
+        "totalTokens": 892
+      },
+      "generatedSql": "CREATE TABLE public.partner_feed_records (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    partner_code text NOT NULL,\n    validation_status text NOT NULL CHECK (validation_status IN ('pending', 'valid', 'invalid')),\n    client_ip inet,\n    idempotency_key text NOT NULL,\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    \n    CONSTRAINT uk_tenant_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_partner_feed_records_tenant_created ON public.partner_feed_records (tenant_id, created_at DESC);\nCREATE INDEX idx_partner_feed_records_partner_code ON public.partner_feed_records (tenant_id, partner_code);\nCREATE INDEX idx_partner_feed_records_payload ON public.partner_feed_records USING gin (payload);\n\nALTER TABLE public.partner_feed_records ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_partner_feed_records_tenant_isolation ON public.partner_feed_records\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_partner_feed_records_readonly ON public.partner_feed_records\n    FOR SELECT\n    TO readonly_user\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_partner_feed_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.partner_feed_records is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_partner_feed_records_append_only\nBEFORE UPDATE OR DELETE ON public.partner_feed_records\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_partner_feed_updates();\n\nCREATE VIEW public.vw_partner_feed_records AS\nSELECT \n    id,\n    partner_code,\n    validation_status,\n    client_ip,\n    idempotency_key,\n    payload,\n    created_at\nFROM public.partner_feed_records\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT ON public.partner_feed_records TO application;\nGRANT SELECT ON public.partner_feed_records TO readonly_user;\nGRANT SELECT ON public.vw_partner_feed_records TO application;\nGRANT SELECT ON public.vw_partner_feed_records TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 44536
+    },
+    {
+      "taskId": "D-005",
+      "cohortId": "C1_TTT",
+      "table": "mobile_crash_reports",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-02",
+        "F-12",
+        "F-16",
+        "F-25",
+        "F-36"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-02"
+      ],
+      "boundFailedFacts": [
+        "F-12",
+        "F-16",
+        "F-25",
+        "F-36"
+      ],
+      "boundFactFraction": 0.2,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.6296,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 260,
+        "completionTokens": 637,
+        "totalTokens": 897
+      },
+      "generatedSql": "CREATE TABLE public.mobile_crash_reports (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    app_build_identifier text NOT NULL,\n    triage_status text NOT NULL DEFAULT 'pending',\n    client_ip inet,\n    idempotency_key text NOT NULL,\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_mobile_crash_reports_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_mobile_crash_reports_tenant_created ON public.mobile_crash_reports (tenant_id, created_at DESC);\nCREATE INDEX idx_mobile_crash_reports_triage_status ON public.mobile_crash_reports (tenant_id, triage_status) WHERE triage_status = 'pending';\nCREATE INDEX idx_mobile_crash_reports_payload_gin ON public.mobile_crash_reports USING gin (payload);\n\nALTER TABLE public.mobile_crash_reports ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_mobile_crash_reports_tenant_isolation ON public.mobile_crash_reports\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_mobile_crash_reports_readonly ON public.mobile_crash_reports\n    FOR SELECT\n    TO readonly_user\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_mobile_crash_reports_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.mobile_crash_reports is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_mobile_crash_reports_append_only\nBEFORE UPDATE OR DELETE ON public.mobile_crash_reports\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_mobile_crash_reports_updates();\n\nCREATE VIEW public.vw_mobile_crash_reports AS\nSELECT \n    id,\n    app_build_identifier,\n    triage_status,\n    client_ip,\n    payload,\n    created_at\nFROM public.mobile_crash_reports\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT ON public.mobile_crash_reports TO application;\nGRANT SELECT ON public.mobile_crash_reports TO readonly_user;\nGRANT SELECT ON public.vw_mobile_crash_reports TO application;\nGRANT SELECT ON public.vw_mobile_crash_reports TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 49651
+    },
+    {
+      "taskId": "D-006",
+      "cohortId": "C2_TTF",
+      "table": "user_login_events",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36",
+        "F-39"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-30"
+      ],
+      "boundFailedFacts": [
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-39"
+      ],
+      "boundFactFraction": 0.2,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.6818,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 261,
+        "completionTokens": 539,
+        "totalTokens": 800
+      },
+      "generatedSql": "CREATE TABLE public.user_login_events (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE SET NULL,\n    auth_method text NOT NULL,\n    outcome text NOT NULL,\n    client_ip inet,\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_user_login_events_tenant_id ON public.user_login_events(tenant_id);\nCREATE INDEX idx_user_login_events_user_id ON public.user_login_events(user_id);\nCREATE INDEX idx_user_login_events_created_at ON public.user_login_events(created_at);\n\nCREATE OR REPLACE FUNCTION public.prevent_user_login_events_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.user_login_events is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_user_login_events_append_only\nBEFORE UPDATE OR DELETE ON public.user_login_events\nFOR EACH ROW EXECUTE FUNCTION public.prevent_user_login_events_updates();\n\nALTER TABLE public.user_login_events ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_user_login_events_tenant_isolation ON public.user_login_events\n    FOR SELECT\n    TO application\n    USING ((tenant_id = (auth.jwt() ->> 'tenant_id')::uuid));\n\nCREATE POLICY policy_user_login_events_insert ON public.user_login_events\n    FOR INSERT\n    TO application\n    WITH CHECK ((tenant_id = (auth.jwt() ->> 'tenant_id')::uuid));\n\nCREATE VIEW public.tenant_login_summary AS\nSELECT \n    tenant_id,\n    outcome,\n    count(*) as event_count,\n    max(created_at) as last_event_at\nFROM public.user_login_events\nGROUP BY tenant_id, outcome;\n\nGRANT SELECT ON public.user_login_events TO readonly_user;\nGRANT SELECT, INSERT ON public.user_login_events TO application;\nGRANT SELECT ON public.tenant_login_summary TO readonly_user;\nGRANT SELECT ON public.tenant_login_summary TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 22759
+    },
+    {
+      "taskId": "D-007",
+      "cohortId": "C2_TTF",
+      "table": "permission_grant_logs",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-01",
+        "F-16",
+        "F-18",
+        "F-36"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-01",
+        "F-18"
+      ],
+      "boundFailedFacts": [
+        "F-16",
+        "F-36"
+      ],
+      "boundFactFraction": 0.5,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 12,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.5455,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 257,
+        "completionTokens": 552,
+        "totalTokens": 809
+      },
+      "generatedSql": "CREATE TABLE public.permission_grant_logs (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    actor_id uuid NOT NULL REFERENCES public.users(id),\n    role_name text NOT NULL,\n    action text NOT NULL CHECK (action IN ('GRANT', 'REVOKE')),\n    granted_at timestamptz NOT NULL DEFAULT now(),\n    metadata jsonb DEFAULT '{}'::jsonb\n);\n\nCREATE INDEX idx_permission_grant_logs_tenant_id ON public.permission_grant_logs(tenant_id);\nCREATE INDEX idx_permission_grant_logs_actor_id ON public.permission_grant_logs(actor_id);\nCREATE INDEX idx_permission_grant_logs_granted_at ON public.permission_grant_logs(granted_at);\n\nALTER TABLE public.permission_grant_logs ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_permission_grant_logs_tenant_isolation ON public.permission_grant_logs\n    FOR SELECT\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_permission_grant_logs_insert ON public.permission_grant_logs\n    FOR INSERT\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_permission_grant_logs_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.permission_grant_logs is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_permission_grant_logs_append_only\nBEFORE UPDATE OR DELETE ON public.permission_grant_logs\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_permission_grant_logs_updates();\n\nCREATE OR REPLACE VIEW public.view_tenant_permission_grant_summary AS\nSELECT \n    tenant_id,\n    role_name,\n    action,\n    count(*) as occurrence_count,\n    max(granted_at) as last_action_at\nFROM public.permission_grant_logs\nGROUP BY tenant_id, role_name, action;\n\nGRANT SELECT ON public.permission_grant_logs TO application, readonly_user;\nGRANT INSERT ON public.permission_grant_logs TO application;\nGRANT SELECT ON public.view_tenant_permission_grant_summary TO application, readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 47186
+    },
+    {
+      "taskId": "D-008",
+      "cohortId": "C2_TTF",
+      "table": "api_token_issuances",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-02",
+        "F-05",
+        "F-17",
+        "F-39"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-02",
+        "F-17"
+      ],
+      "boundFailedFacts": [
+        "F-05",
+        "F-39"
+      ],
+      "boundFactFraction": 0.5,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 12,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-15",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.5455,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 260,
+        "completionTokens": 581,
+        "totalTokens": 841
+      },
+      "generatedSql": "CREATE TABLE public.api_token_issuances (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    actor_id uuid NOT NULL REFERENCES public.users(id),\n    token_hash text NOT NULL,\n    scope text NOT NULL,\n    expiration_policy text NOT NULL,\n    issued_at timestamptz NOT NULL DEFAULT now(),\n    expires_at timestamptz NOT NULL,\n    created_by uuid NOT NULL DEFAULT (auth.jwt() ->> 'sub')::uuid\n);\n\nCREATE INDEX idx_api_token_issuances_tenant_id ON public.api_token_issuances(tenant_id);\nCREATE INDEX idx_api_token_issuances_actor_id ON public.api_token_issuances(actor_id);\n\nCREATE OR REPLACE FUNCTION public.prevent_api_token_issuances_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.api_token_issuances is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_api_token_issuances_append_only\nBEFORE UPDATE OR DELETE ON public.api_token_issuances\nFOR EACH ROW EXECUTE FUNCTION public.prevent_api_token_issuances_updates();\n\nALTER TABLE public.api_token_issuances ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_api_token_issuances_tenant_isolation ON public.api_token_issuances\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.view_api_token_issuances_tenant_summary AS\nSELECT \n    tenant_id,\n    count(*) as total_issuances,\n    count(*) FILTER (WHERE expires_at > now()) as active_tokens,\n    max(issued_at) as last_issuance_at\nFROM public.api_token_issuances\nGROUP BY tenant_id;\n\nGRANT SELECT ON public.api_token_issuances TO application;\nGRANT SELECT ON public.api_token_issuances TO readonly_user;\nGRANT INSERT ON public.api_token_issuances TO application;\nGRANT SELECT ON public.view_api_token_issuances_tenant_summary TO application;\nGRANT SELECT ON public.view_api_token_issuances_tenant_summary TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 98682
+    },
+    {
+      "taskId": "D-009",
+      "cohortId": "C2_TTF",
+      "table": "data_export_audits",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-16",
+        "F-26"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [],
+      "boundFailedFacts": [
+        "F-03",
+        "F-16",
+        "F-26"
+      ],
+      "boundFactFraction": 0,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 12,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.5455,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 259,
+        "completionTokens": 628,
+        "totalTokens": 887
+      },
+      "generatedSql": "CREATE TABLE public.data_export_audits (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    user_id uuid NOT NULL REFERENCES public.users(id),\n    export_format text NOT NULL CHECK (export_format IN ('csv', 'json', 'xlsx', 'parquet')),\n    row_count bigint NOT NULL CHECK (row_count >= 0),\n    exported_at timestamptz NOT NULL DEFAULT now(),\n    ip_address inet,\n    user_agent text,\n    CONSTRAINT data_export_audits_tenant_user_fk FOREIGN KEY (user_id) REFERENCES public.users(id)\n);\n\nCREATE INDEX idx_data_export_audits_tenant_id ON public.data_export_audits(tenant_id);\nCREATE INDEX idx_data_export_audits_user_id ON public.data_export_audits(user_id);\nCREATE INDEX idx_data_export_audits_exported_at ON public.data_export_audits(exported_at);\n\nALTER TABLE public.data_export_audits ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_data_export_audits_tenant_isolation ON public.data_export_audits\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_data_export_audits_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Updates and deletes are not permitted on the data_export_audits table (append-only)';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_data_export_audits_append_only\nBEFORE UPDATE OR DELETE ON public.data_export_audits\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_data_export_audits_updates();\n\nCREATE VIEW public.vw_tenant_export_summary AS\nSELECT \n    tenant_id,\n    export_format,\n    COUNT(*) as total_exports,\n    SUM(row_count) as total_rows_exported,\n    MAX(exported_at) as last_export_at\nFROM public.data_export_audits\nGROUP BY tenant_id, export_format;\n\nGRANT SELECT ON public.data_export_audits TO application;\nGRANT INSERT ON public.data_export_audits TO application;\nGRANT SELECT ON public.vw_tenant_export_summary TO application;\nGRANT SELECT ON public.data_export_audits TO readonly_user;\nGRANT SELECT ON public.vw_tenant_export_summary TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 108206
+    },
+    {
+      "taskId": "D-010",
+      "cohortId": "C2_TTF",
+      "table": "encryption_key_usages",
+      "features": {
+        "tenant": true,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-16",
+        "F-18",
+        "F-19"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-18"
+      ],
+      "boundFailedFacts": [
+        "F-16",
+        "F-19"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 13,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "factPassRate": 0.5909,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 257,
+        "completionTokens": 577,
+        "totalTokens": 834
+      },
+      "generatedSql": "CREATE TABLE public.encryption_key_usages (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    user_id uuid NOT NULL REFERENCES public.users(id),\n    operation_type text NOT NULL CHECK (operation_type IN ('encrypt', 'decrypt', 'rotate', 'export')),\n    cipher_suite text NOT NULL,\n    key_id text NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    metadata jsonb DEFAULT '{}'::jsonb\n);\n\nCREATE INDEX idx_encryption_key_usages_tenant_id ON public.encryption_key_usages(tenant_id);\nCREATE INDEX idx_encryption_key_usages_user_id ON public.encryption_key_usages(user_id);\nCREATE INDEX idx_encryption_key_usages_created_at ON public.encryption_key_usages(created_at);\n\nCREATE OR REPLACE FUNCTION public.prevent_encryption_key_usages_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.encryption_key_usages is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_encryption_key_usages_append_only\nBEFORE UPDATE OR DELETE ON public.encryption_key_usages\nFOR EACH ROW EXECUTE FUNCTION public.prevent_encryption_key_usages_updates();\n\nALTER TABLE public.encryption_key_usages ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_encryption_key_usages_tenant_isolation ON public.encryption_key_usages\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.tenant_encryption_key_usage_summary AS\nSELECT \n    tenant_id,\n    operation_type,\n    cipher_suite,\n    count(*) as usage_count,\n    min(created_at) as first_used,\n    max(created_at) as last_used\nFROM public.encryption_key_usages\nGROUP BY tenant_id, operation_type, cipher_suite;\n\nGRANT SELECT ON public.encryption_key_usages TO readonly_user;\nGRANT SELECT, INSERT ON public.encryption_key_usages TO application;\nGRANT SELECT ON public.tenant_encryption_key_usage_summary TO readonly_user;\nGRANT SELECT ON public.tenant_encryption_key_usage_summary TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 227347
+    },
+    {
+      "taskId": "D-011",
+      "cohortId": "C3_TFT",
+      "table": "inventory_feed_stagings",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-04",
+        "F-10",
+        "F-16"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-04"
+      ],
+      "boundFailedFacts": [
+        "F-03",
+        "F-10",
+        "F-16"
+      ],
+      "boundFactFraction": 0.25,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-10",
+        "F-12",
+        "F-16",
+        "F-18",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.6296,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 260,
+        "completionTokens": 541,
+        "totalTokens": 801
+      },
+      "generatedSql": "CREATE TABLE public.inventory_feed_stagings (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    warehouse_code text NOT NULL,\n    processing_state text NOT NULL DEFAULT 'pending',\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_tenant_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_inventory_feed_stagings_tenant_state ON public.inventory_feed_stagings (tenant_id, processing_state);\nCREATE INDEX idx_inventory_feed_stagings_received_at ON public.inventory_feed_stagings (received_at);\n\nCREATE OR REPLACE FUNCTION public.handle_inventory_feed_stagings_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_inventory_feed_stagings_updated_at\n    BEFORE UPDATE ON public.inventory_feed_stagings\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_inventory_feed_stagings_updated_at();\n\nALTER TABLE public.inventory_feed_stagings ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_inventory_feed_stagings_tenant_isolation ON public.inventory_feed_stagings\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE VIEW public.vw_inventory_feed_stagings AS\nSELECT \n    id,\n    warehouse_code,\n    processing_state,\n    idempotency_key,\n    received_at,\n    payload,\n    updated_at\nFROM public.inventory_feed_stagings;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.inventory_feed_stagings TO application;\nGRANT SELECT ON public.inventory_feed_stagings TO readonly_user;\nGRANT SELECT ON public.vw_inventory_feed_stagings TO application;\nGRANT SELECT ON public.vw_inventory_feed_stagings TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 49654
+    },
+    {
+      "taskId": "D-012",
+      "cohortId": "C3_TFT",
+      "table": "bank_statement_imports",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-06",
+        "F-17",
+        "F-34"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-06",
+        "F-17",
+        "F-34"
+      ],
+      "boundFailedFacts": [
+        "F-03"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-10",
+        "F-12",
+        "F-16",
+        "F-21",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.6296,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 258,
+        "completionTokens": 551,
+        "totalTokens": 809
+      },
+      "generatedSql": "CREATE TABLE public.bank_statement_imports (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE SET NULL,\n    account_number text NOT NULL,\n    match_state text NOT NULL DEFAULT 'pending',\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_bank_statement_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_bank_statement_imports_tenant_id ON public.bank_statement_imports(tenant_id);\nCREATE INDEX idx_bank_statement_imports_match_state ON public.bank_statement_imports(match_state) WHERE match_state = 'pending';\nCREATE INDEX idx_bank_statement_imports_account_number ON public.bank_statement_imports(account_number);\n\nCREATE OR REPLACE FUNCTION public.handle_bank_statement_imports_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_bank_statement_imports_updated_at\n    BEFORE UPDATE ON public.bank_statement_imports\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_bank_statement_imports_updated_at();\n\nALTER TABLE public.bank_statement_imports ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_bank_statement_imports_tenant_isolation ON public.bank_statement_imports\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE VIEW public.vw_bank_statement_imports AS\nSELECT * FROM public.bank_statement_imports;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.bank_statement_imports TO application;\nGRANT SELECT ON public.bank_statement_imports TO readonly_user;\nGRANT ALL ON public.bank_statement_imports TO deployer;\nGRANT SELECT ON public.vw_bank_statement_imports TO application;\nGRANT SELECT ON public.vw_bank_statement_imports TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 46127
+    },
+    {
+      "taskId": "D-013",
+      "cohortId": "C3_TFT",
+      "table": "lead_capture_submissions",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-04",
+        "F-06",
+        "F-21",
+        "F-25",
+        "F-39"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-04",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-21",
+        "F-25",
+        "F-39"
+      ],
+      "boundFactFraction": 0.4,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-10",
+        "F-12",
+        "F-16",
+        "F-18",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.6296,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 257,
+        "completionTokens": 587,
+        "totalTokens": 844
+      },
+      "generatedSql": "CREATE TABLE public.lead_capture_submissions (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    campaign_code text NOT NULL,\n    routing_state text NOT NULL DEFAULT 'pending',\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_lead_capture_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_lead_capture_submissions_tenant_campaign ON public.lead_capture_submissions (tenant_id, campaign_code);\nCREATE INDEX idx_lead_capture_submissions_routing_state ON public.lead_capture_submissions (tenant_id, routing_state) WHERE routing_state = 'pending';\nCREATE INDEX idx_lead_capture_submissions_payload_gin ON public.lead_capture_submissions USING GIN (payload);\n\nCREATE OR REPLACE FUNCTION public.handle_lead_capture_submissions_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_lead_capture_submissions_updated_at\n    BEFORE UPDATE ON public.lead_capture_submissions\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_lead_capture_submissions_updated_at();\n\nALTER TABLE public.lead_capture_submissions ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_lead_capture_submissions_tenant_isolation ON public.lead_capture_submissions\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.vw_lead_capture_submissions AS\nSELECT \n    id,\n    campaign_code,\n    routing_state,\n    idempotency_key,\n    received_at,\n    payload,\n    updated_at\nFROM public.lead_capture_submissions\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.lead_capture_submissions TO application;\nGRANT SELECT ON public.lead_capture_submissions TO readonly_user;\nGRANT SELECT ON public.vw_lead_capture_submissions TO application;\nGRANT SELECT ON public.vw_lead_capture_submissions TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 40023
+    },
+    {
+      "taskId": "D-014",
+      "cohortId": "C3_TFT",
+      "table": "support_ticket_ingests",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-17",
+        "F-21",
+        "F-32",
+        "F-39"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-17",
+        "F-21",
+        "F-32"
+      ],
+      "boundFailedFacts": [
+        "F-39"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 16,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-10",
+        "F-12",
+        "F-15",
+        "F-16",
+        "F-18",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.5926,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 260,
+        "completionTokens": 652,
+        "totalTokens": 912
+      },
+      "generatedSql": "CREATE TABLE public.support_ticket_ingests (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    idempotency_key text NOT NULL,\n    channel_type text NOT NULL,\n    triage_state text NOT NULL DEFAULT 'pending',\n    payload jsonb NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid REFERENCES public.users(id),\n    \n    CONSTRAINT uk_support_ticket_ingests_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_support_ticket_ingests_tenant_state ON public.support_ticket_ingests (tenant_id, triage_state);\nCREATE INDEX idx_support_ticket_ingests_received_at ON public.support_ticket_ingests (received_at DESC);\nCREATE INDEX idx_support_ticket_ingests_payload_gin ON public.support_ticket_ingests USING gin (payload);\n\nCREATE OR REPLACE FUNCTION public.handle_support_ticket_ingests_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_support_ticket_ingests_updated_at\n    BEFORE UPDATE ON public.support_ticket_ingests\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_support_ticket_ingests_updated_at();\n\nALTER TABLE public.support_ticket_ingests ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_support_ticket_ingests_tenant_isolation\n    ON public.support_ticket_ingests\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE POLICY policy_support_ticket_ingests_readonly\n    ON public.support_ticket_ingests\n    FOR SELECT\n    TO readonly_user\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.vw_support_ticket_ingests AS\nSELECT \n    id,\n    tenant_id,\n    channel_type,\n    triage_state,\n    payload,\n    received_at,\n    updated_at\nFROM public.support_ticket_ingests;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.support_ticket_ingests TO application;\nGRANT SELECT ON public.support_ticket_ingests TO readonly_user;\nGRANT SELECT ON public.vw_support_ticket_ingests TO application;\nGRANT SELECT ON public.vw_support_ticket_ingests TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 128889
+    },
+    {
+      "taskId": "D-015",
+      "cohortId": "C3_TFT",
+      "table": "marketplace_order_ingests",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-05",
+        "F-10",
+        "F-17",
+        "F-26",
+        "F-34"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05",
+        "F-17",
+        "F-34"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-26"
+      ],
+      "boundFactFraction": 0.6,
+      "pass": false,
+      "applicableFactCount": 27,
+      "passedFactCount": 18,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-12",
+        "F-15",
+        "F-16",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.6667,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 260,
+        "completionTokens": 651,
+        "totalTokens": 911
+      },
+      "generatedSql": "CREATE TABLE public.marketplace_order_ingests (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    marketplace_code text NOT NULL,\n    fulfillment_state text NOT NULL,\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid REFERENCES public.users(id),\n    updated_by uuid REFERENCES public.users(id),\n    CONSTRAINT uk_marketplace_order_ingests_idempotency UNIQUE (tenant_id, idempotency_key)\n);\n\nCREATE INDEX idx_marketplace_order_ingests_tenant_id ON public.marketplace_order_ingests(tenant_id);\nCREATE INDEX idx_marketplace_order_ingests_marketplace_code ON public.marketplace_order_ingests(marketplace_code);\nCREATE INDEX idx_marketplace_order_ingests_fulfillment_state ON public.marketplace_order_ingests(fulfillment_state);\nCREATE INDEX idx_marketplace_order_ingests_payload ON public.marketplace_order_ingests USING gin (payload);\n\nCREATE OR REPLACE FUNCTION public.handle_marketplace_order_ingests_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_marketplace_order_ingests_updated_at\nBEFORE UPDATE ON public.marketplace_order_ingests\nFOR EACH ROW\nEXECUTE FUNCTION public.handle_marketplace_order_ingests_updated_at();\n\nALTER TABLE public.marketplace_order_ingests ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_marketplace_order_ingests_tenant_isolation ON public.marketplace_order_ingests\n    AS PERMISSIVE FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.vw_marketplace_order_ingests AS\nSELECT \n    id,\n    tenant_id,\n    marketplace_code,\n    fulfillment_state,\n    idempotency_key,\n    received_at,\n    payload,\n    created_at,\n    updated_at\nFROM public.marketplace_order_ingests;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.marketplace_order_ingests TO application;\nGRANT SELECT ON public.marketplace_order_ingests TO readonly_user;\nGRANT SELECT ON public.vw_marketplace_order_ingests TO application;\nGRANT SELECT ON public.vw_marketplace_order_ingests TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 65780
+    },
+    {
+      "taskId": "D-016",
+      "cohortId": "C4_TFF",
+      "table": "customer_contracts",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-01",
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-16"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-01",
+        "F-05",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-03",
+        "F-16"
+      ],
+      "boundFactFraction": 0.6,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 13,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "factPassRate": 0.5909,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 248,
+        "completionTokens": 459,
+        "totalTokens": 707
+      },
+      "generatedSql": "CREATE TABLE public.customer_contracts (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,\n    contract_number text NOT NULL,\n    term_months integer NOT NULL CHECK (term_months > 0),\n    contract_value numeric(19, 4) NOT NULL CHECK (contract_value >= 0),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid NOT NULL REFERENCES public.users(id),\n    updated_by uuid NOT NULL REFERENCES public.users(id),\n    CONSTRAINT uk_tenant_contract_number UNIQUE (tenant_id, contract_number)\n);\n\nCREATE INDEX idx_customer_contracts_tenant_customer ON public.customer_contracts (tenant_id, customer_id);\nCREATE INDEX idx_customer_contracts_customer_id ON public.customer_contracts (customer_id);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_customer_contracts_updated_at\n    BEFORE UPDATE ON public.customer_contracts\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.customer_contracts ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_customer_contracts_tenant_isolation ON public.customer_contracts\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.customer_contracts TO application;\nGRANT SELECT ON public.customer_contracts TO readonly_user;\nGRANT ALL ON public.customer_contracts TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 32571
+    },
+    {
+      "taskId": "D-017",
+      "cohortId": "C4_TFF",
+      "table": "service_queues",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-05",
+        "F-10",
+        "F-17"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-17"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "factPassRate": 0.6818,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 250,
+        "completionTokens": 507,
+        "totalTokens": 757
+      },
+      "generatedSql": "CREATE TABLE public.service_queues (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    owner_id uuid NOT NULL REFERENCES public.users(id) ON DELETE SET NULL,\n    slug text NOT NULL,\n    max_concurrency integer NOT NULL DEFAULT 1 CHECK (max_concurrency > 0),\n    priority integer NOT NULL DEFAULT 0,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_service_queues_tenant_slug UNIQUE (tenant_id, slug)\n);\n\nCREATE INDEX idx_service_queues_tenant_id ON public.service_queues(tenant_id);\nCREATE INDEX idx_service_queues_owner_id ON public.service_queues(owner_id);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_service_queues_updated_at\n    BEFORE UPDATE ON public.service_queues\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.service_queues ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_service_queues_tenant_isolation ON public.service_queues\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE VIEW public.vw_service_queues AS\nSELECT \n    id,\n    slug,\n    max_concurrency,\n    priority,\n    owner_id,\n    created_at,\n    updated_at\nFROM public.service_queues;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.service_queues TO application;\nGRANT SELECT ON public.service_queues TO readonly_user;\nGRANT SELECT ON public.vw_service_queues TO application;\nGRANT SELECT ON public.vw_service_queues TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 49377
+    },
+    {
+      "taskId": "D-018",
+      "cohortId": "C4_TFF",
+      "table": "webhook_endpoints",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-01",
+        "F-10",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-01"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "boundFactFraction": 0.2,
+      "pass": false,
+      "applicableFactCount": 23,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "factPassRate": 0.7391,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 248,
+        "completionTokens": 487,
+        "totalTokens": 735
+      },
+      "generatedSql": "CREATE TABLE public.webhook_endpoints (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    user_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,\n    slug text NOT NULL,\n    url text NOT NULL,\n    timeout_seconds integer NOT NULL DEFAULT 30 CHECK (timeout_seconds > 0),\n    status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'paused', 'disabled')),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_webhook_endpoints_tenant_slug UNIQUE (tenant_id, slug)\n);\n\nCREATE INDEX idx_webhook_endpoints_tenant_id ON public.webhook_endpoints(tenant_id);\nCREATE INDEX idx_webhook_endpoints_user_id ON public.webhook_endpoints(user_id);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_webhook_endpoints_updated_at\n    BEFORE UPDATE ON public.webhook_endpoints\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.webhook_endpoints ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_webhook_endpoints_tenant_isolation ON public.webhook_endpoints\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE VIEW public.view_webhook_endpoints AS\nSELECT * FROM public.webhook_endpoints;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.webhook_endpoints TO application;\nGRANT SELECT ON public.webhook_endpoints TO readonly_user;\nGRANT ALL PRIVILEGES ON public.webhook_endpoints TO deployer;\nGRANT SELECT ON public.view_webhook_endpoints TO application;\nGRANT SELECT ON public.view_webhook_endpoints TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 12600
+    },
+    {
+      "taskId": "D-019",
+      "cohortId": "C4_TFF",
+      "table": "billing_profiles",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-05",
+        "F-10",
+        "F-16"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-16"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "factPassRate": 0.7727,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 248,
+        "completionTokens": 512,
+        "totalTokens": 760
+      },
+      "generatedSql": "CREATE TABLE public.billing_profiles (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,\n    profile_code text NOT NULL,\n    payment_terms text,\n    credit_limit numeric(19, 4) DEFAULT 0,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_tenant_customer_profile UNIQUE (tenant_id, customer_id, profile_code)\n);\n\nCREATE INDEX idx_billing_profiles_tenant_id ON public.billing_profiles(tenant_id);\nCREATE INDEX idx_billing_profiles_customer_id ON public.billing_profiles(customer_id);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_billing_profiles_updated_at\n    BEFORE UPDATE ON public.billing_profiles\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.billing_profiles ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_billing_profiles_tenant_isolation ON public.billing_profiles\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE OR REPLACE VIEW public.view_billing_profiles AS\nSELECT \n    id,\n    customer_id,\n    profile_code,\n    payment_terms,\n    credit_limit,\n    created_at,\n    updated_at\nFROM public.billing_profiles\nWHERE tenant_id = (auth.jwt() ->> 'tenant_id')::uuid;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.billing_profiles TO application;\nGRANT SELECT ON public.billing_profiles TO readonly_user;\nGRANT SELECT ON public.view_billing_profiles TO application;\nGRANT SELECT ON public.view_billing_profiles TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 17606
+    },
+    {
+      "taskId": "D-020",
+      "cohortId": "C4_TFF",
+      "table": "feature_entitlements",
+      "features": {
+        "tenant": true,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-06",
+        "F-10",
+        "F-11",
+        "F-12"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-06",
+        "F-11",
+        "F-12"
+      ],
+      "boundFailedFacts": [
+        "F-10"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 23,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-39"
+      ],
+      "factPassRate": 0.6522,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 251,
+        "completionTokens": 560,
+        "totalTokens": 811
+      },
+      "generatedSql": "CREATE TABLE public.feature_entitlements (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tenant_id uuid NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,\n    customer_id uuid NOT NULL REFERENCES public.customers(id) ON DELETE CASCADE,\n    feature_key text NOT NULL,\n    quota_limit bigint,\n    status text NOT NULL CHECK (status IN ('enabled', 'disabled', 'limited')),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid NOT NULL REFERENCES public.users(id),\n    updated_by uuid NOT NULL REFERENCES public.users(id),\n    CONSTRAINT unique_customer_feature UNIQUE (customer_id, feature_key)\n);\n\nCREATE INDEX idx_feature_entitlements_tenant_id ON public.feature_entitlements(tenant_id);\nCREATE INDEX idx_feature_entitlements_customer_id ON public.feature_entitlements(customer_id);\n\nCREATE OR REPLACE FUNCTION public.handle_feature_entitlements_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_feature_entitlements_updated_at\nBEFORE UPDATE ON public.feature_entitlements\nFOR EACH ROW EXECUTE FUNCTION public.handle_feature_entitlements_updated_at();\n\nALTER TABLE public.feature_entitlements ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_feature_entitlements_tenant_isolation ON public.feature_entitlements\n    FOR ALL\n    TO application\n    USING (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid)\n    WITH CHECK (tenant_id = (auth.jwt() ->> 'tenant_id')::uuid);\n\nCREATE VIEW public.vw_feature_entitlements AS\nSELECT \n    id,\n    tenant_id,\n    customer_id,\n    feature_key,\n    quota_limit,\n    status,\n    created_at,\n    updated_at\nFROM public.feature_entitlements;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.feature_entitlements TO application;\nGRANT SELECT ON public.feature_entitlements TO readonly_user;\nGRANT SELECT ON public.vw_feature_entitlements TO application;\nGRANT SELECT ON public.vw_feature_entitlements TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 37705
+    },
+    {
+      "taskId": "D-021",
+      "cohortId": "C5_FTT",
+      "table": "ddos_scrubbing_flows",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-16",
+        "F-17",
+        "F-20"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-16",
+        "F-17"
+      ],
+      "boundFailedFacts": [
+        "F-20"
+      ],
+      "boundFactFraction": 0.6667,
+      "pass": false,
+      "applicableFactCount": 21,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36",
+        "F-37"
+      ],
+      "factPassRate": 0.8095,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 269,
+        "completionTokens": 511,
+        "totalTokens": 780
+      },
+      "generatedSql": "CREATE TABLE public.ddos_scrubbing_flows (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    idempotency_key text NOT NULL UNIQUE,\n    mitigation_pop text NOT NULL,\n    drop_action boolean NOT NULL DEFAULT false,\n    source_ip inet NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_ddos_scrubbing_flows_received_at ON public.ddos_scrubbing_flows (received_at DESC);\nCREATE INDEX idx_ddos_scrubbing_flows_source_ip ON public.ddos_scrubbing_flows (source_ip);\nCREATE INDEX idx_ddos_scrubbing_flows_payload ON public.ddos_scrubbing_flows USING gin (payload);\n\nALTER TABLE public.ddos_scrubbing_flows ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_ddos_scrubbing_flows_ingest ON public.ddos_scrubbing_flows\n    FOR INSERT TO application WITH CHECK (true);\n\nCREATE POLICY policy_ddos_scrubbing_flows_read ON public.ddos_scrubbing_flows\n    FOR SELECT TO application USING (true);\n\nCREATE POLICY policy_ddos_scrubbing_flows_readonly ON public.ddos_scrubbing_flows\n    FOR SELECT TO readonly_user USING (true);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_ddos_flows_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.ddos_scrubbing_flows is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_ddos_scrubbing_flows_append_only\nBEFORE UPDATE OR DELETE ON public.ddos_scrubbing_flows\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_ddos_flows_updates();\n\nGRANT SELECT, INSERT ON public.ddos_scrubbing_flows TO application;\nGRANT SELECT ON public.ddos_scrubbing_flows TO readonly_user;\nGRANT ALL ON public.ddos_scrubbing_flows TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 32411
+    },
+    {
+      "taskId": "D-022",
+      "cohortId": "C5_FTT",
+      "table": "tor_exit_observations",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-04",
+        "F-12",
+        "F-17",
+        "F-18",
+        "F-37"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-04",
+        "F-17"
+      ],
+      "boundFailedFacts": [
+        "F-12",
+        "F-18",
+        "F-37"
+      ],
+      "boundFactFraction": 0.4,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-05",
+        "F-12",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.6818,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 262,
+        "completionTokens": 533,
+        "totalTokens": 795
+      },
+      "generatedSql": "CREATE TABLE public.tor_exit_observations (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    fingerprint_hash bytea NOT NULL,\n    probe_status text NOT NULL,\n    exit_ip inet NOT NULL,\n    idempotency_key text NOT NULL UNIQUE,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_by uuid NOT NULL\n);\n\nCREATE INDEX idx_tor_exit_observations_fingerprint ON public.tor_exit_observations (fingerprint_hash);\nCREATE INDEX idx_tor_exit_observations_exit_ip ON public.tor_exit_observations (exit_ip);\nCREATE INDEX idx_tor_exit_observations_received_at ON public.tor_exit_observations (received_at);\n\nALTER TABLE public.tor_exit_observations ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_tor_exit_observations_insert ON public.tor_exit_observations\n    FOR INSERT\n    TO application\n    WITH CHECK (true);\n\nCREATE POLICY policy_tor_exit_observations_select ON public.tor_exit_observations\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_tor_exit_observations_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.tor_exit_observations is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_tor_exit_observations_append_only\nBEFORE UPDATE OR DELETE ON public.tor_exit_observations\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_tor_exit_observations_updates();\n\nCREATE OR REPLACE VIEW public.vw_tor_exit_observations AS\nSELECT \n    id,\n    fingerprint_hash,\n    probe_status,\n    exit_ip,\n    idempotency_key,\n    received_at,\n    payload,\n    created_by\nFROM public.tor_exit_observations;\n\nGRANT SELECT ON public.tor_exit_observations TO readonly_user;\nGRANT SELECT, INSERT ON public.tor_exit_observations TO application;\nGRANT ALL ON public.tor_exit_observations TO deployer;\nGRANT SELECT ON public.vw_tor_exit_observations TO readonly_user;\nGRANT SELECT ON public.vw_tor_exit_observations TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 27958
+    },
+    {
+      "taskId": "D-023",
+      "cohortId": "C5_FTT",
+      "table": "spam_trap_captures",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-07",
+        "F-16",
+        "F-17",
+        "F-37"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-07",
+        "F-16",
+        "F-17"
+      ],
+      "boundFailedFacts": [
+        "F-37"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 17,
+      "failedFacts": [
+        "F-12",
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36",
+        "F-37"
+      ],
+      "factPassRate": 0.7727,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 267,
+        "completionTokens": 449,
+        "totalTokens": 716
+      },
+      "generatedSql": "CREATE TABLE public.spam_trap_captures (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    idempotency_key text NOT NULL UNIQUE,\n    helo_domain text,\n    classification_status text,\n    sender_ip inet NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL DEFAULT '{}',\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_spam_trap_captures_sender_ip ON public.spam_trap_captures (sender_ip);\nCREATE INDEX idx_spam_trap_captures_received_at ON public.spam_trap_captures (received_at);\nCREATE INDEX idx_spam_trap_captures_payload ON public.spam_trap_captures USING gin (payload);\n\nCREATE OR REPLACE FUNCTION public.prevent_spam_trap_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.spam_trap_captures is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_spam_trap_captures_append_only\nBEFORE UPDATE OR DELETE ON public.spam_trap_captures\nFOR EACH ROW EXECUTE FUNCTION public.prevent_spam_trap_updates();\n\nALTER TABLE public.spam_trap_captures ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_spam_trap_captures_insert_application ON public.spam_trap_captures\n    FOR INSERT TO application WITH CHECK (true);\n\nCREATE POLICY policy_spam_trap_captures_select_application ON public.spam_trap_captures\n    FOR SELECT TO application USING (true);\n\nCREATE POLICY policy_spam_trap_captures_select_readonly ON public.spam_trap_captures\n    FOR SELECT TO readonly_user USING (true);\n\nGRANT SELECT, INSERT ON public.spam_trap_captures TO application;\nGRANT SELECT ON public.spam_trap_captures TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 25497
+    },
+    {
+      "taskId": "D-024",
+      "cohortId": "C5_FTT",
+      "table": "honeypot_ssh_sessions",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-05",
+        "F-13",
+        "F-16",
+        "F-17",
+        "F-37"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05",
+        "F-16",
+        "F-17",
+        "F-37"
+      ],
+      "boundFailedFacts": [
+        "F-13"
+      ],
+      "boundFactFraction": 0.8,
+      "pass": false,
+      "applicableFactCount": 21,
+      "passedFactCount": 20,
+      "failedFacts": [
+        "F-13"
+      ],
+      "factPassRate": 0.9524,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 270,
+        "completionTokens": 479,
+        "totalTokens": 749
+      },
+      "generatedSql": "CREATE TABLE public.honeypot_ssh_sessions (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    idempotency_key text NOT NULL UNIQUE,\n    sensor_region text NOT NULL,\n    auth_outcome text NOT NULL,\n    attacker_ip inet NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_by uuid DEFAULT (auth.jwt() -> 'sub')::uuid\n);\n\nCREATE INDEX idx_honeypot_ssh_sessions_received_at ON public.honeypot_ssh_sessions (received_at DESC);\nCREATE INDEX idx_honeypot_ssh_sessions_attacker_ip ON public.honeypot_ssh_sessions (attacker_ip);\nCREATE INDEX idx_honeypot_ssh_sessions_payload ON public.honeypot_ssh_sessions USING gin (payload);\n\nALTER TABLE public.honeypot_ssh_sessions ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_honeypot_ssh_sessions_ingest ON public.honeypot_ssh_sessions\n    FOR INSERT TO application\n    WITH CHECK (true);\n\nCREATE POLICY policy_honeypot_ssh_sessions_read ON public.honeypot_ssh_sessions\n    FOR SELECT TO application, readonly_user\n    USING (true);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_honeypot_ssh_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.honeypot_ssh_sessions is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_honeypot_ssh_sessions_append_only\nBEFORE UPDATE OR DELETE ON public.honeypot_ssh_sessions\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_honeypot_ssh_updates();\n\nGRANT SELECT ON public.honeypot_ssh_sessions TO application;\nGRANT SELECT ON public.honeypot_ssh_sessions TO readonly_user;\nGRANT INSERT ON public.honeypot_ssh_sessions TO application;\nGRANT ALL ON public.honeypot_ssh_sessions TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 95747
+    },
+    {
+      "taskId": "D-025",
+      "cohortId": "C5_FTT",
+      "table": "tls_fingerprint_probes",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-05",
+        "F-18",
+        "F-32"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-18",
+        "F-32"
+      ],
+      "boundFactFraction": 0.5,
+      "pass": false,
+      "applicableFactCount": 22,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-12",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "factPassRate": 0.6818,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 268,
+        "completionTokens": 549,
+        "totalTokens": 817
+      },
+      "generatedSql": "CREATE TABLE public.tls_fingerprint_probes (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    idempotency_key text NOT NULL,\n    listener_port integer NOT NULL,\n    handshake_status text NOT NULL,\n    client_ip inet NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE UNIQUE INDEX idx_tls_fingerprint_probes_idempotency ON public.tls_fingerprint_probes (idempotency_key);\nCREATE INDEX idx_tls_fingerprint_probes_received_at ON public.tls_fingerprint_probes (received_at);\nCREATE INDEX idx_tls_fingerprint_probes_client_ip ON public.tls_fingerprint_probes (client_ip);\n\nALTER TABLE public.tls_fingerprint_probes ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_tls_fingerprint_probes_ingest ON public.tls_fingerprint_probes\n    FOR INSERT TO application WITH CHECK (true);\n\nCREATE POLICY policy_tls_fingerprint_probes_read ON public.tls_fingerprint_probes\n    FOR SELECT TO application USING (true);\n\nCREATE POLICY policy_tls_fingerprint_probes_readonly ON public.tls_fingerprint_probes\n    FOR SELECT TO readonly_user USING (true);\n\nCREATE OR REPLACE FUNCTION public.fn_tls_fingerprint_probes_prevent_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.tls_fingerprint_probes is append-only; updates and deletes are not permitted';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_tls_fingerprint_probes_prevent_update\nBEFORE UPDATE ON public.tls_fingerprint_probes\nFOR EACH ROW EXECUTE FUNCTION public.fn_tls_fingerprint_probes_prevent_updates();\n\nCREATE TRIGGER trg_tls_fingerprint_probes_prevent_delete\nBEFORE DELETE ON public.tls_fingerprint_probes\nFOR EACH ROW EXECUTE FUNCTION public.fn_tls_fingerprint_probes_prevent_updates();\n\nGRANT SELECT, INSERT ON public.tls_fingerprint_probes TO application;\nGRANT SELECT ON public.tls_fingerprint_probes TO readonly_user;\nGRANT ALL ON public.tls_fingerprint_probes TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 26792
+    },
+    {
+      "taskId": "D-026",
+      "cohortId": "C6_FTF",
+      "table": "cluster_failover_events",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-05",
+        "F-18",
+        "F-20"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05",
+        "F-18"
+      ],
+      "boundFailedFacts": [
+        "F-20"
+      ],
+      "boundFactFraction": 0.6667,
+      "pass": false,
+      "applicableFactCount": 17,
+      "passedFactCount": 9,
+      "failedFacts": [
+        "F-03",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-30",
+        "F-36"
+      ],
+      "factPassRate": 0.5294,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 261,
+        "completionTokens": 429,
+        "totalTokens": 690
+      },
+      "generatedSql": "CREATE TABLE public.cluster_failover_events (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    operator_id uuid NOT NULL REFERENCES public.users(id),\n    cluster_name text NOT NULL,\n    old_primary_node text NOT NULL,\n    failover_duration_ms integer NOT NULL CHECK (failover_duration_ms >= 0),\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_cluster_failover_events_cluster_name ON public.cluster_failover_events(cluster_name);\nCREATE INDEX idx_cluster_failover_events_created_at ON public.cluster_failover_events(created_at);\n\nALTER TABLE public.cluster_failover_events ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_cluster_failover_events_select ON public.cluster_failover_events\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_cluster_failover_events_insert ON public.cluster_failover_events\n    FOR INSERT\n    TO application\n    WITH CHECK (true);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_cluster_failover_events_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Updates and deletes are not permitted on append-only table public.cluster_failover_events';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_cluster_failover_events_append_only\nBEFORE UPDATE OR DELETE ON public.cluster_failover_events\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_cluster_failover_events_updates();\n\nGRANT SELECT ON public.cluster_failover_events TO application;\nGRANT SELECT ON public.cluster_failover_events TO readonly_user;\nGRANT INSERT ON public.cluster_failover_events TO application;\nGRANT ALL ON public.cluster_failover_events TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 42237
+    },
+    {
+      "taskId": "D-027",
+      "cohortId": "C6_FTF",
+      "table": "backup_verification_logs",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-12",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-18"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-15",
+        "F-18"
+      ],
+      "boundFailedFacts": [
+        "F-12",
+        "F-16",
+        "F-17"
+      ],
+      "boundFactFraction": 0.4,
+      "pass": false,
+      "applicableFactCount": 18,
+      "passedFactCount": 11,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36"
+      ],
+      "factPassRate": 0.6111,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 256,
+        "completionTokens": 425,
+        "totalTokens": 681
+      },
+      "generatedSql": "CREATE TABLE public.backup_verification_logs (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    verified_by_user_id uuid NOT NULL REFERENCES public.users(id),\n    backup_archive_id text NOT NULL,\n    restore_status text NOT NULL,\n    size_bytes bigint NOT NULL CHECK (size_bytes >= 0),\n    created_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_backup_verification_logs_backup_archive_id ON public.backup_verification_logs(backup_archive_id);\nCREATE INDEX idx_backup_verification_logs_verified_by_user_id ON public.backup_verification_logs(verified_by_user_id);\nCREATE INDEX idx_backup_verification_logs_created_at ON public.backup_verification_logs(created_at);\n\nCREATE OR REPLACE FUNCTION public.fn_prevent_backup_verification_logs_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Updates and deletes are not permitted on the append-only table public.backup_verification_logs';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_backup_verification_logs_append_only\nBEFORE UPDATE OR DELETE ON public.backup_verification_logs\nFOR EACH ROW EXECUTE FUNCTION public.fn_prevent_backup_verification_logs_updates();\n\nALTER TABLE public.backup_verification_logs ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_backup_verification_logs_select_all ON public.backup_verification_logs\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_backup_verification_logs_insert_app ON public.backup_verification_logs\n    FOR INSERT\n    TO application\n    WITH CHECK (true);\n\nGRANT SELECT ON public.backup_verification_logs TO readonly_user;\nGRANT SELECT, INSERT ON public.backup_verification_logs TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 30952
+    },
+    {
+      "taskId": "D-028",
+      "cohortId": "C6_FTF",
+      "table": "hsm_ceremony_transcripts",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-07",
+        "F-17",
+        "F-18",
+        "F-20"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-07",
+        "F-18"
+      ],
+      "boundFailedFacts": [
+        "F-03",
+        "F-17",
+        "F-20"
+      ],
+      "boundFactFraction": 0.4,
+      "pass": false,
+      "applicableFactCount": 17,
+      "passedFactCount": 9,
+      "failedFacts": [
+        "F-03",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-36"
+      ],
+      "factPassRate": 0.5294,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 261,
+        "completionTokens": 571,
+        "totalTokens": 832
+      },
+      "generatedSql": "CREATE TABLE public.hsm_ceremony_transcripts (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    custodian_id uuid NOT NULL REFERENCES public.users(id),\n    ceremony_type text NOT NULL,\n    quorum_count integer NOT NULL CHECK (quorum_count > 0),\n    slot_number integer NOT NULL CHECK (slot_number >= 0),\n    transcript_data jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid NOT NULL REFERENCES public.users(id)\n);\n\nCREATE INDEX idx_hsm_ceremony_transcripts_custodian_id ON public.hsm_ceremony_transcripts(custodian_id);\nCREATE INDEX idx_hsm_ceremony_transcripts_ceremony_type ON public.hsm_ceremony_transcripts(ceremony_type);\nCREATE INDEX idx_hsm_ceremony_transcripts_created_at ON public.hsm_ceremony_transcripts(created_at);\n\nCREATE OR REPLACE FUNCTION public.fn_hsm_ceremony_transcripts_append_only()\nRETURNS TRIGGER AS $$\nBEGIN\n    IF (TG_OP = 'UPDATE') THEN\n        RAISE EXCEPTION 'Updates are not permitted on append-only table public.hsm_ceremony_transcripts';\n    ELSIF (TG_OP = 'DELETE') THEN\n        RAISE EXCEPTION 'Deletions are not permitted on append-only table public.hsm_ceremony_transcripts';\n    END IF;\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_hsm_ceremony_transcripts_append_only\nBEFORE UPDATE OR DELETE ON public.hsm_ceremony_transcripts\nFOR EACH ROW EXECUTE FUNCTION public.fn_hsm_ceremony_transcripts_append_only();\n\nALTER TABLE public.hsm_ceremony_transcripts ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_hsm_ceremony_transcripts_select\nON public.hsm_ceremony_transcripts\nFOR SELECT\nTO application\nUSING (true);\n\nCREATE POLICY policy_hsm_ceremony_transcripts_insert\nON public.hsm_ceremony_transcripts\nFOR INSERT\nTO application\nWITH CHECK (\n    (auth.jwt() ->> 'sub')::uuid = created_by\n);\n\nGRANT SELECT ON public.hsm_ceremony_transcripts TO readonly_user;\nGRANT SELECT, INSERT ON public.hsm_ceremony_transcripts TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 38948
+    },
+    {
+      "taskId": "D-029",
+      "cohortId": "C6_FTF",
+      "table": "zero_day_patch_rollouts",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-12",
+        "F-19",
+        "F-20"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [],
+      "boundFailedFacts": [
+        "F-12",
+        "F-19",
+        "F-20"
+      ],
+      "boundFactFraction": 0,
+      "pass": false,
+      "applicableFactCount": 18,
+      "passedFactCount": 10,
+      "failedFacts": [
+        "F-03",
+        "F-12",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-30",
+        "F-36"
+      ],
+      "factPassRate": 0.5556,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 264,
+        "completionTokens": 497,
+        "totalTokens": 761
+      },
+      "generatedSql": "CREATE TABLE public.zero_day_patch_rollouts (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    approved_by_user_id uuid NOT NULL REFERENCES public.users(id),\n    advisory_code text NOT NULL,\n    fleet_coverage_percent numeric(5, 2) NOT NULL CHECK (fleet_coverage_percent >= 0 AND fleet_coverage_percent <= 100),\n    rollout_state text NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    \n    CONSTRAINT zero_day_patch_rollouts_immutable CHECK (true)\n);\n\nCREATE INDEX idx_zero_day_patch_rollouts_advisory_code ON public.zero_day_patch_rollouts(advisory_code);\nCREATE INDEX idx_zero_day_patch_rollouts_created_at ON public.zero_day_patch_rollouts(created_at);\n\nCREATE OR REPLACE FUNCTION public.prevent_update_delete_zero_day_patch_rollouts()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.zero_day_patch_rollouts is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_zero_day_patch_rollouts_append_only\nBEFORE UPDATE OR DELETE ON public.zero_day_patch_rollouts\nFOR EACH ROW EXECUTE FUNCTION public.prevent_update_delete_zero_day_patch_rollouts();\n\nALTER TABLE public.zero_day_patch_rollouts ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_zero_day_patch_rollouts_select\n    ON public.zero_day_patch_rollouts\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_zero_day_patch_rollouts_insert\n    ON public.zero_day_patch_rollouts\n    FOR INSERT\n    TO application\n    WITH CHECK (true);\n\nGRANT SELECT ON public.zero_day_patch_rollouts TO readonly_user;\nGRANT SELECT, INSERT ON public.zero_day_patch_rollouts TO application;\nGRANT ALL ON public.zero_day_patch_rollouts TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 72099
+    },
+    {
+      "taskId": "D-030",
+      "cohortId": "C6_FTF",
+      "table": "incident_postmortem_locks",
+      "features": {
+        "tenant": false,
+        "append_only": true,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-05",
+        "F-20"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-03",
+        "F-20"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 17,
+      "passedFactCount": 10,
+      "failedFacts": [
+        "F-03",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-30",
+        "F-36"
+      ],
+      "factPassRate": 0.5882,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 258,
+        "completionTokens": 425,
+        "totalTokens": 683
+      },
+      "generatedSql": "CREATE TABLE public.incident_postmortem_locks (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    commander_id uuid NOT NULL REFERENCES public.users(id),\n    incident_code text NOT NULL,\n    severity_level text NOT NULL,\n    mttr_minutes integer NOT NULL CHECK (mttr_minutes >= 0),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    created_by uuid NOT NULL DEFAULT (auth.jwt() ->> 'sub')::uuid\n);\n\nCREATE INDEX idx_incident_postmortem_locks_incident_code ON public.incident_postmortem_locks(incident_code);\nCREATE INDEX idx_incident_postmortem_locks_commander_id ON public.incident_postmortem_locks(commander_id);\n\nCREATE OR REPLACE FUNCTION public.prevent_incident_postmortem_locks_updates()\nRETURNS TRIGGER AS $$\nBEGIN\n    RAISE EXCEPTION 'Table public.incident_postmortem_locks is append-only; updates and deletes are not permitted.';\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_incident_postmortem_locks_append_only\nBEFORE UPDATE OR DELETE ON public.incident_postmortem_locks\nFOR EACH ROW EXECUTE FUNCTION public.prevent_incident_postmortem_locks_updates();\n\nALTER TABLE public.incident_postmortem_locks ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_incident_postmortem_locks_select ON public.incident_postmortem_locks\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_incident_postmortem_locks_insert ON public.incident_postmortem_locks\n    FOR INSERT\n    TO application\n    WITH CHECK (true);\n\nGRANT SELECT ON public.incident_postmortem_locks TO application;\nGRANT SELECT ON public.incident_postmortem_locks TO readonly_user;\nGRANT INSERT ON public.incident_postmortem_locks TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 19765
+    },
+    {
+      "taskId": "D-031",
+      "cohortId": "C7_FFT",
+      "table": "spot_instance_prices",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-06",
+        "F-10",
+        "F-13",
+        "F-37"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-06",
+        "F-13"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-37"
+      ],
+      "boundFactFraction": 0.5,
+      "pass": false,
+      "applicableFactCount": 20,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-05",
+        "F-10",
+        "F-17",
+        "F-18",
+        "F-21",
+        "F-30",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.7,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 264,
+        "completionTokens": 574,
+        "totalTokens": 838
+      },
+      "generatedSql": "CREATE TABLE public.spot_instance_prices (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    instance_family text NOT NULL,\n    hourly_price numeric(18, 8) NOT NULL CHECK (hourly_price >= 0),\n    sample_count integer NOT NULL CHECK (sample_count >= 0),\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_spot_instance_idempotency UNIQUE (idempotency_key)\n);\n\nCREATE INDEX idx_spot_instance_prices_family ON public.spot_instance_prices (instance_family);\nCREATE INDEX idx_spot_instance_prices_received_at ON public.spot_instance_prices (received_at DESC);\n\nCREATE OR REPLACE FUNCTION public.handle_spot_instance_prices_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_spot_instance_prices_updated_at\nBEFORE UPDATE ON public.spot_instance_prices\nFOR EACH ROW\nEXECUTE FUNCTION public.handle_spot_instance_prices_updated_at();\n\nALTER TABLE public.spot_instance_prices ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_spot_instance_prices_deployer_all ON public.spot_instance_prices\n    TO deployer\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_spot_instance_prices_application_all ON public.spot_instance_prices\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_spot_instance_prices_readonly ON public.spot_instance_prices\n    FOR SELECT\n    TO readonly_user\n    USING (true);\n\nCREATE OR REPLACE VIEW public.vw_spot_instance_prices AS\nSELECT \n    id,\n    instance_family,\n    hourly_price,\n    sample_count,\n    received_at,\n    payload\nFROM public.spot_instance_prices;\n\nGRANT ALL PRIVILEGES ON TABLE public.spot_instance_prices TO deployer;\nGRANT ALL PRIVILEGES ON TABLE public.spot_instance_prices TO application;\nGRANT SELECT ON TABLE public.spot_instance_prices TO readonly_user;\nGRANT SELECT ON public.vw_spot_instance_prices TO readonly_user;\nGRANT SELECT ON public.vw_spot_instance_prices TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 24880
+    },
+    {
+      "taskId": "D-032",
+      "cohortId": "C7_FFT",
+      "table": "carbon_intensity_feeds",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-04",
+        "F-06",
+        "F-10",
+        "F-21"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-04",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-10",
+        "F-21"
+      ],
+      "boundFactFraction": 0.6,
+      "pass": false,
+      "applicableFactCount": 20,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-05",
+        "F-10",
+        "F-17",
+        "F-21",
+        "F-30",
+        "F-37"
+      ],
+      "factPassRate": 0.75,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 268,
+        "completionTokens": 442,
+        "totalTokens": 710
+      },
+      "generatedSql": "CREATE TABLE public.carbon_intensity_feeds (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    grid_zone text NOT NULL,\n    grams_co2_per_kwh decimal(12, 4) NOT NULL,\n    sample_count integer NOT NULL CHECK (sample_count >= 0),\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_carbon_intensity_idempotency UNIQUE (idempotency_key)\n);\n\nCREATE INDEX idx_carbon_intensity_feeds_grid_zone ON public.carbon_intensity_feeds (grid_zone);\nCREATE INDEX idx_carbon_intensity_feeds_received_at ON public.carbon_intensity_feeds (received_at);\n\nCREATE OR REPLACE FUNCTION public.handle_carbon_intensity_feeds_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_carbon_intensity_feeds_updated_at\nBEFORE UPDATE ON public.carbon_intensity_feeds\nFOR EACH ROW\nEXECUTE FUNCTION public.handle_carbon_intensity_feeds_updated_at();\n\nALTER TABLE public.carbon_intensity_feeds ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_carbon_intensity_feeds_application_all ON public.carbon_intensity_feeds\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_carbon_intensity_feeds_readonly_select ON public.carbon_intensity_feeds\n    FOR SELECT\n    TO readonly_user\n    USING (true);\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.carbon_intensity_feeds TO application;\nGRANT SELECT ON public.carbon_intensity_feeds TO readonly_user;\nGRANT ALL ON public.carbon_intensity_feeds TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 52186
+    },
+    {
+      "taskId": "D-033",
+      "cohortId": "C7_FFT",
+      "table": "crypto_index_tickers",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-05",
+        "F-37"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03"
+      ],
+      "boundFailedFacts": [
+        "F-05",
+        "F-37"
+      ],
+      "boundFactFraction": 0.3333,
+      "pass": false,
+      "applicableFactCount": 20,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-05",
+        "F-10",
+        "F-17",
+        "F-18",
+        "F-21",
+        "F-30",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.7,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 263,
+        "completionTokens": 498,
+        "totalTokens": 761
+      },
+      "generatedSql": "CREATE TABLE public.crypto_index_tickers (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    ticker_symbol text NOT NULL,\n    index_price numeric(38, 18) NOT NULL,\n    sample_count bigint NOT NULL CHECK (sample_count >= 0),\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_crypto_index_tickers_idempotency UNIQUE (idempotency_key)\n);\n\nCREATE INDEX idx_crypto_index_tickers_symbol ON public.crypto_index_tickers (ticker_symbol);\nCREATE INDEX idx_crypto_index_tickers_received_at ON public.crypto_index_tickers (received_at DESC);\n\nCREATE OR REPLACE FUNCTION public.handle_crypto_index_tickers_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_crypto_index_tickers_updated_at\nBEFORE UPDATE ON public.crypto_index_tickers\nFOR EACH ROW\nEXECUTE FUNCTION public.handle_crypto_index_tickers_updated_at();\n\nALTER TABLE public.crypto_index_tickers ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_crypto_index_tickers_application_all ON public.crypto_index_tickers\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_crypto_index_tickers_readonly_select ON public.crypto_index_tickers\n    FOR SELECT\n    TO readonly_user\n    USING (true);\n\nCREATE OR REPLACE VIEW public.vw_crypto_index_tickers AS\nSELECT \n    ticker_symbol,\n    index_price,\n    sample_count,\n    received_at,\n    payload\nFROM public.crypto_index_tickers;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.crypto_index_tickers TO application;\nGRANT SELECT ON public.crypto_index_tickers TO readonly_user;\nGRANT SELECT ON public.vw_crypto_index_tickers TO application, readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 10650
+    },
+    {
+      "taskId": "D-034",
+      "cohortId": "C7_FFT",
+      "table": "commodity_futures_quotes",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-04",
+        "F-06",
+        "F-17",
+        "F-18"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-04",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-17",
+        "F-18"
+      ],
+      "boundFactFraction": 0.5,
+      "pass": false,
+      "applicableFactCount": 20,
+      "passedFactCount": 16,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-18",
+        "F-30",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.8,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 262,
+        "completionTokens": 550,
+        "totalTokens": 812
+      },
+      "generatedSql": "CREATE TABLE public.commodity_futures_quotes (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    contract_symbol text NOT NULL,\n    settlement_price numeric(20, 10) NOT NULL,\n    sample_count integer NOT NULL CHECK (sample_count >= 0),\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_commodity_futures_quotes_idempotency UNIQUE (idempotency_key)\n);\n\nCREATE INDEX idx_commodity_futures_quotes_symbol ON public.commodity_futures_quotes (contract_symbol);\nCREATE INDEX idx_commodity_futures_quotes_received_at ON public.commodity_futures_quotes (received_at);\n\nCREATE OR REPLACE FUNCTION public.handle_commodity_futures_quotes_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_commodity_futures_quotes_updated_at\nBEFORE UPDATE ON public.commodity_futures_quotes\nFOR EACH ROW\nEXECUTE FUNCTION public.handle_commodity_futures_quotes_updated_at();\n\nALTER TABLE public.commodity_futures_quotes ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_commodity_futures_quotes_application_all ON public.commodity_futures_quotes\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_commodity_futures_quotes_readonly ON public.commodity_futures_quotes\n    FOR SELECT\n    TO readonly_user\n    USING (true);\n\nCREATE OR REPLACE VIEW public.vw_commodity_futures_quotes AS\nSELECT \n    id,\n    contract_symbol,\n    settlement_price,\n    sample_count,\n    idempotency_key,\n    received_at,\n    payload,\n    created_at,\n    updated_at\nFROM public.commodity_futures_quotes;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.commodity_futures_quotes TO application;\nGRANT SELECT ON public.commodity_futures_quotes TO readonly_user;\nGRANT SELECT ON public.vw_commodity_futures_quotes TO application;\nGRANT SELECT ON public.vw_commodity_futures_quotes TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 23857
+    },
+    {
+      "taskId": "D-035",
+      "cohortId": "C7_FFT",
+      "table": "freight_index_benchmarks",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": true
+      },
+      "boundFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-34"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-06",
+        "F-34"
+      ],
+      "boundFailedFacts": [
+        "F-05",
+        "F-10"
+      ],
+      "boundFactFraction": 0.6,
+      "pass": false,
+      "applicableFactCount": 20,
+      "passedFactCount": 15,
+      "failedFacts": [
+        "F-05",
+        "F-10",
+        "F-17",
+        "F-21",
+        "F-30",
+        "F-37",
+        "F-39"
+      ],
+      "factPassRate": 0.75,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 269,
+        "completionTokens": 583,
+        "totalTokens": 852
+      },
+      "generatedSql": "CREATE TABLE public.freight_index_benchmarks (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    lane_code text NOT NULL,\n    rate_per_feu decimal(12, 4) NOT NULL,\n    sample_count integer NOT NULL CHECK (sample_count >= 0),\n    idempotency_key text NOT NULL,\n    received_at timestamptz NOT NULL DEFAULT now(),\n    payload jsonb NOT NULL,\n    updated_at timestamptz NOT NULL DEFAULT now(),\n    CONSTRAINT uk_freight_index_benchmarks_idempotency UNIQUE (idempotency_key)\n);\n\nCREATE INDEX idx_freight_index_benchmarks_lane_code ON public.freight_index_benchmarks (lane_code);\nCREATE INDEX idx_freight_index_benchmarks_received_at ON public.freight_index_benchmarks (received_at);\n\nCREATE OR REPLACE FUNCTION public.handle_freight_index_benchmarks_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_freight_index_benchmarks_updated_at\n    BEFORE UPDATE ON public.freight_index_benchmarks\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_freight_index_benchmarks_updated_at();\n\nALTER TABLE public.freight_index_benchmarks ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_freight_index_benchmarks_application_all\n    ON public.freight_index_benchmarks\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nCREATE POLICY policy_freight_index_benchmarks_readonly_select\n    ON public.freight_index_benchmarks\n    FOR SELECT\n    TO readonly_user\n    USING (true);\n\nCREATE OR REPLACE VIEW public.vw_freight_index_benchmarks AS\nSELECT \n    id,\n    lane_code,\n    rate_per_feu,\n    sample_count,\n    idempotency_key,\n    received_at,\n    payload,\n    updated_at\nFROM public.freight_index_benchmarks;\n\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.freight_index_benchmarks TO application;\nGRANT SELECT ON public.freight_index_benchmarks TO readonly_user;\nGRANT SELECT ON public.vw_freight_index_benchmarks TO application;\nGRANT SELECT ON public.vw_freight_index_benchmarks TO readonly_user;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 30408
+    },
+    {
+      "taskId": "D-036",
+      "cohortId": "C8_FFF",
+      "table": "time_zones",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-05",
+        "F-06",
+        "F-10"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-05",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-10"
+      ],
+      "boundFactFraction": 0.6667,
+      "pass": false,
+      "applicableFactCount": 16,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-30"
+      ],
+      "factPassRate": 0.875,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 256,
+        "completionTokens": 332,
+        "totalTokens": 588
+      },
+      "generatedSql": "CREATE TABLE public.time_zones (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    tz_identifier text NOT NULL UNIQUE,\n    utc_offset_minutes integer NOT NULL CHECK (utc_offset_minutes BETWEEN -720 AND 840),\n    dst_supported boolean NOT NULL DEFAULT false,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_time_zones_tz_identifier ON public.time_zones (tz_identifier);\n\nCREATE OR REPLACE FUNCTION public.set_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_time_zones_set_updated_at\nBEFORE UPDATE ON public.time_zones\nFOR EACH ROW\nEXECUTE FUNCTION public.set_updated_at();\n\nALTER TABLE public.time_zones ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_time_zones_read ON public.time_zones\n    FOR SELECT\n    USING (true);\n\nCREATE POLICY policy_time_zones_modify ON public.time_zones\n    FOR ALL\n    TO deployer\n    USING (true)\n    WITH CHECK (true);\n\nGRANT SELECT ON public.time_zones TO readonly_user;\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.time_zones TO application;\nGRANT ALL ON public.time_zones TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 18924
+    },
+    {
+      "taskId": "D-037",
+      "cohortId": "C8_FFF",
+      "table": "mime_types",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-04",
+        "F-06",
+        "F-10"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-04",
+        "F-06"
+      ],
+      "boundFailedFacts": [
+        "F-10"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 16,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-30"
+      ],
+      "factPassRate": 0.875,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 250,
+        "completionTokens": 323,
+        "totalTokens": 573
+      },
+      "generatedSql": "CREATE TABLE public.mime_types (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    media_type text NOT NULL UNIQUE,\n    extension text NOT NULL,\n    max_size_bytes bigint NOT NULL CHECK (max_size_bytes > 0),\n    scan_required boolean NOT NULL DEFAULT true,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_mime_types_extension ON public.mime_types(extension);\n\nCREATE OR REPLACE FUNCTION public.set_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_mime_types_updated_at\n    BEFORE UPDATE ON public.mime_types\n    FOR EACH ROW\n    EXECUTE FUNCTION public.set_updated_at();\n\nALTER TABLE public.mime_types ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_mime_types_read ON public.mime_types\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_mime_types_all ON public.mime_types\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nGRANT SELECT ON public.mime_types TO readonly_user;\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.mime_types TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 27865
+    },
+    {
+      "taskId": "D-038",
+      "cohortId": "C8_FFF",
+      "table": "oauth_providers",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-05",
+        "F-17"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-05"
+      ],
+      "boundFailedFacts": [
+        "F-17"
+      ],
+      "boundFactFraction": 0.6667,
+      "pass": false,
+      "applicableFactCount": 16,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-30"
+      ],
+      "factPassRate": 0.875,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 249,
+        "completionTokens": 324,
+        "totalTokens": 573
+      },
+      "generatedSql": "CREATE TABLE public.oauth_providers (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    slug text NOT NULL UNIQUE,\n    issuer_url text NOT NULL,\n    token_ttl_seconds integer NOT NULL CHECK (token_ttl_seconds > 0),\n    pkce_required boolean NOT NULL DEFAULT true,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_oauth_providers_slug ON public.oauth_providers(slug);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_oauth_providers_updated_at\n    BEFORE UPDATE ON public.oauth_providers\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.oauth_providers ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_oauth_providers_read ON public.oauth_providers\n    FOR SELECT\n    USING (true);\n\nCREATE POLICY policy_oauth_providers_all ON public.oauth_providers\n    FOR ALL\n    TO deployer\n    USING (true)\n    WITH CHECK (true);\n\nGRANT SELECT ON public.oauth_providers TO application;\nGRANT SELECT ON public.oauth_providers TO readonly_user;\nGRANT ALL ON public.oauth_providers TO deployer;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 13219
+    },
+    {
+      "taskId": "D-039",
+      "cohortId": "C8_FFF",
+      "table": "instance_types",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-08",
+        "F-16",
+        "F-18"
+      ],
+      "boundPassed": false,
+      "boundPassedFacts": [
+        "F-03",
+        "F-08",
+        "F-16"
+      ],
+      "boundFailedFacts": [
+        "F-18"
+      ],
+      "boundFactFraction": 0.75,
+      "pass": false,
+      "applicableFactCount": 16,
+      "passedFactCount": 13,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-18",
+        "F-30"
+      ],
+      "factPassRate": 0.8125,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 249,
+        "completionTokens": 354,
+        "totalTokens": 603
+      },
+      "generatedSql": "CREATE TABLE public.instance_types (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    sku_name text NOT NULL UNIQUE,\n    vcpu_count integer NOT NULL CHECK (vcpu_count > 0),\n    memory_mib integer NOT NULL CHECK (memory_mib > 0),\n    architecture_family text NOT NULL,\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_instance_types_sku_name ON public.instance_types (sku_name);\nCREATE INDEX idx_instance_types_arch ON public.instance_types (architecture_family);\n\nCREATE OR REPLACE FUNCTION public.handle_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_instance_types_updated_at\n    BEFORE UPDATE ON public.instance_types\n    FOR EACH ROW\n    EXECUTE FUNCTION public.handle_updated_at();\n\nALTER TABLE public.instance_types ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_instance_types_read ON public.instance_types\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_instance_types_all ON public.instance_types\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nGRANT SELECT ON public.instance_types TO readonly_user;\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.instance_types TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 16082
+    },
+    {
+      "taskId": "D-040",
+      "cohortId": "C8_FFF",
+      "table": "storage_classes",
+      "features": {
+        "tenant": false,
+        "append_only": false,
+        "ingestion": false
+      },
+      "boundFacts": [
+        "F-03",
+        "F-06",
+        "F-18"
+      ],
+      "boundPassed": true,
+      "boundPassedFacts": [
+        "F-03",
+        "F-06",
+        "F-18"
+      ],
+      "boundFailedFacts": [],
+      "boundFactFraction": 1,
+      "pass": false,
+      "applicableFactCount": 16,
+      "passedFactCount": 14,
+      "failedFacts": [
+        "F-10",
+        "F-17",
+        "F-30"
+      ],
+      "factPassRate": 0.875,
+      "fromCache": false,
+      "usage": {
+        "promptTokens": 249,
+        "completionTokens": 321,
+        "totalTokens": 570
+      },
+      "generatedSql": "CREATE TABLE public.storage_classes (\n    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),\n    code text NOT NULL UNIQUE,\n    replication_factor integer NOT NULL CHECK (replication_factor BETWEEN 1 AND 6),\n    min_retention_days integer NOT NULL CHECK (min_retention_days >= 0),\n    created_at timestamptz NOT NULL DEFAULT now(),\n    updated_at timestamptz NOT NULL DEFAULT now()\n);\n\nCREATE INDEX idx_storage_classes_code ON public.storage_classes(code);\n\nCREATE OR REPLACE FUNCTION public.set_updated_at()\nRETURNS TRIGGER AS $$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW;\nEND;\n$$ LANGUAGE plpgsql;\n\nCREATE TRIGGER trg_storage_classes_updated_at\nBEFORE UPDATE ON public.storage_classes\nFOR EACH ROW EXECUTE FUNCTION public.set_updated_at();\n\nALTER TABLE public.storage_classes ENABLE ROW LEVEL SECURITY;\n\nCREATE POLICY policy_storage_classes_read ON public.storage_classes\n    FOR SELECT\n    TO application, readonly_user\n    USING (true);\n\nCREATE POLICY policy_storage_classes_all ON public.storage_classes\n    FOR ALL\n    TO application\n    USING (true)\n    WITH CHECK (true);\n\nGRANT SELECT ON public.storage_classes TO readonly_user;\nGRANT SELECT, INSERT, UPDATE, DELETE ON public.storage_classes TO application;",
+      "requestedModel": "google/gemma-4-31b-it",
+      "returnedModel": "google/gemma-4-31b-it",
+      "finishReason": "stop",
+      "latencyMs": 11834
+    }
+  ],
+  "provider": "nvidia",
+  "baseUrl": "https://integrate.api.nvidia.com/v1",
+  "requestedModel": "google/gemma-4-31b-it",
+  "returnedModel": "google/gemma-4-31b-it",
+  "oracleCommit": "a32b958856e8692299dee79994d9d4e466b5af15",
+  "factsSha256": "3fca31b6dda0b65d3adb33a02f2db288eb1eb14c027862418dccfb88bcda4815"
+}
