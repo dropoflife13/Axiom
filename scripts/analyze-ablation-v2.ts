@@ -7,6 +7,11 @@ export type GenerationStatus = 'ok' | 'empty' | 'length' | 'other';
 export interface Trial {
   condition: Condition;
   taskId: string;
+  features?: {
+    tenant: boolean;
+    append_only: boolean;
+    ingestion: boolean;
+  };
   generationStatus?: GenerationStatus;
   generatedSql?: string;
   boundFacts: string[];
@@ -357,6 +362,198 @@ export function sensitivityAnalysis(trials: Trial[]) {
   };
 }
 
+let cachedDefaultTaskCells: Map<
+  string,
+  { tenant: boolean; append_only: boolean; ingestion: boolean }
+> | null = null;
+
+function loadDefaultTaskCells(): Map<
+  string,
+  { tenant: boolean; append_only: boolean; ingestion: boolean }
+> {
+  if (cachedDefaultTaskCells) return cachedDefaultTaskCells;
+  const map = new Map<string, { tenant: boolean; append_only: boolean; ingestion: boolean }>();
+  try {
+    const tasksPath = path.resolve('fixtures/task-v2/tasks.json');
+    if (fs.existsSync(tasksPath)) {
+      const parsed = JSON.parse(fs.readFileSync(tasksPath, 'utf8')) as {
+        train?: Array<{ id: string; features?: any }>;
+        dev?: Array<{ id: string; features?: any }>;
+        test?: Array<{ id: string; features?: any }>;
+      };
+      for (const task of [
+        ...(parsed.train ?? []),
+        ...(parsed.dev ?? []),
+        ...(parsed.test ?? []),
+      ]) {
+        if (task && typeof task.id === 'string' && task.features) {
+          map.set(task.id, {
+            tenant: Boolean(task.features.tenant),
+            append_only: Boolean(task.features.append_only),
+            ingestion: Boolean(task.features.ingestion),
+          });
+        }
+      }
+    }
+  } catch {
+    // ignore
+  }
+  cachedDefaultTaskCells = map;
+  return map;
+}
+
+export function formatCellKey(features: {
+  tenant: boolean;
+  append_only: boolean;
+  ingestion: boolean;
+}): string {
+  return `tenant=${Boolean(features.tenant)},append_only=${Boolean(features.append_only)},ingestion=${Boolean(features.ingestion)}`;
+}
+
+export function exactCellSignFlip(cellMeans: readonly number[]): number {
+  const m = cellMeans.length;
+  if (m === 0 || cellMeans.every((v) => v === 0)) return 1;
+  const observed = cellMeans.reduce((sum, v) => sum + v, 0) / m;
+  const absObserved = Math.abs(observed);
+  const totalConfigs = 1 << m;
+  let atLeastAsExtreme = 0;
+  for (let mask = 0; mask < totalConfigs; mask++) {
+    let sum = 0;
+    for (let i = 0; i < m; i++) {
+      const sign = (mask & (1 << i)) !== 0 ? -1 : 1;
+      sum += sign * cellMeans[i];
+    }
+    const mean = sum / m;
+    if (Math.abs(mean) + 1e-12 >= absObserved) {
+      atLeastAsExtreme += 1;
+    }
+  }
+  return Math.min(1, atLeastAsExtreme / totalConfigs);
+}
+
+export function perCellAnalysis(
+  trials: Trial[],
+  taskFeaturesById?: ReadonlyMap<
+    string,
+    { tenant: boolean; append_only: boolean; ingestion: boolean }
+  >,
+  seed = BOOTSTRAP_SEED,
+  bootstrapResamples = BOOTSTRAP_RESAMPLES
+) {
+  const defaultMap = loadDefaultTaskCells();
+  const resolvedCellByTask = new Map<string, string>();
+  for (const trial of trials) {
+    if (resolvedCellByTask.has(trial.taskId)) continue;
+    const f =
+      trial.features ??
+      taskFeaturesById?.get(trial.taskId) ??
+      defaultMap.get(trial.taskId);
+    if (f) {
+      resolvedCellByTask.set(trial.taskId, formatCellKey(f));
+    }
+  }
+
+  const byCondition = new Map<Condition, Trial[]>();
+  for (const condition of CONDITIONS) {
+    byCondition.set(condition, trials.filter((trial) => trial.condition === condition));
+  }
+
+  const comparisons: Record<
+    string,
+    {
+      n: number;
+      cellCount: number;
+      perCell: Record<
+        string,
+        {
+          n: number;
+          meanDifference: number;
+        }
+      >;
+      combinedMeanDifference: number;
+      withinCellBootstrapCi95: [number, number];
+      exactCellSignFlipPValue: number;
+    }
+  > = {};
+
+  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
+    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
+    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
+    const pairedIds = [...base.keys()].filter((id) => target.has(id)).sort();
+
+    const diffsByCell = new Map<string, number[]>();
+    for (const id of pairedIds) {
+      const cellKey = resolvedCellByTask.get(id) ?? 'unassigned';
+      const diff =
+        (target.get(id) as Trial).boundFactFraction -
+        (base.get(id) as Trial).boundFactFraction;
+      let arr = diffsByCell.get(cellKey);
+      if (!arr) {
+        arr = [];
+        diffsByCell.set(cellKey, arr);
+      }
+      arr.push(diff);
+    }
+
+    const sortedCells = [...diffsByCell.keys()].sort();
+    const perCell: Record<string, { n: number; meanDifference: number }> = {};
+    const cellMeans: number[] = [];
+
+    for (const cellKey of sortedCells) {
+      const diffs = diffsByCell.get(cellKey)!;
+      const mean = diffs.reduce((s, v) => s + v, 0) / diffs.length;
+      perCell[cellKey] = {
+        n: diffs.length,
+        meanDifference: mean,
+      };
+      cellMeans.push(mean);
+    }
+
+    const m = cellMeans.length;
+    const combinedMeanDifference =
+      m > 0 ? cellMeans.reduce((s, v) => s + v, 0) / m : 0;
+
+    let ci95: [number, number] = [0, 0];
+    if (m > 0 && bootstrapResamples > 0) {
+      const random = rng(seed);
+      const samples: number[] = [];
+      for (let r = 0; r < bootstrapResamples; r++) {
+        let cellMeanSum = 0;
+        for (const cellKey of sortedCells) {
+          const diffs = diffsByCell.get(cellKey)!;
+          const nc = diffs.length;
+          let sum = 0;
+          for (let i = 0; i < nc; i++) {
+            sum += diffs[Math.floor(random() * nc)];
+          }
+          cellMeanSum += sum / nc;
+        }
+        samples.push(cellMeanSum / m);
+      }
+      samples.sort((a, b) => a - b);
+      const quantile = (p: number) =>
+        samples[Math.min(samples.length - 1, Math.floor(p * samples.length))];
+      ci95 = [quantile(0.025), quantile(0.975)];
+    }
+
+    const exactP = exactCellSignFlip(cellMeans);
+    comparisons[`C_vs_${baseline}`] = {
+      n: pairedIds.length,
+      cellCount: m,
+      perCell,
+      combinedMeanDifference,
+      withinCellBootstrapCi95: ci95,
+      exactCellSignFlipPValue: exactP,
+    };
+  }
+
+  return {
+    exploratory: true as const,
+    note: 'Exploratory per-cell analysis outside the Holm-Bonferroni family: paired mean difference per (tenant, append_only, ingestion) cell, equal-weight cell-stratified combined estimate with within-cell bootstrap 95% CI, and exact two-sided sign-flip test over cell means.',
+    comparisons,
+  };
+}
+
 export function analyzeTrials(trials: Trial[]) {
   const byCondition = new Map<Condition, Trial[]>();
   for (const condition of CONDITIONS) {
@@ -425,12 +622,14 @@ export function analyzeTrials(trials: Trial[]) {
     secondaryP[key] = secondary.pValue;
   }
   const sensitivity = sensitivityAnalysis(trials);
+  const perCell = perCellAnalysis(trials);
   return {
     conditions,
     comparisons,
     holmPrimaryPValues: holmAdjust(primaryP),
     holmSecondaryPValues: holmAdjust(secondaryP),
     sensitivityAnalysis: sensitivity,
+    perCellAnalysis: perCell,
     generationIndependenceNote:
       "E_B trials with reusedFromCondition='B' reuse Condition B's cached generation and are not independent generations.",
   };
@@ -732,6 +931,12 @@ export function markdownReport(report: any): string {
     JSON.stringify(report.sensitivityAnalysis, null, 2),
     '```',
     '',
+    '## Per-cell analysis (Exploratory — Outside Holm Family)',
+    '',
+    '```json',
+    JSON.stringify(report.perCellAnalysis, null, 2),
+    '```',
+    '',
     '## Retrieval overlap',
     '',
     '```json',
@@ -849,6 +1054,7 @@ export function buildReport(
     generationIndependenceNote: analysis.generationIndependenceNote,
     analysis,
     sensitivityAnalysis: analysis.sensitivityAnalysis,
+    perCellAnalysis: analysis.perCellAnalysis,
     failuresByFact: failuresByFact(trials),
     retrievalOverlap: retrievalOverlap(trials),
     perFactRetrievalAnalysis: perFactRetrievalAnalysis(trials),

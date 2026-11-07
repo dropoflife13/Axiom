@@ -331,10 +331,12 @@ export function getTaskApplicableFacts(
   return rawApplicable.filter((id) => ELIGIBLE_FACT_IDS.has(id));
 }
 
+export const SQL_RETRIEVAL_TOP_K = 10;
+
 export function retrieveApplicableLessonsForTask(
   task: Pick<TaskV2Item, 'features'> & Partial<Pick<TaskV2Item, 'applicableFacts' | 'prompt' | 'goldenSql'>>,
   memory: readonly Lesson[] | Lesson[],
-  topK: number = LESSON_TOP_K
+  topK: number = SQL_RETRIEVAL_TOP_K
 ): Lesson[] {
   const applicableFactIds = getTaskApplicableFacts(task);
   return retrieveLessonsByFeatures(task.features, memory, topK, applicableFactIds, true);
@@ -360,13 +362,13 @@ export function buildConditionHint(
     return `ORACLE STATIC FACTS. Satisfy every applicable fact below:\n${STATIC_FACTS}`;
   }
   if (condition === 'C') {
-    const lessons = retrieveApplicableLessonsForTask(task, memory, LESSON_TOP_K);
+    const lessons = retrieveApplicableLessonsForTask(task, memory, SQL_RETRIEVAL_TOP_K);
     return lessons.length > 0
       ? `DYNAMIC MEMORY LESSONS:\n${formatRetrievedLessons(lessons)}`
       : undefined;
   }
   if (condition === 'C0') {
-    const lessons = retrieveApplicableLessonsForTask(task, memory, LESSON_TOP_K);
+    const lessons = retrieveApplicableLessonsForTask(task, memory, SQL_RETRIEVAL_TOP_K);
     if (lessons.length === 0) return undefined;
     const verbatimLines = lessons.map((l) => {
       const code = l.factId ?? l.errorCode;
@@ -522,7 +524,7 @@ export async function runAblationTaskCondition(options: {
   const oracleEvalFn = options.oracleEvalFn ?? evaluateMigrationSqlInContainer;
   const retrievedFactIds =
     options.condition === 'C' || options.condition === 'C0'
-      ? retrieveApplicableLessonsForTask(options.task, options.memory, LESSON_TOP_K).map(
+      ? retrieveApplicableLessonsForTask(options.task, options.memory, SQL_RETRIEVAL_TOP_K).map(
           (lesson) => lesson.factId ?? lesson.errorCode
         )
       : [];
@@ -843,6 +845,11 @@ export function assertMemoryUnchanged(
   return actualSha256;
 }
 
+function parseCliArg(flag: string): string | undefined {
+  const idx = process.argv.indexOf(flag);
+  return idx >= 0 && process.argv[idx + 1] ? process.argv[idx + 1] : undefined;
+}
+
 async function main(): Promise<void> {
   const root = path.resolve('.');
   const allowDirty = process.argv.includes('--allow-dirty');
@@ -855,12 +862,32 @@ async function main(): Promise<void> {
     path.join(root, 'out', 'train-calibration.json'),
     path.join(root, 'out', 'dev-calibration.json'),
   ]);
-  if (
-    taskFile.test.length !== 120 ||
-    taskFile.test[0]?.id !== 'H-001' ||
-    taskFile.test[119]?.id !== 'H-120'
-  ) {
-    throw new Error(`Expected H-001..H-120 test tasks, got ${taskFile.test.length}`);
+
+  const tasksFilterArg = parseCliArg('--tasks');
+  let targetTasks: TaskV2Item[];
+  if (tasksFilterArg) {
+    const requestedIds = new Set(
+      tasksFilterArg
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+    const allTasks = [...taskFile.train, ...taskFile.dev, ...taskFile.test];
+    targetTasks = allTasks.filter((t) => requestedIds.has(t.id));
+    if (targetTasks.length !== requestedIds.size) {
+      throw new Error(
+        `Requested --tasks ${tasksFilterArg}, found ${targetTasks.map((t) => t.id).join(', ')}`
+      );
+    }
+  } else {
+    if (
+      taskFile.test.length !== 120 ||
+      taskFile.test[0]?.id !== 'H-001' ||
+      taskFile.test[119]?.id !== 'H-120'
+    ) {
+      throw new Error(`Expected H-001..H-120 test tasks, got ${taskFile.test.length}`);
+    }
+    targetTasks = taskFile.test;
   }
 
   const configuredModel = resolveExecutorModel();
@@ -875,15 +902,24 @@ async function main(): Promise<void> {
 
   const stateDir = path.join(root, '.axiom-state');
   const memoryPath = path.join(stateDir, 'memory.json');
-  const checkpointPath = path.join(stateDir, 'ablation-v2-checkpoint.json');
-  const resultPath = path.join(stateDir, 'ablation-v2-results.json');
+  const checkpointArg = parseCliArg('--checkpoint');
+  const outArg = parseCliArg('--out');
+  const checkpointPath = checkpointArg
+    ? path.resolve(checkpointArg)
+    : path.join(stateDir, 'ablation-v2-checkpoint.json');
+  const resultPath = outArg
+    ? path.resolve(outArg)
+    : path.join(stateDir, 'ablation-v2-results.json');
   fs.mkdirSync(stateDir, { recursive: true });
+  fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
+  fs.mkdirSync(path.dirname(resultPath), { recursive: true });
 
   // Load memory once in read-only mode and record its SHA-256 at startup
   const { memory, sha256: memorySha256AtStart } = loadReadOnlyMemorySnapshot(memoryPath);
   const runMetadata = getRunMetadata(root);
 
   const conditions: ConditionId[] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
+  const totalExpectedTrials = targetTasks.length * conditions.length;
   const containerName = `axiom-ablation-v2-${process.pid}`;
   let checkpointMetadata: RunMetadata | undefined;
   const trials: Trial[] = fs.existsSync(checkpointPath)
@@ -901,7 +937,7 @@ async function main(): Promise<void> {
 
   startPostgresContainer(containerName);
   try {
-    for (const task of taskFile.test) {
+    for (const task of targetTasks) {
       for (const condition of conditions) {
         if (trials.some((trial) => trial.taskId === task.id && trial.condition === condition)) {
           continue;
@@ -917,7 +953,7 @@ async function main(): Promise<void> {
         trials.push(trial);
         fs.writeFileSync(checkpointPath, JSON.stringify({ metadata: runMetadata, trials }, null, 2), 'utf8');
         console.log(
-          `[${trials.length}/720 ${task.id} ${condition}] gen=${trial.generationStatus} boundPass=${trial.boundPassed} (${(trial.boundFactFraction * 100).toFixed(1)}%) | rawPass=${trial.passRaw} | failed=[${trial.failedFacts.join(', ')}]`
+          `[${trials.length}/${totalExpectedTrials} ${task.id} ${condition}] gen=${trial.generationStatus} boundPass=${trial.boundPassed} (${(trial.boundFactFraction * 100).toFixed(1)}%) | rawPass=${trial.passRaw} | failed=[${trial.failedFacts.join(', ')}]`
         );
         if (!fromCache) {
           await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -943,7 +979,7 @@ async function main(): Promise<void> {
     model: configuredModel,
     temperature: 0,
     repeats: 1,
-    testTasks: taskFile.test.length,
+    testTasks: targetTasks.length,
     conditions,
     memorySha256AtStart,
     memorySha256AtEnd,

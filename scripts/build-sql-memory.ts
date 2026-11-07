@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { FACTS, FACT_STATEMENTS } from './facts.js';
 import { generateLesson } from '../src/advisor.js';
+import { BUDGET_GUARD, getDailyCap } from '../src/guardrails.js';
+import { mergeObservedFeatures, type ObservedFeatures } from '../src/memory.js';
 import {
   assertTaskContentSha256Matches,
   canonicalFactStatement,
@@ -37,6 +39,7 @@ export async function buildMemoryProposal(
   const rows = calibration.factStats ?? calibration.perFactStats ?? [];
   const byId = new Map(rows.map((row) => [row.factId, row]));
   const observedByFact = new Map<string, Record<string, boolean>>();
+  const observedCoverageByFact = new Map<string, ObservedFeatures>();
   for (const report of calibration.taskReports ?? []) {
     const flagsSource = report.derivedFlags ?? report.features;
     for (const factId of report.applicableFacts ?? []) {
@@ -46,9 +49,21 @@ export async function buildMemoryProposal(
           existing[key] = Boolean(existing[key]) || Boolean(value);
         }
         observedByFact.set(factId, existing);
+        const mergedCoverage = mergeObservedFeatures(
+          observedCoverageByFact.get(factId),
+          {
+            tenant: Boolean(flagsSource.tenant),
+            append_only: Boolean(flagsSource.append_only),
+            ingestion: Boolean(flagsSource.ingestion),
+          }
+        );
+        if (mergedCoverage) {
+          observedCoverageByFact.set(factId, mergedCoverage);
+        }
       }
     }
   }
+  const now = new Date().toISOString();
   const lessons = [];
   for (const fact of FACTS) {
     const row = byId.get(fact.id);
@@ -60,14 +75,18 @@ export async function buildMemoryProposal(
     const lesson = failed
       ? await distill(fact.id, canonicalFactStatement(fact.id))
       : FACT_STATEMENTS[fact.id];
+    const observedFeatures = observedCoverageByFact.get(fact.id);
     lessons.push({
       errorCode: fact.id,
       factId: fact.id,
       lesson,
       origin: failed ? 'distilled' : 'verbatim',
       features: observedByFact.get(fact.id) ?? {},
+      ...(observedFeatures ? { observedFeatures } : {}),
       trainFailureRate: failed ? row.failedCount / row.applicableCount : 0,
       utilityScore: failed ? row.failedCount : 0,
+      createdAt: now,
+      lastUsedAt: now,
     });
   }
   lessons.sort(
@@ -103,6 +122,12 @@ function main(): void {
     installReviewedMemory();
     return;
   }
+  process.env.AXIOM_DAILY_CALLS = String(
+    Math.max(Number(process.env.AXIOM_DAILY_CALLS || 1000), 1000)
+  );
+  BUDGET_GUARD.maxTotalLlmCallsPerProcess = Math.max(getDailyCap(), 100);
+  BUDGET_GUARD.callTimeoutMs = Math.max(BUDGET_GUARD.callTimeoutMs, 120_000);
+
   const calibrationPath = path.resolve('out/train-calibration.json');
   const tasksPath = path.resolve('fixtures/task-v2/tasks.json');
   const calibration = JSON.parse(fs.readFileSync(calibrationPath, 'utf8')) as CalibrationInput;

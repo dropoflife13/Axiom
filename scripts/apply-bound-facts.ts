@@ -19,6 +19,7 @@ export function applyBoundFacts(
 ): string {
   assertScopedCleanGitTree({ gitStatus, context: 'applying bound facts' });
   const proposal = JSON.parse(fs.readFileSync(proposalPath, 'utf8')) as {
+    rule?: 'R1' | 'R2';
     tasksSha256: string;
     boundFacts: Record<string, string[]>;
   };
@@ -37,16 +38,22 @@ export function applyBoundFacts(
   fs.writeFileSync(tasksPath, JSON.stringify(tasks, null, 2) + '\n');
   const after = sha256(tasksPath);
   const date = new Date().toISOString().slice(0, 10);
+  const ruleLabel = proposal.rule ? ` (${proposal.rule})` : '';
   fs.appendFileSync(
     changelogPath,
-    `\n- ${date}, bound-fact regeneration, \`fixtures/task-v2/tasks.json\`, regenerated bound facts from the Train calibration with the committed deterministic rule; 49 bound-fact occurrences (F-12 x35, F-39 x14) were invalid; this happened before any test-split condition was run. SHA-256: ${before} -> ${after}.\n`
+    `\n- ${date}, bound-fact regeneration${ruleLabel}, \`fixtures/task-v2/tasks.json\`, regenerated bound facts from the Train calibration with the committed deterministic rule${ruleLabel}; 49 bound-fact occurrences (F-12 x35, F-39 x14) were invalid; this happened before any test-split condition was run. SHA-256: ${before} -> ${after}.\n`
   );
   return after;
 }
 
 function main(): void {
+  const propIdx = process.argv.indexOf('--proposal');
+  const proposalArg =
+    propIdx >= 0 && process.argv[propIdx + 1]
+      ? process.argv[propIdx + 1]
+      : 'out/proposed/bound-facts.proposed.json';
   applyBoundFacts(
-    path.resolve('out/proposed/bound-facts.proposed.json'),
+    path.resolve(proposalArg),
     path.resolve('fixtures/task-v2/tasks.json'),
     path.resolve('docs/spec/oracle-changelog.md')
   );

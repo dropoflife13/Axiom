@@ -2,12 +2,15 @@ import { describe, expect, it } from 'vitest';
 import {
   analyzeTrials,
   buildReport,
+  exactCellSignFlip,
+  formatCellKey,
   holmAdjust,
   lessonOriginAnalysis,
   lessonOrigins,
   markdownReport,
   mcnemar,
   pairedBootstrap,
+  perCellAnalysis,
   retrievalOverlap,
   sensitivityAnalysis,
   wilson,
@@ -473,5 +476,47 @@ describe('offline ablation analysis', () => {
     const md = markdownReport(report);
     expect(md).toContain('## Sensitivity analysis (Exploratory — Outside Holm Family)');
     expect(md).toContain('gen(ok/empty/length/other)');
+  });
+
+  it('computes exploratory per-cell analysis with equal-weight cell-stratified estimate, within-cell bootstrap CI, and exact cell sign-flip test', () => {
+    // 8 cells, all with positive cell mean difference -> exact 2-sided sign-flip p = 2 / 2^8 = 1/128 = 0.0078125
+    expect(exactCellSignFlip([0.2, 0.3, 0.1, 0.4, 0.25, 0.15, 0.35, 0.25])).toBeCloseTo(
+      2 / 256,
+      10
+    );
+    expect(exactCellSignFlip([0, 0, 0, 0])).toBe(1);
+
+    // Unbalanced synthetic cells to verify equal-weight cell stratification:
+    // Cell 1 (tenant=true, append_only=false, ingestion=false): 3 tasks with diff = [0.2, 0.4, 0.6] -> cell mean = 0.4
+    // Cell 2 (tenant=false, append_only=false, ingestion=false): 1 task with diff = [0.8] -> cell mean = 0.8
+    // Equal-weight stratified mean = (0.4 + 0.8) / 2 = 0.6 (whereas unstratified mean is (0.2+0.4+0.6+0.8)/4 = 0.5)
+    const cell1 = { tenant: true, append_only: false, ingestion: false };
+    const cell2 = { tenant: false, append_only: false, ingestion: false };
+    const syntheticTrials: Trial[] = [
+      trial('A', 'SYN-1', 0.0, false, { features: cell1 }),
+      trial('C', 'SYN-1', 0.2, false, { features: cell1 }),
+      trial('A', 'SYN-2', 0.0, false, { features: cell1 }),
+      trial('C', 'SYN-2', 0.4, false, { features: cell1 }),
+      trial('A', 'SYN-3', 0.0, false, { features: cell1 }),
+      trial('C', 'SYN-3', 0.6, false, { features: cell1 }),
+      trial('A', 'SYN-4', 0.0, false, { features: cell2 }),
+      trial('C', 'SYN-4', 0.8, false, { features: cell2 }),
+    ];
+
+    const res = perCellAnalysis(syntheticTrials, undefined, 20260101, 2000);
+    expect(res.exploratory).toBe(true);
+    const cVsA = res.comparisons.C_vs_A;
+    expect(cVsA.n).toBe(4);
+    expect(cVsA.cellCount).toBe(2);
+    expect(cVsA.perCell[formatCellKey(cell1)].n).toBe(3);
+    expect(cVsA.perCell[formatCellKey(cell1)].meanDifference).toBeCloseTo(0.4, 6);
+    expect(cVsA.perCell[formatCellKey(cell2)].n).toBe(1);
+    expect(cVsA.perCell[formatCellKey(cell2)].meanDifference).toBeCloseTo(0.8, 6);
+    expect(cVsA.combinedMeanDifference).toBeCloseTo(0.6, 6);
+    // In every within-cell resample, cell1 mean is in [0.2, 0.6] and cell2 mean is 0.8, so combined is in [0.5, 0.7]
+    expect(cVsA.withinCellBootstrapCi95[0]).toBeGreaterThanOrEqual(0.5 - 1e-9);
+    expect(cVsA.withinCellBootstrapCi95[1]).toBeLessThanOrEqual(0.7 + 1e-9);
+    // With 2 cells both positive (0.4 and 0.8), 2 of 4 sign flips (++ and --) have |mean| >= 0.6 -> p = 0.5
+    expect(cVsA.exactCellSignFlipPValue).toBeCloseTo(0.5, 6);
   });
 });

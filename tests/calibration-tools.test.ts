@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildBoundFactProposal, discriminatingFacts, selectBoundFacts } from '../scripts/propose-bound-facts.js';
+import {
+  buildBoundFactProposal,
+  candidateFactsForRule,
+  discriminatingFacts,
+  selectBoundFacts,
+} from '../scripts/propose-bound-facts.js';
 import { buildMemoryProposal } from '../scripts/build-sql-memory.js';
-import { syntheticKSweep } from '../scripts/report-dev-k-sweep.js';
+import { computeDevKSweepForRule, syntheticKSweep } from '../scripts/report-dev-k-sweep.js';
+import { auditTaskConditionPrompts, buildInMemoryPlaceholderMemory } from '../scripts/audit-condition-prompts.js';
 import {
   buildCalibrationTaskRecord,
   getCalibrationApplicableFacts,
@@ -26,6 +32,103 @@ describe('offline calibration preparation', () => {
       { factId: 'F-02', applicableCount: 3, passRate: 0.8 },
       { factId: 'F-03', applicableCount: 3, passRate: 0.81 },
     ] })]).toEqual(['F-01', 'F-02']);
+  });
+
+  it('supports R1 and R2 candidate rules including floor facts and optional Condition B satisfiability filter', () => {
+    const cal = {
+      factStats: [
+        { factId: 'F-03', applicableCount: 40, passRate: 0.375 },
+        { factId: 'F-10', applicableCount: 20, passRate: 0.0 },
+        { factId: 'F-19', applicableCount: 20, passRate: 0.0 },
+        { factId: 'F-39', applicableCount: 2, passRate: 0.0 },
+        { factId: 'F-01', applicableCount: 40, passRate: 0.975 },
+      ],
+    };
+
+    const r1 = candidateFactsForRule(cal, { rule: 'R1' });
+    expect([...r1.candidates]).toEqual(['F-03']);
+    expect(r1.floorCandidates).toEqual([]);
+    expect(r1.satisfiabilityFilterSkipped).toBe(false);
+
+    // R2 without Condition B calibration: includes floor facts with applicableCount >= 3 and reports filter skipped
+    const r2NoB = candidateFactsForRule(cal, { rule: 'R2' });
+    expect([...r2NoB.candidates].sort()).toEqual(['F-03', 'F-10', 'F-19']);
+    expect(r2NoB.discriminatingCandidates).toEqual(['F-03']);
+    expect(r2NoB.floorCandidates).toEqual(['F-10', 'F-19']);
+    expect(r2NoB.satisfiabilityFilterSkipped).toBe(true);
+
+    // R2 with Condition B calibration: excludes facts with Condition B passRate === 0
+    const r2WithB = candidateFactsForRule(cal, {
+      rule: 'R2',
+      conditionBCalibration: {
+        factStats: [
+          { factId: 'F-03', applicableCount: 40, passRate: 0.9 },
+          { factId: 'F-10', applicableCount: 20, passRate: 0.5 },
+          { factId: 'F-19', applicableCount: 20, passRate: 0.0 },
+        ],
+      },
+    });
+    expect([...r2WithB.candidates].sort()).toEqual(['F-03', 'F-10']);
+    expect(r2WithB.unsatisfiableFactsExcluded).toEqual(['F-19']);
+    expect(r2WithB.satisfiabilityFilterSkipped).toBe(false);
+  });
+
+  it('computes Dev K-sweep from Train failure rates only and rejects Test split tasks', () => {
+    const devTask = {
+      id: 'D-001',
+      split: 'dev' as const,
+      features: { tenant: false, append_only: false, ingestion: false },
+      prompt: 'Create a table.',
+      goldenSql: 'CREATE TABLE public.items (id uuid PRIMARY KEY);',
+    };
+    const rows = computeDevKSweepForRule(
+      [devTask],
+      { 'D-001': ['F-01', 'F-03', 'F-05'] },
+      {
+        factStats: [
+          { factId: 'F-01', applicableCount: 40, passRate: 0.2 },
+          { factId: 'F-03', applicableCount: 40, passRate: 0.3 },
+          { factId: 'F-05', applicableCount: 40, passRate: 0.4 },
+        ],
+      },
+      [6]
+    );
+    expect(rows[0].meanRetrievableBoundFactFraction).toBe(1);
+    expect(rows[0].fullCoverageFraction).toBe(1);
+
+    expect(() =>
+      computeDevKSweepForRule(
+        [{ ...devTask, id: 'H-001', split: 'test' }],
+        { 'H-001': ['F-01'] },
+        { factStats: [] },
+        [6]
+      )
+    ).toThrow(/only run on dev split/);
+  });
+
+  it('audits condition prompts without calling any LLM', () => {
+    const sampleTrainTask = {
+      id: 'T-001',
+      split: 'train' as const,
+      cohortId: 'C1',
+      table: 'webhook_deliveries',
+      prompt: 'Create a multi-tenant append-only ingestion table.',
+      features: { tenant: true, append_only: true, ingestion: true },
+      boundFacts: ['F-03', 'F-05', 'F-15'],
+      goldenSql: 'CREATE TABLE public.webhook_deliveries (id uuid PRIMARY KEY);',
+    };
+    const memory = buildInMemoryPlaceholderMemory([sampleTrainTask], {
+      factStats: [{ factId: 'F-03', applicableCount: 40, passRate: 0.375 }],
+    });
+    const audit = auditTaskConditionPrompts(sampleTrainTask, memory);
+    expect(audit.checks.c0UsesOnlyCanonicalStatementsOfSameRetrievedFacts).toBe(true);
+    expect(audit.checks.dTipsNotInApplicableSet).toBe(true);
+    expect(audit.checks.ebByteIdenticalToB).toBe(true);
+    expect(audit.checks.noCorrectedSql).toBe(true);
+    expect(audit.checks.noReferenceSolutionText).toBe(true);
+    expect(audit.checks.noNonApplicableFactIdsByCondition.C).toBe(true);
+    expect(audit.checks.noNonApplicableFactIdsByCondition.C0).toBe(true);
+    expect(audit.checks.noNonApplicableFactIdsByCondition.B).toBe(false);
   });
 
   it('builds a proposal without Advisor calls for facts with no failures', async () => {
