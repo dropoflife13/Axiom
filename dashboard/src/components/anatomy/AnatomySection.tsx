@@ -1,4 +1,4 @@
-'use client';
+import AxiomAnatomy from './AxiomAnatomy';
 
 const parts = [
   ['Task generator', 'Seeded tasks: 40 train, 40 dev, and 120 test tasks.'],
@@ -21,13 +21,9 @@ export function AnatomySection() {
         <p>Axiom is a machine for testing generated migrations against rules that are not visible to the model.</p>
         <p>Every failure becomes evidence, and only evidence that survives a retry can become memory.</p>
       </div>
-      <figure className="anatomy-frame">
-        <figcaption>Fig. 1 · Illustration, not telemetry</figcaption>
-        <div className="anatomy-frame__placeholder" role="img" aria-label="Axiom anatomy illustration placeholder">
-          <span>Anatomy figure slot</span>
-          <small>AxiomAnatomy will render here when the illustration component is added.</small>
-        </div>
-      </figure>
+      <div className="anatomy-frame">
+        <AxiomAnatomy />
+      </div>
       <dl className="anatomy-parts">
         {parts.map(([term, role]) => (
           <div className="anatomy-part" key={term}>

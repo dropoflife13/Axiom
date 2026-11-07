@@ -1,0 +1,598 @@
+@import "./kit/iso.css";
+
+.iso.axiom-anatomy-root {
+  /* Dashboard palette mapped to kit --anatomy-* tokens on near-black #05060a */
+  --anatomy-page: #05060a;
+  --anatomy-card: #05060a;
+  --anatomy-paper: #05060a;
+  --anatomy-text: #cbd5e1;
+  --anatomy-strong: #f8fafc;
+  --anatomy-muted: #7c8ba1;
+
+  --anatomy-face: #101624;
+  --anatomy-top: #182134;
+  --anatomy-shade-0: #090d16;
+  --anatomy-shade-1: #0c121e;
+  --anatomy-shade-2: #101827;
+  --anatomy-shade-3: #141e30;
+
+  --anatomy-lit-top: #2e1d4a;
+  --anatomy-lit-shade: #1f1435;
+  --anatomy-lit: #c084fc;
+
+  --anatomy-hi: #e2e8f0;
+  --anatomy-mid: #8896ab;
+  --anatomy-lo: #4b596e;
+  --anatomy-faint: #293446;
+
+  --anatomy-halo: #020305;
+  --anatomy-halo-opacity: 0.85;
+  --anatomy-dot: #22d3ee;
+
+  --anatomy-red: #f43f5e;
+  --anatomy-green: #34d399;
+  --anatomy-blue: #22d3ee;
+  --anatomy-weight: 0.72px;
+
+  color: var(--anatomy-strong);
+  margin: 28px 0;
+}
+
+.iso.axiom-anatomy-root .iso-plate {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(168, 85, 247, 0.11), transparent 46%),
+    radial-gradient(circle at 78% 24%, rgba(34, 211, 238, 0.09), transparent 48%),
+    radial-gradient(circle at 52% 76%, rgba(251, 191, 36, 0.06), transparent 52%),
+    #05060a;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 16px;
+  padding: 46px 22px 50px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+
+.iso.axiom-anatomy-root .iso-plate-corners {
+  inset: 16px 22px;
+}
+
+.iso.axiom-anatomy-root .iso-plate-corner[data-corner="fig"] {
+  color: #a855f7;
+  font-weight: 600;
+}
+
+.iso.axiom-anatomy-root .iso-plate-corner[data-corner="title"] {
+  color: #94a3b8;
+}
+
+.iso.axiom-anatomy-root .iso-plate-corner[data-corner="hint"] {
+  color: #64748b;
+}
+
+.iso.axiom-anatomy-root .iso-plate-corner[data-corner="readout"] {
+  color: #22d3ee;
+}
+
+.iso.axiom-anatomy-root .iso-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 20px;
+  margin-top: 14px;
+  padding: 0 4px;
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+
+.iso.axiom-anatomy-root .iso-caption {
+  color: #cbd5e1;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* Interactive Toolbar */
+.axiom-anatomy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.axiom-anatomy__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  background: rgba(11, 15, 25, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 10px;
+}
+
+.axiom-anatomy__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.axiom-anatomy__btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #e2e8f0;
+  background: rgba(24, 32, 50, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 7px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+}
+
+.axiom-anatomy__btn:hover,
+.axiom-anatomy__btn:focus-visible {
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.14);
+  color: #ffffff;
+  outline: none;
+}
+
+.axiom-anatomy__btn[aria-pressed="true"] {
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.2);
+  color: #f3e8ff;
+}
+
+.axiom-anatomy__btn--primary {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.26), rgba(34, 211, 238, 0.18));
+  color: #f8fafc;
+}
+
+.axiom-anatomy__btn--primary:hover,
+.axiom-anatomy__btn--primary:focus-visible {
+  border-color: #c084fc;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.38), rgba(34, 211, 238, 0.26));
+}
+
+.axiom-anatomy__btn-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #34d399;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.85);
+}
+
+.axiom-anatomy__phases {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.axiom-anatomy__phase-pill {
+  appearance: none;
+  font-family: var(--anatomy-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  background: rgba(11, 15, 26, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.axiom-anatomy__phase-pill:hover,
+.axiom-anatomy__phase-pill:focus-visible {
+  color: #f8fafc;
+  border-color: rgba(226, 232, 240, 0.45);
+  outline: none;
+}
+
+.axiom-anatomy__phase-pill[data-active="true"][data-accent="violet"] {
+  color: #f3e8ff;
+  border-color: #a855f7;
+  background: rgba(168, 85, 247, 0.26);
+}
+.axiom-anatomy__phase-pill[data-active="true"][data-accent="cyan"] {
+  color: #ecfeff;
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.24);
+}
+.axiom-anatomy__phase-pill[data-active="true"][data-accent="rose"] {
+  color: #ffe4e6;
+  border-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.26);
+}
+.axiom-anatomy__phase-pill[data-active="true"][data-accent="amber"] {
+  color: #fef3c7;
+  border-color: #fbbf24;
+  background: rgba(251, 191, 36, 0.24);
+}
+.axiom-anatomy__phase-pill[data-active="true"][data-accent="emerald"] {
+  color: #d1fae5;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.24);
+}
+
+/* Stage wrapper */
+.axiom-anatomy__stage-wrap {
+  position: relative;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 52%, rgba(34, 211, 238, 0.07), rgba(168, 85, 247, 0.04) 42%, transparent 72%),
+    #05060a;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  padding: 4px 6px;
+  outline: none;
+}
+
+.axiom-anatomy__stage-wrap:focus-visible {
+  border-color: #22d3ee;
+  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.25);
+}
+
+/* Station Hit Area & Accent Variables per Station mapped to --anatomy-lit-* */
+.axiom-anatomy__hit {
+  fill: rgba(0, 0, 0, 0.001);
+  stroke: none;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.axiom-anatomy__station {
+  cursor: pointer;
+  outline: none;
+}
+
+.axiom-anatomy__station[data-accent="violet"] {
+  --anatomy-lit-top: #2d1948;
+  --anatomy-lit-shade: #1e1133;
+  --anatomy-lit: #a855f7;
+}
+
+.axiom-anatomy__station[data-accent="cyan"] {
+  --anatomy-lit-top: #0f313d;
+  --anatomy-lit-shade: #0a222b;
+  --anatomy-lit: #22d3ee;
+}
+
+.axiom-anatomy__station[data-accent="amber"] {
+  --anatomy-lit-top: #382a10;
+  --anatomy-lit-shade: #261c0b;
+  --anatomy-lit: #fbbf24;
+}
+
+.axiom-anatomy__station[data-accent="rose"] {
+  --anatomy-lit-top: #3b1523;
+  --anatomy-lit-shade: #280e18;
+  --anatomy-lit: #f43f5e;
+}
+
+.axiom-anatomy__station[data-accent="emerald"] {
+  --anatomy-lit-top: #0f3328;
+  --anatomy-lit-shade: #0a231b;
+  --anatomy-lit: #34d399;
+}
+
+/* Selected / Hovered Station Highlighting */
+.axiom-anatomy__station[data-selected="true"] .iso-edge {
+  stroke-width: 1.05px;
+}
+
+.axiom-anatomy__station[data-selected="true"][data-accent="violet"] {
+  --anatomy-top: #26173e;
+  --anatomy-lit-top: #462373;
+  --anatomy-lit-shade: #301750;
+  --anatomy-lit: #d8b4fe;
+  --anatomy-hi: #f3e8ff;
+}
+
+.axiom-anatomy__station[data-selected="true"][data-accent="cyan"] {
+  --anatomy-top: #112b38;
+  --anatomy-lit-top: #154c5e;
+  --anatomy-lit-shade: #0e3542;
+  --anatomy-lit: #67e8f9;
+  --anatomy-hi: #ecfeff;
+}
+
+.axiom-anatomy__station[data-selected="true"][data-accent="amber"] {
+  --anatomy-top: #302410;
+  --anatomy-lit-top: #574014;
+  --anatomy-lit-shade: #3b2b0d;
+  --anatomy-lit: #fde68a;
+  --anatomy-hi: #fef3c7;
+}
+
+.axiom-anatomy__station[data-selected="true"][data-accent="rose"] {
+  --anatomy-top: #331420;
+  --anatomy-lit-top: #5c1d33;
+  --anatomy-lit-shade: #3f1323;
+  --anatomy-lit: #fda4af;
+  --anatomy-hi: #ffe4e6;
+}
+
+.axiom-anatomy__station[data-selected="true"][data-accent="emerald"] {
+  --anatomy-top: #112d24;
+  --anatomy-lit-top: #164f3d;
+  --anatomy-lit-shade: #0f372a;
+  --anatomy-lit: #6ee7b7;
+  --anatomy-hi: #d1fae5;
+}
+
+/* Moving trial blank tone mapping */
+.axiom-anatomy__trial-layer[data-tone="violet"] {
+  --anatomy-lit-top: #4c247d;
+  --anatomy-lit-shade: #341857;
+  --anatomy-lit: #d8b4fe;
+}
+.axiom-anatomy__trial-layer[data-tone="cyan"] {
+  --anatomy-lit-top: #145369;
+  --anatomy-lit-shade: #0d3948;
+  --anatomy-lit: #67e8f9;
+}
+.axiom-anatomy__trial-layer[data-tone="rose"] {
+  --anatomy-lit-top: #691e38;
+  --anatomy-lit-shade: #471426;
+  --anatomy-lit: #fda4af;
+}
+.axiom-anatomy__trial-layer[data-tone="amber"] {
+  --anatomy-lit-top: #634814;
+  --anatomy-lit-shade: #45320d;
+  --anatomy-lit: #fde68a;
+}
+.axiom-anatomy__trial-layer[data-tone="emerald"] {
+  --anatomy-lit-top: #165944;
+  --anatomy-lit-shade: #0e3d2e;
+  --anatomy-lit: #6ee7b7;
+}
+
+/* Station Readout Card & Inspector */
+.axiom-anatomy__inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(11, 15, 26, 0.92);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.axiom-anatomy__inspector[data-accent="violet"] {
+  border-left: 3px solid #a855f7;
+}
+.axiom-anatomy__inspector[data-accent="cyan"] {
+  border-left: 3px solid #22d3ee;
+}
+.axiom-anatomy__inspector[data-accent="amber"] {
+  border-left: 3px solid #fbbf24;
+}
+.axiom-anatomy__inspector[data-accent="rose"] {
+  border-left: 3px solid #f43f5e;
+}
+.axiom-anatomy__inspector[data-accent="emerald"] {
+  border-left: 3px solid #34d399;
+}
+
+.axiom-anatomy__readout-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.axiom-anatomy__readout-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.axiom-anatomy__station-num {
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.32);
+  border-radius: 5px;
+  padding: 2px 6px;
+}
+
+.axiom-anatomy__station-title {
+  margin: 0;
+  font-family: var(--anatomy-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.axiom-anatomy__station-badge {
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  color: #cbd5e1;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 5px;
+  padding: 2px 7px;
+}
+
+.axiom-anatomy__trial-badge {
+  margin-left: auto;
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 9px;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  color: #e9d5ff;
+  background: rgba(168, 85, 247, 0.16);
+}
+
+.axiom-anatomy__station-role {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+.axiom-anatomy__trial-summary {
+  margin: 0;
+  font-family: var(--anatomy-mono);
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #94a3b8;
+}
+
+/* 9-Station Selector Strip */
+.axiom-anatomy__station-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 6px;
+}
+
+.axiom-anatomy__station-chip {
+  appearance: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-align: left;
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  color: #94a3b8;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 6px;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.axiom-anatomy__station-chip:hover,
+.axiom-anatomy__station-chip:focus-visible {
+  color: #f8fafc;
+  border-color: rgba(226, 232, 240, 0.38);
+  outline: none;
+}
+
+.axiom-anatomy__station-chip[data-active="true"] {
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.95);
+  border-color: #22d3ee;
+}
+
+.axiom-anatomy__chip-num {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.axiom-anatomy__station-chip[data-active="true"] .axiom-anatomy__chip-num {
+  color: #22d3ee;
+}
+
+.axiom-anatomy__chip-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 6-Condition Summary Bar */
+.axiom-anatomy__conditions-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.axiom-anatomy__conditions-title {
+  font-family: var(--anatomy-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.axiom-anatomy__conditions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.axiom-anatomy__condition-tag {
+  font-family: var(--anatomy-mono);
+  font-size: 10.5px;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 5px;
+  padding: 3px 7px;
+}
+
+.axiom-anatomy__condition-tag strong {
+  color: #fbbf24;
+  margin-right: 4px;
+}
+
+@media (max-width: 680px) {
+  .iso.axiom-anatomy-root .iso-plate {
+    padding: 46px 12px 78px;
+  }
+
+  .iso.axiom-anatomy-root .iso-plate-corners {
+    inset: 14px 12px;
+  }
+
+  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="title"] {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+
+  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="hint"] {
+    bottom: 28px;
+    left: 0;
+    right: 0;
+    white-space: normal;
+    line-height: 1.3;
+    font-size: 9px;
+  }
+
+  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="readout"] {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    white-space: normal;
+    line-height: 1.3;
+    font-size: 9.5px;
+  }
+
+  .axiom-anatomy__toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .axiom-anatomy__actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .axiom-anatomy__btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .axiom-anatomy__station-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .axiom-anatomy__trial-badge {
+    margin-left: 0;
+  }
+}
