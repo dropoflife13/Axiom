@@ -1,4 +1,4 @@
--- META: {"table":"system_boot_logs","tenant":false,"append_only":true,"ingestion":false}
+-- META: {"table":"system_boot_logs","tenant":false,"append_only":true,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.system_boot_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   supersedes_id uuid NULL,

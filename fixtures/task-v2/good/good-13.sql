@@ -1,4 +1,4 @@
--- META: {"table":"telemetry_frames","tenant":true,"append_only":true,"ingestion":true}
+-- META: {"table":"telemetry_frames","tenant":true,"append_only":true,"ingestion":true,"view":true,"sec_definer":true}
 CREATE TABLE public.telemetry_frames (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

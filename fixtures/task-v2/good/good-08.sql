@@ -1,4 +1,4 @@
--- META: {"table":"access_logs","tenant":true,"append_only":true,"ingestion":false}
+-- META: {"table":"access_logs","tenant":true,"append_only":true,"ingestion":false,"view":true,"sec_definer":true}
 CREATE TABLE public.access_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

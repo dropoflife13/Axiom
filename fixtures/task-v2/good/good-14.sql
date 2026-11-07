@@ -1,4 +1,4 @@
--- META: {"table":"payment_callbacks","tenant":true,"append_only":true,"ingestion":true}
+-- META: {"table":"payment_callbacks","tenant":true,"append_only":true,"ingestion":true,"view":true,"sec_definer":true}
 CREATE TABLE public.payment_callbacks (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

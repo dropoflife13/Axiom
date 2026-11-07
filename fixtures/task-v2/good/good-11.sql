@@ -1,4 +1,4 @@
--- META: {"table":"price_logs","tenant":true,"append_only":true,"ingestion":true}
+-- META: {"table":"price_logs","tenant":true,"append_only":true,"ingestion":true,"view":true,"sec_definer":true}
 CREATE TABLE public.price_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

@@ -1,4 +1,4 @@
--- META: {"table":"subscriptions","tenant":true,"append_only":false,"ingestion":false,"expectedFailedFacts":["F-31"],"mutationDescription":"Comment trick: SET search_path = '' commented out on SECURITY DEFINER function"}
+-- META: {"table":"subscriptions","tenant":true,"append_only":false,"ingestion":false,"sec_definer":true,"expectedFailedFacts":["F-31"],"mutationDescription":"Comment trick: SET search_path = '' commented out on SECURITY DEFINER function"}
 CREATE TABLE public.subscriptions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

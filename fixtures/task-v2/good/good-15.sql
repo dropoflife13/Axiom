@@ -1,4 +1,4 @@
--- META: {"table":"meter_readings","tenant":true,"append_only":true,"ingestion":true}
+-- META: {"table":"meter_readings","tenant":true,"append_only":true,"ingestion":true,"view":true,"sec_definer":true}
 CREATE TABLE public.meter_readings (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

@@ -1,4 +1,4 @@
--- META: {"table":"schema_migrations_audit","tenant":false,"append_only":true,"ingestion":false}
+-- META: {"table":"schema_migrations_audit","tenant":false,"append_only":true,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.schema_migrations_audit (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   supersedes_id uuid NULL,

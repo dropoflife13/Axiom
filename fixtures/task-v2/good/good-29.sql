@@ -1,4 +1,4 @@
--- META: {"table":"feature_flags","tenant":false,"append_only":false,"ingestion":false}
+-- META: {"table":"feature_flags","tenant":false,"append_only":false,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.feature_flags (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   flag_key text NOT NULL,

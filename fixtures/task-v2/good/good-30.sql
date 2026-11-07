@@ -1,4 +1,4 @@
--- META: {"table":"rate_limit_tiers","tenant":false,"append_only":false,"ingestion":false}
+-- META: {"table":"rate_limit_tiers","tenant":false,"append_only":false,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.rate_limit_tiers (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tier_slug text NOT NULL,

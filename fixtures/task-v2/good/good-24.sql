@@ -1,4 +1,4 @@
--- META: {"table":"ca_certificates","tenant":false,"append_only":true,"ingestion":false}
+-- META: {"table":"ca_certificates","tenant":false,"append_only":true,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.ca_certificates (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   supersedes_id uuid NULL,

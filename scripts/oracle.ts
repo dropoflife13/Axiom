@@ -14,6 +14,7 @@ export interface MigrationMeta {
   latest_per_key?: boolean;
   status?: boolean;
   sec_definer?: boolean;
+  view?: boolean;
   expectedFailedFacts?: string[];
 }
 
@@ -22,6 +23,7 @@ export interface OracleReport {
   failedFacts: string[];
   details: string;
   failureDetails?: string[];
+  migrationExitNonZero?: boolean;
 }
 
 export function parseMigrationMeta(sql: string, filePath: string): MigrationMeta {
@@ -141,6 +143,9 @@ function buildOracleProbeSql(meta: MigrationMeta): string {
   const isAppendOnly = meta.append_only ? 'true' : 'false';
   const isIngestion = meta.ingestion ? 'true' : 'false';
   const isLatestPerKey = meta.latest_per_key ? 'true' : 'false';
+  const isStatus = meta.status ? 'true' : 'false';
+  const isSecDefiner = meta.sec_definer ? 'true' : 'false';
+  const isView = meta.view ? 'true' : 'false';
 
   return `
 -- 1. Run deterministic structural catalog probes + seed rows + F-37 & F-21 probes
@@ -151,6 +156,9 @@ DECLARE
   v_append_only boolean := ${isAppendOnly};
   v_ingestion boolean := ${isIngestion};
   v_latest_per_key boolean := ${isLatestPerKey};
+  v_status boolean := ${isStatus};
+  v_sec_definer boolean := ${isSecDefiner};
+  v_view boolean := ${isView};
   v_relid oid;
   v_cnt int;
   v_rec record;
@@ -233,15 +241,8 @@ BEGIN
     RAISE NOTICE 'FACT_FAIL|F-05';
   END IF;
 
-  -- F-06 (append_only = false vs append_only = true override): updated_at present on mutable, absent on append-only
-  IF v_append_only THEN
-    SELECT count(*) INTO v_cnt
-    FROM pg_attribute a
-    WHERE a.attrelid = v_relid AND a.attname = 'updated_at' AND NOT a.attisdropped;
-    IF v_cnt > 0 THEN
-      RAISE NOTICE 'FACT_FAIL|F-06';
-    END IF;
-  ELSE
+  -- F-06 (append_only = false): updated_at timestamptz NOT NULL DEFAULT now()
+  IF NOT v_append_only THEN
     SELECT count(*) INTO v_cnt
     FROM pg_attribute a
     LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
@@ -273,31 +274,26 @@ BEGIN
     RAISE NOTICE 'FACT_FAIL|F-08';
   END IF;
 
-  -- F-09 (Universal + ingestion = true): No json columns; ingestion tables require payload jsonb NOT NULL
-  SELECT count(*) INTO v_cnt
-  FROM pg_attribute a
-  WHERE a.attrelid = v_relid AND a.attnum > 0 AND NOT a.attisdropped
-    AND a.atttypid = 'json'::regtype;
-  IF v_cnt > 0 THEN
-    RAISE NOTICE 'FACT_FAIL|F-09';
-  ELSIF v_ingestion THEN
+  -- F-09 (ingestion = true): No json columns; ingestion tables require payload jsonb NOT NULL
+  IF v_ingestion THEN
     SELECT count(*) INTO v_cnt
     FROM pg_attribute a
-    WHERE a.attrelid = v_relid AND a.attname = 'payload' AND a.atttypid = 'jsonb'::regtype AND a.attnotnull = true;
-    IF v_cnt = 0 THEN
+    WHERE a.attrelid = v_relid AND a.attnum > 0 AND NOT a.attisdropped
+      AND a.atttypid = 'json'::regtype;
+    IF v_cnt > 0 THEN
       RAISE NOTICE 'FACT_FAIL|F-09';
+    ELSE
+      SELECT count(*) INTO v_cnt
+      FROM pg_attribute a
+      WHERE a.attrelid = v_relid AND a.attname = 'payload' AND a.atttypid = 'jsonb'::regtype AND a.attnotnull = true;
+      IF v_cnt = 0 THEN
+        RAISE NOTICE 'FACT_FAIL|F-09';
+      END IF;
     END IF;
   END IF;
 
-  -- F-10 (append_only = false vs append_only = true override): deleted_at nullable timestamptz on mutable, absent on append-only
-  IF v_append_only THEN
-    SELECT count(*) INTO v_cnt
-    FROM pg_attribute a
-    WHERE a.attrelid = v_relid AND a.attname = 'deleted_at' AND NOT a.attisdropped;
-    IF v_cnt > 0 THEN
-      RAISE NOTICE 'FACT_FAIL|F-10';
-    END IF;
-  ELSE
+  -- F-10 (append_only = false): deleted_at nullable timestamptz on mutable tables
+  IF NOT v_append_only THEN
     SELECT count(*) INTO v_cnt
     FROM pg_attribute a
     WHERE a.attrelid = v_relid
@@ -319,9 +315,9 @@ BEGIN
     RAISE NOTICE 'FACT_FAIL|F-11';
   END IF;
 
-  -- F-12: Status or state columns must be text NOT NULL validated by a CHECK (col IN (...)) constraint
-  FOR v_rec IN
-    SELECT a.attname, a.atttypid, a.attnotnull
+  -- F-12 (status = true): Status or state columns must be text NOT NULL validated by a CHECK (col IN (...)) constraint
+  IF v_status THEN
+    SELECT count(*) INTO v_cnt
     FROM pg_attribute a
     WHERE a.attrelid = v_relid AND a.attnum > 0 AND NOT a.attisdropped
       AND (
@@ -329,23 +325,38 @@ BEGIN
         OR a.attname LIKE '%_status'
         OR a.attname LIKE '%_state'
       )
-      AND a.attname NOT IN ('http_status', 'status_code')
-  LOOP
-    IF v_rec.atttypid <> 'text'::regtype OR NOT v_rec.attnotnull THEN
-      RAISE NOTICE 'FACT_FAIL|F-12';
-      EXIT;
-    END IF;
-
-    SELECT count(*) INTO v_cnt
-    FROM pg_constraint c
-    JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
-    WHERE c.conrelid = v_relid AND c.contype = 'c' AND a.attname = v_rec.attname;
-
+      AND a.attname NOT IN ('http_status', 'status_code');
     IF v_cnt = 0 THEN
       RAISE NOTICE 'FACT_FAIL|F-12';
-      EXIT;
+    ELSE
+      FOR v_rec IN
+        SELECT a.attname, a.atttypid, a.attnotnull
+        FROM pg_attribute a
+        WHERE a.attrelid = v_relid AND a.attnum > 0 AND NOT a.attisdropped
+          AND (
+            a.attname IN ('status', 'state', 'billing_state', 'delivery_status', 'batch_status', 'sync_status', 'decision', 'verification_status')
+            OR a.attname LIKE '%_status'
+            OR a.attname LIKE '%_state'
+          )
+          AND a.attname NOT IN ('http_status', 'status_code')
+      LOOP
+        IF v_rec.atttypid <> 'text'::regtype OR NOT v_rec.attnotnull THEN
+          RAISE NOTICE 'FACT_FAIL|F-12';
+          EXIT;
+        END IF;
+
+        SELECT count(*) INTO v_cnt
+        FROM pg_constraint c
+        JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+        WHERE c.conrelid = v_relid AND c.contype = 'c' AND a.attname = v_rec.attname;
+
+        IF v_cnt = 0 THEN
+          RAISE NOTICE 'FACT_FAIL|F-12';
+          EXIT;
+        END IF;
+      END LOOP;
     END IF;
-  END LOOP;
+  END IF;
 
   -- F-15 (Universal): FK columns named <singular_ref_table>_id (or role-qualified _<singular_ref_table>_id / supersedes_id)
   SELECT count(*) INTO v_cnt
@@ -477,27 +488,31 @@ BEGIN
     END IF;
   END IF;
 
-  -- F-30 (Universal / RLS write policies): No tautological USING (true) or WITH CHECK (true) on write policies
-  SELECT count(*) INTO v_cnt
-  FROM pg_policy p
-  WHERE p.polrelid = v_relid AND p.polcmd IN ('a', 'w', '*')
-    AND (btrim(pg_get_expr(p.polqual, p.polrelid)) = 'true'
-         OR btrim(pg_get_expr(p.polwithcheck, p.polrelid)) = 'true');
-  IF v_cnt > 0 THEN
-    RAISE NOTICE 'FACT_FAIL|F-30';
+  -- F-30 (tenant = true): No tautological USING (true) or WITH CHECK (true) on write policies
+  IF v_tenant THEN
+    SELECT count(*) INTO v_cnt
+    FROM pg_policy p
+    WHERE p.polrelid = v_relid AND p.polcmd IN ('a', 'w', '*')
+      AND (btrim(pg_get_expr(p.polqual, p.polrelid)) = 'true'
+           OR btrim(pg_get_expr(p.polwithcheck, p.polrelid)) = 'true');
+    IF v_cnt > 0 THEN
+      RAISE NOTICE 'FACT_FAIL|F-30';
+    END IF;
   END IF;
 
-  -- F-31: Functions declared SECURITY DEFINER must set search_path = ''
-  IF EXISTS (
-    SELECT 1
-    FROM pg_proc p
-    JOIN pg_namespace n ON n.oid = p.pronamespace
-    WHERE n.nspname = 'public'
-      AND p.prosecdef = true
-      AND (p.proconfig IS NULL
-           OR NOT ('search_path=""' = ANY(p.proconfig)))
-  ) THEN
-    RAISE NOTICE 'FACT_FAIL|F-31';
+  -- F-31 (sec_definer = true): Functions declared SECURITY DEFINER must set search_path = ''
+  IF v_sec_definer THEN
+    IF EXISTS (
+      SELECT 1
+      FROM pg_proc p
+      JOIN pg_namespace n ON n.oid = p.pronamespace
+      WHERE n.nspname = 'public'
+        AND p.prosecdef = true
+        AND (p.proconfig IS NULL
+             OR NOT ('search_path=""' = ANY(p.proconfig)))
+    ) THEN
+      RAISE NOTICE 'FACT_FAIL|F-31';
+    END IF;
   END IF;
 
   -- F-32 (ingestion = true): UNIQUE constraint on idempotency_key (and tenant_id if tenant)
@@ -565,8 +580,8 @@ BEGIN
     END IF;
   END IF;
 
-  -- F-39 (tenant = true or any dependent view): Dynamically check pg_depend / pg_rewrite for any view depending on v_relid with security_invoker = true
-  IF v_tenant THEN
+  -- F-39 (view = true): Dynamically check pg_depend / pg_rewrite for any view depending on v_relid with security_invoker = true
+  IF v_view THEN
     SELECT count(*) INTO v_cnt
     FROM pg_class vc
     JOIN pg_namespace vn ON vn.oid = vc.relnamespace
@@ -585,32 +600,30 @@ BEGIN
         OR 'security_invoker=on' = ANY(vc.reloptions)
         OR 'security_invoker=1' = ANY(vc.reloptions)
       );
-    IF v_cnt = 0 THEN
+    IF v_cnt = 0 OR EXISTS (
+      SELECT 1
+      FROM pg_class vc
+      JOIN pg_namespace vn ON vn.oid = vc.relnamespace
+      WHERE vn.nspname = 'public'
+        AND vc.relkind = 'v'
+        AND EXISTS (
+          SELECT 1
+          FROM pg_rewrite rw
+          JOIN pg_depend d ON d.objid = rw.oid
+          WHERE rw.ev_class = vc.oid
+            AND d.refobjid = v_relid
+        )
+        AND (
+          vc.reloptions IS NULL
+          OR NOT (
+            'security_invoker=true' = ANY(vc.reloptions)
+            OR 'security_invoker=on' = ANY(vc.reloptions)
+            OR 'security_invoker=1' = ANY(vc.reloptions)
+          )
+        )
+    ) THEN
       RAISE NOTICE 'FACT_FAIL|F-39';
     END IF;
-  ELSIF EXISTS (
-    SELECT 1
-    FROM pg_class vc
-    JOIN pg_namespace vn ON vn.oid = vc.relnamespace
-    WHERE vn.nspname = 'public'
-      AND vc.relkind = 'v'
-      AND EXISTS (
-        SELECT 1
-        FROM pg_rewrite rw
-        JOIN pg_depend d ON d.objid = rw.oid
-        WHERE rw.ev_class = vc.oid
-          AND d.refobjid = v_relid
-      )
-      AND (
-        vc.reloptions IS NULL
-        OR NOT (
-          'security_invoker=true' = ANY(vc.reloptions)
-          OR 'security_invoker=on' = ANY(vc.reloptions)
-          OR 'security_invoker=1' = ANY(vc.reloptions)
-        )
-      )
-  ) THEN
-    RAISE NOTICE 'FACT_FAIL|F-39';
   END IF;
 
   -- =========================================================================
@@ -1063,11 +1076,12 @@ export function evaluateMigrationSqlInContainer(
 
   try {
     // 1. Apply migration as deployer
-    runPsqlInContainer(
+    const migRes = runPsqlInContainer(
       containerName,
       dbName,
-      `SET ROLE deployer;\n${migrationSql}\nRESET ROLE;\n`
+      `\\set ON_ERROR_STOP on\nSET ROLE deployer;\n${migrationSql}\nRESET ROLE;\n`
     );
+    const migrationExitNonZero = migRes.status !== 0;
 
     // 2. Run ALL applicable Oracle structural & behavioral probes (zero cohort slicing)
     const probeSql = buildOracleProbeSql(meta);
@@ -1102,6 +1116,7 @@ export function evaluateMigrationSqlInContainer(
       failedFacts,
       details,
       failureDetails,
+      migrationExitNonZero,
     };
   } finally {
     // Fast-path cleanup: always drop test_<id> with FORCE

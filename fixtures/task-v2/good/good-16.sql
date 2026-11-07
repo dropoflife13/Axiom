@@ -1,4 +1,4 @@
--- META: {"table":"import_batches","tenant":true,"append_only":false,"ingestion":true}
+-- META: {"table":"import_batches","tenant":true,"append_only":false,"ingestion":true,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.import_batches (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

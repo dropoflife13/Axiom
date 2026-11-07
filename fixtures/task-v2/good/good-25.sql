@@ -1,4 +1,4 @@
--- META: {"table":"compliance_snapshots","tenant":false,"append_only":true,"ingestion":false}
+-- META: {"table":"compliance_snapshots","tenant":false,"append_only":true,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.compliance_snapshots (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   supersedes_id uuid NULL,

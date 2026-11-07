@@ -1,4 +1,4 @@
--- META: {"table":"catalog_feeds","tenant":true,"append_only":false,"ingestion":true}
+-- META: {"table":"catalog_feeds","tenant":true,"append_only":false,"ingestion":true,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.catalog_feeds (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

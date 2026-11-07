@@ -1,4 +1,4 @@
--- META: {"table":"consent_records","tenant":true,"append_only":true,"ingestion":false}
+-- META: {"table":"consent_records","tenant":true,"append_only":true,"ingestion":false,"view":true,"sec_definer":true}
 CREATE TABLE public.consent_records (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

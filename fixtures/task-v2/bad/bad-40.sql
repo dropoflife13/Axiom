@@ -1,4 +1,4 @@
--- META: {"table":"price_logs","tenant":true,"append_only":true,"ingestion":true,"expectedFailedFacts":["F-39"],"mutationDescription":"Omit v_price_logs_summary view"}
+-- META: {"table":"price_logs","tenant":true,"append_only":true,"ingestion":true,"view":true,"expectedFailedFacts":["F-39"],"mutationDescription":"Omit v_price_logs_summary view"}
 CREATE TABLE public.price_logs (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

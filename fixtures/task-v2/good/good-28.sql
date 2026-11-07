@@ -1,4 +1,4 @@
--- META: {"table":"tax_brackets","tenant":false,"append_only":false,"ingestion":false}
+-- META: {"table":"tax_brackets","tenant":false,"append_only":false,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.tax_brackets (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   jurisdiction_code text NOT NULL,

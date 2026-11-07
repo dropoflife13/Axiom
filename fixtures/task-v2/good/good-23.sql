@@ -1,4 +1,4 @@
--- META: {"table":"key_rotation_events","tenant":false,"append_only":true,"ingestion":false}
+-- META: {"table":"key_rotation_events","tenant":false,"append_only":true,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.key_rotation_events (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   supersedes_id uuid NULL,

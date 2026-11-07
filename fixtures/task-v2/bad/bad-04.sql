@@ -1,4 +1,4 @@
--- META: {"table":"work_orders","tenant":true,"append_only":false,"ingestion":false,"expectedFailedFacts":["F-39"],"mutationDescription":"Comment trick: WITH (security_invoker = true) commented out on view"}
+-- META: {"table":"work_orders","tenant":true,"append_only":false,"ingestion":false,"view":true,"expectedFailedFacts":["F-39"],"mutationDescription":"Comment trick: WITH (security_invoker = true) commented out on view"}
 CREATE TABLE public.work_orders (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

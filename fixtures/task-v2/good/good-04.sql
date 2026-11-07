@@ -1,4 +1,4 @@
--- META: {"table":"work_orders","tenant":true,"append_only":false,"ingestion":false}
+-- META: {"table":"work_orders","tenant":true,"append_only":false,"ingestion":false,"view":true,"sec_definer":true}
 CREATE TABLE public.work_orders (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

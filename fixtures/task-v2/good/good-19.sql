@@ -1,4 +1,4 @@
--- META: {"table":"shipment_manifests","tenant":true,"append_only":false,"ingestion":true}
+-- META: {"table":"shipment_manifests","tenant":true,"append_only":false,"ingestion":true,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.shipment_manifests (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

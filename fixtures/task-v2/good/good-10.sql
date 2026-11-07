@@ -1,4 +1,4 @@
--- META: {"table":"approval_stamps","tenant":true,"append_only":true,"ingestion":false}
+-- META: {"table":"approval_stamps","tenant":true,"append_only":true,"ingestion":false,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.approval_stamps (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

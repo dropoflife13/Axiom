@@ -1,4 +1,4 @@
--- META: {"table":"currencies","tenant":false,"append_only":false,"ingestion":false}
+-- META: {"table":"currencies","tenant":false,"append_only":false,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.currencies (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   iso_code text NOT NULL,

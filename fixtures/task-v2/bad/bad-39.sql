@@ -1,4 +1,4 @@
--- META: {"table":"approval_stamps","tenant":true,"append_only":true,"ingestion":false,"expectedFailedFacts":["F-31"],"mutationDescription":"SECURITY DEFINER function omits SET search_path = ''"}
+-- META: {"table":"approval_stamps","tenant":true,"append_only":true,"ingestion":false,"sec_definer":true,"expectedFailedFacts":["F-31"],"mutationDescription":"SECURITY DEFINER function omits SET search_path = ''"}
 CREATE TABLE public.approval_stamps (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

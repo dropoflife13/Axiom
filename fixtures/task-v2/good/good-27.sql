@@ -1,4 +1,4 @@
--- META: {"table":"countries","tenant":false,"append_only":false,"ingestion":false}
+-- META: {"table":"countries","tenant":false,"append_only":false,"ingestion":false,"sec_definer":true}
 CREATE TABLE public.countries (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   alpha2_code text NOT NULL,

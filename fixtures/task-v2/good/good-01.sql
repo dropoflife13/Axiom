@@ -1,4 +1,4 @@
--- META: {"table":"invoices","tenant":true,"append_only":false,"ingestion":false}
+-- META: {"table":"invoices","tenant":true,"append_only":false,"ingestion":false,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.invoices (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

@@ -1,4 +1,4 @@
--- META: {"table":"audit_events","tenant":true,"append_only":true,"ingestion":false}
+-- META: {"table":"audit_events","tenant":true,"append_only":true,"ingestion":false,"view":true,"sec_definer":true}
 CREATE TABLE public.audit_events (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

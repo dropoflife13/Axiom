@@ -1,4 +1,4 @@
--- META: {"table":"ledger_entries","tenant":true,"append_only":true,"ingestion":false}
+-- META: {"table":"ledger_entries","tenant":true,"append_only":true,"ingestion":false,"view":true,"sec_definer":true}
 CREATE TABLE public.ledger_entries (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,

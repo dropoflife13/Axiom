@@ -1,4 +1,4 @@
--- META: {"table":"tax_brackets","tenant":false,"append_only":false,"ingestion":false,"expectedFailedFacts":["F-12"],"mutationDescription":"Status column omits validating CHECK constraint"}
+-- META: {"table":"tax_brackets","tenant":false,"append_only":false,"ingestion":false,"status":true,"expectedFailedFacts":["F-12"],"mutationDescription":"Status column omits validating CHECK constraint"}
 CREATE TABLE public.tax_brackets (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   jurisdiction_code text NOT NULL,

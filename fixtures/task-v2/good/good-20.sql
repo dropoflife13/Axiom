@@ -1,4 +1,4 @@
--- META: {"table":"kyc_submissions","tenant":true,"append_only":false,"ingestion":true}
+-- META: {"table":"kyc_submissions","tenant":true,"append_only":false,"ingestion":true,"view":true,"sec_definer":true,"status":true}
 CREATE TABLE public.kyc_submissions (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   tenant_id uuid NOT NULL,
