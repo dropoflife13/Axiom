@@ -3,6 +3,7 @@ import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { useRef } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
+import { AxiomLogo } from './AxiomLogo';
 
 const LoopingDonut = dynamic(() => import('./LoopingDonut'), { ssr: false });
 
@@ -83,7 +84,7 @@ export default function HealingLoopHero({ live, onCopyLogs }: HealingLoopHeroPro
           </div>
           <div className="hl-hud">
         <header>
-          <div className="hl-brand"><b>AXIOM</b><span>Verifier / ablation v2</span></div>
+          <div className="hl-brand"><AxiomLogo size={24} variant="duo" title="Axiom" /><b>AXIOM</b><span>Verifier / ablation v2</span></div>
           <div className="hl-m">
             <div>ORACLE<b>locked</b></div><div>TEMP<b>0</b></div>
             <div>CONDITIONS<b>06</b></div><div>MODE<b>SQL</b></div><div>STAGE<b style={{ color }}>{STAGES[stage][0]}</b></div>
@@ -129,7 +130,7 @@ const css = `
 .hl-canvas{position:absolute;inset:0;opacity:var(--canvas)}
 .hl *{box-sizing:border-box}.hl-grid{position:absolute;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%)}
 .hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud)}.hl-hud>*{position:absolute}.hl header{top:16px;left:24px;right:24px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:12px}
-.hl-brand b{letter-spacing:.2em;font-size:14px}.hl-brand span{color:var(--dim);margin-left:10px}.hl-m{display:flex;gap:22px;color:var(--dim)}.hl-m b{display:block;color:#e8eaf2;font-weight:500}.hl-chip{color:#34d399;border:1px solid rgba(52,211,153,.4);padding:3px 10px;border-radius:99px;letter-spacing:.08em}
+.hl-brand{display:flex;align-items:center;gap:8px}.hl-brand b{letter-spacing:.2em;font-size:14px}.hl-brand span{color:var(--dim);margin-left:2px}.hl-m{display:flex;gap:22px;color:var(--dim)}.hl-m b{display:block;color:#e8eaf2;font-weight:500}.hl-chip{color:#34d399;border:1px solid rgba(52,211,153,.4);padding:3px 10px;border-radius:99px;letter-spacing:.08em}
 .hl-hero{left:24px;top:22%;max-width:min(560px,60vw)}.hl-k{color:#a78bfa;letter-spacing:.2em;margin:0 0 12px}.hl h1{font:600 clamp(40px,7vw,92px)/.95 system-ui,sans-serif;letter-spacing:-.04em;margin:0 0 16px;text-shadow:0 0 40px rgba(168,85,247,.45)}.hl-s{color:var(--dim);max-width:380px;margin:0}.hl-dim{color:var(--dim)}
 .hl-conds{right:24px;top:84px;width:230px}.hl-row{display:grid;grid-template-columns:34px 1fr 56px;gap:8px;align-items:center;margin-bottom:7px;color:var(--dim)}.hl-bar{height:3px;background:var(--line)}.hl-bar i{display:block;height:100%;background:#a855f7;box-shadow:0 0 8px #a855f7}
 .hl-run{right:24px;bottom:120px;text-align:right}.hl-big b{font-size:clamp(48px,6vw,84px);font-weight:600;letter-spacing:-.04em}.hl-big span{color:var(--dim);font-size:18px}.hl button{pointer-events:auto;background:none;color:inherit;border:1px solid var(--line);padding:6px 14px;font:inherit;letter-spacing:.12em;cursor:pointer}.hl button:hover,.hl button:focus-visible{border-color:#a78bfa;outline:none}
