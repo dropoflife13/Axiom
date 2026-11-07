@@ -2,8 +2,16 @@ import dotenv from 'dotenv';
 import { assertBudgetAvailable } from './guardrails.js';
 dotenv.config();
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = process.env.GROQ_ADVISOR_MODEL || 'qwen/qwen3.8-27b';
+const NVIDIA_BASE_URL =
+  process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
+const MODEL = process.env.NVIDIA_ADVISOR_MODEL || 'deepseek-ai/deepseek-v4.1-flash';
+
+function normalizeAdvisorModel(m: string): string {
+  if (m === 'gemini-3.5') return 'gemini-3.5-flash';
+  if (m === 'gemini-3.8') return 'gemini-3.8-flash';
+  return m;
+}
 
 export const ADVISOR_SYSTEM_PROMPT =
   'You are a terse syntax coach. Convert the verifier error into one concrete rule under 24 words. Do NOT reference any specific IDs, task names, or variable names from the error.';
@@ -12,11 +20,12 @@ export async function generateLesson(
   errorCode: string,
   errorDetail: string
 ): Promise<string> {
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('GROQ_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
   }
 
+  const effectiveModel = normalizeAdvisorModel(MODEL);
   const systemPrompt = ADVISOR_SYSTEM_PROMPT;
   const userPrompt = `Error code: ${errorCode}\nError detail: ${errorDetail}`;
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
@@ -28,14 +37,14 @@ export async function generateLesson(
 
   while (attempt < MAX_RETRIES) {
     try {
-      const response = await fetch(GROQ_URL, {
+      const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: MODEL,
+          model: effectiveModel,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
@@ -45,13 +54,13 @@ export async function generateLesson(
         signal: abortSignal,
       });
 
-      if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
+      if (response.status === 429 || response.status === 503) {
+        const retryAfter = parseInt(response.headers.get('retry-after') || '3', 10);
         if (retryAfter > 30) {
-          throw new Error(`[ABORT_NON_RETRYABLE] Rate limit retry-after too high (${retryAfter}s).`);
+          throw new Error(`[ABORT_NON_RETRYABLE] Rate limit / 503 retry-after too high (${retryAfter}s).`);
         }
-        const delay = retryAfter * 1000 + Math.random() * 1000;
-        console.warn(`[Advisor] Rate limited. Retrying in ${delay.toFixed(0)}ms...`);
+        const delay = (retryAfter + (attempt + 1) * 2) * 1000 + Math.random() * 1000;
+        console.warn(`[Advisor] ${response.status === 429 ? 'Rate limited' : 'High demand (503)'}. Retrying in ${delay.toFixed(0)}ms...`);
         await new Promise((r) => setTimeout(r, delay));
         attempt++;
         continue;
@@ -60,13 +69,25 @@ export async function generateLesson(
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] Groq Advisor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Advisor ${response.status}: ${errText}`);
         }
-        throw new Error(`Groq Advisor 5xx ${response.status}: ${errText}`);
+        throw new Error(`NVIDIA Advisor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();
-      return data.choices[0].message.content.trim();
+      const choice = data.choices?.[0];
+      if (choice?.finish_reason === 'length') {
+        throw new Error('[ABORT_NON_RETRYABLE] Advisor response stopped at token limit (finish_reason=length).');
+      }
+      const rawContent = typeof choice?.message?.content === 'string' ? choice.message.content : '';
+      const content = rawContent
+        .replace(/<think>[\s\S]*?<\/think>/gi, '')
+        .replace(/<think>[\s\S]*$/gi, '')
+        .trim();
+      if (!content) {
+        throw new Error('[ABORT_NON_RETRYABLE] Advisor response contained no final content.');
+      }
+      return content;
     } catch (err: any) {
       if (
         err.message?.includes('[ABORT_NON_RETRYABLE]') ||

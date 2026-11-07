@@ -1,12 +1,34 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import dotenv from 'dotenv';
 import { assertBudgetAvailable, BUDGET_GUARD } from './guardrails.js';
 dotenv.config();
 
-const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL = process.env.GROQ_EXECUTOR_MODEL || 'openai/gpt-oss-120b';
+const NVIDIA_BASE_URL =
+  process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
+const MODEL = process.env.NVIDIA_CODE_MODEL || 'google/gemma-4-31b-it';
+export const PROVIDER = 'nvidia';
+
+export function getProviderProvenance(requestedModel: string, returnedModel: string) {
+  const factsPath = path.resolve('fixtures/task-v2/facts.json');
+  return {
+    provider: PROVIDER,
+    baseUrl: NVIDIA_BASE_URL,
+    requestedModel,
+    returnedModel,
+    oracleCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
+    factsSha256: crypto.createHash('sha256').update(fs.readFileSync(factsPath)).digest('hex'),
+  };
+}
+
+export function normalizeModelName(m: string): string {
+  if (m === 'gemini-3.8') return 'gemini-3.8-flash';
+  if (m === 'gemini-3.5') return 'gemini-3.5-flash';
+  return m;
+}
 
 export const DEFAULT_EXECUTOR_CACHE_DIR = path.join(process.cwd(), '.axiom-cache');
 
@@ -15,6 +37,7 @@ export interface ExecutorResult {
   rawResponse: string;
   fromCache?: boolean;
   cacheKey?: string;
+  finishReason?: string;
 }
 
 export interface ExecutorOptions {
@@ -32,8 +55,25 @@ export function computeExecutorCacheKey(
 ): string {
   return crypto
     .createHash('sha256')
-    .update(`${model}${system}${user}${temperature}`)
+    .update(`${NVIDIA_BASE_URL}${model}${system}${user}${temperature}`)
     .digest('hex');
+}
+
+function finalMessageContent(choice: any, context: string): string {
+  const finishReason = choice?.finish_reason;
+  if (finishReason === 'length') {
+    throw new Error(`[ABORT_NON_RETRYABLE] ${context} response stopped at token limit (finish_reason=length).`);
+  }
+  // Ignore separate reasoning fields (e.g. choice.message.reasoning_content) and strip any <think> blocks
+  const rawContent = typeof choice?.message?.content === 'string' ? choice.message.content : '';
+  const content = rawContent
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/<think>[\s\S]*$/gi, '')
+    .trim();
+  if (!content) {
+    throw new Error(`[ABORT_NON_RETRYABLE] ${context} response contained no final content.`);
+  }
+  return content;
 }
 
 export async function generateAgentMarkdown(
@@ -80,12 +120,19 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
   if (!options?.disableCache && fs.existsSync(cacheFilePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cacheFilePath, 'utf-8'));
-      if (typeof cached.markdown === 'string' && typeof cached.rawResponse === 'string') {
+      if (
+        typeof cached.markdown === 'string' &&
+        typeof cached.rawResponse === 'string' &&
+        cached.provider === PROVIDER &&
+        cached.baseUrl === NVIDIA_BASE_URL &&
+        cached.requestedModel === model
+      ) {
         return {
           markdown: cached.markdown,
           rawResponse: cached.rawResponse,
           fromCache: true,
           cacheKey,
+          finishReason: cached.finishReason,
         };
       }
     } catch {
@@ -93,11 +140,12 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
     }
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('GROQ_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
   }
 
+  const effectiveModel = normalizeModelName(model);
   const fullPrompt = `${systemPrompt}\n${task}`;
   const abortSignal = assertBudgetAvailable('EXECUTOR', fullPrompt.length);
 
@@ -106,30 +154,32 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
 
   while (attempt < MAX_RETRIES) {
     try {
-      const response = await fetch(GROQ_URL, {
+      const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model,
+          model: effectiveModel,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: task },
           ],
           temperature,
+          max_tokens: 8192,
+          ...(effectiveModel.includes('glm') ? { chat_template_kwargs: { enable_thinking: false } } : {}),
         }),
         signal: abortSignal,
       });
 
-      if (response.status === 429) {
-        const retryAfter = parseInt(response.headers.get('retry-after') || '5', 10);
+      if (response.status === 429 || response.status === 503) {
+        const retryAfter = parseInt(response.headers.get('retry-after') || '3', 10);
         if (retryAfter > 30) {
-          throw new Error(`[ABORT_NON_RETRYABLE] Rate limit retry-after too high (${retryAfter}s).`);
+          throw new Error(`[ABORT_NON_RETRYABLE] Rate limit / 503 retry-after too high (${retryAfter}s).`);
         }
-        const delay = retryAfter * 1000 + Math.random() * 1000;
-        console.warn(`[Executor] Rate limited. Retrying in ${delay.toFixed(0)}ms...`);
+        const delay = (retryAfter + (attempt + 1) * 2) * 1000 + Math.random() * 1000;
+        console.warn(`[Executor] ${response.status === 429 ? 'Rate limited' : 'High demand (503)'}. Retrying in ${delay.toFixed(0)}ms...`);
         await new Promise((r) => setTimeout(r, delay));
         attempt++;
         continue;
@@ -138,14 +188,17 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] Groq Executor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Executor ${response.status}: ${errText}`);
         }
-        throw new Error(`Groq Executor 5xx ${response.status}: ${errText}`);
+        throw new Error(`NVIDIA Executor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();
-      const markdown = data.choices[0].message.content;
+      const finishReason = data.choices?.[0]?.finish_reason;
+      const markdown = finalMessageContent(data.choices?.[0], 'Executor');
       const rawResponse = JSON.stringify(data);
+      const returnedModel = data.model || effectiveModel;
+      const provenance = getProviderProvenance(model, returnedModel);
 
       if (!options?.disableCache) {
         if (!fs.existsSync(cacheDir)) {
@@ -154,13 +207,13 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
         const tmpCachePath = `${cacheFilePath}.tmp.${process.pid}.${Date.now()}`;
         fs.writeFileSync(
           tmpCachePath,
-          JSON.stringify({ cacheKey, model, temperature, markdown, rawResponse }, null, 2),
+          JSON.stringify({ cacheKey, model, temperature, markdown, rawResponse, finishReason, ...provenance }, null, 2),
           'utf-8'
         );
         fs.renameSync(tmpCachePath, cacheFilePath);
       }
 
-      return { markdown, rawResponse, fromCache: false, cacheKey };
+      return { markdown, rawResponse, fromCache: false, cacheKey, finishReason };
     } catch (err: any) {
       if (
         err.message?.includes('[ABORT_NON_RETRYABLE]') ||
@@ -169,8 +222,9 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
         throw err;
       }
       attempt++;
-      if (attempt >= MAX_RETRIES) throw err;
-      const backoffDelay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+      console.warn(`[Executor] Attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
+      if (attempt >= 3) throw err;
+      const backoffDelay = Math.min(Math.pow(2, attempt) * 1000 + Math.random() * 1000, 10_000);
       await new Promise((resolve) => setTimeout(resolve, backoffDelay));
     }
   }
@@ -183,6 +237,9 @@ export interface SqlExecutorResult {
   rawResponse: string;
   fromCache?: boolean;
   cacheKey?: string;
+  requestedModel: string;
+  returnedModel: string;
+  finishReason: string;
   usage?: {
     promptTokens: number;
     completionTokens: number;
@@ -229,7 +286,13 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
   if (!options?.disableCache && fs.existsSync(cacheFilePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cacheFilePath, 'utf-8'));
-      if (typeof cached.sql === 'string' && typeof cached.rawResponse === 'string') {
+      if (
+        typeof cached.sql === 'string' &&
+        typeof cached.rawResponse === 'string' &&
+        cached.provider === PROVIDER &&
+        cached.baseUrl === NVIDIA_BASE_URL &&
+        cached.requestedModel === model
+      ) {
         let usage: SqlExecutorResult['usage'] | undefined;
         try {
           const parsedRaw = JSON.parse(cached.rawResponse);
@@ -248,6 +311,9 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
           rawResponse: cached.rawResponse,
           fromCache: true,
           cacheKey,
+          requestedModel: cached.requestedModel,
+          returnedModel: cached.returnedModel,
+          finishReason: cached.finishReason ?? 'unknown',
           usage,
         };
       }
@@ -256,49 +322,51 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
     }
   }
 
-  const apiKey = process.env.GROQ_API_KEY;
+  const apiKey = process.env.NVIDIA_API_KEY;
   if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('GROQ_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
   }
 
+  const effectiveModel = normalizeModelName(model);
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
   assertBudgetAvailable('EXECUTOR', fullPrompt.length);
 
-  const MAX_RETRIES = 10;
+  const MAX_RETRIES = 20;
   let attempt = 0;
 
   while (attempt < MAX_RETRIES) {
     try {
       const reqSignal = AbortSignal.timeout(BUDGET_GUARD.callTimeoutMs);
-      const response = await fetch(GROQ_URL, {
+      const response = await fetch(CHAT_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model,
+          model: effectiveModel,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
           temperature,
+          max_tokens: 8192,
+          ...(effectiveModel.includes('glm') ? { chat_template_kwargs: { enable_thinking: false } } : {}),
         }),
         signal: reqSignal,
       });
 
-      if (response.status === 429) {
+      if (response.status === 429 || response.status === 503) {
         const retryAfterHeader = response.headers.get('retry-after');
-        const resetTokensHeader = response.headers.get('x-ratelimit-reset-tokens');
-        let delaySec = 5;
+        let delaySec = 10 + attempt * 5;
         if (retryAfterHeader) {
-          delaySec = parseFloat(retryAfterHeader);
-        } else if (resetTokensHeader) {
-          delaySec = parseFloat(resetTokensHeader);
+          const parsed = parseFloat(retryAfterHeader);
+          if (!isNaN(parsed) && parsed > 0) delaySec = Math.max(delaySec, parsed);
         }
-        if (isNaN(delaySec) || delaySec <= 0) delaySec = 5;
-        const waitSec = Math.min(Math.ceil(delaySec) + 1, 600);
-        console.warn(`[Executor] Rate limited (retry-after: ${delaySec}s). Backing off for ${waitSec}s...`);
+        const waitSec = Math.min(Math.ceil(delaySec) + Math.random() * 2, 60);
+        console.warn(
+          `[Executor] ${response.status === 429 ? 'Rate limited (429)' : 'High demand (503)'} on attempt ${attempt + 1}/${MAX_RETRIES}. Backing off for ${waitSec.toFixed(1)}s...`
+        );
         await new Promise((r) => setTimeout(r, waitSec * 1000));
         attempt++;
         continue;
@@ -307,15 +375,18 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] Groq Executor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Executor ${response.status}: ${errText}`);
         }
-        throw new Error(`Groq Executor 5xx ${response.status}: ${errText}`);
+        throw new Error(`NVIDIA Executor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();
-      const rawContent = data.choices?.[0]?.message?.content || '';
+      const finishReason = data.choices?.[0]?.finish_reason;
+      const rawContent = finalMessageContent(data.choices?.[0], 'SQL executor');
       const sql = stripSqlFences(rawContent);
       const rawResponse = JSON.stringify(data);
+      const returnedModel = data.model || effectiveModel;
+      const provenance = getProviderProvenance(model, returnedModel);
       const usage = data.usage
         ? {
             promptTokens: data.usage.prompt_tokens ?? 0,
@@ -331,13 +402,22 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
         const tmpCachePath = `${cacheFilePath}.tmp.${process.pid}.${Date.now()}`;
         fs.writeFileSync(
           tmpCachePath,
-          JSON.stringify({ cacheKey, model, temperature, sql, rawResponse }, null, 2),
+          JSON.stringify({ cacheKey, model, temperature, sql, rawResponse, finishReason, ...provenance }, null, 2),
           'utf-8'
         );
         fs.renameSync(tmpCachePath, cacheFilePath);
       }
 
-      return { sql, rawResponse, fromCache: false, cacheKey, usage };
+      return {
+        sql,
+        rawResponse,
+        fromCache: false,
+        cacheKey,
+        usage,
+        requestedModel: model,
+        returnedModel,
+        finishReason,
+      };
     } catch (err: any) {
       if (
         err.message?.includes('[ABORT_NON_RETRYABLE]') ||
@@ -346,8 +426,9 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
         throw err;
       }
       attempt++;
-      if (attempt >= MAX_RETRIES) throw err;
-      const backoffDelay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+      console.warn(`[Executor] Attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
+      if (attempt >= 3) throw err;
+      const backoffDelay = Math.min(Math.pow(2, attempt) * 1000 + Math.random() * 1000, 10_000);
       await new Promise((resolve) => setTimeout(resolve, backoffDelay));
     }
   }
