@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import HealingLoopHero, { type LiveRun } from '@/components/HealingLoopHero';
+import { AnatomySection } from '@/components/anatomy/AnatomySection';
 
 const CHECKPOINT_API = '/api/ablation-checkpoint';
 const RESULTS_API = '/api/ablation-results';
@@ -79,5 +80,10 @@ export default function Page() {
     window.dispatchEvent(new CustomEvent('axiom-toast', { detail: { kind: 'success', message: 'Logs copied to clipboard' } }));
   };
 
-  return <HealingLoopHero live={live} onCopyLogs={copyLogs} />;
+  return (
+    <>
+      <HealingLoopHero live={live} onCopyLogs={copyLogs} />
+      <AnatomySection />
+    </>
+  );
 }

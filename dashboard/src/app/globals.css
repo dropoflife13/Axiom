@@ -132,6 +132,113 @@ body {
   transition: background-color var(--transition), color var(--transition);
 }
 
+.anatomy-section {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 120px 28px 160px;
+  color: var(--color-text);
+}
+
+.anatomy-section__intro {
+  max-width: 620px;
+}
+
+.anatomy-section__eyebrow {
+  margin: 0 0 18px;
+  color: var(--color-primary);
+  font: 11px var(--font-mono), monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.anatomy-section h2 {
+  margin: 0 0 22px;
+  font-size: clamp(36px, 6vw, 72px);
+  letter-spacing: -0.06em;
+  line-height: 0.98;
+}
+
+.anatomy-section__intro p:not(.anatomy-section__eyebrow) {
+  max-width: 560px;
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.anatomy-frame {
+  margin: 72px 0 0;
+}
+
+.anatomy-frame figcaption {
+  margin-bottom: 12px;
+  color: var(--color-text-muted);
+  font: 11px var(--font-mono), monospace;
+}
+
+.anatomy-frame__placeholder {
+  min-height: 360px;
+  display: grid;
+  place-content: center;
+  gap: 8px;
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.anatomy-frame__placeholder span {
+  color: var(--color-text);
+  font-size: 18px;
+}
+
+.anatomy-frame__placeholder small {
+  font-size: 12px;
+}
+
+.anatomy-parts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0 28px;
+  margin: 52px 0 0;
+}
+
+.anatomy-part {
+  padding: 20px 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.anatomy-part dt {
+  color: var(--color-text);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.anatomy-part dd {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .anatomy-section {
+    padding: 80px 20px 100px;
+  }
+
+  .anatomy-frame {
+    margin-top: 48px;
+  }
+
+  .anatomy-frame__placeholder {
+    min-height: 280px;
+  }
+
+  .anatomy-parts {
+    grid-template-columns: 1fr;
+  }
+}
+
 .app-header {
   height: var(--header-height);
   border-bottom: 1px solid var(--color-border);
