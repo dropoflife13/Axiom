@@ -1,28 +1,30 @@
 'use client';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, type MutableRefObject } from 'react';
 import * as THREE from 'three';
+import { sceneForProgress } from '@/lib/scroll-scene';
 
 const vertex = `varying vec2 vUv;varying vec3 vN;varying vec3 vV;
 void main(){vUv=uv;vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);gl_Position=projectionMatrix*mv;}`;
 
-const fragment = `uniform float uT;uniform vec3 uCol,uAlt;varying vec2 vUv;varying vec3 vN;varying vec3 vV;
+const fragment = `uniform float uT,uGlow;uniform vec3 uCol,uAlt;varying vec2 vUv;varying vec3 vN;varying vec3 vV;
 void main(){
   float f=pow(1.-abs(dot(normalize(vN),normalize(vV))),2.2);
   float ln=smoothstep(.44,.5,abs(fract(vUv.y*36.)-.5));
   float rg=smoothstep(.45,.5,abs(fract(vUv.x*128.)-.5));
   float p=pow(max(0.,sin(vUv.x*18.8496-uT*2.)),24.);
   vec3 c=mix(uCol,uAlt,.5+.5*sin(vUv.x*12.57+uT*.4));
-  gl_FragColor=vec4(c*(.3+f*1.5)+vec3(p)*.8,clamp(f*.85+ln*.3+rg*.14+p*.9,0.,1.));
+  gl_FragColor=vec4((c*(.3+f*1.5)+vec3(p)*.8)*uGlow,clamp((f*.85+ln*.3+rg*.14+p*.9)*uGlow,0.,1.));
 }`;
 
-function Knot({ color, running }: { color: number; running: boolean }) {
+function Knot({ color, running, progress }: { color: number; running: boolean; progress: MutableRefObject<number> }) {
   const group = useRef<THREE.Group>(null);
   const wire = useRef<THREE.Mesh>(null);
   const halo = useRef<THREE.Mesh>(null);
   const points = useRef<THREE.Points>(null);
   const speed = useRef(1);
+  const currentScale = useRef(1);
   const cur = useMemo(() => new THREE.Color(color), []); // eslint-disable-line react-hooks/exhaustive-deps
   const target = useMemo(() => new THREE.Color(), []);
   const uniforms = useMemo(
@@ -30,6 +32,7 @@ function Knot({ color, running }: { color: number; running: boolean }) {
       uT: { value: 0 },
       uCol: { value: new THREE.Color(color) },
       uAlt: { value: new THREE.Color(0x22d3ee) },
+      uGlow: { value: 1 },
     }),
     [], // eslint-disable-line react-hooks/exhaustive-deps
   );
@@ -51,9 +54,13 @@ function Knot({ color, running }: { color: number; running: boolean }) {
   useFrame((_, delta) => {
     if (!group.current || !wire.current || !halo.current || !points.current) return;
     const dt = Math.min(0.05, delta);
+    const scene = sceneForProgress(progress.current);
     speed.current += ((running ? 1.6 : 0.15) - speed.current) * 0.05;
     const s = speed.current;
+    currentScale.current += (scene.scale - currentScale.current) * Math.min(1, dt * 5);
+    group.current.scale.setScalar(currentScale.current);
     uniforms.uT.value += dt * s;
+    uniforms.uGlow.value += (scene.glow - uniforms.uGlow.value) * Math.min(1, dt * 5);
     group.current.rotation.y += dt * 0.2 * s;
     group.current.rotation.x += dt * 0.08 * s;
     wire.current.rotation.y -= dt * 0.05 * s;
@@ -97,12 +104,12 @@ function Fit() {
   return null;
 }
 
-export default function LoopingDonut({ color, running }: { color: number; running: boolean }) {
+export default function LoopingDonut({ color, running, progress }: { color: number; running: boolean; progress: MutableRefObject<number> }) {
   return (
-    <Canvas camera={{ position: [0, 0.4, 5.4], fov: 45 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }} style={{ position: 'absolute', inset: 0, touchAction: 'none' }}>
+    <Canvas camera={{ position: [0, 0.4, 5.4], fov: 45 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }} style={{ position: 'absolute', inset: 0, touchAction: 'pan-y' }}>
       <Fit />
-      <Knot color={color} running={running} />
-      <OrbitControls enablePan={false} enableDamping autoRotate={running} autoRotateSpeed={0.8} minDistance={3} maxDistance={10} />
+      <Knot color={color} running={running} progress={progress} />
+      <OrbitControls enablePan={false} enableZoom={false} enableDamping autoRotate={running} autoRotateSpeed={0.8} minDistance={3} maxDistance={10} />
     </Canvas>
   );
 }

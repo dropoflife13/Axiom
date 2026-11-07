@@ -130,7 +130,6 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   transition: background-color var(--transition), color var(--transition);
-  overflow: hidden;
 }
 
 .app-header {
