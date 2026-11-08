@@ -1,6 +1,8 @@
 /* =========================================================================
-   Axiom Cortex Architecture & Knowledge Vault
-   Matches the 3-Tier Cortex Core Design System
+   Axiom Scale & Invariant Topology Architecture
+   Integrates:
+   1. Scale & Efficiency Empirical Telemetry (Image 1)
+   2. Axiom Autonomous Kernel & 3-Tier Invariant Vault (Image 2 Elevated)
    ========================================================================= */
 
 .cortex-section {
@@ -8,7 +10,7 @@
   width: 100%;
   max-width: 100%;
   margin: 0 auto;
-  padding: 90px clamp(16px, 3vw, 48px) 120px;
+  padding: 100px clamp(16px, 3vw, 48px) 140px;
   background-color: #05060a;
   color: var(--color-text, #f5eff7);
   overflow: hidden;
@@ -20,22 +22,22 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(160, 170, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(160, 170, 255, 0.06) 1px, transparent 1px);
+    linear-gradient(rgba(160, 170, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 170, 255, 0.05) 1px, transparent 1px);
   background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 80%);
-  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 25%, #000 20%, transparent 85%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 25%, #000 20%, transparent 85%);
   z-index: 0;
 }
 
 .cortex-bg-glow {
   position: absolute;
-  top: 20%;
-  left: 10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(168, 85, 247, 0.08) 50%, transparent 70%);
-  filter: blur(60px);
+  top: 15%;
+  left: 20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, rgba(168, 85, 247, 0.06) 50%, transparent 70%);
+  filter: blur(80px);
   pointer-events: none;
   z-index: 0;
 }
@@ -45,11 +47,195 @@
   z-index: 1;
   max-width: 1320px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 80px;
 }
 
-/* Header */
+/* =========================================================================
+   PART 1: SCALE & EFFICIENCY CARD (Directly from User Reference Image 1)
+   ========================================================================= */
+
+.cortex-scale-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+}
+
+.cortex-scale-eyebrow {
+  color: #22d3ee;
+  font: 700 11px var(--font-mono, monospace);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.cortex-scale-title {
+  font-size: clamp(34px, 5vw, 64px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.05;
+}
+
+.cortex-scale-subtitle {
+  color: #8b90a8;
+  font-size: 15px;
+  margin: 0 0 28px;
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* Main Scale & Telemetry Container */
+.cortex-scale-card {
+  width: 100%;
+  background: rgba(9, 12, 21, 0.94);
+  border: 1px solid rgba(160, 170, 255, 0.14);
+  border-radius: 20px;
+  padding: 40px clamp(20px, 4vw, 48px);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(16px);
+  position: relative;
+  overflow: hidden;
+}
+
+.cortex-scale-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.6), rgba(168, 85, 247, 0.6), transparent);
+}
+
+/* Top 3 Metric Stat Callouts */
+.cortex-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  padding-bottom: 36px;
+  border-bottom: 1px solid rgba(160, 170, 255, 0.1);
+  text-align: left;
+}
+
+@media (max-width: 680px) {
+  .cortex-metrics-row {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+.cortex-metric-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cortex-metric-number {
+  font-family: var(--font-sans, sans-serif);
+  font-size: clamp(48px, 6vw, 76px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  color: #ffffff;
+}
+
+.cortex-metric-number--cyan {
+  color: #22d3ee;
+  text-shadow: 0 0 24px rgba(34, 211, 238, 0.4);
+}
+
+.cortex-metric-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #7c829e;
+  text-transform: uppercase;
+}
+
+/* Bottom Dual Charts Grid */
+.cortex-charts-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  padding-top: 36px;
+}
+
+@media (min-width: 900px) {
+  .cortex-charts-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+  }
+}
+
+.cortex-chart-box {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cortex-chart-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.cortex-chart-title {
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #e8eaf2;
+  text-transform: uppercase;
+}
+
+.cortex-chart-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  color: #7b819a;
+  text-transform: uppercase;
+}
+
+.cortex-svg-chart {
+  width: 100%;
+  height: 160px;
+  overflow: visible;
+}
+
+/* Chart X-Axis Labels */
+.cortex-chart-xaxis {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #7b819a;
+  letter-spacing: 0.04em;
+  padding-top: 6px;
+}
+
+.cortex-chart-xaxis span.is-active {
+  color: #22d3ee;
+  font-weight: 700;
+}
+
+/* =========================================================================
+   PART 2: AXIOM KERNEL & 3-TIER INVARIANT VAULT (Elevated Image 2)
+   ========================================================================= */
+
+.cortex-kernel-block {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
 .cortex-header {
-  margin-bottom: 56px;
   max-width: 760px;
 }
 
@@ -100,10 +286,10 @@
   color: #8b90a8;
   font-size: 15px;
   line-height: 1.65;
-  max-width: 640px;
+  max-width: 660px;
 }
 
-/* Main Interactive Grid: Left Cortex Core + Connector Lines + Right 3 Layers */
+/* Main Interactive Stage: Left Kernel + Bus Lines + Right 3 Layers */
 .cortex-stage {
   display: flex;
   flex-direction: column;
@@ -120,7 +306,7 @@
   }
 }
 
-/* Left: Cortex Core Node */
+/* Left: Axiom Autonomous Kernel Sphere */
 .cortex-node-col {
   display: flex;
   flex-direction: column;
@@ -143,56 +329,55 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  border: 1px dashed rgba(34, 211, 238, 0.25);
+  border: 1px dashed rgba(34, 211, 238, 0.28);
   animation: cortex-orbit-spin 25s linear infinite;
   pointer-events: none;
 }
 
 .cortex-orbit-ring--wide {
-  width: 216px;
-  height: 216px;
-  border-color: rgba(168, 85, 247, 0.18);
+  width: 224px;
+  height: 224px;
+  border-color: rgba(168, 85, 247, 0.2);
   animation-duration: 40s;
   animation-direction: reverse;
 }
 
 .cortex-core-sphere {
   position: relative;
-  width: 124px;
-  height: 124px;
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
-  background: radial-gradient(circle at 34% 32%, #38bdf8 0%, #0284c7 50%, #034870 100%);
+  background: radial-gradient(circle at 35% 35%, #0a1124 0%, #050814 60%, #020308 100%);
+  border: 2px solid #22d3ee;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    0 0 25px rgba(56, 189, 248, 0.55),
-    0 0 60px rgba(14, 165, 233, 0.35),
-    inset 0 2px 6px rgba(255, 255, 255, 0.6),
-    inset 0 -4px 10px rgba(0, 0, 0, 0.6);
+    0 0 30px rgba(34, 211, 238, 0.5),
+    0 0 70px rgba(168, 85, 247, 0.25),
+    inset 0 0 20px rgba(34, 211, 238, 0.25);
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
   user-select: none;
 }
 
 .cortex-core-sphere:hover {
-  transform: scale(1.06);
+  transform: scale(1.08);
   box-shadow:
-    0 0 35px rgba(56, 189, 248, 0.8),
-    0 0 80px rgba(14, 165, 233, 0.55),
-    inset 0 2px 8px #ffffff;
+    0 0 45px rgba(34, 211, 238, 0.8),
+    0 0 90px rgba(168, 85, 247, 0.4),
+    inset 0 0 25px rgba(34, 211, 238, 0.4);
 }
 
-.cortex-brain-icon {
-  width: 58px;
-  height: 58px;
-  color: #ffffff;
-  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4));
+.cortex-axiom-knot-icon {
+  width: 68px;
+  height: 68px;
+  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.8));
   transition: transform 0.3s ease;
 }
 
-.cortex-core-sphere:hover .cortex-brain-icon {
-  transform: scale(1.08);
+.cortex-core-sphere:hover .cortex-axiom-knot-icon {
+  transform: scale(1.1) rotate(5deg);
 }
 
 .cortex-core-label {
@@ -200,9 +385,9 @@
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
-  color: #38bdf8;
+  color: #22d3ee;
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+  text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
 }
 
 /* Middle: SVG Connection Bus Lines */
@@ -230,7 +415,7 @@
 
 .cortex-bus-path {
   fill: none;
-  stroke: rgba(34, 211, 238, 0.32);
+  stroke: rgba(34, 211, 238, 0.35);
   stroke-width: 1.5;
   stroke-dasharray: 4 6;
   animation: cortex-bus-flow 3s linear infinite;
@@ -254,12 +439,8 @@
 }
 
 @keyframes cortex-orbit-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* Right: 3 Stacked Cards */
@@ -272,7 +453,7 @@
 
 .cortex-card {
   position: relative;
-  background: rgba(9, 12, 21, 0.92);
+  background: rgba(9, 12, 21, 0.94);
   border: 1px solid rgba(160, 170, 255, 0.14);
   border-radius: 16px;
   padding: 24px 28px;
@@ -415,10 +596,10 @@
 /* Interactive Inspector Detail Banner */
 .cortex-detail-banner {
   margin-top: 14px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  background: rgba(7, 9, 16, 0.95);
-  border: 1px solid rgba(34, 211, 238, 0.3);
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: rgba(7, 9, 16, 0.96);
+  border: 1px solid rgba(34, 211, 238, 0.35);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -435,6 +616,7 @@
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   color: #e8eaf2;
+  line-height: 1.5;
 }
 
 .cortex-detail-info b {
@@ -443,7 +625,7 @@
 
 .cortex-detail-badge {
   font-size: 9px;
-  padding: 2px 6px;
+  padding: 3px 7px;
   border-radius: 3px;
   background: rgba(52, 211, 153, 0.15);
   border: 1px solid #34d399;
@@ -451,6 +633,7 @@
   font-family: var(--font-mono, monospace);
   font-weight: 700;
   letter-spacing: 0.08em;
+  flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
