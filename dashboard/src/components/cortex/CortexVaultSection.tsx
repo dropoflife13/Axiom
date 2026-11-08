@@ -11,6 +11,116 @@ interface TagItem {
   spec?: string;
 }
 
+export interface ConditionDetail {
+  code: string;
+  name: string;
+  shortName: string;
+  role: string;
+  description: string;
+  pct: number;
+  tokens: string;
+  tokenNum: number;
+  deltaBaseline: string;
+  status: 'baseline' | 'control' | 'reflexion' | 'oracle' | 'stress';
+  badge: string;
+  keyFinding: string;
+  isLeader?: boolean;
+}
+
+export const CONDITIONS_DATA: ConditionDetail[] = [
+  {
+    code: 'A',
+    name: 'Condition A · Zero-Shot Baseline',
+    shortName: 'Zero-Shot',
+    role: 'Raw unassisted generation with task prompt only',
+    description:
+      'No memory lessons, no contractual hints, and no retry feedback. The LLM generates migration SQL purely from the user requirement prompt.',
+    pct: 30.9,
+    tokens: '915 tok',
+    tokenNum: 915,
+    deltaBaseline: '0.0% (Baseline)',
+    status: 'baseline',
+    badge: 'CONTROL BASELINE',
+    keyFinding: 'Fails on 69.1% of enterprise contracts, proving raw LLMs cannot infer unstated architectural invariants without guidance.',
+  },
+  {
+    code: 'D',
+    name: 'Condition D · Placebo Distractor',
+    shortName: 'Placebo Distractor',
+    role: 'Prompt-length artifact negative control group',
+    description:
+      'Injects 10 irrelevant distractor tips (matching the token length of memory lessons) into the prompt before generation to control for prompt size.',
+    pct: 37.4,
+    tokens: '1,678 tok',
+    tokenNum: 1678,
+    deltaBaseline: '+6.5%',
+    status: 'control',
+    badge: 'NEGATIVE CONTROL',
+    keyFinding: 'Yields negligible gain (+6.5%), proving Axiom gains are causal from semantic invariant guidance—not prompt-length artifacts.',
+  },
+  {
+    code: 'C',
+    name: 'Condition C · Reflexion Memory (K=10)',
+    shortName: 'Reflexion Memory',
+    role: 'Autonomous natural language lessons from trial failures',
+    description:
+      'When candidate migrations violate contracts in PostgreSQL 16, the Advisor distills concise invariant lessons into a cryptographic FIFO ring buffer. Top K=10 lessons are retrieved by feature match.',
+    pct: 60.2,
+    tokens: '1,296 tok',
+    tokenNum: 1296,
+    deltaBaseline: '+29.3% ★',
+    status: 'reflexion',
+    badge: 'AUTONOMOUS REFLEXION',
+    keyFinding: 'Statistically significant compliance jump (McNemar p = 1.00e-5), demonstrating durable self-healing across held-out tasks.',
+  },
+  {
+    code: 'C0',
+    name: 'Condition C0 · Verbatim Canonical Facts',
+    shortName: 'Verbatim Facts',
+    role: 'Exact contract clauses directly from the Oracle',
+    description:
+      'Injects exact behavioral contract clauses verbatim into the prompt without Advisor paraphrasing, testing conciseness vs natural language distillation.',
+    pct: 69.6,
+    tokens: '554 tok',
+    tokenNum: 554,
+    deltaBaseline: '+38.7%',
+    status: 'reflexion',
+    badge: 'HIGH EFFICIENCY',
+    keyFinding: 'Cuts token consumption by 51.3% while exceeding distilled lessons by +9.4% in primary compliance.',
+  },
+  {
+    code: 'B',
+    name: 'Condition B · Static Invariant Hints',
+    shortName: 'Golden Oracle',
+    role: 'Theoretical oracle ceiling (all 34 contracts pre-loaded)',
+    description:
+      'Pre-populates all 34 known enterprise PostgreSQL rules statically into every prompt. Represents the theoretical upper-bound ceiling.',
+    pct: 85.7,
+    tokens: '1,852 tok',
+    tokenNum: 1852,
+    deltaBaseline: '+54.8%',
+    status: 'oracle',
+    badge: 'ORACLE CEILING',
+    keyFinding: 'High compliance (85.7%) but causes extreme prompt bloat (+102% token overhead), making it cost-prohibitive in production.',
+  },
+  {
+    code: 'E_B',
+    name: 'Condition E_B · Adversarial Invariant Stress',
+    shortName: 'Adversarial Stress',
+    role: 'Deterministic auto-fixer control under schema stress',
+    description:
+      'Combines static invariant guidance with deterministic static AST auto-fixers and adversarial schema mutations to validate the absolute system ceiling.',
+    pct: 88.2,
+    tokens: '1,858 tok',
+    tokenNum: 1858,
+    deltaBaseline: '+57.3%',
+    status: 'stress',
+    badge: 'MAX CEILING (88.2%)',
+    keyFinding: 'Highest benchmark pass rate. Proves that pairing architectural invariants with deterministic fixers seals 88.2% of edge cases.',
+    isLeader: true,
+  },
+];
+
 const MEMORY_VAULT_FILES: TagItem[] = [
   { id: 'memory', name: 'MEMORY.JSON', role: 'Cryptographic FIFO ring buffer (cap 25). Stores distilled Reflexion lessons.' },
   { id: 'checkpoint', name: 'CHECKPOINT.JSON', role: 'Twin ledger committing trial records and SHA-256 hashes immediately after execution.' },
@@ -56,30 +166,17 @@ const OPERATIONAL_CIRCUIT: TagItem[] = [
   { id: 'st-arb', name: 'ARBITER', role: 'Deterministic ground-truth supreme court adjudicating cross-domain invariant conflicts.' },
 ];
 
-interface ConditionBar {
-  cond: string;
-  label: string;
-  pct: number;
-  tokens: string;
-  isLeader?: boolean;
-}
-
-const CONDITIONS_DATA: ConditionBar[] = [
-  { cond: 'A', label: 'Zero-Shot Baseline', pct: 30.9, tokens: '915 tok' },
-  { cond: 'D', label: 'Placebo Distractor', pct: 37.4, tokens: '1,678 tok' },
-  { cond: 'C', label: 'Reflexion Memory (K=10)', pct: 60.2, tokens: '1,296 tok' },
-  { cond: 'C0', label: 'Verbatim Canonical Facts', pct: 69.6, tokens: '554 tok' },
-  { cond: 'B', label: 'Static Invariant Hints', pct: 85.7, tokens: '1,852 tok' },
-  { cond: 'E_B', label: 'Adversarial Invariant Stress', pct: 88.2, tokens: '1,858 tok', isLeader: true },
-];
-
 export function CortexVaultSection() {
   const [showAllContracts, setShowAllContracts] = useState(false);
   const [activeItem, setActiveItem] = useState<TagItem | null>(null);
+  const [selectedCondition, setSelectedCondition] = useState<string>('C0');
 
   const displayedContracts = showAllContracts
     ? [...INITIAL_CONTRACTS, ...EXTRA_CONTRACTS]
     : INITIAL_CONTRACTS;
+
+  const activeCondition =
+    CONDITIONS_DATA.find((c) => c.code === selectedCondition) ?? CONDITIONS_DATA[3];
 
   return (
     <section className="cortex-section" id="cortex-vault" aria-labelledby="cortex-title">
@@ -114,7 +211,7 @@ export function CortexVaultSection() {
               </div>
             </div>
 
-            {/* Bottom Dual Interactive Charts (Image 1 Exact Layout) */}
+            {/* Bottom Dual Interactive Charts (Exact Mathematical Alignment) */}
             <div className="cortex-charts-row">
               {/* Chart Left: Token Cost Optimization Line Chart */}
               <div className="cortex-chart-box">
@@ -123,11 +220,16 @@ export function CortexVaultSection() {
                   <span className="cortex-chart-tag">[ EMPIRICAL TELEMETRY ]</span>
                 </div>
 
-                <svg className="cortex-svg-chart" viewBox="0 0 360 140" preserveAspectRatio="none">
-                  {/* Subtle Grid Lines */}
-                  <line x1="0" y1="20" x2="360" y2="20" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
-                  <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
-                  <line x1="0" y1="100" x2="360" y2="100" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                <svg className="cortex-svg-chart" viewBox="0 0 360 148" preserveAspectRatio="none">
+                  {/* Horizontal Reference Grid Lines */}
+                  <line x1="20" y1="28" x2="340" y2="28" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                  <line x1="20" y1="72" x2="340" y2="72" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                  <line x1="20" y1="112" x2="340" y2="112" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+
+                  {/* Vertical Alignment Drop Lines Matching Labels */}
+                  <line x1="50" y1="28" x2="50" y2="124" stroke="rgba(160, 170, 255, 0.16)" strokeDasharray="3 3" />
+                  <line x1="180" y1="72" x2="180" y2="124" stroke="rgba(160, 170, 255, 0.16)" strokeDasharray="3 3" />
+                  <line x1="310" y1="112" x2="310" y2="124" stroke="rgba(34, 211, 238, 0.35)" strokeDasharray="3 3" />
 
                   {/* Gradient Area under Curve */}
                   <defs>
@@ -137,34 +239,42 @@ export function CortexVaultSection() {
                     </linearGradient>
                   </defs>
                   <path
-                    d="M 20 25 Q 160 85, 340 115 L 340 135 L 20 135 Z"
+                    d="M 50 28 C 95 36, 140 56, 180 72 C 220 88, 265 106, 310 112 L 310 124 L 50 124 Z"
                     fill="url(#token-curve-grad)"
                   />
 
-                  {/* Main Downward Curve */}
+                  {/* Continuous Smooth Cubic Bezier Curve */}
                   <path
-                    d="M 20 25 C 100 40, 200 85, 340 115"
+                    d="M 50 28 C 95 36, 140 56, 180 72 C 220 88, 265 106, 310 112"
                     fill="none"
                     stroke="#ffffff"
                     strokeWidth="2.5"
                     strokeLinecap="round"
                   />
 
-                  {/* Nodes along curve */}
-                  <circle cx="20" cy="25" r="4" fill="#ffffff" />
-                  <circle cx="100" cy="45" r="3.5" fill="#ffffff" />
-                  <circle cx="180" cy="75" r="3.5" fill="#ffffff" />
-                  <circle cx="260" cy="98" r="3.5" fill="#ffffff" />
-                  
+                  {/* Token Values Above Nodes */}
+                  <text x="50" y="16" textAnchor="middle" fill="#9ca3af" fontSize="9.5" fontFamily="monospace">1,852 tok</text>
+                  <text x="180" y="60" textAnchor="middle" fill="#9ca3af" fontSize="9.5" fontFamily="monospace">915 tok</text>
+                  <text x="310" y="98" textAnchor="middle" fill="#22d3ee" fontSize="9.5" fontFamily="monospace" fontWeight="700">554 tok (-51.3%)</text>
+
+                  {/* Nodes Directly on the Line */}
+                  <circle cx="50" cy="28" r="4.5" fill="#ffffff" />
+                  <circle cx="180" cy="72" r="4.5" fill="#ffffff" />
+
                   {/* Active Lowest Cost Endpoint */}
-                  <circle cx="340" cy="115" r="6" fill="#22d3ee" filter="drop-shadow(0 0 8px #22d3ee)" />
-                  <circle cx="340" cy="115" r="2.5" fill="#ffffff" />
+                  <circle cx="310" cy="112" r="6.5" fill="#22d3ee" filter="drop-shadow(0 0 8px #22d3ee)" />
+                  <circle cx="310" cy="112" r="2.5" fill="#ffffff" />
+
+                  {/* X-Axis Labels Precisely Centered Beneath Each Node in SVG */}
+                  <text x="50" y="139" textAnchor="middle" fill="#7b819a" fontSize="9.5" fontFamily="monospace">Golden Hints</text>
+                  <text x="180" y="139" textAnchor="middle" fill="#7b819a" fontSize="9.5" fontFamily="monospace">Zero-Shot</text>
+                  <text x="310" y="139" textAnchor="middle" fill="#22d3ee" fontSize="9.5" fontFamily="monospace" fontWeight="700">Reflexion C0</text>
                 </svg>
 
-                <div className="cortex-chart-xaxis">
-                  <span>Golden Prompt (1,138 tok)</span>
-                  <span>Zero-Shot (915 tok)</span>
-                  <span className="is-active">Reflexion C0 (554 tok · -51.3%)</span>
+                <div className="cortex-chart-caption">
+                  <span>Theoretical Oracle ceiling (+102% bloat)</span>
+                  <span>Unassisted base</span>
+                  <span className="is-active">Axiom Verbatim (-51.3% cost)</span>
                 </div>
               </div>
 
@@ -172,60 +282,198 @@ export function CortexVaultSection() {
               <div className="cortex-chart-box">
                 <div className="cortex-chart-head">
                   <span className="cortex-chart-title">COMPLIANCE ACROSS 6 CONDITIONS</span>
-                  <span className="cortex-chart-tag">[ ABLATION V2 BENCHMARK ]</span>
+                  <span className="cortex-chart-tag">[ CLICK BAR TO DECODE ]</span>
                 </div>
 
-                <svg className="cortex-svg-chart" viewBox="0 0 360 140" preserveAspectRatio="none">
+                <svg className="cortex-svg-chart" viewBox="0 0 360 148" preserveAspectRatio="none">
                   {/* Grid Lines */}
-                  <line x1="0" y1="20" x2="360" y2="20" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
-                  <line x1="0" y1="60" x2="360" y2="60" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
-                  <line x1="0" y1="100" x2="360" y2="100" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                  <line x1="16" y1="30" x2="344" y2="30" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                  <line x1="16" y1="65" x2="344" y2="65" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
+                  <line x1="16" y1="100" x2="344" y2="100" stroke="rgba(160, 170, 255, 0.08)" strokeWidth="1" />
 
-                  {/* 6 Condition Bars */}
+                  {/* 6 Condition Bars with Precise Spacing */}
                   {CONDITIONS_DATA.map((item, idx) => {
-                    const barWidth = 28;
-                    const spacing = (360 - 6 * barWidth) / 7;
+                    const barWidth = 32;
+                    const spacing = 24;
                     const x = spacing + idx * (barWidth + spacing);
-                    const maxHeight = 100;
+                    const center = x + barWidth / 2;
+                    const maxHeight = 85;
                     const height = (item.pct / 100) * maxHeight;
-                    const y = 120 - height;
+                    const y = 115 - height;
+                    const isSelected = selectedCondition === item.code;
                     const isCyan = item.isLeader;
 
                     return (
-                      <g key={item.cond}>
+                      <g
+                        key={item.code}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setSelectedCondition(item.code)}
+                        onMouseEnter={() => setSelectedCondition(item.code)}
+                      >
+                        {/* Interactive Click Target Area */}
+                        <rect
+                          x={x - 4}
+                          y={20}
+                          width={barWidth + 8}
+                          height={120}
+                          fill="transparent"
+                        />
+
+                        {/* Bar Rect */}
                         <rect
                           x={x}
                           y={y}
                           width={barWidth}
                           height={height}
-                          rx="3"
-                          fill={isCyan ? '#22d3ee' : '#4b5563'}
-                          filter={isCyan ? 'drop-shadow(0 0 10px rgba(34, 211, 238, 0.6))' : undefined}
-                          opacity={isCyan ? 1 : 0.8}
+                          rx="4"
+                          fill={
+                            isSelected
+                              ? '#22d3ee'
+                              : isCyan
+                              ? '#38bdf8'
+                              : '#475569'
+                          }
+                          stroke={isSelected ? '#ffffff' : 'none'}
+                          strokeWidth={isSelected ? 1.5 : 0}
+                          filter={
+                            isSelected
+                              ? 'drop-shadow(0 0 12px rgba(34, 211, 238, 0.8))'
+                              : isCyan
+                              ? 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))'
+                              : undefined
+                          }
+                          opacity={isSelected ? 1 : isCyan ? 0.95 : 0.75}
                         />
+
+                        {/* Percentage Label Above Bar */}
                         <text
-                          x={x + barWidth / 2}
+                          x={center}
                           y={y - 6}
                           textAnchor="middle"
-                          fill={isCyan ? '#22d3ee' : '#8b90a8'}
+                          fill={isSelected ? '#22d3ee' : isCyan ? '#38bdf8' : '#8b90a8'}
                           fontSize="9.5"
                           fontFamily="monospace"
-                          fontWeight={isCyan ? '700' : '500'}
+                          fontWeight={isSelected || isCyan ? '700' : '500'}
                         >
                           {item.pct}%
                         </text>
+
+                        {/* Condition Code Label Below Bar */}
+                        <text
+                          x={center}
+                          y={134}
+                          textAnchor="middle"
+                          fill={isSelected ? '#22d3ee' : '#9ca3af'}
+                          fontSize="10"
+                          fontFamily="monospace"
+                          fontWeight={isSelected ? '700' : '500'}
+                        >
+                          {item.code}
+                        </text>
+
+                        {/* Active Indicator Under Selected Condition */}
+                        {isSelected && (
+                          <circle cx={center} cy={142} r="2" fill="#22d3ee" />
+                        )}
                       </g>
                     );
                   })}
                 </svg>
 
-                <div className="cortex-chart-xaxis">
-                  <span>A (Zero-Shot)</span>
-                  <span>D (Distractor)</span>
-                  <span>C (Reflexion)</span>
-                  <span>C0 (Verbatim)</span>
-                  <span>B (Golden)</span>
-                  <span className="is-active">E_B (Stress 88%)</span>
+                <div className="cortex-chart-caption cortex-chart-caption--bars">
+                  <span>Baseline</span>
+                  <span>Distractor</span>
+                  <span>Reflexion</span>
+                  <span className="is-active">Verbatim</span>
+                  <span>Oracle</span>
+                  <span>Stress (88%)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* =====================================================================
+                CONDITION DECODER PANEL: Rigorous Explanation of A, B, C, C0, D, E_B
+                ===================================================================== */}
+            <div className="cortex-decoder-block">
+              <div className="cortex-decoder-header">
+                <span className="cortex-decoder-eyebrow">// ABLATION MATRIX DECODER · PRE-REGISTERED DESIGN CHOICES</span>
+                <span className="cortex-decoder-hint">SELECT CONDITION TO INSPECT CAUSAL ROLE &amp; IMPACT</span>
+              </div>
+
+              {/* 6 Condition Selector Tabs */}
+              <div className="cortex-cond-pills-row" role="tablist" aria-label="Ablation Condition Selector">
+                {CONDITIONS_DATA.map((c) => {
+                  const isSelected = selectedCondition === c.code;
+                  return (
+                    <button
+                      key={c.code}
+                      type="button"
+                      role="tab"
+                      aria-selected={isSelected}
+                      className={`cortex-cond-pill ${isSelected ? 'is-active' : ''}`}
+                      onClick={() => setSelectedCondition(c.code)}
+                    >
+                      <span className="cortex-cond-pill-code">{c.code}</span>
+                      <span className="cortex-cond-pill-name">{c.shortName}</span>
+                      <span className="cortex-cond-pill-pct">{c.pct}%</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Condition Detailed Explainer Card */}
+              <div
+                className="cortex-cond-detail-card"
+                style={
+                  {
+                    '--cond-accent':
+                      activeCondition.isLeader
+                        ? '#22d3ee'
+                        : activeCondition.code === 'C0' || activeCondition.code === 'C'
+                        ? '#38bdf8'
+                        : '#a855f7',
+                  } as React.CSSProperties
+                }
+              >
+                <div className="cortex-cond-detail-header">
+                  <div className="cortex-cond-detail-title-group">
+                    <span className="cortex-cond-code-badge">{activeCondition.code}</span>
+                    <div>
+                      <h4 className="cortex-cond-title">{activeCondition.name}</h4>
+                      <p className="cortex-cond-role">{activeCondition.role}</p>
+                    </div>
+                  </div>
+                  <div className="cortex-cond-metrics-group">
+                    <div className="cortex-cond-metric-item">
+                      <span className="cortex-cond-metric-val cortex-cond-metric-val--cyan">
+                        {activeCondition.pct}%
+                      </span>
+                      <span className="cortex-cond-metric-lbl">PRIMARY COMPLIANCE</span>
+                    </div>
+                    <div className="cortex-cond-metric-item">
+                      <span className="cortex-cond-metric-val">{activeCondition.deltaBaseline}</span>
+                      <span className="cortex-cond-metric-lbl">DELTA VS BASELINE</span>
+                    </div>
+                    <div className="cortex-cond-metric-item">
+                      <span className="cortex-cond-metric-val">{activeCondition.tokens}</span>
+                      <span className="cortex-cond-metric-lbl">AVG TOKEN FOOTPRINT</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cortex-cond-detail-body">
+                  <div className="cortex-cond-desc-col">
+                    <div className="cortex-cond-section-title">WHAT THIS DESIGN CHOICE MEANS IN AXIOM</div>
+                    <p className="cortex-cond-desc-text">{activeCondition.description}</p>
+                  </div>
+                  <div className="cortex-cond-finding-col">
+                    <div className="cortex-cond-section-title">EMPIRICAL BENCHMARK VERDICT</div>
+                    <p className="cortex-cond-finding-text">{activeCondition.keyFinding}</p>
+                    <div className="cortex-cond-meta-badge">
+                      <span className="cortex-cond-meta-dot" />
+                      <span>720 PROVENANCE RUNS · POSTGRESQL 16 ORACLE · HOLM-BONFERRONI P &lt; 0.0001</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -252,7 +500,7 @@ export function CortexVaultSection() {
 
           {/* Interactive Layout Stage */}
           <div className="cortex-stage">
-            {/* Column 1: Axiom Kernel Sphere (Authentic Axiom Knot Mark) */}
+            {/* Column 1: Axiom Kernel Sphere (Transparent Vector Mark - No Dark Square Container) */}
             <div className="cortex-node-col">
               <div className="cortex-core-wrapper">
                 <div className="cortex-orbit-ring" aria-hidden="true" />
@@ -270,7 +518,7 @@ export function CortexVaultSection() {
                     })
                   }
                 >
-                  <AxiomLogo size={68} variant="icon" className="cortex-axiom-knot-icon" title="Axiom Kernel" />
+                  <AxiomLogo size={68} variant="mark" className="cortex-axiom-knot-icon" title="Axiom Kernel" />
                 </div>
                 <span className="cortex-core-label">AXIOM KERNEL</span>
               </div>

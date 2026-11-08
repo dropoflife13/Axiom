@@ -304,8 +304,8 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
       }
       attempt++;
       console.warn(`[Executor] Attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
-      if (attempt >= 3) throw err;
-      const backoffDelay = Math.min(Math.pow(2, attempt) * 1000 + Math.random() * 1000, 10_000);
+      if (attempt >= MAX_RETRIES) throw err;
+      const backoffDelay = Math.min(Math.pow(2, Math.min(attempt, 6)) * 1000 + Math.random() * 1000, 30_000);
       await new Promise((resolve) => setTimeout(resolve, backoffDelay));
     }
   }
@@ -687,8 +687,8 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       }
       attempt++;
       console.warn(`[Executor] Attempt ${attempt}/${MAX_RETRIES} failed: ${err.message}`);
-      if (attempt >= 3) throw err;
-      const backoffDelay = Math.min(Math.pow(2, attempt) * 1000 + Math.random() * 1000, 10_000);
+      if (attempt >= MAX_RETRIES) throw err;
+      const backoffDelay = Math.min(Math.pow(2, Math.min(attempt, 6)) * 1000 + Math.random() * 1000, 30_000);
       await new Promise((resolve) => setTimeout(resolve, backoffDelay));
     }
   }
