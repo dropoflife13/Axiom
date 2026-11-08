@@ -5,13 +5,13 @@ import HealingLoopHero, { type LiveRun, type SnapshotMeta } from '@/components/H
 import { AnatomySection } from '@/components/anatomy/AnatomySection';
 import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial, type LogLine } from '@/lib/desk';
 
-export interface RunOption {
+interface RunOption {
   id: string;
   label: string;
   model: string;
 }
 
-export const RUN_OPTIONS: RunOption[] = [
+const RUN_OPTIONS: RunOption[] = [
   { id: 'nemotron-1', label: 'NEMOTRON 550B', model: 'nvidia/nemotron-3-ultra-550b-a55b' },
   { id: 'qwen27b-1', label: 'QWEN 3.8 27B', model: 'qwen/qwen3.8-27b' },
 ];
