@@ -84,6 +84,25 @@ export function ConvergenceGauge({ value, done }: { value: number | null; done: 
   );
 }
 
+/* Precomputed asynchronous live-stream pulse styles for the 720 matrix squares.
+ * Provides randomized delays (0 to 5s) and durations (2 to 5s) that never pulse in unison,
+ * while maintaining deterministic values across SSR hydration to prevent React warnings.
+ */
+const MATRIX_PULSE_STYLES = Array.from({ length: TOTAL_TRIALS }, (_, i) => {
+  const row = Math.floor(i / 60);
+  const col = i % 60;
+  // High-entropy 2D pseudo-random hashes
+  const h1 = Math.sin((col + 1) * 127.1 + (row + 1) * 311.7) * 43758.5453;
+  const rand1 = Math.abs(h1 - Math.floor(h1));
+  const h2 = Math.cos((col + 1) * 269.5 + (row + 1) * 183.3) * 43758.5453;
+  const rand2 = Math.abs(h2 - Math.floor(h2));
+
+  return {
+    animationDelay: `${(rand1 * 5).toFixed(2)}s`,
+    animationDuration: `${(rand2 * 3 + 2).toFixed(2)}s`,
+  };
+});
+
 /* ---------- Evidence matrix (High Performance & Sparse Breathing Accents) ---------- */
 export function EvidenceMatrix({
   cells,
@@ -178,23 +197,17 @@ export function EvidenceMatrix({
       >
         {cells.map((c, i) => {
           const isRunning = i === runningIdx;
-          // 2D pseudo-random coordinate hash breaks all column/row alignment (no falling rain)
-          const row = Math.floor(i / 60);
-          const col = i % 60;
-          const raw = Math.sin((col + 1) * 127.1 + (row + 1) * 311.7) * 43758.5453;
-          const rand = raw - Math.floor(raw);
-          // Scatter ~18% truly random individual boxes across the grid
-          const isPulse = c !== 'pending' && !isRunning && rand < 0.18;
-          // Smooth, continuous de-correlated bloom timing
-          const pulsePhase = isPulse ? (-rand * 4.2).toFixed(2) : undefined;
+          const pulseStyle = MATRIX_PULSE_STYLES[i] ?? {
+            animationDelay: `${((i * 17) % 50) / 10}s`,
+            animationDuration: `${(((i * 23) % 30) / 10) + 2}s`,
+          };
 
           return (
             <i
               key={i}
-              className={`dk-cell dk-cell--${c} ${isRunning ? 'dk-cell--running' : ''} ${
-                isPulse ? 'dk-cell--pulse' : ''
-              }`}
-              style={pulsePhase ? { animationDelay: `${pulsePhase}s` } : undefined}
+              suppressHydrationWarning
+              className={`dk-cell dk-cell--${c} matrix-pulse ${isRunning ? 'dk-cell--running' : ''}`}
+              style={!isRunning ? pulseStyle : undefined}
             />
           );
         })}

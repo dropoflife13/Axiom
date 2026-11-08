@@ -525,7 +525,21 @@
   box-shadow: 0 0 2px rgba(217, 70, 239, 0.35);
 }
 
-/* Pulsating micro-cells: Light up only, no darkening, strict color fidelity */
+/* Pulsating micro-cells: Live data stream pulse with randomized delays */
+.axm-matrix-cell.matrix-pulse {
+  animation-name: matrix-pulse;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, filter, box-shadow;
+  transform: translateZ(0);
+}
+.axm-matrix-cell.cell-pass.matrix-pulse {
+  animation-name: matrix-pulse-pass;
+}
+.axm-matrix-cell.cell-fail.matrix-pulse {
+  animation-name: matrix-pulse-fail;
+}
+
 .axm-matrix-cell.is-pulse {
   will-change: filter, background-color;
   transform: translateZ(0);

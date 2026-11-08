@@ -303,18 +303,25 @@ const css = `
 .dk-cell--pass{background:#22d3ee;box-shadow:0 0 2px rgba(34,211,238,.35)}
 .dk-cell--fail{background:#d946ef;box-shadow:0 0 2px rgba(217,70,239,.35)}
 
-/* High-vibrancy light-up breathing: blooms upwards in its exact native hue, never darkens */
-.dk-cell--pulse{will-change:filter,background-color;transform:translateZ(0)}
-.dk-cell--pass.dk-cell--pulse{animation:dk-pulse-pass 4.2s ease-in-out infinite}
-.dk-cell--fail.dk-cell--pulse{animation:dk-pulse-fail 4.2s ease-in-out infinite}
+/* High-vibrancy live data stream: pure CSS asynchronous pulse with randomized per-element delays */
+.matrix-pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(0.4,0,0.2,1);will-change:opacity,filter,box-shadow;transform:translateZ(0)}
+.dk-cell--pass.matrix-pulse{animation-name:matrix-pulse-pass}
+.dk-cell--fail.matrix-pulse{animation-name:matrix-pulse-fail}
+.dk-cell--pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(0.4,0,0.2,1);will-change:opacity,filter,box-shadow;transform:translateZ(0)}
+.dk-cell--pass.dk-cell--pulse{animation-name:matrix-pulse-pass}
+.dk-cell--fail.dk-cell--pulse{animation-name:matrix-pulse-fail}
 
-@keyframes dk-pulse-pass{
-  0%,100%{background:#22d3ee;opacity:1;filter:brightness(1) drop-shadow(0 0 2px rgba(34,211,238,.35))}
-  50%{background:#67e8f9;opacity:1;filter:brightness(1.35) drop-shadow(0 0 4px #22d3ee) drop-shadow(0 0 8px rgba(34,211,238,.9))}
+@keyframes matrix-pulse{
+  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(255,255,255,.2)}
+  86%{opacity:1;filter:brightness(1.75);box-shadow:0 0 5px #ffffff,0 0 9px rgba(34,211,238,.85)}
 }
-@keyframes dk-pulse-fail{
-  0%,100%{background:#d946ef;opacity:1;filter:brightness(1) drop-shadow(0 0 2px rgba(217,70,239,.35))}
-  50%{background:#f0abfc;opacity:1;filter:brightness(1.35) drop-shadow(0 0 4px #d946ef) drop-shadow(0 0 8px rgba(217,70,239,.9))}
+@keyframes matrix-pulse-pass{
+  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(34,211,238,.35)}
+  86%{opacity:1;filter:brightness(1.7);box-shadow:0 0 5px #ffffff,0 0 9px #22d3ee}
+}
+@keyframes matrix-pulse-fail{
+  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(217,70,239,.35)}
+  86%{opacity:1;filter:brightness(1.7);box-shadow:0 0 5px #ffffff,0 0 9px #d946ef}
 }
 
 .dk-cell--running{background:#ffffff!important;box-shadow:0 0 6px #22d3ee,0 0 12px rgba(34,211,238,.85)!important;animation:dk-runner-pulse .75s ease-in-out infinite alternate;transform:scale(1.25);z-index:2}

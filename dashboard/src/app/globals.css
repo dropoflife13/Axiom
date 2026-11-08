@@ -465,3 +465,59 @@ button, input, select, textarea {
   box-shadow: 0 0 0 0 var(--color-overclocked-glow);
   animation: pulse-glow 2.5s ease-in-out infinite;
 }
+
+/* 2D Evidence Matrix: Live Data Stream Pulse */
+.matrix-pulse {
+  animation-name: matrix-pulse;
+  animation-iteration-count: infinite;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: opacity, filter, box-shadow;
+  transform: translateZ(0);
+}
+
+.dk-cell--pass.matrix-pulse {
+  animation-name: matrix-pulse-pass;
+}
+
+.dk-cell--fail.matrix-pulse {
+  animation-name: matrix-pulse-fail;
+}
+
+@keyframes matrix-pulse {
+  0%, 72%, 100% {
+    opacity: 0.85;
+    filter: brightness(1);
+    box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+  }
+  86% {
+    opacity: 1;
+    filter: brightness(1.75);
+    box-shadow: 0 0 5px #ffffff, 0 0 9px rgba(34, 211, 238, 0.85);
+  }
+}
+
+@keyframes matrix-pulse-pass {
+  0%, 72%, 100% {
+    opacity: 0.85;
+    filter: brightness(1);
+    box-shadow: 0 0 2px rgba(34, 211, 238, 0.35);
+  }
+  86% {
+    opacity: 1;
+    filter: brightness(1.7);
+    box-shadow: 0 0 5px #ffffff, 0 0 9px #22d3ee;
+  }
+}
+
+@keyframes matrix-pulse-fail {
+  0%, 72%, 100% {
+    opacity: 0.85;
+    filter: brightness(1);
+    box-shadow: 0 0 2px rgba(217, 70, 239, 0.35);
+  }
+  86% {
+    opacity: 1;
+    filter: brightness(1.7);
+    box-shadow: 0 0 5px #ffffff, 0 0 9px #d946ef;
+  }
+}

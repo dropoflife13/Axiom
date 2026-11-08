@@ -947,17 +947,21 @@ export function AxiomAnatomy({
                         const isRun = isCurRow && cIdx === Math.min(21, rowPassed);
                         const isPass = cIdx < rowPassed && cIdx % 7 !== 4;
                         const isFail = cIdx < rowPassed && cIdx % 7 === 4;
-                        const raw = Math.sin((cIdx + 1) * 127.1 + (rIdx + 1) * 311.7) * 43758.5453;
-                        const rand = raw - Math.floor(raw);
-                        const isPulse = (isPass || isFail) && !isRun && rand < 0.20;
-                        const pulsePhase = isPulse ? (-rand * 4.2).toFixed(2) : undefined;
+                        const raw1 = Math.sin((cIdx + 1) * 127.1 + (rIdx + 1) * 311.7) * 43758.5453;
+                        const rand1 = Math.abs(raw1 - Math.floor(raw1));
+                        const raw2 = Math.cos((cIdx + 1) * 269.5 + (rIdx + 1) * 183.3) * 43758.5453;
+                        const rand2 = Math.abs(raw2 - Math.floor(raw2));
                         return (
                           <span
                             key={cIdx}
+                            suppressHydrationWarning
                             className={`axm-matrix-cell ${
                               isRun ? 'is-running' : isPass ? 'cell-pass' : isFail ? 'cell-fail' : 'cell-pending'
-                            } ${isPulse ? 'is-pulse' : ''}`}
-                            style={pulsePhase ? { animationDelay: `${pulsePhase}s` } : undefined}
+                            } matrix-pulse`}
+                            style={!isRun ? {
+                              animationDelay: `${(rand1 * 5).toFixed(2)}s`,
+                              animationDuration: `${(rand2 * 3 + 2).toFixed(2)}s`,
+                            } : undefined}
                           />
                         );
                       })}
