@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  experimental: {},
+  transpilePackages: ['three'],
+  turbopack: {
+    root: import.meta.dirname,
+  },
   async headers() {
     return [
       {
