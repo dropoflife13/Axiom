@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
+import { AnatomyTelemetryChart } from './AnatomyTelemetryChart';
 
 const AxiomAnatomy = dynamic(
   () => import('./AxiomAnatomy').then((mod) => mod.AxiomAnatomy),
@@ -214,35 +215,44 @@ export function AnatomySection({
 
   return (
     <section className="anatomy-section" aria-labelledby="anatomy-title">
-      {/* ---------- Intro Title ---------- */}
-      <div className="anatomy-section__intro">
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{
-            fontSize: '10px',
-            padding: '3px 8px',
-            borderRadius: '4px',
-            border: snapshot?.awaiting
-              ? '1px solid rgba(251, 191, 36, 0.5)'
-              : snapshot?.isLive
-              ? '1px solid rgba(52, 211, 153, 0.4)'
-              : '1px solid rgba(168, 85, 247, 0.4)',
-            color: snapshot?.awaiting ? '#fbbf24' : snapshot?.isLive ? '#34d399' : '#d8b4fe',
-            background: 'rgba(5, 6, 10, 0.7)',
-            fontFamily: 'var(--font-mono, monospace)',
-            letterSpacing: '0.1em',
-            fontWeight: 600,
-          }}>
-            {snapshot?.awaiting
-              ? `AWAITING SNAPSHOT // ${snapshot.runId}`
-              : snapshot?.isLive
-              ? '● LIVE RUN'
-              : `SNAPSHOT // ${snapshot?.runId ?? 'nemotron-1'} @ ${snapshot?.commit ?? '7ebae83'}`}
-          </span>
+      {/* ---------- Header Row with Intro Title & Empirical Benchmark Telemetry Chart ---------- */}
+      <div className="anatomy-section__header-row">
+        <div className="anatomy-section__intro">
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+            <span style={{
+              fontSize: '10px',
+              padding: '3px 8px',
+              borderRadius: '4px',
+              border: snapshot?.awaiting
+                ? '1px solid rgba(251, 191, 36, 0.5)'
+                : snapshot?.isLive
+                ? '1px solid rgba(52, 211, 153, 0.4)'
+                : '1px solid rgba(168, 85, 247, 0.4)',
+              color: snapshot?.awaiting ? '#fbbf24' : snapshot?.isLive ? '#34d399' : '#d8b4fe',
+              background: 'rgba(5, 6, 10, 0.7)',
+              fontFamily: 'var(--font-mono, monospace)',
+              letterSpacing: '0.1em',
+              fontWeight: 600,
+            }}>
+              {snapshot?.awaiting
+                ? `AWAITING SNAPSHOT // ${snapshot.runId}`
+                : snapshot?.isLive
+                ? '● LIVE RUN'
+                : `SNAPSHOT // ${snapshot?.runId ?? 'nemotron-1'} @ ${snapshot?.commit ?? '7ebae83'}`}
+            </span>
+          </div>
+          <p className="anatomy-section__eyebrow">The system behind the signal</p>
+          <h2 id="anatomy-title">Anatomy of Axiom</h2>
+          <p>Axiom is a machine for testing generated migrations against rules that are not visible to the model.</p>
+          <p>Every failure becomes evidence, and only evidence that survives a retry can become memory.</p>
         </div>
-        <p className="anatomy-section__eyebrow">The system behind the signal</p>
-        <h2 id="anatomy-title">Anatomy of Axiom</h2>
-        <p>Axiom is a machine for testing generated migrations against rules that are not visible to the model.</p>
-        <p>Every failure becomes evidence, and only evidence that survives a retry can become memory.</p>
+
+        {/* Dynamic Empirical Telemetry & Invariant Compliance Chart */}
+        <AnatomyTelemetryChart
+          checkpoint={checkpoint}
+          snapshot={snapshot}
+          activeModel={activeModel}
+        />
       </div>
 
       {/* ---------- 3D Motherboard Workbench Stage ---------- */}

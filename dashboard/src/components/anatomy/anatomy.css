@@ -2222,3 +2222,359 @@
   .axm-360-insp dl { display: none; }
   .lbl small { display: none !important; }
 }
+
+/* =========================================================================
+   ANATOMY INTRO TELEMETRY CHART (Dead-space filling sci-fi HUD benchmark)
+   ========================================================================= */
+.anatomy-section__header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  margin-bottom: 48px;
+}
+
+@media (min-width: 1024px) {
+  .anatomy-section__header-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    gap: 40px;
+    align-items: center;
+  }
+}
+
+.axm-telemetry-box {
+  background: rgba(7, 9, 16, 0.88);
+  border: 1px solid rgba(160, 170, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.06) inset, 0 8px 32px rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(12px);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  font-family: var(--font-mono, monospace);
+  position: relative;
+  overflow: hidden;
+}
+
+.axm-telemetry-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #94a3b8, #38bdf8, #22d3ee, #a855f7);
+  opacity: 0.85;
+}
+
+.axm-telemetry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border-bottom: 1px solid rgba(160, 170, 255, 0.12);
+  padding-bottom: 10px;
+}
+
+.axm-telemetry-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.axm-telemetry-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.1);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  border-radius: 4px;
+  padding: 2px 7px;
+  text-transform: uppercase;
+}
+
+.axm-pill-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 6px #22d3ee;
+}
+
+.axm-pill-dot.is-live {
+  animation: dk-runner-pulse 0.9s ease-in-out infinite alternate;
+}
+
+.axm-telemetry-model {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #8b90a8;
+  font-weight: 600;
+}
+
+.axm-telemetry-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(5, 6, 10, 0.75);
+  border: 1px solid rgba(160, 170, 255, 0.15);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.axm-tab-btn {
+  all: unset;
+  cursor: pointer;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border-radius: 3px;
+  color: #8b90a8;
+  transition: all 0.18s ease;
+}
+
+.axm-tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.axm-tab-btn.is-active {
+  color: #22d3ee;
+  background: rgba(34, 211, 238, 0.15);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.35);
+}
+
+/* Conditions list */
+.axm-cond-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.axm-cond-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.axm-cond-row:hover {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(160, 170, 255, 0.15);
+}
+
+.axm-cond-row.is-hero {
+  background: rgba(34, 211, 238, 0.04);
+  border-color: rgba(34, 211, 238, 0.25);
+  box-shadow: 0 0 16px rgba(34, 211, 238, 0.06);
+}
+
+.axm-cond-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.axm-cond-tag-wrap {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.axm-cond-tag {
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--cond-color);
+  background: var(--cond-accent);
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.axm-cond-name {
+  color: #e2e8f0;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.axm-cond-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.axm-cond-tok {
+  color: #64748b;
+  font-size: 9px;
+}
+
+.axm-cond-val {
+  color: #f1f5f9;
+  font-weight: 700;
+  font-size: 10.5px;
+  min-width: 40px;
+  text-align: right;
+}
+
+.axm-cond-delta {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  min-width: 58px;
+  text-align: right;
+}
+
+.axm-cond-delta.is-hero {
+  color: #34d399;
+  text-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+}
+
+.axm-cond-bar-track {
+  height: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+.axm-cond-bar-fill {
+  height: 100%;
+  background: var(--cond-color);
+  border-radius: 3px;
+  position: relative;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px var(--cond-color);
+}
+
+.axm-cond-bar-glow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 6px;
+  background: #ffffff;
+  border-radius: 3px;
+  box-shadow: 0 0 6px #ffffff;
+}
+
+/* Delta view */
+.axm-delta-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.axm-delta-headline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.axm-delta-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  background: rgba(5, 6, 10, 0.6);
+  border: 1px solid rgba(160, 170, 255, 0.1);
+  border-radius: 4px;
+}
+
+.axm-delta-label {
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: #8b90a8;
+  text-transform: uppercase;
+}
+
+.axm-delta-big {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #22d3ee;
+  text-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
+}
+
+.axm-delta-sub {
+  font-size: 8.5px;
+  color: #64748b;
+  line-height: 1.3;
+}
+
+.axm-delta-svg-wrap {
+  width: 100%;
+  background: rgba(2, 3, 6, 0.8);
+  border: 1px solid rgba(160, 170, 255, 0.12);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.axm-delta-svg {
+  width: 100%;
+  height: 80px;
+  display: block;
+}
+
+.axm-delta-proof {
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: #8b90a8;
+  background: rgba(5, 6, 10, 0.5);
+  border: 1px dashed rgba(160, 170, 255, 0.15);
+  border-radius: 3px;
+  padding: 5px 8px;
+  text-align: center;
+}
+
+/* Footer strip */
+.axm-telemetry-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  border-top: 1px solid rgba(160, 170, 255, 0.1);
+  padding-top: 10px;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  color: #8b90a8;
+}
+
+.axm-foot-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.axm-foot-item b {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.axm-foot-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+}
+
