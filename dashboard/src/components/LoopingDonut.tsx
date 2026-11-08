@@ -39,8 +39,8 @@ void main() {
 }
 `;
 
-const BASE_CORE_SCALE = 1.22;
-const MAX_CORE_SCALE = 1.82;
+const BASE_CORE_SCALE = 0.84;
+const MAX_CORE_SCALE = 1.38;
 
 export interface LoopingDonutProps {
   color: number;
@@ -196,8 +196,8 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
       if (w === 0 || h === 0) return;
       renderer.setSize(w, h, false);
       camera.aspect = w / h;
-      camera.position.z = w / h < 1 ? 8 : 5.4;
-      camera.position.y = 0.4;
+      camera.position.z = w / h < 1 ? 8.2 : 6.4;
+      camera.position.y = 0.2;
       camera.updateProjectionMatrix();
     };
     updateSize();
@@ -228,7 +228,7 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
 
     // Cinematic zoom-out transition when opening the website
     const isReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let introZoom = isReduced ? 1.0 : 2.5;
+    let introZoom = isReduced ? 1.0 : 1.3;
 
     const frame = (now: number) => {
       animId = requestAnimationFrame(frame);

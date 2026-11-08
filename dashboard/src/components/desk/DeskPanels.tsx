@@ -512,18 +512,18 @@ export const LiveTerminal = memo(function LiveTerminal({
   );
 });
 
-/* ---------- Floating fact nodes around the torus (Positioned to Maximize Spaces) ---------- */
+/* ---------- Floating fact nodes around the torus (Calibrated Orbit - Zero HUD Collision) ---------- */
 const FACT_SLOTS: [number, number][] = [
-  [50, 18], // Top apogee directly above the knot
-  [63, 23], // Upper-right orbital flank
-  [69, 44], // Mid-right clear pocket (between knot and right frequency rack)
-  [65, 64], // Lower-right orbital flank
-  [51, 74], // Bottom perigee directly below the knot
-  [39, 68], // Lower-left orbital pocket (below hero copy, above evidence matrix)
-  [38, 23], // Upper-left orbital pocket (above hero copy, below sparklines)
-  [58, 30], // Inner upper-right orbital lane
-  [44, 21], // Inner upper-left orbital lane
-  [44, 72], // Inner lower-left orbital lane
+  [52, 23], // Upper center apogee (safely below dk-top sparklines, above knot)
+  [61, 26], // Upper-right orbital flank
+  [66, 38], // Mid-upper right clear pocket (left of frequency rack)
+  [66, 52], // Mid-lower right clear pocket (left of frequency rack)
+  [61, 63], // Lower-right orbital flank (safely above dk-bottom gauge)
+  [52, 65], // Lower center perigee (safely above live terminal)
+  [43, 63], // Lower-left orbital flank (safely above evidence matrix)
+  [38, 52], // Mid-lower left clear pocket (right of hero copy)
+  [38, 38], // Mid-upper left clear pocket (right of hero copy)
+  [43, 26], // Upper-left orbital flank (safely below dk-top sparklines)
 ];
 
 export const FactNodes = memo(function FactNodes({ facts }: { facts: string[] }) {
@@ -568,7 +568,7 @@ export const Connectors = memo(function Connectors() {
     <svg className="dk-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
       {ANCHORS.map(([x, y], i) => (
         <g key={i}>
-          <path d={`M50 46 C ${(50 + x) / 2} 46, ${(50 + x) / 2} ${y}, ${x} ${y}`} className="dk-wire" style={{ animationDelay: `${i * 0.3}s` }} />
+          <path d={`M52 45 C ${(52 + x) / 2} 45, ${(52 + x) / 2} ${y}, ${x} ${y}`} className="dk-wire" style={{ animationDelay: `${i * 0.3}s` }} />
           <circle cx={x} cy={y} r={0.35} className="dk-wire-end" />
         </g>
       ))}
