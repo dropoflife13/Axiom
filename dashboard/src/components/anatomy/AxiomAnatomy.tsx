@@ -4,6 +4,7 @@ import * as React from 'react';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { AxiomLogo } from '@/components/AxiomLogo';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
 
 export interface AxiomAnatomyProps {
@@ -360,18 +361,6 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       return Math.min(120, Math.floor(trialCount / 6));
     });
   }, [checkpoint, trialCount]);
-
-  // Lemniscate logo path
-  const logoPath = React.useMemo(() => {
-    let d = '';
-    const A = 26;
-    for (let i = 0; i <= 120; i++) {
-      const t = (i / 120) * Math.PI * 2;
-      const s = 1 + Math.sin(t) * Math.sin(t);
-      d += (i ? 'L' : 'M') + (30 + (A * Math.cos(t)) / s).toFixed(2) + ' ' + (15 + (A * Math.sin(t) * Math.cos(t)) / s).toFixed(2);
-    }
-    return d + 'Z';
-  }, []);
 
   // Preset Views
   const setCameraView = React.useCallback((view: 'front' | 'side' | 'top' | 'iso') => {
@@ -1038,9 +1027,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
         {/* Top Header */}
         <header className="axm-360-header">
           <div className="axm-360-brand">
-            <svg viewBox="0 0 60 30" aria-hidden="true">
-              <path d={logoPath} fill="none" stroke="#a855f7" strokeWidth="5" strokeLinejoin="round" />
-            </svg>
+            <AxiomLogo size={24} />
             <b>AXIOM</b>
             <span>Anatomy / 360 view</span>
             <span

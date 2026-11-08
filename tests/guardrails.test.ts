@@ -284,8 +284,9 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
     expect(trialEB.migrationExitNonZero).toBe(false);
     expect(trialEB.boundPassed).toBe(false);
     expect(trialEB.boundFactFraction).toBeCloseTo(2 / 3, 4);
-    expect(trialEB.provider).toBe('nvidia');
-    expect(trialEB.baseUrl).toBe('https://integrate.api.nvidia.com/v1');
+    const isGroq = REQUIRED_EXECUTOR_MODEL.startsWith('qwen/');
+    expect(trialEB.provider).toBe(isGroq ? 'groq' : 'nvidia');
+    expect(trialEB.baseUrl).toBe(isGroq ? 'https://api.groq.com/openai/v1' : 'https://integrate.api.nvidia.com/v1');
     expect(trialEB.requestedModel).toBe(REQUIRED_EXECUTOR_MODEL);
     expect(trialEB.returnedModel).toBe(REQUIRED_EXECUTOR_MODEL);
     expect(trialEB.finishReason).toBe('stop');

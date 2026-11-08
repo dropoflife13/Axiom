@@ -13,10 +13,31 @@ const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
 export const ALLOWED_EXECUTOR_MODELS = [
   'google/gemma-4-31b-it',
   'nvidia/nemotron-3-ultra-550b-a55b',
+  'qwen/qwen3.8-27b',
 ] as const;
 export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
 
 export const PROVIDER = 'nvidia';
+
+export function resolveEndpoint(model: string) {
+  const isGroq = model === 'qwen/qwen3.8-27b' || model.startsWith('qwen/');
+  if (isGroq) {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey === 'your_key_here') {
+      throw new Error('GROQ_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    }
+    const baseUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
+    const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+    return { provider: 'groq', apiKey, baseUrl, chatUrl };
+  }
+  const apiKey = process.env.NVIDIA_API_KEY;
+  if (!apiKey || apiKey === 'your_key_here') {
+    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+  }
+  const baseUrl = NVIDIA_BASE_URL;
+  const chatUrl = CHAT_URL;
+  return { provider: 'nvidia', apiKey, baseUrl, chatUrl };
+}
 
 export function resolveExecutorModel(explicitModel?: string): string {
   const resolved = (explicitModel ?? process.env.NVIDIA_EXECUTOR_MODEL ?? '').trim();
@@ -53,10 +74,11 @@ export function getProviderProvenance(
   requestedModel: string,
   returnedModel: string = requestedModel
 ) {
+  const endpoint = resolveEndpoint(requestedModel);
   const factsPath = path.resolve('fixtures/task-v2/facts.json');
   return {
-    provider: PROVIDER,
-    baseUrl: NVIDIA_BASE_URL,
+    provider: endpoint.provider,
+    baseUrl: endpoint.baseUrl,
     requestedModel,
     returnedModel,
     oracleCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
@@ -93,9 +115,10 @@ export function computeExecutorCacheKey(
   user: string,
   temperature: number | string
 ): string {
+  const endpoint = resolveEndpoint(model);
   return crypto
     .createHash('sha256')
-    .update(`${NVIDIA_BASE_URL}${model}${system}${user}${temperature}`)
+    .update(`${endpoint.baseUrl}${model}${system}${user}${temperature}`)
     .digest('hex');
 }
 
@@ -157,14 +180,16 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
   const cacheKey = computeExecutorCacheKey(model, systemPrompt, task, temperature);
   const cacheFilePath = path.join(cacheDir, `${cacheKey}.json`);
 
+  const endpoint = resolveEndpoint(model);
+
   if (!options?.disableCache && fs.existsSync(cacheFilePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cacheFilePath, 'utf-8'));
       if (
         typeof cached.markdown === 'string' &&
         typeof cached.rawResponse === 'string' &&
-        cached.provider === PROVIDER &&
-        cached.baseUrl === NVIDIA_BASE_URL &&
+        cached.provider === endpoint.provider &&
+        cached.baseUrl === endpoint.baseUrl &&
         cached.requestedModel === model
       ) {
         return {
@@ -180,11 +205,6 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
     }
   }
 
-  const apiKey = process.env.NVIDIA_API_KEY;
-  if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
-  }
-
   const effectiveModel = normalizeModelName(model);
   const fullPrompt = `${systemPrompt}\n${task}`;
   const abortSignal = assertBudgetAvailable('EXECUTOR', fullPrompt.length);
@@ -194,11 +214,11 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
 
   while (attempt < MAX_RETRIES) {
     try {
-      const response = await fetch(CHAT_URL, {
+      const response = await fetch(endpoint.chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${endpoint.apiKey}`,
         },
         body: JSON.stringify({
           model: effectiveModel,
@@ -228,9 +248,9 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Executor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] ${endpoint.provider.toUpperCase()} Executor ${response.status}: ${errText}`);
         }
-        throw new Error(`NVIDIA Executor 5xx ${response.status}: ${errText}`);
+        throw new Error(`${endpoint.provider.toUpperCase()} Executor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();
@@ -516,11 +536,7 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
     }
   }
 
-  const apiKey = process.env.NVIDIA_API_KEY;
-  if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
-  }
-
+  const endpoint = resolveEndpoint(model);
   const effectiveModel = normalizeModelName(model);
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
   assertBudgetAvailable('EXECUTOR', fullPrompt.length);
@@ -531,11 +547,11 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
   while (attempt < MAX_RETRIES) {
     try {
       const reqSignal = AbortSignal.timeout(BUDGET_GUARD.callTimeoutMs);
-      const response = await fetch(CHAT_URL, {
+      const response = await fetch(endpoint.chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${endpoint.apiKey}`,
         },
         body: JSON.stringify({
           model: effectiveModel,
@@ -569,9 +585,9 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Executor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] ${endpoint.provider.toUpperCase()} Executor ${response.status}: ${errText}`);
         }
-        throw new Error(`NVIDIA Executor 5xx ${response.status}: ${errText}`);
+        throw new Error(`${endpoint.provider.toUpperCase()} Executor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();

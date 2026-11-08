@@ -7,7 +7,11 @@ export const metadata: Metadata = {
   title: 'Axiom Mission Control',
   description: 'Axiom verification telemetry and ablation evidence.',
   icons: {
-    icon: '/brand/axiom-mark.svg',
+    icon: [
+      { url: '/brand/axiom-icon.svg', type: 'image/svg+xml' },
+      { url: '/brand/axiom-mark.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/brand/axiom-icon.svg',
   },
 };
 

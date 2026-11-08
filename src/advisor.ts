@@ -20,12 +20,20 @@ export async function generateLesson(
   errorCode: string,
   errorDetail: string
 ): Promise<string> {
-  const apiKey = process.env.NVIDIA_API_KEY;
+  const executorModel = (process.env.NVIDIA_EXECUTOR_MODEL || '').trim();
+  const isGroq = executorModel === 'qwen/qwen3.8-27b' || executorModel.startsWith('qwen/');
+  const apiKey = isGroq ? process.env.GROQ_API_KEY : process.env.NVIDIA_API_KEY;
   if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    throw new Error(`${isGroq ? 'GROQ_API_KEY' : 'NVIDIA_API_KEY'} is not set or is still the placeholder. Please set a valid key in .env`);
   }
-
-  const effectiveModel = normalizeAdvisorModel(MODEL);
+  const baseUrl = isGroq
+    ? (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1')
+    : NVIDIA_BASE_URL;
+  const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+  const rawModel = isGroq
+    ? (process.env.GROQ_ADVISOR_MODEL || 'qwen/qwen3.8-27b')
+    : MODEL;
+  const effectiveModel = normalizeAdvisorModel(rawModel);
   const systemPrompt = ADVISOR_SYSTEM_PROMPT;
   const userPrompt = `Error code: ${errorCode}\nError detail: ${errorDetail}`;
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
@@ -39,7 +47,7 @@ export async function generateLesson(
     try {
       const reqSignal =
         attempt === 0 ? abortSignal : AbortSignal.timeout(BUDGET_GUARD.callTimeoutMs);
-      const response = await fetch(CHAT_URL, {
+      const response = await fetch(chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -72,9 +80,9 @@ export async function generateLesson(
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] NVIDIA Advisor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] ${isGroq ? 'Groq' : 'NVIDIA'} Advisor ${response.status}: ${errText}`);
         }
-        throw new Error(`NVIDIA Advisor 5xx ${response.status}: ${errText}`);
+        throw new Error(`${isGroq ? 'Groq' : 'NVIDIA'} Advisor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();
