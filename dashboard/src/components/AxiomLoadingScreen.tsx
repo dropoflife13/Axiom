@@ -199,79 +199,97 @@ export function AxiomLoadingScreen({
           opacity: 0;
         }
 
-        /* Rotating HUD Reticles */
-        .axiom-reticle-outer {
-          position: absolute;
-          width: 320px;
-          height: 320px;
-          border-radius: 50%;
-          border: 1px dashed rgba(34, 211, 238, 0.22);
-          animation: axiom-spin-cw 24s linear infinite;
-          pointer-events: none;
+        .axiom-loader-shroud.reduced-motion .axiom-reticle-outer,
+        .axiom-loader-shroud.reduced-motion .axiom-reticle-mid,
+        .axiom-loader-shroud.reduced-motion .axiom-reticle-inner,
+        .axiom-loader-shroud.reduced-motion .axiom-sonar-pulse {
+          animation: none;
+          transform: translate(-50%, -50%);
         }
 
-        .axiom-reticle-mid {
-          position: absolute;
-          width: 250px;
-          height: 250px;
-          border-radius: 50%;
-          border: 1px solid rgba(168, 85, 247, 0.25);
-          border-left-color: transparent;
-          border-right-color: transparent;
-          animation: axiom-spin-ccw 14s linear infinite;
-          pointer-events: none;
+        .axiom-loader-shroud.reduced-motion .axiom-logo-img {
+          animation: none;
+          transform: none;
         }
 
-        .axiom-reticle-inner {
-          position: absolute;
-          width: 190px;
-          height: 190px;
-          border-radius: 50%;
-          border: 1px dotted rgba(34, 211, 238, 0.4);
-          animation: axiom-spin-cw 9s linear infinite;
-          pointer-events: none;
-        }
-
-        /* Sonar Pulse Ripple */
-        .axiom-sonar-pulse {
-          position: absolute;
-          width: 140px;
-          height: 140px;
-          border-radius: 50%;
-          border: 1.5px solid rgba(34, 211, 238, 0.6);
-          animation: axiom-sonar 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
-          pointer-events: none;
-        }
-
-        @keyframes axiom-spin-cw {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-
-        @keyframes axiom-spin-ccw {
-          from { transform: rotate(360deg); }
-          to { transform: rotate(0deg); }
-        }
-
-        @keyframes axiom-sonar {
-          0% { transform: scale(0.85); opacity: 0.9; }
-          100% { transform: scale(2.6); opacity: 0; }
-        }
-
-        /* Central Brand Mark Container */
+        /* Central Brand Mark Container with Concentric Holographic Reticles */
         .axiom-logo-wrapper {
           position: relative;
-          width: 140px;
-          height: 140px;
+          width: 160px;
+          height: 160px;
           display: flex;
           align-items: center;
           justify-content: center;
           margin-bottom: 24px;
         }
 
+        /* Perfectly Centered Rotating HUD Reticles */
+        .axiom-reticle-outer,
+        .axiom-reticle-mid,
+        .axiom-reticle-inner,
+        .axiom-sonar-pulse {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+
+        .axiom-reticle-outer {
+          width: 270px;
+          height: 270px;
+          border-radius: 50%;
+          border: 1px dashed rgba(34, 211, 238, 0.26);
+          animation: axiom-spin-cw 24s linear infinite;
+        }
+
+        .axiom-reticle-mid {
+          width: 215px;
+          height: 215px;
+          border-radius: 50%;
+          border: 1px solid rgba(168, 85, 247, 0.32);
+          border-left-color: transparent;
+          border-right-color: transparent;
+          animation: axiom-spin-ccw 14s linear infinite;
+        }
+
+        .axiom-reticle-inner {
+          width: 165px;
+          height: 165px;
+          border-radius: 50%;
+          border: 1px dotted rgba(34, 211, 238, 0.45);
+          animation: axiom-spin-cw 9s linear infinite;
+        }
+
+        .axiom-sonar-pulse {
+          width: 130px;
+          height: 130px;
+          border-radius: 50%;
+          border: 1.5px solid rgba(34, 211, 238, 0.65);
+          animation: axiom-sonar 2.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+        }
+
+        @keyframes axiom-spin-cw {
+          from { transform: translate(-50%, -50%) rotate(0deg); }
+          to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        @keyframes axiom-spin-ccw {
+          from { transform: translate(-50%, -50%) rotate(360deg); }
+          to { transform: translate(-50%, -50%) rotate(0deg); }
+        }
+
+        @keyframes axiom-sonar {
+          0% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.9; }
+          100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
+        }
+
         .axiom-logo-img {
+          position: relative;
+          z-index: 3;
           width: 110px;
           height: 110px;
+          display: block;
           filter: drop-shadow(0 0 25px rgba(34, 211, 238, 0.65)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.45));
           animation: axiom-core-breathe 2.6s ease-in-out infinite alternate;
         }
@@ -292,12 +310,14 @@ export function AxiomLoadingScreen({
           font-size: 24px;
           font-weight: 800;
           letter-spacing: 0.38em;
+          padding-left: 0.38em;
           color: #ffffff;
           margin: 0;
           text-shadow: 0 0 16px rgba(34, 211, 238, 0.6);
           display: flex;
           align-items: center;
-          gap: 10px;
+          justify-content: center;
+          text-align: center;
         }
 
         .axiom-loader-tagline {
@@ -426,12 +446,11 @@ export function AxiomLoadingScreen({
 
       {/* Central Holographic Axiom Stage */}
       <div className="axiom-loader-core">
-        <div className="axiom-reticle-outer" />
-        <div className="axiom-reticle-mid" />
-        <div className="axiom-reticle-inner" />
-        <div className="axiom-sonar-pulse" />
-
         <div className="axiom-logo-wrapper">
+          <div className="axiom-reticle-outer" />
+          <div className="axiom-reticle-mid" />
+          <div className="axiom-reticle-inner" />
+          <div className="axiom-sonar-pulse" />
           <img
             src="/brand/axiom-mark.svg"
             alt="Axiom"
