@@ -177,9 +177,28 @@ export function AnatomySection({
   checkpoint?: CheckpointTrial[];
   desk?: DeskData;
   running?: boolean;
-  snapshot?: { runId: string; commit: string; isLive?: boolean };
+  snapshot?: { runId: string; commit: string; isLive?: boolean; model?: string; awaiting?: boolean };
 } = {}) {
   const [selectedSubsystem, setSelectedSubsystem] = useState<string>('03'); // Default to Oracle Crucible
+
+  const activeModel = snapshot?.model ?? (snapshot?.runId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b');
+
+  const subsystems = React.useMemo(() => {
+    return SUBSYSTEMS.map((sub) => {
+      if (sub.id === '02') {
+        return {
+          ...sub,
+          spec: [
+            { key: 'model', val: activeModel },
+            { key: 'temperature', val: '0 (deterministic)' },
+            { key: 'timeout', val: '30s per execution' },
+          ],
+          codeSnippet: `response = client.chat.completions.create(\n  model="${activeModel}", temp=0.0\n)`,
+        };
+      }
+      return sub;
+    });
+  }, [activeModel]);
 
   return (
     <section className="anatomy-section" aria-labelledby="anatomy-title">
@@ -190,14 +209,22 @@ export function AnatomySection({
             fontSize: '10px',
             padding: '3px 8px',
             borderRadius: '4px',
-            border: snapshot?.isLive ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
-            color: snapshot?.isLive ? '#34d399' : '#d8b4fe',
+            border: snapshot?.awaiting
+              ? '1px solid rgba(251, 191, 36, 0.5)'
+              : snapshot?.isLive
+              ? '1px solid rgba(52, 211, 153, 0.4)'
+              : '1px solid rgba(168, 85, 247, 0.4)',
+            color: snapshot?.awaiting ? '#fbbf24' : snapshot?.isLive ? '#34d399' : '#d8b4fe',
             background: 'rgba(5, 6, 10, 0.7)',
             fontFamily: 'var(--font-mono, monospace)',
             letterSpacing: '0.1em',
             fontWeight: 600,
           }}>
-            {snapshot?.isLive ? '● LIVE RUN' : `SNAPSHOT // ${snapshot?.runId ?? 'ablation-v2'} @ ${snapshot?.commit ?? '7ebae83'}`}
+            {snapshot?.awaiting
+              ? `AWAITING SNAPSHOT // ${snapshot.runId}`
+              : snapshot?.isLive
+              ? '● LIVE RUN'
+              : `SNAPSHOT // ${snapshot?.runId ?? 'nemotron-1'} @ ${snapshot?.commit ?? '7ebae83'}`}
           </span>
         </div>
         <p className="anatomy-section__eyebrow">The system behind the signal</p>
@@ -338,7 +365,7 @@ export function AnatomySection({
 
         {/* 9 Subsystem Architectural Cards in a Sleek, Compact 3x3 Grid */}
         <div className="axm-subsystems-grid">
-          {SUBSYSTEMS.map((sub) => {
+          {subsystems.map((sub) => {
             const isSelected = selectedSubsystem === sub.id;
             return (
               <div
@@ -397,7 +424,7 @@ export function AnatomySection({
 
         {/* Dynamic Contextual Inspector Console for Selected Subsystem */}
         {(() => {
-          const activeSub = SUBSYSTEMS.find((s) => s.id === selectedSubsystem) || SUBSYSTEMS[2];
+          const activeSub = subsystems.find((s) => s.id === selectedSubsystem) || subsystems[2];
           return (
             <div
               className="axm-inspector-console"

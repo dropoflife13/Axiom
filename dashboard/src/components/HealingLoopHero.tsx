@@ -20,6 +20,8 @@ export interface SnapshotMeta {
   runId: string;
   commit: string;
   isLive?: boolean;
+  model?: string;
+  awaiting?: boolean;
 }
 
 export type LiveRun = {
@@ -28,6 +30,7 @@ export type LiveRun = {
   stage: number;
   running?: boolean;
   label?: string;
+  awaiting?: boolean;
 };
 
 interface HealingLoopHeroProps {
@@ -36,10 +39,12 @@ interface HealingLoopHeroProps {
   stamp: string;
   error: string | null;
   snapshot?: SnapshotMeta;
+  activeRunId?: string;
+  onSelectRun?: (runId: string) => void;
   onCopyLogs?: () => void;
 }
 
-export default function HealingLoopHero({ live, desk, stamp, error, snapshot, onCopyLogs }: HealingLoopHeroProps) {
+export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', onSelectRun, onCopyLogs }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -95,17 +100,46 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, on
             <Connectors />
             <FactNodes facts={desk.activeFacts} />
             <header>
-              <div className="hl-brand"><AxiomLogo size={24} variant="duo" title="Axiom" /><b>AXIOM</b><span>Verifier / ablation v2</span></div>
+              <div className="hl-brand"><AxiomLogo size={24} variant="duo" title="Axiom" /><b>AXIOM</b><span>Verifier / {snapshot?.runId ?? 'nemotron-1'}</span></div>
               <div className="hl-m">
                 <div>ORACLE<b>locked</b></div><div>TEMP<b>0</b></div>
                 <div>CONDITIONS<b>06</b></div><div>STAGE<b style={{ color }}>{STAGES[stage][0]}</b></div>
               </div>
-              <div className="hl-chip" role="status">
-                {snapshot && !snapshot.isLive ? (
-                  <span>SNAPSHOT // {snapshot.runId} @ {snapshot.commit}</span>
-                ) : (
-                  <span>{live.label ?? 'LIVE'}</span>
-                )}
+              <div className="hl-header-controls">
+                {/* ACTIVE MODEL / RUN Selector (Futuristic Sci-Fi Glow Toggle) */}
+                <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN">
+                  <span className="hl-run-label">ACTIVE MODEL / RUN</span>
+                  <div className="hl-run-tabs">
+                    <button
+                      type="button"
+                      className={`hl-run-tab ${activeRunId === 'nemotron-1' ? 'is-active' : ''}`}
+                      onClick={() => onSelectRun?.('nemotron-1')}
+                      title="Switch to NEMOTRON 550B snapshot"
+                    >
+                      <span className="hl-run-dot" />
+                      NEMOTRON 550B
+                    </button>
+                    <button
+                      type="button"
+                      className={`hl-run-tab ${activeRunId === 'gemma-1' ? 'is-active' : ''}`}
+                      onClick={() => onSelectRun?.('gemma-1')}
+                      title="Switch to GEMMA 4 31B snapshot"
+                    >
+                      <span className="hl-run-dot" />
+                      GEMMA 4 31B
+                    </button>
+                  </div>
+                </div>
+
+                <div className={`hl-chip ${snapshot?.awaiting ? 'hl-chip--awaiting' : ''}`} role="status">
+                  {snapshot?.awaiting ? (
+                    <span>AWAITING SNAPSHOT // {snapshot.runId}</span>
+                  ) : snapshot && !snapshot.isLive ? (
+                    <span>SNAPSHOT // {snapshot.runId} @ {snapshot.commit}</span>
+                  ) : (
+                    <span>{live.label ?? 'LIVE'}</span>
+                  )}
+                </div>
               </div>
             </header>
 
@@ -121,11 +155,21 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, on
                 <h1>Architecture<br />under pressure.</h1>
                 <p className="hl-s">Generate, verify, fail, advise, retry. Axiom tests generated migrations against the rules they claim to satisfy.</p>
                 <div className="hl-run">
-                  <div className="hl-big"><b>{live.done}</b><span> / {TOTAL}</span></div>
-                  <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={live.done}>
-                    <i style={{ width: `${(live.done / TOTAL) * 100}%` }} />
+                  <div className="hl-big">
+                    {snapshot?.awaiting ? (
+                      <><b>0</b><span> / {TOTAL}</span></>
+                    ) : (
+                      <><b>{live.done}</b><span> / {TOTAL}</span></>
+                    )}
                   </div>
-                  <p className="hl-dim">{desk.totalTokens.toLocaleString()} tokens · {TOTAL - live.done} trials remain</p>
+                  <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
+                    <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${(live.done / TOTAL) * 100}%` }} />
+                  </div>
+                  <p className="hl-dim">
+                    {snapshot?.awaiting
+                      ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${activeRunId}`
+                      : `${desk.totalTokens.toLocaleString()} tokens · ${TOTAL - live.done} trials remain`}
+                  </p>
                   {onCopyLogs && <button onClick={onCopyLogs}>COPY LOGS</button>}
                 </div>
               </div>
@@ -137,6 +181,7 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, on
                 done={desk.done}
                 memoryHits={desk.memoryHits}
                 convergence={desk.convergence}
+                snapshot={snapshot}
               />
             </div>
 
@@ -152,6 +197,10 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, on
                   <span key={name} style={i === stage ? { color: hex(c), borderColor: hex(c) } : undefined}>{name}</span>
                 ))}
               </div>
+              <div className="hl-footer-model">
+                <span>ACTIVE MODEL:</span>
+                <b>{snapshot?.model ?? (activeRunId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b')}</b>
+              </div>
             </footer>
           </div>
         </div>
@@ -166,6 +215,24 @@ const css = `
 .hl *{box-sizing:border-box}.hl-grid{position:absolute;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%)}
 .hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:12px;padding:12px 18px}
 .hl header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;position:relative;z-index:2}
+.hl-header-controls{display:flex;align-items:center;gap:12px}
+.hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto}
+.hl-run-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600}
+.hl-run-tabs{display:inline-flex;align-items:center;padding:2px;background:rgba(5,6,10,.85);border:1px solid rgba(160,170,255,.2);border-radius:4px;gap:2px}
+.hl-run-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;letter-spacing:.08em;font-weight:600;padding:3px 9px;border-radius:3px;color:#8b90a8;transition:all .2s ease;border:1px solid transparent}
+.hl-run-tab:hover{color:#e8eaf2;background:rgba(255,255,255,.05);border-color:rgba(160,170,255,.3)}
+.hl-run-tab.is-active{color:#22d3ee;background:rgba(34,211,238,.12);border:1px solid #22d3ee;box-shadow:0 0 10px rgba(34,211,238,.5),inset 0 0 6px rgba(34,211,238,.2)}
+.hl-run-tab .hl-run-dot{width:4.5px;height:4.5px;border-radius:50%;background:#4b5563;transition:all .2s ease}
+.hl-run-tab.is-active .hl-run-dot{background:#22d3ee;box-shadow:0 0 6px #22d3ee}
+.hl-chip--awaiting{color:#fbbf24!important;border-color:rgba(251,191,36,.5)!important;animation:hl-awaiting-pulse 2s ease-in-out infinite}
+@keyframes hl-awaiting-pulse{0%,100%{box-shadow:0 0 4px rgba(251,191,36,.3)}50%{box-shadow:0 0 12px rgba(251,191,36,.8)}}
+.hl-footer-model{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-family:var(--font-mono,monospace)}
+.hl-footer-model b{color:#22d3ee;font-weight:600}
+@keyframes dk-progress-awaiting{
+  0%{background:linear-gradient(90deg,rgba(251,191,36,.2),#fbbf24,rgba(251,191,36,.2));opacity:.6}
+  50%{background:linear-gradient(90deg,rgba(34,211,238,.2),#22d3ee,rgba(34,211,238,.2));opacity:1}
+  100%{background:linear-gradient(90deg,rgba(251,191,36,.2),#fbbf24,rgba(251,191,36,.2));opacity:.6}
+}
 .hl-brand{display:flex;align-items:center;gap:8px}.hl-brand b{letter-spacing:.18em;font-size:13px;font-weight:700;color:#ffffff;text-shadow:none}.hl-brand span{color:var(--dim);margin-left:2px}.hl-m{display:flex;gap:20px;color:var(--dim)}.hl-m b{display:block;color:#e8eaf2;font-weight:500;text-shadow:none}.hl-chip{color:#34d399;border:1px solid rgba(52,211,153,.4);padding:3px 10px;border-radius:99px;letter-spacing:.08em}
 .hl-hero{max-width:min(420px,34vw);position:relative;z-index:2;pointer-events:auto;margin:0}
 .hl-k{display:inline-flex;align-items:center;gap:6px;color:#c4b5fd;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);font-size:10.5px;font-weight:600;letter-spacing:.18em;margin:0 0 8px;text-shadow:none}

@@ -94,14 +94,15 @@ export function EvidenceMatrix({
   cells: CellState[];
   passed: number;
   failed: number;
-  snapshot?: { runId: string; commit: string; isLive?: boolean };
+  snapshot?: { runId: string; commit: string; isLive?: boolean; model?: string; awaiting?: boolean };
 }) {
+  const isAwaiting = Boolean(snapshot?.awaiting);
   const pending = TOTAL_TRIALS - passed - failed;
   const runningIdx = passed + failed < TOTAL_TRIALS ? passed + failed : -1;
   const isLive = Boolean(snapshot?.isLive);
 
   return (
-    <div className="dk-panel dk-matrix">
+    <div className="dk-panel dk-matrix" style={{ position: 'relative' }}>
       <div className="dk-head">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span>EVIDENCE MATRIX // 720 TRIALS</span>
@@ -111,18 +112,65 @@ export function EvidenceMatrix({
               fontSize: '8.5px',
               padding: '1px 6px',
               borderRadius: '3px',
-              border: isLive ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
-              color: isLive ? '#34d399' : '#d8b4fe',
+              border: isAwaiting
+                ? '1px solid rgba(251, 191, 36, 0.5)'
+                : isLive
+                ? '1px solid rgba(52, 211, 153, 0.4)'
+                : '1px solid rgba(168, 85, 247, 0.4)',
+              color: isAwaiting ? '#fbbf24' : isLive ? '#34d399' : '#d8b4fe',
               background: 'rgba(5, 6, 10, 0.6)',
               letterSpacing: '0.08em',
               fontWeight: 600,
             }}
           >
-            {isLive ? 'LIVE' : `SNAPSHOT // ${snapshot?.runId ?? 'ablation-v2'} @ ${snapshot?.commit ?? '7ebae83'}`}
+            {isAwaiting
+              ? `AWAITING SNAPSHOT // ${snapshot?.runId ?? 'gemma-1'}`
+              : isLive
+              ? 'LIVE'
+              : `SNAPSHOT // ${snapshot?.runId ?? 'nemotron-1'} @ ${snapshot?.commit ?? '7ebae83'}`}
           </span>
         </div>
-        <b>{passed + failed}</b>
+        <b>{isAwaiting ? 'AWAITING' : passed + failed}</b>
       </div>
+      {isAwaiting && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: '30px 8px 8px 8px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            background: 'rgba(5, 6, 10, 0.88)',
+            backdropFilter: 'blur(4px)',
+            borderRadius: '4px',
+            border: '1px dashed rgba(251, 191, 36, 0.4)',
+            zIndex: 3,
+            color: '#fbbf24',
+            fontFamily: 'var(--font-mono, monospace)',
+            textAlign: 'center',
+            padding: '12px',
+          }}
+        >
+          <div
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: '#fbbf24',
+              boxShadow: '0 0 10px #fbbf24',
+              animation: 'dk-runner-pulse 0.9s ease-in-out infinite alternate',
+            }}
+          />
+          <b style={{ fontSize: '10.5px', letterSpacing: '0.12em' }}>
+            AWAITING SNAPSHOT // {snapshot?.runId ?? 'gemma-1'}
+          </b>
+          <span style={{ fontSize: '9px', color: '#8b90a8', letterSpacing: '0.08em', maxWidth: '320px' }}>
+            Crucible execution pipeline active · Replay dataset will hydrate automatically upon completion
+          </span>
+        </div>
+      )}
       <div
         className="dk-grid"
         role="img"
@@ -183,12 +231,14 @@ export function FrequencyRack({
   done,
   memoryHits,
   convergence,
+  snapshot,
 }: {
   tokens: number[] | null;
   latency: number[] | null;
   done: number;
   memoryHits?: number[] | null;
   convergence?: number | null;
+  snapshot?: { model?: string; runId?: string; awaiting?: boolean };
 }) {
   const reduce = useReducedMotion();
   const [bars, setBars] = useState<number[]>([
@@ -399,7 +449,7 @@ export function FrequencyRack({
       {/* System Verdict Signature */}
       <div className="hl-rack-footer">
         <span className="hl-sig-dot" />
-        <span>AXIOM VERIFIES · NEVER LEAKS SQL</span>
+        <span>{snapshot?.model ? `MODEL: ${snapshot.model.split('/').pop()?.toUpperCase()}` : 'AXIOM VERIFIES · NEVER LEAKS SQL'}</span>
       </div>
     </div>
   );

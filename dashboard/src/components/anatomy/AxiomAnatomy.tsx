@@ -10,7 +10,7 @@ export interface AxiomAnatomyProps {
   checkpoint?: CheckpointTrial[];
   desk?: DeskData;
   running?: boolean;
-  snapshot?: { runId: string; commit: string; isLive?: boolean };
+  snapshot?: { runId: string; commit: string; isLive?: boolean; model?: string; awaiting?: boolean };
 }
 
 export interface AssemblySpec {
@@ -530,8 +530,10 @@ export function AxiomAnatomy({
   snapshot,
 }: AxiomAnatomyProps = {}) {
   const isLive = Boolean(snapshot?.isLive);
-  const runId = snapshot?.runId ?? 'ablation-v2';
+  const isAwaiting = Boolean(snapshot?.awaiting);
+  const runId = snapshot?.runId ?? 'nemotron-1';
   const commit = snapshot?.commit ?? '7ebae83';
+  const model = snapshot?.model ?? (runId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b');
 
   const [running, setRunning] = React.useState(initialRunning);
   const [stageIdx, setStageIdx] = React.useState(0);
@@ -715,17 +717,21 @@ export function AxiomAnatomy({
             gap: '6px',
             padding: '4px 10px',
             borderRadius: '4px',
-            border: isLive ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
+            border: isAwaiting
+              ? '1px solid rgba(251, 191, 36, 0.5)'
+              : isLive
+              ? '1px solid rgba(52, 211, 153, 0.4)'
+              : '1px solid rgba(168, 85, 247, 0.4)',
             background: 'rgba(7, 9, 16, 0.8)',
-            color: isLive ? '#34d399' : '#d8b4fe',
+            color: isAwaiting ? '#fbbf24' : isLive ? '#34d399' : '#d8b4fe',
             fontSize: '10px',
             fontFamily: 'var(--axm-font-mono, monospace)',
             letterSpacing: '0.08em',
             fontWeight: 600,
           }}
         >
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isLive ? '#34d399' : '#a855f7' }} />
-          <span>{isLive ? 'LIVE' : `SNAPSHOT // ${runId} @ ${commit}`}</span>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isAwaiting ? '#fbbf24' : isLive ? '#34d399' : '#a855f7' }} />
+          <span>{isAwaiting ? `AWAITING SNAPSHOT // ${runId}` : isLive ? 'LIVE' : `SNAPSHOT // ${runId} @ ${commit}`}</span>
         </div>
       </header>
 
@@ -824,7 +830,7 @@ export function AxiomAnatomy({
             </div>
             <div className="axm-kv-row">
               <span>model</span>
-              <b style={{ color: 'var(--axm-ver)' }}>nemotron-3-ultra</b>
+              <b style={{ color: 'var(--axm-ver)' }}>{model}</b>
             </div>
           </div>
         </aside>
@@ -1416,13 +1422,17 @@ export function AxiomAnatomy({
                     fontSize: '8px',
                     padding: '1px 5px',
                     borderRadius: '3px',
-                    border: isLive ? '1px solid rgba(52, 211, 153, 0.4)' : '1px solid rgba(168, 85, 247, 0.4)',
-                    color: isLive ? '#34d399' : '#d8b4fe',
+                    border: isAwaiting
+                      ? '1px solid rgba(251, 191, 36, 0.5)'
+                      : isLive
+                      ? '1px solid rgba(52, 211, 153, 0.4)'
+                      : '1px solid rgba(168, 85, 247, 0.4)',
+                    color: isAwaiting ? '#fbbf24' : isLive ? '#34d399' : '#d8b4fe',
                     background: 'rgba(5, 6, 10, 0.6)',
                     fontWeight: 600,
                   }}
                 >
-                  {isLive ? 'LIVE' : `SNAPSHOT · ${runId} · ${commit}`}
+                  {isAwaiting ? `AWAITING SNAPSHOT · ${runId}` : isLive ? 'LIVE' : `SNAPSHOT · ${runId} · ${commit}`}
                 </span>
               </div>
               <b style={{ color: 'var(--axm-text)' }}>{trial}</b>
