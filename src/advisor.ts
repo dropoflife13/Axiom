@@ -2,10 +2,13 @@ import dotenv from 'dotenv';
 import { assertBudgetAvailable, BUDGET_GUARD } from './guardrails.js';
 dotenv.config();
 
-const NVIDIA_BASE_URL =
-  process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
-const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
-const MODEL = process.env.NVIDIA_ADVISOR_MODEL || 'deepseek-ai/deepseek-v4.1-flash';
+const OPENROUTER_BASE_URL =
+  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
+const CHAT_URL = `${OPENROUTER_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
+const MODEL =
+  process.env.OPENROUTER_ADVISOR_MODEL ||
+  process.env.OPENROUTER_EXECUTOR_MODEL ||
+  'meta-llama/llama-3.3-70b-instruct';
 
 function normalizeAdvisorModel(m: string): string {
   if (m === 'gemini-3.5') return 'gemini-3.5-flash';
@@ -20,18 +23,44 @@ export async function generateLesson(
   errorCode: string,
   errorDetail: string
 ): Promise<string> {
-  const executorModel = (process.env.NVIDIA_EXECUTOR_MODEL || '').trim();
+  const executorModel = (
+    process.env.OPENROUTER_EXECUTOR_MODEL ||
+    process.env.NVIDIA_EXECUTOR_MODEL ||
+    'z-ai/glm-5.3-flash'
+  ).trim();
   const isGroq = executorModel === 'qwen/qwen3.8-27b' || executorModel.startsWith('qwen/');
-  const apiKey = isGroq ? process.env.GROQ_API_KEY : process.env.NVIDIA_API_KEY;
+  const isNvidia =
+    executorModel.startsWith('nvidia/') ||
+    executorModel.startsWith('google/') ||
+    executorModel.startsWith('z-ai/');
+  const isOpenRouter = !isGroq && !isNvidia;
+
+  const apiKey = isGroq
+    ? process.env.GROQ_API_KEY
+    : isNvidia
+    ? process.env.NVIDIA_API_KEY
+    : process.env.OPENROUTER_API_KEY;
+
   if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error(`${isGroq ? 'GROQ_API_KEY' : 'NVIDIA_API_KEY'} is not set or is still the placeholder. Please set a valid key in .env`);
+    const keyName = isGroq
+      ? 'GROQ_API_KEY'
+      : isNvidia
+      ? 'NVIDIA_API_KEY'
+      : 'OPENROUTER_API_KEY';
+    throw new Error(`${keyName} is not set or is still the placeholder. Please set a valid key in .env`);
   }
+
   const baseUrl = isGroq
     ? (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1')
-    : NVIDIA_BASE_URL;
+    : isNvidia
+    ? (process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1')
+    : OPENROUTER_BASE_URL;
+
   const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
   const rawModel = isGroq
     ? (process.env.GROQ_ADVISOR_MODEL || 'qwen/qwen3.8-27b')
+    : isNvidia
+    ? (process.env.NVIDIA_ADVISOR_MODEL || 'z-ai/glm-5.3-flash')
     : MODEL;
   const effectiveModel = normalizeAdvisorModel(rawModel);
   const systemPrompt = ADVISOR_SYSTEM_PROMPT;
@@ -79,10 +108,11 @@ export async function generateLesson(
 
       if (!response.ok) {
         const errText = await response.text();
+        const providerName = isOpenRouter ? 'OpenRouter' : isGroq ? 'Groq' : 'NVIDIA';
         if (response.status < 500) {
-          throw new Error(`[ABORT_NON_RETRYABLE] ${isGroq ? 'Groq' : 'NVIDIA'} Advisor ${response.status}: ${errText}`);
+          throw new Error(`[ABORT_NON_RETRYABLE] ${providerName} Advisor ${response.status}: ${errText}`);
         }
-        throw new Error(`${isGroq ? 'Groq' : 'NVIDIA'} Advisor 5xx ${response.status}: ${errText}`);
+        throw new Error(`${providerName} Advisor 5xx ${response.status}: ${errText}`);
       }
 
       const data: any = await response.json();

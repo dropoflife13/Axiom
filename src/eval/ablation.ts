@@ -412,13 +412,17 @@ export function getRunMetadata(
   return meta;
 }
 
-export function assertRunMetadataMatches(expected: Partial<RunMetadata>, actual: RunMetadata): void {
+export function assertRunMetadataMatches(
+  expected: Partial<RunMetadata>,
+  actual: RunMetadata,
+  allowDirty = false
+): void {
   const keysToCheck = [
     'oracleSha256',
     'tasksSha256',
     'factsSha256',
     'memorySha256',
-    'gitCommit',
+    ...(allowDirty ? [] : (['gitCommit'] as const)),
     'requestedModel',
   ] as const;
   for (const key of keysToCheck) {
@@ -493,7 +497,7 @@ export function buildTrial(
 ): Trial {
   assertModelMatch(genMeta.requestedModel, genMeta.returnedModel);
   const provenance = getProviderProvenance(genMeta.requestedModel, genMeta.returnedModel);
-  const meta = runMetadata ?? getRunMetadata();
+  const meta = runMetadata ?? getRunMetadata(undefined, genMeta.requestedModel);
   const generationStatus = classifyGenerationStatus(
     genMeta.finishReason,
     sql,
@@ -1002,7 +1006,8 @@ async function main(): Promise<void> {
     targetTasks = taskFile.test;
   }
 
-  const configuredModel = resolveExecutorModel();
+  const cliModel = parseCliArg('--model');
+  const configuredModel = resolveExecutorModel(cliModel);
   assertModelMatch(configuredModel, configuredModel);
 
   const runId = parseCliArg('--run-id');
@@ -1057,7 +1062,7 @@ async function main(): Promise<void> {
               `[ABORT_NON_RETRYABLE] Checkpoint model mismatch: checkpoint requestedModel="${checkpointMetadata.requestedModel}" does not match configuredModel="${configuredModel}".`
             );
           }
-          assertRunMetadataMatches(checkpointMetadata, runMetadata);
+          assertRunMetadataMatches(checkpointMetadata, runMetadata, allowDirty);
         } else {
           throw new Error('Checkpoint is missing provenance metadata.');
         }

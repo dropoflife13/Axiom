@@ -284,9 +284,16 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
     expect(trialEB.migrationExitNonZero).toBe(false);
     expect(trialEB.boundPassed).toBe(false);
     expect(trialEB.boundFactFraction).toBeCloseTo(2 / 3, 4);
+    const isOpenRouter = REQUIRED_EXECUTOR_MODEL.startsWith('meta-llama/');
     const isGroq = REQUIRED_EXECUTOR_MODEL.startsWith('qwen/');
-    expect(trialEB.provider).toBe(isGroq ? 'groq' : 'nvidia');
-    expect(trialEB.baseUrl).toBe(isGroq ? 'https://api.groq.com/openai/v1' : 'https://integrate.api.nvidia.com/v1');
+    expect(trialEB.provider).toBe(isOpenRouter ? 'openrouter' : isGroq ? 'groq' : 'nvidia');
+    expect(trialEB.baseUrl).toBe(
+      isOpenRouter
+        ? 'https://openrouter.ai/api/v1'
+        : isGroq
+        ? 'https://api.groq.com/openai/v1'
+        : 'https://integrate.api.nvidia.com/v1'
+    );
     expect(trialEB.requestedModel).toBe(REQUIRED_EXECUTOR_MODEL);
     expect(trialEB.returnedModel).toBe(REQUIRED_EXECUTOR_MODEL);
     expect(trialEB.finishReason).toBe('stop');
@@ -302,13 +309,13 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
       expect(() => resolveExecutorModel(undefined)).toThrowError(
         /explicit required setting.*no silent default/i
       );
-      expect(() => resolveExecutorModel('z-ai/glm-5.3-flash')).toThrowError(
+      expect(() => resolveExecutorModel('invalid/unsupported-model')).toThrowError(
         /must be one of/i
       );
       expect(resolveExecutorModel(REQUIRED_EXECUTOR_MODEL)).toBe(REQUIRED_EXECUTOR_MODEL);
 
       expect(() =>
-        assertModelMatch(REQUIRED_EXECUTOR_MODEL, 'z-ai/glm-5.3-flash')
+        assertModelMatch(REQUIRED_EXECUTOR_MODEL, 'invalid/unsupported-model')
       ).toThrowError(/does not match requested model/i);
     } finally {
       if (prevEnv !== undefined) {

@@ -215,7 +215,13 @@ export function AnatomySection({
 
   return (
     <section className="anatomy-section" aria-labelledby="anatomy-title">
-      {/* ---------- Header Row with Intro Title & Empirical Benchmark Telemetry Chart ---------- */}
+      {/* Background Cyber Coordinate Grid & Ambient Axiom Knot Watermark */}
+      <div className="anatomy-section__bg-grid" aria-hidden="true" />
+      <div className="anatomy-section__bg-watermark" aria-hidden="true">
+        <img src="/brand/axiom-mark.svg" alt="" className="anatomy-section__bg-axiom-knot" />
+      </div>
+
+      {/* ---------- Header Row with Intro Title & AI Models Marquee ---------- */}
       <div className="anatomy-section__header-row">
         <div className="anatomy-section__intro">
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>

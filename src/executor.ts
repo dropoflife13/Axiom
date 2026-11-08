@@ -6,18 +6,23 @@ import dotenv from 'dotenv';
 import { assertBudgetAvailable, BUDGET_GUARD } from './guardrails.js';
 dotenv.config();
 
+const OPENROUTER_BASE_URL =
+  process.env.OPENROUTER_BASE_URL || 'https://openrouter.ai/api/v1';
 const NVIDIA_BASE_URL =
   process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
-const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
+const CHAT_URL = `${OPENROUTER_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
 
 export const ALLOWED_EXECUTOR_MODELS = [
   'google/gemma-4-31b-it',
   'nvidia/nemotron-3-ultra-550b-a55b',
   'qwen/qwen3.8-27b',
+  'meta-llama/llama-3.3-70b-instruct',
+  'z-ai/glm-5.3-flash',
 ] as const;
+export const REQUIRED_MODELS = ALLOWED_EXECUTOR_MODELS;
 export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
 
-export const PROVIDER = 'nvidia';
+export const PROVIDER = 'openrouter';
 
 export function resolveEndpoint(model: string) {
   const isGroq = model === 'qwen/qwen3.8-27b' || model.startsWith('qwen/');
@@ -30,13 +35,26 @@ export function resolveEndpoint(model: string) {
     const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
     return { provider: 'groq', apiKey, baseUrl, chatUrl };
   }
-  const apiKey = process.env.NVIDIA_API_KEY;
-  if (!apiKey || apiKey === 'your_key_here') {
-    throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+  const isNvidia =
+    model.startsWith('nvidia/') ||
+    model.startsWith('google/') ||
+    model.startsWith('z-ai/');
+  if (isNvidia) {
+    const apiKey = process.env.NVIDIA_API_KEY;
+    if (!apiKey || apiKey === 'your_key_here') {
+      throw new Error('NVIDIA_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    }
+    const baseUrl = process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
+    const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+    return { provider: 'nvidia', apiKey, baseUrl, chatUrl };
   }
-  const baseUrl = NVIDIA_BASE_URL;
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey || apiKey === 'your_key_here') {
+    throw new Error('OPENROUTER_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+  }
+  const baseUrl = OPENROUTER_BASE_URL;
   const chatUrl = CHAT_URL;
-  return { provider: 'nvidia', apiKey, baseUrl, chatUrl };
+  return { provider: 'openrouter', apiKey, baseUrl, chatUrl };
 }
 
 export function resolveExecutorModel(explicitModel?: string): string {
@@ -54,7 +72,10 @@ export function resolveExecutorModel(explicitModel?: string): string {
   return resolved;
 }
 
-export const REQUIRED_EXECUTOR_MODEL = process.env.NVIDIA_EXECUTOR_MODEL || 'google/gemma-4-31b-it';
+export const REQUIRED_EXECUTOR_MODEL =
+  process.env.OPENROUTER_EXECUTOR_MODEL ||
+  process.env.NVIDIA_EXECUTOR_MODEL ||
+  'z-ai/glm-5.3-flash';
 
 export function assertModelMatch(requestedModel: string, returnedModel: string): void {
   const configured = resolveExecutorModel(requestedModel);
@@ -487,14 +508,16 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
   const cacheKey = computeExecutorCacheKey(model, systemPrompt, userPrompt, temperature);
   const cacheFilePath = path.join(cacheDir, `${cacheKey}.json`);
 
+  const endpoint = resolveEndpoint(model);
+
   if (!options?.disableCache && fs.existsSync(cacheFilePath)) {
     try {
       const cached = JSON.parse(fs.readFileSync(cacheFilePath, 'utf-8'));
       if (
         typeof cached.sql === 'string' &&
         typeof cached.rawResponse === 'string' &&
-        cached.provider === PROVIDER &&
-        cached.baseUrl === NVIDIA_BASE_URL &&
+        cached.provider === endpoint.provider &&
+        cached.baseUrl === endpoint.baseUrl &&
         cached.requestedModel === model
       ) {
         assertModelMatch(cached.requestedModel, cached.returnedModel);
@@ -536,12 +559,11 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
     }
   }
 
-  const endpoint = resolveEndpoint(model);
   const effectiveModel = normalizeModelName(model);
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
   assertBudgetAvailable('EXECUTOR', fullPrompt.length);
 
-  const MAX_RETRIES = 20;
+  const MAX_RETRIES = 50;
   let attempt = 0;
 
   while (attempt < MAX_RETRIES) {
