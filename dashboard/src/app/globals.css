@@ -472,9 +472,7 @@ button, input, select, textarea {
   animation-name: matrix-pulse;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  will-change: opacity, box-shadow;
   contain: layout paint;
-  transform: translateZ(0);
 }
 
 .dk-cell--pass.matrix-pulse {

@@ -304,10 +304,10 @@ const css = `
 .dk-cell--fail{background:#d946ef;box-shadow:0 0 2px rgba(217,70,239,.35)}
 
 /* Calm, natural live data stream pulse with gentle brighter hues and zero white shadows */
-.matrix-pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;will-change:opacity,box-shadow,background-color;transform:translateZ(0)}
+.matrix-pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;contain:layout paint}
 .dk-cell--pass.matrix-pulse{animation-name:matrix-pulse-pass}
 .dk-cell--fail.matrix-pulse{animation-name:matrix-pulse-fail}
-.dk-cell--pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;will-change:opacity,box-shadow,background-color;transform:translateZ(0)}
+.dk-cell--pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;contain:layout paint}
 .dk-cell--pass.dk-cell--pulse{animation-name:matrix-pulse-pass}
 .dk-cell--fail.dk-cell--pulse{animation-name:matrix-pulse-fail}
 

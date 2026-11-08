@@ -197,8 +197,8 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
       >
         {cells.map((c, i) => {
           const isRunning = i === runningIdx;
-          // Asynchronous live-stream pulse on a sparse subset (~24 cells at any time, eliminating lag)
-          const shouldPulse = (i * 17) % 31 === 0;
+          // Asynchronous live-stream pulse on a calibrated subset (~20-25 active pulses at any given moment)
+          const shouldPulse = (c === 'pass' || c === 'fail') && ((i * 11) % 5 === 0 || (i * 7) % 13 === 0);
           const pulseStyle = MATRIX_PULSE_STYLES[i] ?? {
             animationDelay: `${((i * 17) % 50) / 10}s`,
             animationDuration: `${(((i * 23) % 30) / 10) + 2}s`,

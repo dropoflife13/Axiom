@@ -602,6 +602,13 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
     // Buses
     const buses = EDGES.map((e, i) => {
       const pos = new Float32Array(12);
+      const A = BY_ID[e[0]].pos;
+      const B = BY_ID[e[1]].pos;
+      const yA = BY_ID[e[0]].top ?? 0;
+      const yB = BY_ID[e[1]].top ?? 0;
+      const H = Math.max(yA, yB) + 1.1;
+      pos.set([A[0], yA, A[2], A[0], H, A[2], B[0], H, B[2], B[0], yB, B[2]]);
+
       const geom = new THREE.BufferGeometry();
       geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       const mat = new THREE.LineBasicMaterial({
@@ -613,7 +620,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       });
       const line = new THREE.Line(geom, mat);
       scene.add(line);
-      const pk = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.1, 0.1), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+      const pk = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
       scene.add(pk);
       return { a: e[0], b: e[1], key: ek(e[0], e[1]), pos, geom, mat, pk, phase: i / EDGES.length };
     });
@@ -842,10 +849,8 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
         const yB = lf(BY_ID[b.b].top ?? 0);
         const H = Math.max(yA, yB) + 1.1;
 
-        if (factorMoving) {
-          p.set([A[0] * f, yA, A[2] * f, A[0] * f, H, A[2] * f, B[0] * f, H, B[2] * f, B[0] * f, yB, B[2] * f]);
-          b.geom.attributes.position.needsUpdate = true;
-        }
+        p.set([A[0] * f, yA, A[2] * f, A[0] * f, H, A[2] * f, B[0] * f, H, B[2] * f, B[0] * f, yB, B[2] * f]);
+        b.geom.attributes.position.needsUpdate = true;
 
         const isAct = Boolean(active[b.key]);
         const touches = b.a === curSel || b.b === curSel;
