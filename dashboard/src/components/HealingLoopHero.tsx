@@ -42,9 +42,10 @@ interface HealingLoopHeroProps {
   activeRunId?: string;
   onSelectRun?: (runId: string) => void;
   onCopyLogs?: () => void;
+  onReplayIntro?: () => void;
 }
 
-export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', onSelectRun, onCopyLogs }: HealingLoopHeroProps) {
+export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', onSelectRun, onCopyLogs, onReplayIntro }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -100,7 +101,17 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
             <Connectors />
             <FactNodes facts={desk.activeFacts} />
             <header>
-              <div className="hl-brand"><AxiomLogo size={24} variant="duo" title="Axiom" /><b>AXIOM</b><span>Verifier / {snapshot?.runId ?? 'nemotron-1'}</span></div>
+              <div
+                className="hl-brand"
+                onClick={onReplayIntro}
+                role={onReplayIntro ? 'button' : undefined}
+                tabIndex={onReplayIntro ? 0 : undefined}
+                title={onReplayIntro ? 'Click to replay boot intro sequence' : undefined}
+              >
+                <AxiomLogo size={24} variant="duo" title="Axiom" />
+                <b>AXIOM</b>
+                <span>Verifier / {snapshot?.runId ?? 'nemotron-1'}</span>
+              </div>
               <div className="hl-m">
                 <div>ORACLE<b>locked</b></div><div>TEMP<b>0</b></div>
                 <div>CONDITIONS<b>06</b></div><div>STAGE<b style={{ color }}>{STAGES[stage][0]}</b></div>
@@ -213,7 +224,10 @@ const css = `
 .hl-track{height:320vh;background:#05060a}.hl-sticky{--hud:1;--canvas:1;position:sticky;top:0;height:100svh;overflow:hidden}.hl{--line:rgba(160,170,255,.14);--dim:#8b90a8;position:relative;height:100%;background:#05060a;color:#e8eaf2;font:12px/1.45 var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);overflow:hidden}
 .hl-canvas{position:absolute;inset:0;opacity:var(--canvas)}
 .hl *{box-sizing:border-box}.hl-grid{position:absolute;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%)}
-.hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:12px;padding:12px 18px}
+.hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:12px;padding:12px 18px;animation:hl-hud-reveal 1.2s cubic-bezier(0.16,1,0.3,1) both}
+@keyframes hl-hud-reveal{0%{opacity:0;transform:scale(0.985)}100%{opacity:var(--hud);transform:scale(1)}}
+.hl-brand{display:flex;align-items:center;gap:8px;cursor:pointer;transition:filter .3s ease;pointer-events:auto}
+.hl-brand:hover{filter:drop-shadow(0 0 10px rgba(34,211,238,.85))}
 .hl header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;position:relative;z-index:2}
 .hl-header-controls{display:flex;align-items:center;gap:12px}
 .hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto}

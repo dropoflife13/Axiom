@@ -226,6 +226,10 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
     let speed = 1.0;
     let currentScale = BASE_CORE_SCALE;
 
+    // Cinematic zoom-out transition when opening the website
+    const isReduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let introZoom = isReduced ? 1.0 : 2.5;
+
     const frame = (now: number) => {
       animId = requestAnimationFrame(frame);
 
@@ -237,6 +241,13 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
 
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
+
+      // Opening zoom-out transition
+      if (introZoom > 1.0) {
+        introZoom += (1.0 - introZoom) * Math.min(1, dt * 2.6);
+        if (introZoom < 1.002) introZoom = 1.0;
+        points.rotation.y += dt * 0.4 * (introZoom - 1.0);
+      }
 
       const isRunning = runningRef.current;
       // Active speed when running, smooth idle rotation when paused (never completely frozen)
@@ -268,7 +279,7 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
         BASE_CORE_SCALE + zoomProgress * (MAX_CORE_SCALE - BASE_CORE_SCALE)
       );
       currentScale += (targetScale - currentScale) * Math.min(1, dt * 6);
-      group.scale.setScalar(currentScale);
+      group.scale.setScalar(currentScale * introZoom);
 
       mat.uniforms.uGlow.value += (sceneValues.glow - mat.uniforms.uGlow.value) * Math.min(1, dt * 6);
 

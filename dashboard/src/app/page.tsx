@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import HealingLoopHero, { type LiveRun, type SnapshotMeta } from '@/components/HealingLoopHero';
 import { AnatomySection } from '@/components/anatomy/AnatomySection';
+import { AxiomLoadingScreen } from '@/components/AxiomLoadingScreen';
 import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial, type LogLine } from '@/lib/desk';
 
 interface RunOption {
@@ -46,6 +47,8 @@ export default function Page() {
   });
   const [checkpointError, setCheckpointError] = useState<string | null>(null);
   const [stamp, setStamp] = useState('--:--:--');
+  const [showLoading, setShowLoading] = useState(true);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   useEffect(() => {
     let controller = new AbortController();
@@ -147,6 +150,8 @@ export default function Page() {
         } else {
           setCheckpointError('Failed to fetch snapshot. Check public/data directory.');
         }
+      } finally {
+        setIsDataLoaded(true);
       }
     }
 
@@ -212,6 +217,14 @@ export default function Page() {
 
   return (
     <>
+      {showLoading && (
+        <AxiomLoadingScreen
+          isReady={isDataLoaded}
+          runId={activeRunId}
+          model={snapshotMeta.model}
+          onComplete={() => setShowLoading(false)}
+        />
+      )}
       <HealingLoopHero
         live={live}
         desk={desk}
@@ -221,6 +234,7 @@ export default function Page() {
         activeRunId={activeRunId}
         onSelectRun={setActiveRunId}
         onCopyLogs={copyLogs}
+        onReplayIntro={() => setShowLoading(true)}
       />
       <AnatomySection
         checkpoint={checkpoint}
