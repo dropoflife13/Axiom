@@ -193,7 +193,7 @@ export function AnatomySection({
 } = {}) {
   const [selectedSubsystem, setSelectedSubsystem] = useState<string>('03'); // Default to Oracle Crucible
 
-  const activeModel = snapshot?.model ?? (snapshot?.runId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b');
+  const activeModel = snapshot?.model ?? (snapshot?.runId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b');
 
   const subsystems = React.useMemo(() => {
     return SUBSYSTEMS.map((sub) => {

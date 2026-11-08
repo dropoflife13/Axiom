@@ -121,12 +121,12 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                     </button>
                     <button
                       type="button"
-                      className={`hl-run-tab ${activeRunId === 'gemma-1' ? 'is-active' : ''}`}
-                      onClick={() => onSelectRun?.('gemma-1')}
-                      title="Switch to GEMMA 4 31B snapshot"
+                      className={`hl-run-tab ${activeRunId === 'qwen27b-1' ? 'is-active' : ''}`}
+                      onClick={() => onSelectRun?.('qwen27b-1')}
+                      title="Switch to QWEN 3.8 27B snapshot"
                     >
                       <span className="hl-run-dot" />
-                      GEMMA 4 31B
+                      QWEN 3.8 27B
                     </button>
                   </div>
                 </div>
@@ -199,7 +199,7 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
               </div>
               <div className="hl-footer-model">
                 <span>ACTIVE MODEL:</span>
-                <b>{snapshot?.model ?? (activeRunId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b')}</b>
+                <b>{snapshot?.model ?? (activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b')}</b>
               </div>
             </footer>
           </div>

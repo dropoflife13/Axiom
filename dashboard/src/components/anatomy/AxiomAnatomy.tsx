@@ -309,7 +309,7 @@ export function AxiomAnatomy({
   stateRef.current.exploded = exploded;
 
   // Active Model and metadata
-  const activeModel = snapshot?.model ?? (snapshot?.runId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b');
+  const activeModel = snapshot?.model ?? (snapshot?.runId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b');
   const activeCommit = snapshot?.commit ?? '7ebae83';
   const activeRunId = snapshot?.runId ?? 'nemotron-1';
   const isLive = Boolean(snapshot?.isLive);

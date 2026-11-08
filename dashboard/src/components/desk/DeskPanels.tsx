@@ -143,7 +143,7 @@ export function EvidenceMatrix({
             }}
           >
             {isAwaiting
-              ? `AWAITING SNAPSHOT // ${snapshot?.runId ?? 'gemma-1'}`
+              ? `AWAITING SNAPSHOT // ${snapshot?.runId ?? 'qwen27b-1'}`
               : isLive
               ? 'LIVE'
               : `SNAPSHOT // ${snapshot?.runId ?? 'nemotron-1'} @ ${snapshot?.commit ?? '7ebae83'}`}
@@ -183,7 +183,7 @@ export function EvidenceMatrix({
             }}
           />
           <b style={{ fontSize: '10.5px', letterSpacing: '0.12em' }}>
-            AWAITING SNAPSHOT // {snapshot?.runId ?? 'gemma-1'}
+            AWAITING SNAPSHOT // {snapshot?.runId ?? 'qwen27b-1'}
           </b>
           <span style={{ fontSize: '9px', color: '#8b90a8', letterSpacing: '0.08em', maxWidth: '320px' }}>
             Crucible execution pipeline active · Replay dataset will hydrate automatically upon completion

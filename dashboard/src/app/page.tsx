@@ -13,7 +13,7 @@ export interface RunOption {
 
 export const RUN_OPTIONS: RunOption[] = [
   { id: 'nemotron-1', label: 'NEMOTRON 550B', model: 'nvidia/nemotron-3-ultra-550b-a55b' },
-  { id: 'gemma-1', label: 'GEMMA 4 31B', model: 'google/gemma-4-31b-it' },
+  { id: 'qwen27b-1', label: 'QWEN 3.8 27B', model: 'qwen/qwen3.8-27b' },
 ];
 
 const DEFAULT_RUN_ID = 'nemotron-1';
@@ -72,7 +72,7 @@ export default function Page() {
               runId: activeRunId,
               commit: 'pending',
               isLive: false,
-              model: activeRunId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b',
+              model: activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b',
               awaiting: true,
             });
             setCheckpointError(null);
@@ -96,21 +96,21 @@ export default function Page() {
           runId: data.id || data.runId || activeRunId,
           commit,
           isLive,
-          model: data.model || (activeRunId === 'gemma-1' ? 'google/gemma-4-31b-it' : 'nvidia/nemotron-3-ultra-550b-a55b'),
+          model: data.model || (activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b'),
           awaiting: false,
         });
         setCheckpointError(null);
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
-        // Graceful fallback on network or missing JSON for Gemma
-        if (activeRunId === 'gemma-1') {
+        // Graceful fallback on network or missing JSON for Qwen
+        if (activeRunId === 'qwen27b-1') {
           setAwaitingSnapshot(true);
           setCheckpoint([]);
           setSnapshotMeta({
             runId: activeRunId,
             commit: 'pending',
             isLive: false,
-            model: 'google/gemma-4-31b-it',
+            model: 'qwen/qwen3.8-27b',
             awaiting: true,
           });
           setCheckpointError(null);
@@ -130,7 +130,7 @@ export default function Page() {
 
   const desk = useMemo(() => {
     if (awaitingSnapshot) {
-      const activeModel = activeRunId === 'gemma-1' ? 'google/gemma-4-31b-it' : activeRunId;
+      const activeModel = activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : activeRunId;
       const awaitingLog: LogLine[] = [
         { key: 'aw-1', stage: 'ORACLE', text: `Target run: ${activeRunId} (${activeModel})`, status: 'OK' },
         { key: 'aw-2', stage: 'EXECUTOR', text: `Awaiting run snapshot at /data/run-${activeRunId}.json...`, status: 'WARN' },
