@@ -18,8 +18,10 @@ void main(){
   gl_FragColor=vec4((c*(.3+f*1.5)+vec3(p)*.8)*uGlow,clamp((f*.85+ln*.3+rg*.14+p*.9)*uGlow,0.,1.));
 }`;
 
-// Original imposing core scale matching Image 2 perfectly across all scroll states
-const BASE_CORE_SCALE = 1.95;
+// Normal resting scale matching Image 2 perfectly in the hero gap
+const BASE_CORE_SCALE = 1.22;
+// Cinematic expanded scale at full scroll down
+const MAX_CORE_SCALE = 1.82;
 
 function Knot({ color, running, progress }: { color: number; running: boolean; progress: MutableRefObject<number> }) {
   const group = useRef<THREE.Group>(null);
@@ -59,10 +61,20 @@ function Knot({ color, running, progress }: { color: number; running: boolean; p
     const dt = Math.min(0.05, delta);
     speed.current += ((running ? 1.6 : 0.15) - speed.current) * 0.05;
     const s = speed.current;
-    // Maintain the large original size from Image 2 throughout all scroll interactions
-    group.current.scale.setScalar(BASE_CORE_SCALE);
+
+    // Scroll-driven zoom transition:
+    // At rest (progress = 0): stays solidly at BASE_CORE_SCALE (1.22)
+    // On scroll down: smoothly expands up to MAX_CORE_SCALE (1.82)
+    // On scroll back up: smoothly lerps back to BASE_CORE_SCALE and NEVER shrinks below it
+    const scene = sceneForProgress(progress.current);
+    const zoomProgress = Math.max(0, Math.min(1, (scene.scale - 1) / 1.6));
+    const targetScale = Math.max(BASE_CORE_SCALE, BASE_CORE_SCALE + zoomProgress * (MAX_CORE_SCALE - BASE_CORE_SCALE));
+
+    currentScale.current += (targetScale - currentScale.current) * Math.min(1, dt * 6);
+    group.current.scale.setScalar(Math.max(BASE_CORE_SCALE, currentScale.current));
+
     uniforms.uT.value += dt * s;
-    uniforms.uGlow.value = 1.05;
+    uniforms.uGlow.value += (scene.glow - uniforms.uGlow.value) * Math.min(1, dt * 6);
     group.current.rotation.y += dt * 0.2 * s;
     group.current.rotation.x += dt * 0.08 * s;
     wire.current.rotation.y -= dt * 0.05 * s;
