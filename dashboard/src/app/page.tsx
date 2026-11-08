@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import HealingLoopHero, { type LiveRun, type SnapshotMeta } from '@/components/HealingLoopHero';
 import { AnatomySection } from '@/components/anatomy/AnatomySection';
+import { CortexVaultSection } from '@/components/cortex/CortexVaultSection';
+import { AxiomFooter } from '@/components/footer/AxiomFooter';
 import { AxiomLoadingScreen } from '@/components/AxiomLoadingScreen';
 import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial, type LogLine } from '@/lib/desk';
 
@@ -242,6 +244,8 @@ export default function Page() {
         running={live.running}
         snapshot={snapshotMeta}
       />
+      <CortexVaultSection />
+      <AxiomFooter />
     </>
   );
 }

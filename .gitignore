@@ -13,3 +13,4 @@ quarantine.json
 probe-output.txt
 probe2-output.txt
 .tsupgrader/
+scratch/

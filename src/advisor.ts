@@ -90,6 +90,7 @@ export async function generateLesson(
           ],
           temperature: 0.3,
           max_tokens: 4096,
+          ...(effectiveModel.includes('glm') ? { reasoning_effort: 'low' } : {}),
         }),
         signal: reqSignal,
       });

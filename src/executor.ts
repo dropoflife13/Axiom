@@ -249,7 +249,7 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
           ],
           temperature,
           max_tokens: 8192,
-          ...(effectiveModel.includes('glm') ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+          ...(effectiveModel.includes('glm') ? { reasoning_effort: 'low' } : {}),
         }),
         signal: abortSignal,
       });
@@ -583,7 +583,7 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
           ],
           temperature,
           max_tokens: 8192,
-          ...(effectiveModel.includes('glm') ? { chat_template_kwargs: { enable_thinking: false } } : {}),
+          ...(effectiveModel.includes('glm') ? { reasoning_effort: 'low' } : {}),
         }),
         signal: reqSignal,
       });
