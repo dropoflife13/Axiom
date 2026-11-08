@@ -10,23 +10,12 @@ export interface AxiomLoadingScreenProps {
   isReady?: boolean;
 }
 
-const BOOT_STEPS = [
-  'INITIALIZING DETERMINISTIC CRUCIBLE & ORACLE ENGINE...',
-  'MOUNTING READ-ONLY MEMORY VAULT (SHA-256 VERIFIED)...',
-  'VERIFYING 34 INVARIANT FACTS ACROSS POSTGRES 16 RUNTIME...',
-  'CALIBRATING 12 ARCHITECTURAL TOPOLOGY BUSES...',
-  'HYDRATING EVIDENCE MATRIX (720 PROVENANCE TRIALS)...',
-  'SYS//AXIOM-REFLX-V2 ONLINE · ZERO NON-DETERMINISTIC DRIFT',
-];
-
 export function AxiomLoadingScreen({
   onComplete,
   runId = 'nemotron-1',
   model = 'nvidia/nemotron-3-ultra-550b-a55b',
   isReady = false,
 }: AxiomLoadingScreenProps) {
-  const [progress, setProgress] = React.useState(0);
-  const [stepIndex, setStepIndex] = React.useState(0);
   const [isExiting, setIsExiting] = React.useState(false);
   const [isDone, setIsDone] = React.useState(false);
 
@@ -39,46 +28,25 @@ export function AxiomLoadingScreen({
     }
   }, []);
 
-  // Smoothly increment progress
+  // When website is ready/loaded, transition out gracefully
   React.useEffect(() => {
-    if (isDone) return;
+    if (!isReady || isExiting || isDone) return;
 
-    const interval = window.setInterval(() => {
-      setProgress((prev) => {
-        // Fast-forward to 100% if ready or approaching end
-        const increment = prev < 60 ? 3.5 : prev < 90 ? 2.2 : isReady ? 5 : 1.2;
-        const next = Math.min(100, prev + increment);
+    // Grace period so the initial loop doesn't flash if data loaded instantly
+    const timer = window.setTimeout(() => {
+      setIsExiting(true);
+      window.setTimeout(() => {
+        setIsDone(true);
+        onComplete?.();
+      }, reducedMotion ? 250 : 850);
+    }, 1800);
 
-        // Update boot step text based on progress brackets
-        const step = Math.min(
-          BOOT_STEPS.length - 1,
-          Math.floor((next / 100) * (BOOT_STEPS.length - 0.1))
-        );
-        setStepIndex(step);
+    return () => window.clearTimeout(timer);
+  }, [isReady, isExiting, isDone, onComplete, reducedMotion]);
 
-        if (next >= 100) {
-          window.clearInterval(interval);
-          // Trigger the zoom-out transition
-          window.setTimeout(() => {
-            setIsExiting(true);
-            window.setTimeout(() => {
-              setIsDone(true);
-              onComplete?.();
-            }, reducedMotion ? 250 : 950);
-          }, 200);
-        }
-        return next;
-      });
-    }, 32);
-
-    return () => window.clearInterval(interval);
-  }, [isReady, isDone, onComplete, reducedMotion]);
-
-  // Handle skip with Space or Click
+  // Handle immediate skip with Space, Enter, Escape, or Click
   const handleSkip = React.useCallback(() => {
     if (isExiting || isDone) return;
-    setProgress(100);
-    setStepIndex(BOOT_STEPS.length - 1);
     setIsExiting(true);
     window.setTimeout(() => {
       setIsDone(true);
@@ -99,18 +67,14 @@ export function AxiomLoadingScreen({
 
   if (isDone) return null;
 
-  const pct = Math.round(progress);
   const activeModelDisplay = model.split('/').pop()?.toUpperCase() ?? 'QWEN 3.8 27B';
 
   return (
     <aside
       className={`axiom-loader-shroud ${isExiting ? 'is-exiting' : ''} ${reducedMotion ? 'reduced-motion' : ''}`}
       onClick={handleSkip}
-      role="progressbar"
-      aria-label="Axiom boot sequence"
-      aria-valuenow={pct}
-      aria-valuemin={0}
-      aria-valuemax={100}
+      role="status"
+      aria-label="Axiom loading"
     >
       <style>{`
         .axiom-loader-shroud {
@@ -208,16 +172,15 @@ export function AxiomLoadingScreen({
           transform: translate(-50%, -50%);
         }
 
-        .axiom-loader-shroud.reduced-motion .axiom-logo-img {
+        .axiom-loader-shroud.reduced-motion .axiom-knot-loader {
           animation: none;
-          transform: none;
         }
 
         /* Central Brand Mark Container with Concentric Holographic Reticles */
         .axiom-logo-wrapper {
           position: relative;
-          width: 160px;
-          height: 160px;
+          width: 170px;
+          height: 170px;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -285,8 +248,7 @@ export function AxiomLoadingScreen({
           100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
         }
 
-        .axiom-knot-loader,
-        .axiom-logo-img {
+        .axiom-knot-loader {
           position: relative;
           z-index: 3;
           display: block;
@@ -307,7 +269,7 @@ export function AxiomLoadingScreen({
 
         /* Brand Typography */
         .axiom-loader-title {
-          font-size: 24px;
+          font-size: 26px;
           font-weight: 800;
           letter-spacing: 0.38em;
           padding-left: 0.38em;
@@ -321,89 +283,16 @@ export function AxiomLoadingScreen({
         }
 
         .axiom-loader-tagline {
-          font-size: 9.5px;
-          color: #7dd3fc;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          margin-top: 4px;
-          opacity: 0.85;
-        }
-
-        /* Progress Bar & Readouts */
-        .axiom-progress-container {
-          width: 380px;
-          max-width: 88vw;
-          margin-top: 32px;
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
-        .axiom-progress-meta {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
           font-size: 10px;
-          letter-spacing: 0.12em;
+          color: #7dd3fc;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          margin-top: 6px;
+          opacity: 0.85;
+          text-align: center;
         }
 
-        .axiom-progress-track {
-          position: relative;
-          width: 100%;
-          height: 5px;
-          background: rgba(255, 255, 255, 0.08);
-          border-radius: 3px;
-          overflow: hidden;
-          border: 1px solid rgba(34, 211, 238, 0.25);
-          box-shadow: 0 0 10px rgba(34, 211, 238, 0.15) inset;
-        }
-
-        .axiom-progress-bar {
-          height: 100%;
-          background: linear-gradient(90deg, #22d3ee 0%, #a855f7 70%, #f43f5e 100%);
-          box-shadow: 0 0 12px #22d3ee, 0 0 20px #a855f7;
-          border-radius: 3px;
-          transition: width 0.1s linear;
-        }
-
-        /* Status Ticker */
-        .axiom-ticker-box {
-          margin-top: 18px;
-          padding: 6px 14px;
-          background: rgba(5, 6, 10, 0.75);
-          border: 1px solid rgba(34, 211, 238, 0.28);
-          border-radius: 4px;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
-          min-height: 28px;
-        }
-
-        .axiom-ticker-dot {
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #22d3ee;
-          box-shadow: 0 0 8px #22d3ee;
-          animation: axiom-dot-blink 0.8s ease-in-out infinite alternate;
-        }
-
-        @keyframes axiom-dot-blink {
-          0% { opacity: 0.3; transform: scale(0.8); }
-          100% { opacity: 1; transform: scale(1.2); }
-        }
-
-        .axiom-ticker-text {
-          font-size: 9.5px;
-          letter-spacing: 0.14em;
-          color: #e2e8f0;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        /* Bottom HUD Specs */
+        /* Bottom Corner Telemetry */
         .axiom-loader-footer {
           position: absolute;
           bottom: 24px;
@@ -452,33 +341,13 @@ export function AxiomLoadingScreen({
           <div className="axiom-reticle-inner" />
           <div className="axiom-sonar-pulse" />
           <AxiomKnotLoader
-            progress={progress}
             reducedMotion={reducedMotion}
-            size={160}
+            size={170}
           />
         </div>
 
         <h1 className="axiom-loader-title">AXIOM</h1>
         <span className="axiom-loader-tagline">Self-Healing Architectural Verifier</span>
-
-        {/* Dynamic Progress Bar */}
-        <div className="axiom-progress-container">
-          <div className="axiom-progress-meta">
-            <span style={{ color: '#94a3b8' }}>SYSTEM INITIALIZATION</span>
-            <b style={{ color: '#22d3ee', fontVariantNumeric: 'tabular-nums' }}>
-              {String(pct).padStart(3, '0')}%
-            </b>
-          </div>
-          <div className="axiom-progress-track">
-            <div className="axiom-progress-bar" style={{ width: `${progress}%` }} />
-          </div>
-        </div>
-
-        {/* Real-Time Diagnostic Ticker */}
-        <div className="axiom-ticker-box">
-          <div className="axiom-ticker-dot" />
-          <span className="axiom-ticker-text">{BOOT_STEPS[stepIndex]}</span>
-        </div>
       </div>
 
       {/* Bottom Corner Telemetry */}

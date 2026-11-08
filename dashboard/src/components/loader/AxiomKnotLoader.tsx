@@ -7,14 +7,9 @@ import {
   KNOT_NODES,
   KNOT_LINKS,
   KNOT_GLOW,
-  type KnotSlice,
-  type KnotMaskPoint,
-  type KnotNode,
-  type KnotLink,
 } from './axiomLoaderData';
 
 export interface AxiomKnotLoaderProps {
-  progress?: number; // 0 to 100
   reducedMotion?: boolean;
   className?: string;
   size?: number; // Width/height in pixels
@@ -30,12 +25,12 @@ const ob = (t: number) => {
 
 const GREEN = [52, 211, 153];
 const WHITE = [232, 234, 242];
-const CYAN = [34, 211, 238];
 const mixc = (a: number[], b: number[], t: number) =>
   `rgb(${a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',')})`;
 
+const T = 7900; // Continuous natural loop duration in ms
+
 export function AxiomKnotLoader({
-  progress = 0,
   reducedMotion = false,
   className = '',
   size = 170,
@@ -52,31 +47,23 @@ export function AxiomKnotLoader({
   const nodeLabelsRef = React.useRef<SVGGElement[]>([]);
   const linkPathsRef = React.useRef<SVGPathElement[]>([]);
 
-  // Smooth animation driver
-  const targetProgressRef = React.useRef(progress);
-  targetProgressRef.current = progress;
-  const currentProgressRef = React.useRef(progress);
-
   React.useEffect(() => {
     let animId: number;
+    const t0 = performance.now();
 
     const updateFrame = () => {
-      // Smoothly interpolate current progress towards target
-      if (reducedMotion) {
-        currentProgressRef.current = targetProgressRef.current;
-      } else {
-        const diff = targetProgressRef.current - currentProgressRef.current;
-        currentProgressRef.current += diff * 0.12;
-      }
+      const now = performance.now();
+      const ms = reducedMotion ? 5000 : (now - t0) % T;
 
-      const p = currentProgressRef.current; // 0..100
-      const norm = clamp(p / 100);
-
-      // Animation Phase Calculations:
-      // Phase 1 (0%..50%): Rope feeds in from the tip.
-      // Slices and mask advance along continuous arc-length.
-      const ropeFraction = clamp(norm / 0.52);
-      const head = reducedMotion ? 1.2 : sm(ropeFraction) * 1.15;
+      // 0-500: initial rest
+      // 500-2400: rope feeds in from tip (with monotonic arc-length smoothing)
+      // 2300-3000: nodes emerge with elastic bounce
+      // 2800-4300: links shoot across
+      // 4300-5400: verified (green)
+      // 5300-5900: links and nodes retract
+      // 5800-7000: rope retraces/feeds out along the same path
+      // 7000-7900: empty tail pause
+      const head = (ms < 6100 ? sm(clamp((ms - 500) / 1900)) : 1 - sm(clamp((ms - 6100) / 1500))) * (1 + 0.16);
       const tail = 0;
       const F = 0.12;
 
@@ -100,63 +87,60 @@ export function AxiomKnotLoader({
       const sg = sliceGroupsRef.current;
       for (let i = 0; i < KNOT_SLICES.length; i++) {
         const sl = KNOT_SLICES[i];
-        // Lead buffer of 0.05 ensures the slice is present in DOM before mask circle reaches it,
-        // so the mask circle clips it with mathematical precision without tooth-gaps
-        const isVisible = reducedMotion || (sl.tIn <= head + 0.05 && sl.tOut >= tail);
+        // Lead buffer of 0.04 ensures the slice is present in DOM so the circular SVG mask
+        // can sculpt the rounded feed-in tip without missing slice gaps or popped teeth
+        const isVisible = reducedMotion || (sl.tIn <= head + 0.04 && sl.tOut >= tail);
         if (sg[i]) {
-          const currentDisp = sg[i].style.display;
           const targetDisp = isVisible ? '' : 'none';
-          if (currentDisp !== targetDisp) {
+          if (sg[i].style.display !== targetDisp) {
             sg[i].style.display = targetDisp;
           }
         }
       }
 
-      // Phase 2 (35%..65%): Nodes entry with elastic bounce
-      const nodePhase = clamp((norm - 0.35) / 0.28);
-      const verifyPhase = clamp((norm - 0.65) / 0.22);
-      const retractPhase = clamp((norm - 0.90) / 0.10);
+      // Diagnostic Nodes & Ripple Rings
+      const nodeIn = ms - 2500;
+      const vp = clamp((ms - 4500) / 1200);
+      const ret = clamp((ms - 5600) / 600);
 
-      // Update Nodes
       const ng = nodeGroupsRef.current;
       const nr = nodeRingsRef.current;
       const nd = nodeDotsRef.current;
       const nl = nodeLabelsRef.current;
 
       for (let i = 0; i < KNOT_NODES.length; i++) {
-        const nodeIn = clamp((nodePhase * 1.5 - (i / KNOT_NODES.length) * 0.5));
-        const s = (nodeIn <= 0 ? 0 : ob(nodeIn)) * (1 - eo(retractPhase));
-        const vp = clamp(verifyPhase * 1.6 - (i / KNOT_NODES.length) * 0.6);
+        const l = clamp((nodeIn - i * 55) / 380);
+        const rr = clamp(ret * 1.6 - (i / KNOT_NODES.length) * 0.6);
+        const s = (l <= 0 ? 0 : ob(l)) * (1 - eo(rr));
 
         if (nd[i]) {
           nd[i].setAttribute('r', (3.4 * Math.max(s, 0)).toFixed(2));
-          nd[i].setAttribute('fill', mixc(WHITE, GREEN, eo(vp)));
+          nd[i].setAttribute('fill', mixc(WHITE, GREEN, eo(clamp(vp * 1.6 - (i / KNOT_NODES.length) * 0.6))));
         }
         if (ng[i]) {
-          ng[i].style.opacity = nodeIn <= 0 || retractPhase >= 1 ? '0' : '1';
+          ng[i].style.opacity = l <= 0 || rr >= 1 ? '0' : '1';
         }
         if (nr[i]) {
-          const ringScale = clamp(nodePhase * 1.4 - (i / KNOT_NODES.length) * 0.4);
-          nr[i].setAttribute('r', (3 + ringScale * 11).toFixed(2));
-          nr[i].style.opacity = ((1 - ringScale) * 0.8 * (retractPhase > 0 ? 0 : 1)).toFixed(2);
+          const rg = clamp((nodeIn - i * 55) / 700);
+          nr[i].setAttribute('r', (3 + rg * 11).toFixed(2));
+          nr[i].style.opacity = ((1 - rg) * 0.8 * (ret > 0 ? 0 : 1)).toFixed(2);
         }
         if (nl[i]) {
-          const labelIn = clamp(nodeIn * 1.3 - 0.3);
-          nl[i].style.opacity = (labelIn * (1 - clamp(retractPhase * 2))).toFixed(2);
+          nl[i].style.opacity = (clamp((nodeIn - i * 55 - 250) / 300) * (1 - clamp(ret * 2))).toFixed(2);
         }
       }
 
-      // Phase 3 (48%..75%): Interconnecting Links
-      const linkPhase = clamp((norm - 0.48) / 0.26);
+      // Topological Cybernetic Links
       const lp = linkPathsRef.current;
       for (let n = 0; n < KNOT_LINKS.length; n++) {
         const link = KNOT_LINKS[n];
-        const lIn = clamp((linkPhase * 1.6 - (link.start / KNOT_LINKS.length) * 0.6));
-        const lv = clamp(verifyPhase * 1.6 - ((link.i + link.j) / 2 / KNOT_NODES.length) * 0.6);
+        const l = clamp((ms - 3000 - link.start * 80) / 520);
+        const rr = clamp(ret * 1.5 - (link.start / KNOT_LINKS.length) * 0.5);
+        const lv = clamp(vp * 1.6 - ((link.i + link.j) / 2 / KNOT_NODES.length) * 0.6);
 
         if (lp[n]) {
-          lp[n].setAttribute('stroke-dashoffset', (1 - eo(lIn)).toFixed(3));
-          lp[n].style.opacity = lIn > 0 && retractPhase < 1 ? '1' : '0';
+          lp[n].setAttribute('stroke-dashoffset', (rr > 0 ? -eo(rr) : 1 - eo(l)).toFixed(3));
+          lp[n].style.opacity = l > 0 && rr < 1 ? '1' : '0';
           lp[n].setAttribute('stroke', lv > 0 ? mixc([120, 160, 245], GREEN, eo(lv)) : 'url(#lg-loader)');
         }
       }
