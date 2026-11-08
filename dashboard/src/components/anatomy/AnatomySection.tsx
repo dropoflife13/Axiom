@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
-import { AnatomyTelemetryChart } from './AnatomyTelemetryChart';
+import { AIModelsMarquee } from './AIModelsMarquee';
 
 const AxiomAnatomy = dynamic(
   () => import('./AxiomAnatomy').then((mod) => mod.AxiomAnatomy),
@@ -247,12 +247,8 @@ export function AnatomySection({
           <p>Every failure becomes evidence, and only evidence that survives a retry can become memory.</p>
         </div>
 
-        {/* Dynamic Empirical Telemetry & Invariant Compliance Chart */}
-        <AnatomyTelemetryChart
-          checkpoint={checkpoint}
-          snapshot={snapshot}
-          activeModel={activeModel}
-        />
+        {/* Open, borderless AI models marquee */}
+        <AIModelsMarquee />
       </div>
 
       {/* ---------- 3D Motherboard Workbench Stage ---------- */}
