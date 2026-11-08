@@ -55,12 +55,33 @@ export default function Page() {
       const currentStamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
       setStamp(currentStamp);
 
+      const isLocal =
+        typeof window !== 'undefined'
+          ? window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+          : process.env.NODE_ENV === 'development';
+
       try {
-        const snapshotUrl = `/data/run-${activeRunId}.json`;
-        const response = await fetch(snapshotUrl, {
-          signal: controller.signal,
-          cache: 'no-store',
-        });
+        let response: Response;
+        if (isLocal) {
+          // Local Live Mode: query active checkpoint from .axiom-state via local API route
+          response = await fetch(`/api/ablation-checkpoint?run=${activeRunId}`, {
+            signal: controller.signal,
+            cache: 'no-store',
+          });
+          // Fallback to static snapshot if local live checkpoint does not exist for this run
+          if (!response.ok && response.status === 404) {
+            response = await fetch(`/data/run-${activeRunId}.json`, {
+              signal: controller.signal,
+              cache: 'no-store',
+            });
+          }
+        } else {
+          // Vercel / Production: static snapshot only
+          response = await fetch(`/data/run-${activeRunId}.json`, {
+            signal: controller.signal,
+            cache: 'no-store',
+          });
+        }
 
         if (!response.ok) {
           // If 404 (or file missing), graceful sci-fi fallback: Awaiting Snapshot mode
@@ -121,7 +142,12 @@ export default function Page() {
     }
 
     load();
-    const timer = window.setInterval(load, 30000);
+    const pollInterval =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 2000
+        : 30000;
+    const timer = window.setInterval(load, pollInterval);
     return () => {
       window.clearInterval(timer);
       controller.abort();
