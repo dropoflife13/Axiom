@@ -302,7 +302,7 @@ function getAdj(id: string) {
 const FREQ_LABELS = ['60', '125', '250', '500', '1k', '2k', '4k', '8k', '12k', '16k', '24k', '32k'];
 const CONDITIONS = ['A', 'B', 'C', 'C0', 'D', 'E_B'] as const;
 
-export function AxiomAnatomy({
+export const AxiomAnatomy = React.memo(function AxiomAnatomy({
   checkpoint,
   running: initialRunning = true,
   snapshot,
@@ -397,13 +397,18 @@ export function AxiomAnatomy({
 
     let renderer: THREE.WebGLRenderer;
     try {
-      renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+      renderer = new THREE.WebGLRenderer({
+        canvas,
+        antialias: true,
+        alpha: true,
+        powerPreference: 'high-performance',
+      });
     } catch {
       setWebglError(true);
       return;
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x05060a, 0);
 
     const labelRenderer = new CSS2DRenderer({ element: labelsEl });
@@ -512,14 +517,12 @@ export function AxiomAnatomy({
 
       const body = new THREE.Mesh(
         geo,
-        new THREE.MeshPhysicalMaterial({
+        new THREE.MeshStandardMaterial({
           color: n.color,
-          roughness: 0.34,
+          roughness: 0.32,
           metalness: 0.1,
-          clearcoat: 1,
-          clearcoatRoughness: 0.18,
           emissive: n.color,
-          emissiveIntensity: 0.16,
+          emissiveIntensity: 0.18,
         })
       );
       body.userData.id = n.id;
@@ -672,6 +675,21 @@ export function AxiomAnatomy({
     const resizeObserver = new ResizeObserver(handleResize);
     resizeObserver.observe(container);
 
+    // Viewport IntersectionObserver to pause rendering when offscreen (eliminates GPU contention)
+    let isVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+      },
+      { threshold: 0.02 }
+    );
+    visibilityObserver.observe(container);
+
+    const onVisibilityChange = () => {
+      isVisible = !document.hidden;
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     // Raycaster Picking
     const ray = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
@@ -751,9 +769,18 @@ export function AxiomAnatomy({
     let animId: number;
     let last = performance.now();
     let factor = 1;
+    let lastAzR = -1;
+    let lastElR = -999;
 
     const frame = (now: number) => {
       animId = requestAnimationFrame(frame);
+
+      // Skip render when tab is hidden or element is scrolled out of viewport
+      if (!isVisible || document.hidden) {
+        last = now;
+        return;
+      }
+
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       T.value += dt;
@@ -768,7 +795,9 @@ export function AxiomAnatomy({
         targetView,
       } = stateRef.current;
 
-      factor += ((isExp ? 1.4 : 1) - factor) * 0.08;
+      const targetFactor = isExp ? 1.4 : 1;
+      const factorMoving = Math.abs(targetFactor - factor) > 0.001;
+      factor += (targetFactor - factor) * 0.08;
       ctl.autoRotate = isRot;
 
       const st = STAGES[curStage];
@@ -802,13 +831,16 @@ export function AxiomAnatomy({
         r.core.scale.setScalar(cs);
 
         if (r.drop.visible !== isSel) r.drop.visible = isSel;
-        if (isSel) {
+        if (isSel && (factorMoving || !r.drop.visible)) {
           const h = Math.abs(FLOOR - r.g.position.y);
           r.drop.scale.y = h;
           r.drop.position.y = -h / 2;
         }
 
-        r.el.className = `lbl ${isSel ? 'sel' : ''} ${isAct ? 'act' : ''}`;
+        const nextCls = `lbl ${isSel ? 'sel' : ''} ${isAct ? 'act' : ''}`;
+        if (r.el.className !== nextCls) {
+          r.el.className = nextCls;
+        }
       });
 
       buses.forEach((b) => {
@@ -821,8 +853,10 @@ export function AxiomAnatomy({
         const yB = lf(BY_ID[b.b].top ?? 0);
         const H = Math.max(yA, yB) + 1.1;
 
-        p.set([A[0] * f, yA, A[2] * f, A[0] * f, H, A[2] * f, B[0] * f, H, B[2] * f, B[0] * f, yB, B[2] * f]);
-        b.geom.attributes.position.needsUpdate = true;
+        if (factorMoving) {
+          p.set([A[0] * f, yA, A[2] * f, A[0] * f, H, A[2] * f, B[0] * f, H, B[2] * f, B[0] * f, yB, B[2] * f]);
+          b.geom.attributes.position.needsUpdate = true;
+        }
 
         const isAct = Boolean(active[b.key]);
         const touches = b.a === curSel || b.b === curSel;
@@ -872,12 +906,18 @@ export function AxiomAnatomy({
       const azR = Math.round(az) % 360;
       const elR = Math.round(el);
 
-      if (azRef.current) azRef.current.textContent = `${String(azR).padStart(3, '0')}°`;
-      if (elRef.current) elRef.current.textContent = `${elR < 0 ? '−' : ''}${String(Math.abs(elR)).padStart(2, '0')}°`;
+      if (azR !== lastAzR) {
+        lastAzR = azR;
+        if (azRef.current) azRef.current.textContent = `${String(azR).padStart(3, '0')}°`;
+        if (!draggingSlider && slider && turnOutRef.current) {
+          slider.value = String(azR);
+          turnOutRef.current.textContent = `${azR}°`;
+        }
+      }
 
-      if (!draggingSlider && slider && turnOutRef.current) {
-        slider.value = String(azR);
-        turnOutRef.current.textContent = `${azR}°`;
+      if (elR !== lastElR) {
+        lastElR = elR;
+        if (elRef.current) elRef.current.textContent = `${elR < 0 ? '−' : ''}${String(Math.abs(elR)).padStart(2, '0')}°`;
       }
 
       renderer.render(scene, cam);
@@ -890,6 +930,8 @@ export function AxiomAnatomy({
     return () => {
       cancelAnimationFrame(animId);
       resizeObserver.disconnect();
+      visibilityObserver.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointermove', onPointerMove);
@@ -1275,6 +1317,6 @@ export function AxiomAnatomy({
       </div>
     </div>
   );
-}
+});
 
 export default AxiomAnatomy;

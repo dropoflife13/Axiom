@@ -472,7 +472,8 @@ button, input, select, textarea {
   animation-name: matrix-pulse;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-  will-change: opacity, box-shadow, background-color;
+  will-change: opacity, box-shadow;
+  contain: layout paint;
   transform: translateZ(0);
 }
 

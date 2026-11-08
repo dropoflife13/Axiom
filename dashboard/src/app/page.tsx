@@ -104,9 +104,18 @@ export default function Page() {
         }
 
         const data = await response.json();
-        const trials = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
-        setCheckpoint(trials);
-        setResults(data);
+        const trials: CheckpointTrial[] = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
+        setCheckpoint((prev) => {
+          if (prev.length === trials.length && prev.length > 0) {
+            const pLast = prev[prev.length - 1];
+            const tLast = trials[trials.length - 1];
+            if (pLast?.taskId === tLast?.taskId && pLast?.condition === tLast?.condition && pLast?.boundPassed === tLast?.boundPassed) {
+              return prev; // Identical dataset, bail out of re-rendering tree!
+            }
+          }
+          return trials;
+        });
+        setResults((prev: unknown) => (prev ? prev : data));
         setAwaitingSnapshot(false);
 
         const mtime = data.lastModified ? new Date(data.lastModified).getTime() : 0;

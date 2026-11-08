@@ -86,7 +86,7 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
       return;
     }
 
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
     renderer.setClearColor(0x05060a, 0);
 
     const scene = new THREE.Scene();
@@ -205,6 +205,21 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
     const resizeObserver = new ResizeObserver(updateSize);
     resizeObserver.observe(container);
 
+    // Viewport IntersectionObserver to pause rendering when offscreen (cuts GPU usage in half!)
+    let isVisible = true;
+    const visibilityObserver = new IntersectionObserver(
+      ([entry]) => {
+        isVisible = entry.isIntersecting;
+      },
+      { threshold: 0.02 }
+    );
+    visibilityObserver.observe(container);
+
+    const onVisibilityChange = () => {
+      isVisible = !document.hidden;
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     // Native continuous 60FPS animation loop
     let animId: number;
     let lastTime = performance.now();
@@ -213,6 +228,13 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
 
     const frame = (now: number) => {
       animId = requestAnimationFrame(frame);
+
+      // Skip render when tab is hidden or element is scrolled out of viewport
+      if (!isVisible || document.hidden) {
+        lastTime = now;
+        return;
+      }
+
       const dt = Math.min(0.05, (now - lastTime) / 1000);
       lastTime = now;
 
@@ -261,6 +283,8 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
     return () => {
       cancelAnimationFrame(animId);
       resizeObserver.disconnect();
+      visibilityObserver.disconnect();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       controls.dispose();
       renderer.dispose();
       geo.dispose();

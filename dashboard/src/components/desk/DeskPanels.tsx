@@ -1,12 +1,12 @@
 'use client';
 
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { CellState, DeskData, LogLine } from '@/lib/desk';
 import { TOTAL_TRIALS } from '@/lib/desk';
 
 /* ---------- Sparkline (TOKENS / LATENCY / MEMORY) ---------- */
-export function Sparkline({ label, values, unit, empty }: { label: string; values: number[] | null; unit: string; empty: string }) {
+export const Sparkline = memo(function Sparkline({ label, values, unit, empty }: { label: string; values: number[] | null; unit: string; empty: string }) {
   const series = (values ?? []).slice(-32);
   const max = Math.max(1, ...series);
   const last = series[series.length - 1];
@@ -30,7 +30,7 @@ export function Sparkline({ label, values, unit, empty }: { label: string; value
       )}
     </div>
   );
-}
+});
 
 /* ---------- Risk / convergence gauge ---------- */
 const R = 80;
@@ -42,7 +42,7 @@ const polar = (t: number, r = R): [number, number] => {
   ];
 };
 
-export function ConvergenceGauge({ value, done }: { value: number | null; done: number }) {
+export const ConvergenceGauge = memo(function ConvergenceGauge({ value, done }: { value: number | null; done: number }) {
   const reduce = useReducedMotion();
   const v = value ?? 0;
   const [nx, ny] = polar(v, R - 14);
@@ -82,7 +82,7 @@ export function ConvergenceGauge({ value, done }: { value: number | null; done: 
       <p className="dk-sub">mean boundFactFraction · {done}/{TOTAL_TRIALS}</p>
     </div>
   );
-}
+});
 
 /* Precomputed asynchronous live-stream pulse styles for the 720 matrix squares.
  * Provides randomized delays (0 to 7s) and calm, natural blinking durations (4.5 to 7.5s)
@@ -104,7 +104,7 @@ const MATRIX_PULSE_STYLES = Array.from({ length: TOTAL_TRIALS }, (_, i) => {
 });
 
 /* ---------- Evidence matrix (High Performance & Sparse Breathing Accents) ---------- */
-export function EvidenceMatrix({
+export const EvidenceMatrix = memo(function EvidenceMatrix({
   cells,
   passed,
   failed,
@@ -197,6 +197,8 @@ export function EvidenceMatrix({
       >
         {cells.map((c, i) => {
           const isRunning = i === runningIdx;
+          // Asynchronous live-stream pulse on a sparse subset (~24 cells at any time, eliminating lag)
+          const shouldPulse = (i * 17) % 31 === 0;
           const pulseStyle = MATRIX_PULSE_STYLES[i] ?? {
             animationDelay: `${((i * 17) % 50) / 10}s`,
             animationDuration: `${(((i * 23) % 30) / 10) + 2}s`,
@@ -206,8 +208,8 @@ export function EvidenceMatrix({
             <i
               key={i}
               suppressHydrationWarning
-              className={`dk-cell dk-cell--${c} matrix-pulse ${isRunning ? 'dk-cell--running' : ''}`}
-              style={!isRunning ? pulseStyle : undefined}
+              className={`dk-cell dk-cell--${c} ${shouldPulse ? 'matrix-pulse' : ''} ${isRunning ? 'dk-cell--running' : ''}`}
+              style={shouldPulse && !isRunning ? pulseStyle : undefined}
             />
           );
         })}
@@ -219,7 +221,7 @@ export function EvidenceMatrix({
       </ul>
     </div>
   );
-}
+});
 
 /* ---------- Right-Side Tactical Frequency & Telemetry Rack (Inspired by TikTok Sci-Fi HUD Reference) ---------- */
 const SPECTRAL_BANDS = [
@@ -238,7 +240,7 @@ const FADER_CHANNELS = [
   { name: 'LLM', level: 75, color: '#fbbf24' },
 ];
 
-export function FrequencyRack({
+export const FrequencyRack = memo(function FrequencyRack({
   tokens,
   latency,
   done,
@@ -466,12 +468,12 @@ export function FrequencyRack({
       </div>
     </div>
   );
-}
+});
 
 export const FrequencySpectrum = FrequencyRack;
 
 /* ---------- Live terminal ---------- */
-export function LiveTerminal({
+export const LiveTerminal = memo(function LiveTerminal({
   lines,
   stamp,
   error,
@@ -508,7 +510,7 @@ export function LiveTerminal({
       </div>
     </div>
   );
-}
+});
 
 /* ---------- Floating fact nodes around the torus (Positioned to Maximize Spaces) ---------- */
 const FACT_SLOTS: [number, number][] = [
@@ -524,7 +526,7 @@ const FACT_SLOTS: [number, number][] = [
   [44, 72], // Inner lower-left orbital lane
 ];
 
-export function FactNodes({ facts }: { facts: string[] }) {
+export const FactNodes = memo(function FactNodes({ facts }: { facts: string[] }) {
   const reduce = useReducedMotion();
   return (
     <div
@@ -553,7 +555,7 @@ export function FactNodes({ facts }: { facts: string[] }) {
       </AnimatePresence>
     </div>
   );
-}
+});
 
 /* ---------- Global connectors ---------- */
 const ANCHORS: [number, number][] = [
@@ -561,7 +563,7 @@ const ANCHORS: [number, number][] = [
   [85, 45],                     // Right-side frequency rack
   [18, 74], [50, 80], [84, 72], // matrix, terminal, gauge
 ];
-export function Connectors() {
+export const Connectors = memo(function Connectors() {
   return (
     <svg className="dk-wires" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
       {ANCHORS.map(([x, y], i) => (
@@ -572,6 +574,6 @@ export function Connectors() {
       ))}
     </svg>
   );
-}
+});
 
 export type { DeskData };
