@@ -547,10 +547,213 @@ export function perCellAnalysis(
     };
   }
 
+  const cellSignFlipP: Record<string, number> = {};
+  for (const [k, v] of Object.entries(comparisons)) {
+    cellSignFlipP[k] = v.exactCellSignFlipPValue;
+  }
+  const holmCellPValues = holmAdjust(cellSignFlipP);
+
   return {
     exploratory: true as const,
     note: 'Exploratory per-cell analysis outside the Holm-Bonferroni family: paired mean difference per (tenant, append_only, ingestion) cell, equal-weight cell-stratified combined estimate with within-cell bootstrap 95% CI, and exact two-sided sign-flip test over cell means.',
     comparisons,
+    holmCellPValues,
+  };
+}
+
+export interface CellICCResult {
+  k: number;
+  n_per_group: number;
+  N: number;
+  MSB: number;
+  MSW: number;
+  F: number;
+  icc: number;
+}
+
+export function computeFeatureCellICC(
+  trials: Trial[],
+  taskFeaturesById?: ReadonlyMap<
+    string,
+    { tenant: boolean; append_only: boolean; ingestion: boolean }
+  >
+): {
+  exploratory: true;
+  boundFactFraction: CellICCResult;
+  allFactPassRate: CellICCResult;
+} {
+  const defaultMap = loadDefaultTaskCells();
+  const aTrials = trials.filter((t) => t.condition === 'A');
+  const groups: Record<string, Array<{ boundFactFraction: number; allFactPassRate: number }>> = {};
+
+  for (const t of aTrials) {
+    const f =
+      t.features ??
+      taskFeaturesById?.get(t.taskId) ??
+      defaultMap.get(t.taskId);
+    const cellKey = f ? formatCellKey(f) : 'unassigned';
+    if (!groups[cellKey]) groups[cellKey] = [];
+    const allFactPassRate = (34 - (t.failedFacts?.length ?? 0)) / 34;
+    groups[cellKey].push({
+      boundFactFraction: t.boundFactFraction,
+      allFactPassRate,
+    });
+  }
+
+  function calcOneWayAnova(prop: 'boundFactFraction' | 'allFactPassRate'): CellICCResult {
+    const k = Object.keys(groups).length;
+    const groupSizes = Object.values(groups).map((g) => g.length);
+    const n_per_group = groupSizes[0] ?? 0;
+    const N = groupSizes.reduce((s, c) => s + c, 0);
+
+    if (k <= 1 || N <= k || n_per_group === 0) {
+      return { k, n_per_group, N, MSB: 0, MSW: 0, F: 0, icc: 0 };
+    }
+
+    let grandSum = 0;
+    const groupMeans: number[] = [];
+    for (const rows of Object.values(groups)) {
+      const sum = rows.reduce((acc, r) => acc + r[prop], 0);
+      grandSum += sum;
+      groupMeans.push(sum / rows.length);
+    }
+    const grandMean = grandSum / N;
+
+    let SSB = 0;
+    for (const m of groupMeans) {
+      SSB += n_per_group * Math.pow(m - grandMean, 2);
+    }
+    const MSB = SSB / (k - 1);
+
+    let SSW = 0;
+    for (const rows of Object.values(groups)) {
+      const mean = rows.reduce((acc, r) => acc + r[prop], 0) / rows.length;
+      for (const r of rows) {
+        SSW += Math.pow(r[prop] - mean, 2);
+      }
+    }
+    const MSW = SSW / (N - k);
+
+    const denom = MSB + (n_per_group - 1) * MSW;
+    const icc = denom !== 0 ? (MSB - MSW) / denom : 0;
+    const F = MSW !== 0 ? MSB / MSW : 0;
+
+    return { k, n_per_group, N, MSB, MSW, F, icc };
+  }
+
+  return {
+    exploratory: true,
+    boundFactFraction: calcOneWayAnova('boundFactFraction'),
+    allFactPassRate: calcOneWayAnova('allFactPassRate'),
+  };
+}
+
+export function cleanMigrationConditionAnalysis(trials: Trial[]): Record<
+  Condition,
+  {
+    n: number;
+    meanBoundFactFraction: number;
+    strictBoundPassAt1: number;
+    strictBoundPassAt1Wilson95: [number, number];
+    strictPassCount: number;
+    meanPromptTokens: number;
+    meanTotalTokens: number;
+    generationStatus: Record<GenerationStatus, number>;
+  }
+> {
+  const byCondition = new Map<Condition, Trial[]>();
+  for (const condition of CONDITIONS) {
+    byCondition.set(
+      condition,
+      trials.filter((trial) => trial.condition === condition && !trial.migrationExitNonZero)
+    );
+  }
+
+  return Object.fromEntries(
+    CONDITIONS.map((condition) => {
+      const rows = byCondition.get(condition) ?? [];
+      const strictPassCount = rows.filter((r) => r.boundPassed).length;
+      const [low, high] = wilson(strictPassCount, rows.length);
+      const generationStatusCounts: Record<GenerationStatus, number> = {
+        ok: rows.filter((r) => (r.generationStatus ?? 'ok') === 'ok').length,
+        empty: rows.filter((r) => r.generationStatus === 'empty').length,
+        length: rows.filter((r) => r.generationStatus === 'length').length,
+        other: rows.filter((r) => r.generationStatus === 'other').length,
+      };
+
+      return [
+        condition,
+        {
+          n: rows.length,
+          meanBoundFactFraction: rows.length
+            ? rows.reduce((sum, r) => sum + r.boundFactFraction, 0) / rows.length
+            : 0,
+          strictBoundPassAt1: rows.length ? strictPassCount / rows.length : 0,
+          strictBoundPassAt1Wilson95: [low, high],
+          strictPassCount,
+          meanPromptTokens: rows.length
+            ? rows.reduce((sum, r) => sum + r.promptTokens, 0) / rows.length
+            : 0,
+          meanTotalTokens: rows.length
+            ? rows.reduce((sum, r) => sum + r.totalTokens, 0) / rows.length
+            : 0,
+          generationStatus: generationStatusCounts,
+        },
+      ];
+    })
+  ) as any;
+}
+
+export function sensitivityAnalysisExcludingEarlyTasks(
+  trials: Trial[],
+  excludedTaskIds = ['H-001', 'H-002', 'H-003', 'H-004', 'H-005', 'H-006', 'H-007', 'H-008'],
+  seed = BOOTSTRAP_SEED,
+  bootstrapResamples = BOOTSTRAP_RESAMPLES
+) {
+  const excludedSet = new Set(excludedTaskIds);
+  const byCondition = new Map<Condition, Trial[]>();
+  for (const condition of CONDITIONS) {
+    byCondition.set(condition, trials.filter((t) => t.condition === condition));
+  }
+
+  const comparisons: Record<string, any> = {};
+  const primaryP: Record<string, number> = {};
+  const secondaryP: Record<string, number> = {};
+
+  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
+    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
+    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
+    const includedIds = [...base.keys()]
+      .filter((id) => target.has(id) && !excludedSet.has(id))
+      .sort();
+
+    const differences = includedIds.map(
+      (id) => (target.get(id) as Trial).boundFactFraction - (base.get(id) as Trial).boundFactFraction
+    );
+    const bootstrap = pairedBootstrap(differences, SIGN_FLIP_ITERATIONS, seed, bootstrapResamples);
+    const secondary = mcnemar(
+      includedIds.map((id) => (base.get(id) as Trial).boundPassed),
+      includedIds.map((id) => (target.get(id) as Trial).boundPassed)
+    );
+
+    const key = `C_vs_${baseline}`;
+    comparisons[key] = {
+      n: includedIds.length,
+      excludedCount: excludedTaskIds.length,
+      excludedTaskIds,
+      primary: bootstrap,
+      secondary,
+    };
+    primaryP[key] = bootstrap.signFlipPValue;
+    secondaryP[key] = secondary.pValue;
+  }
+
+  return {
+    exploratory: true as const,
+    excludedTaskIds,
+    comparisons,
+    holmPrimaryPValues: holmAdjust(primaryP),
+    holmSecondaryPValues: holmAdjust(secondaryP),
   };
 }
 
@@ -622,14 +825,22 @@ export function analyzeTrials(trials: Trial[]) {
     secondaryP[key] = secondary.pValue;
   }
   const sensitivity = sensitivityAnalysis(trials);
+  const sensitivityExcludingEarlyTasks = sensitivityAnalysisExcludingEarlyTasks(trials);
   const perCell = perCellAnalysis(trials);
+  const cellICC = computeFeatureCellICC(trials);
+  const cleanMigrationAnalysis = cleanMigrationConditionAnalysis(trials);
+
   return {
     conditions,
     comparisons,
     holmPrimaryPValues: holmAdjust(primaryP),
     holmSecondaryPValues: holmAdjust(secondaryP),
+    holmCellPValues: perCell.holmCellPValues,
     sensitivityAnalysis: sensitivity,
+    sensitivityExcludingEarlyTasks,
+    cleanMigrationAnalysis,
     perCellAnalysis: perCell,
+    cellICC,
     generationIndependenceNote:
       "E_B trials with reusedFromCondition='B' reuse Condition B's cached generation and are not independent generations.",
   };
@@ -870,15 +1081,322 @@ function failuresByFact(trials: Trial[]) {
   return result;
 }
 
-function parseArgs(argv: string[]) {
+export function parseArgs(argv: string[]) {
   const value = (flag: string, fallback: string) => {
-    const index = argv.indexOf(flag);
-    return index >= 0 && argv[index + 1] ? argv[index + 1] : fallback;
+    for (let i = 0; i < argv.length; i++) {
+      const arg = argv[i];
+      if (arg === flag && argv[i + 1] && !argv[i + 1].startsWith('--')) {
+        return argv[i + 1];
+      }
+      if (arg.startsWith(`${flag}=`)) {
+        return arg.slice(flag.length + 1);
+      }
+    }
+    return fallback;
   };
   return {
     checkpoint: path.resolve(value('--checkpoint', '.axiom-state/ablation-v2-checkpoint.json')),
     out: path.resolve(value('--out', 'out/ablation-v2-analysis.json')),
   };
+}
+
+function formatConditionsTable(conditions: Record<string, any>): string {
+  const lines = [
+    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) | tableMissing | migrationExitNonZero | reusedFromCondition |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+  ];
+  for (const condition of CONDITIONS) {
+    const row = conditions[condition];
+    if (!row) continue;
+    const gs = row.generationStatus ?? { ok: row.n, empty: 0, length: 0, other: 0 };
+    const wilsonStr = row.strictBoundPassAt1Wilson95
+      ? ` [${row.strictBoundPassAt1Wilson95[0].toFixed(4)}, ${row.strictBoundPassAt1Wilson95[1].toFixed(4)}]`
+      : '';
+    lines.push(
+      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${row.strictBoundPassAt1.toFixed(4)}${wilsonStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} | ${row.tableMissing} | ${row.migrationExitNonZero} | ${row.reusedFromCondition} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatCleanMigrationTable(cleanAnalysis: Record<string, any>): string {
+  const lines = [
+    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) |',
+    '|---|---:|---:|---:|---:|---:|---:|',
+  ];
+  for (const condition of CONDITIONS) {
+    const row = cleanAnalysis[condition];
+    if (!row) continue;
+    const gs = row.generationStatus ?? { ok: row.n, empty: 0, length: 0, other: 0 };
+    const wilsonStr = row.strictBoundPassAt1Wilson95
+      ? ` [${row.strictBoundPassAt1Wilson95[0].toFixed(4)}, ${row.strictBoundPassAt1Wilson95[1].toFixed(4)}]`
+      : '';
+    lines.push(
+      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${row.strictBoundPassAt1.toFixed(4)}${wilsonStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatPairedComparisonsTable(analysis: any): string {
+  const lines = [
+    '| Contrast | n | Mean Diff [95% CI] | Sign-Flip p (raw) | Holm Primary p | McNemar (b/c) | McNemar p (raw) | Holm Secondary p |',
+    '|:---|---:|:---:|---:|---:|:---:|---:|---:|',
+  ];
+  for (const baseline of ['A', 'B', 'C0', 'D']) {
+    const key = `C_vs_${baseline}`;
+    const comp = analysis.comparisons[key];
+    if (!comp) continue;
+    const meanDiff = comp.primary.meanDifference;
+    const meanDiffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
+    const ciStr = `[${comp.primary.ci95[0].toFixed(4)}, ${comp.primary.ci95[1].toFixed(4)}]`;
+    const signFlipP = comp.primary.signFlipPValue.toExponential(4);
+    const holmPrimP = (analysis.holmPrimaryPValues[key] ?? comp.primary.signFlipPValue).toExponential(4);
+    const mcnemarDiscordant = `${comp.secondary.b}/${comp.secondary.c}`;
+    const mcnemarP = comp.secondary.pValue.toExponential(4);
+    const holmSecP = (analysis.holmSecondaryPValues[key] ?? comp.secondary.pValue).toExponential(4);
+
+    lines.push(
+      `| ${key} | ${comp.n} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatPerCellTables(perCell: any, holmCellPValues?: Record<string, number>): string {
+  if (!perCell?.comparisons) return '_No per-cell comparison data available._';
+  const lines = [
+    '### Cell-Stratified Combined Summary',
+    '',
+    '| Contrast | Cells | Combined Mean Diff [Within-Cell 95% CI] | Exact Cell Sign-Flip p | Holm Cell p |',
+    '|:---|---:|:---:|---:|---:|',
+  ];
+  for (const baseline of ['A', 'B', 'C0', 'D']) {
+    const key = `C_vs_${baseline}`;
+    const comp = perCell.comparisons[key];
+    if (!comp) continue;
+    const combMean = comp.combinedMeanDifference ?? 0;
+    const combMeanStr = `${combMean >= 0 ? '+' : ''}${combMean.toFixed(4)}`;
+    const ci = comp.withinCellBootstrapCi95 ?? [0, 0];
+    const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
+    const exactP = comp.exactCellSignFlipPValue !== undefined ? comp.exactCellSignFlipPValue.toExponential(4) : '—';
+    const rawHolm = holmCellPValues?.[key] ?? perCell.holmCellPValues?.[key] ?? comp.exactCellSignFlipPValue;
+    const holmP = rawHolm !== undefined ? rawHolm.toExponential(4) : '—';
+    lines.push(`| ${key} | ${comp.cellCount ?? 0} | ${combMeanStr} ${ciStr} | ${exactP} | ${holmP} |`);
+  }
+
+  lines.push('', '### Per-Cell Mean Differences Breakdown', '');
+  lines.push('| Contrast | Cell | n | Mean Difference |');
+  lines.push('|:---|:---|---:|---:|');
+  for (const baseline of ['A', 'B', 'C0', 'D']) {
+    const key = `C_vs_${baseline}`;
+    const comp = perCell.comparisons[key];
+    if (!comp?.perCell) continue;
+    for (const [cellKey, cellData] of Object.entries(comp.perCell as Record<string, any>)) {
+      const meanDiff = cellData.meanDifference ?? 0;
+      const diffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
+      lines.push(`| ${key} | \`${cellKey}\` | ${cellData.n ?? 0} | ${diffStr} |`);
+    }
+  }
+  return lines.join('\n');
+}
+
+function formatCellICCTable(cellICC: any): string {
+  const lines = [
+    '| Metric | Cells (k) | n per cell | Total N | MSB | MSW | F | ICC(1) |',
+    '|:---|---:|---:|---:|---:|---:|---:|---:|',
+  ];
+  if (cellICC?.boundFactFraction) {
+    const b = cellICC.boundFactFraction;
+    lines.push(
+      `| Bound-Fact Fraction (\`boundFactFraction\`) | ${b.k} | ${b.n_per_group} | ${b.N} | ${b.MSB.toFixed(4)} | ${b.MSW.toFixed(4)} | ${b.F.toFixed(4)} | ${b.icc.toFixed(4)} |`
+    );
+  }
+  if (cellICC?.allFactPassRate) {
+    const a = cellICC.allFactPassRate;
+    lines.push(
+      `| All-Fact Pass Rate (\`allFactPassRate\`) | ${a.k} | ${a.n_per_group} | ${a.N} | ${a.MSB.toFixed(4)} | ${a.MSW.toFixed(4)} | ${a.F.toFixed(4)} | ${a.icc.toFixed(4)} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatSensitivityExcludingEarlyTable(sensEarly: any): string {
+  if (!sensEarly?.comparisons) return '_No early task sensitivity data available._';
+  const lines = [
+    '| Contrast | n | Mean Diff [95% CI] | Sign-Flip p (raw) | Holm Primary p | McNemar (b/c) | McNemar p (raw) | Holm Secondary p |',
+    '|:---|---:|:---:|---:|---:|:---:|---:|---:|',
+  ];
+  for (const baseline of ['A', 'B', 'C0', 'D']) {
+    const key = `C_vs_${baseline}`;
+    const comp = sensEarly?.comparisons?.[key];
+    if (!comp?.primary) continue;
+    const meanDiff = comp.primary.meanDifference ?? 0;
+    const meanDiffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
+    const ci = comp.primary.ci95 ?? [0, 0];
+    const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
+    const signFlipP = comp.primary.signFlipPValue !== undefined ? comp.primary.signFlipPValue.toExponential(4) : '—';
+    const holmPrimP = (sensEarly.holmPrimaryPValues?.[key] ?? comp.primary.signFlipPValue)?.toExponential?.(4) ?? '—';
+    const mcnemarDiscordant = `${comp.secondary?.b ?? 0}/${comp.secondary?.c ?? 0}`;
+    const mcnemarP = comp.secondary?.pValue !== undefined ? comp.secondary.pValue.toExponential(4) : '—';
+    const holmSecP = (sensEarly.holmSecondaryPValues?.[key] ?? comp.secondary?.pValue)?.toExponential?.(4) ?? '—';
+
+    lines.push(
+      `| ${key} | ${comp.n ?? 0} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatSensitivityTable(sens: any): string {
+  if (!sens?.comparisons) return '_No sensitivity analysis data available._';
+  const lines = [
+    '| Contrast | Included n | Excluded Count | Mean Diff [95% CI] | Sign-Flip p | McNemar (b/c) | McNemar p |',
+    '|:---|---:|---:|:---:|---:|:---:|---:|',
+  ];
+  for (const baseline of ['A', 'B', 'C0', 'D']) {
+    const key = `C_vs_${baseline}`;
+    const comp = sens?.comparisons?.[key];
+    if (!comp?.primary) continue;
+    const meanDiff = comp.primary.meanDifference ?? 0;
+    const meanDiffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
+    const ci = comp.primary.ci95 ?? [0, 0];
+    const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
+    const signFlipP = comp.primary.signFlipPValue !== undefined ? comp.primary.signFlipPValue.toExponential(4) : '—';
+    const mcnemarDiscordant = `${comp.secondary?.b ?? 0}/${comp.secondary?.c ?? 0}`;
+    const mcnemarP = comp.secondary?.pValue !== undefined ? comp.secondary.pValue.toExponential(4) : '—';
+
+    lines.push(
+      `| ${key} | ${comp.n ?? 0} | ${comp.excludedCount ?? 0} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${mcnemarDiscordant} | ${mcnemarP} |`
+    );
+  }
+  return lines.join('\n');
+}
+
+function formatPerFactRetrievalTables(retrieval: any): string {
+  if (!retrieval) return '_No per-fact retrieval data available._';
+  const lines: string[] = [];
+
+  lines.push('### Aggregate Retrieved vs Non-Retrieved Stratification', '');
+  lines.push('| Condition | Stratum | Fact Pairs | Condition Pass Rate | Condition A Pass Rate | Difference |');
+  lines.push('|:---|:---|---:|---:|---:|---:|');
+
+  for (const cond of ['C', 'C0'] as const) {
+    const condData = retrieval[cond];
+    if (!condData) continue;
+    const ret = condData.retrieved;
+    const nonRet = condData.nonRetrieved;
+
+    if (ret) {
+      const retDiff = ret.difference ?? 0;
+      const retDiffStr = `${retDiff >= 0 ? '+' : ''}${retDiff.toFixed(4)}`;
+      const retCondPass = (ret.conditionPassRate ?? 0).toFixed(4);
+      const retAPass = (ret.conditionAPassRate ?? 0).toFixed(4);
+      lines.push(
+        `| Condition ${cond} | Retrieved | ${ret.factPairs ?? 0} | ${retCondPass} | ${retAPass} | ${retDiffStr} |`
+      );
+    }
+    if (nonRet) {
+      const nonRetDiff = nonRet.difference ?? 0;
+      const nonRetDiffStr = `${nonRetDiff >= 0 ? '+' : ''}${nonRetDiff.toFixed(4)}`;
+      const nonRetCondPass = (nonRet.conditionPassRate ?? 0).toFixed(4);
+      const nonRetAPass = (nonRet.conditionAPassRate ?? 0).toFixed(4);
+      lines.push(
+        `| Condition ${cond} | Non-Retrieved (Negative Control) | ${nonRet.factPairs ?? 0} | ${nonRetCondPass} | ${nonRetAPass} | ${nonRetDiffStr} |`
+      );
+    }
+  }
+
+  for (const cond of ['C', 'C0'] as const) {
+    const condData = retrieval[cond];
+    if (!condData?.byFact) continue;
+    lines.push('', `### Condition ${cond} Per-Fact Retrieval Breakdown`, '');
+    lines.push('| Fact | Retrievable? | Retrieved Pairs | Cond Pass (Ret) | Cond A Pass (Ret) | Diff (Ret) | Non-Ret Pairs | Cond Pass (Non-Ret) | Cond A Pass (Non-Ret) | Diff (Non-Ret) |');
+    lines.push('|:---|:---:|---:|---:|---:|---:|---:|---:|---:|---:|');
+
+    const sortedFacts = Object.keys(condData.byFact).sort();
+    for (const fId of sortedFacts) {
+      const fData = condData.byFact[fId];
+      const r = fData?.retrieved;
+      const nr = fData?.nonRetrieved;
+      const isRet = (r?.factPairs ?? 0) > 0;
+
+      const rCondPass = (r?.factPairs ?? 0) > 0 && r?.conditionPassRate !== undefined ? r.conditionPassRate.toFixed(4) : '—';
+      const rAPass = (r?.factPairs ?? 0) > 0 && r?.conditionAPassRate !== undefined ? r.conditionAPassRate.toFixed(4) : '—';
+      const rDiff = (r?.factPairs ?? 0) > 0 && r?.difference !== undefined ? `${r.difference >= 0 ? '+' : ''}${r.difference.toFixed(4)}` : '—';
+
+      const nrCondPass = (nr?.factPairs ?? 0) > 0 && nr?.conditionPassRate !== undefined ? nr.conditionPassRate.toFixed(4) : '—';
+      const nrAPass = (nr?.factPairs ?? 0) > 0 && nr?.conditionAPassRate !== undefined ? nr.conditionAPassRate.toFixed(4) : '—';
+      const nrDiff = (nr?.factPairs ?? 0) > 0 && nr?.difference !== undefined ? `${nr.difference >= 0 ? '+' : ''}${nr.difference.toFixed(4)}` : '—';
+
+      lines.push(
+        `| ${fId} | ${isRet ? 'Yes' : 'No'} | ${r?.factPairs ?? 0} | ${rCondPass} | ${rAPass} | ${rDiff} | ${nr?.factPairs ?? 0} | ${nrCondPass} | ${nrAPass} | ${nrDiff} |`
+      );
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function formatRetrievalOverlapTable(overlap: any): string {
+  const lines = [
+    '### Overlap Distribution',
+    '',
+    '| Overlap Fraction | Count | Percentage |',
+    '|:---|---:|---:|',
+  ];
+  if (overlap?.histogram) {
+    for (const [bin, count] of Object.entries(overlap.histogram as Record<string, number>)) {
+      const pct = overlap.totalTasks ? ((count / overlap.totalTasks) * 100).toFixed(1) + '%' : '0%';
+      lines.push(`| ${bin} | ${count} | ${pct} |`);
+    }
+  }
+  lines.push('', `Mean bound fact overlap fraction: **${(overlap?.meanOverlapFraction ?? 0).toFixed(4)}**`, '');
+  lines.push('### Full vs Partial Overlap Subsets', '');
+  lines.push('| Subset | Task Count | Mean Bound Fact Fraction |');
+  lines.push('|:---|---:|---:|');
+  if (overlap?.fullOverlap) {
+    lines.push(`| Full Overlap (100%) | ${overlap.fullOverlap.n} | ${overlap.fullOverlap.meanBoundFactFraction.toFixed(4)} |`);
+  }
+  if (overlap?.partialOverlap) {
+    lines.push(`| Partial Overlap (<100%) | ${overlap.partialOverlap.n} | ${overlap.partialOverlap.meanBoundFactFraction.toFixed(4)} |`);
+  }
+  return lines.join('\n');
+}
+
+function formatLessonOriginTable(orig: any): string {
+  const lines = [
+    '| Subset | Task Count | C vs C0 Mean Diff [95% CI] | Sign-Flip p |',
+    '|:---|---:|:---:|---:|',
+  ];
+  if (orig?.distilledSubset) {
+    const d = orig.distilledSubset;
+    const diffStr = `${d.meanDifference >= 0 ? '+' : ''}${d.meanDifference.toFixed(4)}`;
+    const ciStr = `[${d.ci95[0].toFixed(4)}, ${d.ci95[1].toFixed(4)}]`;
+    lines.push(`| Distilled Subset (at least one distilled lesson) | ${d.n} | ${diffStr} ${ciStr} | ${d.signFlipPValue.toExponential(4)} |`);
+  }
+  if (orig?.allVerbatimSubset) {
+    const v = orig.allVerbatimSubset;
+    const diffStr = `${v.meanDifference >= 0 ? '+' : ''}${v.meanDifference.toFixed(4)}`;
+    const ciStr = `[${v.ci95[0].toFixed(4)}, ${v.ci95[1].toFixed(4)}]`;
+    lines.push(`| All-Verbatim Subset (internal negative control) | ${v.n} | ${diffStr} ${ciStr} | ${v.signFlipPValue.toExponential(4)} |`);
+  }
+  return lines.join('\n');
+}
+
+function formatFailuresByFactTable(failures: Record<string, Record<string, number>>): string {
+  const lines = [
+    '| Fact ID | Failures in A | Failures in B | Failures in C | Failures in C0 | Failures in D | Failures in E_B |',
+    '|:---|---:|---:|---:|---:|---:|---:|',
+  ];
+  const sortedFacts = Object.keys(failures).sort();
+  for (const fId of sortedFacts) {
+    const f = failures[fId] ?? {};
+    lines.push(
+      `| ${fId} | ${f.A ?? 0} | ${f.B ?? 0} | ${f.C ?? 0} | ${f.C0 ?? 0} | ${f.D ?? 0} | ${f.E_B ?? 0} |`
+    );
+  }
+  return lines.join('\n');
 }
 
 export function markdownReport(report: any): string {
@@ -897,51 +1415,37 @@ export function markdownReport(report: any): string {
     '',
     '## Conditions',
     '',
-    '| Condition | n | Mean bound fraction | Strict Pass@1 | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) | tableMissing | migrationExitNonZero | reusedFromCondition |',
-    '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|'
-  );
-  for (const condition of CONDITIONS) {
-    const row = report.analysis.conditions[condition];
-    const gs = row.generationStatus ?? { ok: row.n, empty: 0, length: 0, other: 0 };
-    lines.push(
-      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${row.strictBoundPassAt1.toFixed(4)} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} | ${row.tableMissing} | ${row.migrationExitNonZero} | ${row.reusedFromCondition} |`
-    );
-  }
-  lines.push(
+    formatConditionsTable(report.analysis.conditions),
     '',
     `> Note: ${report.generationIndependenceNote}`,
     '',
+    '## Clean Migration Per-Condition Table (migrationExitNonZero = false)',
+    '',
+    formatCleanMigrationTable(report.cleanMigrationAnalysis ?? report.analysis.cleanMigrationAnalysis),
+    '',
     '## Paired comparisons',
     '',
-    '```json',
-    JSON.stringify(
-      {
-        comparisons: report.analysis.comparisons,
-        holmPrimaryPValues: report.analysis.holmPrimaryPValues,
-        holmSecondaryPValues: report.analysis.holmSecondaryPValues,
-      },
-      null,
-      2
-    ),
-    '```',
-    '',
-    '## Sensitivity analysis (Exploratory — Outside Holm Family)',
-    '',
-    '```json',
-    JSON.stringify(report.sensitivityAnalysis, null, 2),
-    '```',
+    formatPairedComparisonsTable(report.analysis),
     '',
     '## Per-cell analysis (Exploratory — Outside Holm Family)',
     '',
-    '```json',
-    JSON.stringify(report.perCellAnalysis, null, 2),
-    '```',
+    formatPerCellTables(report.perCellAnalysis ?? report.analysis.perCellAnalysis, report.analysis.holmCellPValues),
+    '',
+    '## Feature cell intraclass correlation (ICC) — Condition A Baseline',
+    '',
+    formatCellICCTable(report.cellICC ?? report.analysis.cellICC),
+    '',
+    '## Sensitivity analysis: excluding H-001 to H-008 (n = 112)',
+    '',
+    formatSensitivityExcludingEarlyTable(report.sensitivityExcludingEarlyTasks ?? report.analysis.sensitivityExcludingEarlyTasks),
+    '',
+    '## Sensitivity analysis (Exploratory — Outside Holm Family)',
+    '',
+    formatSensitivityTable(report.sensitivityAnalysis ?? report.analysis.sensitivityAnalysis),
     '',
     '## Retrieval overlap',
     '',
-    '```json',
-    JSON.stringify(report.retrievalOverlap, null, 2),
-    '```',
+    formatRetrievalOverlapTable(report.retrievalOverlap),
     '',
     '## Lesson origin analysis (Exploratory — Outside Holm Family)',
     '',
@@ -949,7 +1453,7 @@ export function markdownReport(report: any): string {
     ''
   );
   if (report.lessonOriginAnalysis) {
-    lines.push('```json', JSON.stringify(report.lessonOriginAnalysis, null, 2), '```');
+    lines.push(formatLessonOriginTable(report.lessonOriginAnalysis));
   } else {
     lines.push('_Lesson origin analysis was skipped._');
   }
@@ -957,15 +1461,11 @@ export function markdownReport(report: any): string {
     '',
     '## Per-fact retrieval analysis (Exploratory — Negative Control on Non-Retrieved Pairs)',
     '',
-    '```json',
-    JSON.stringify(report.perFactRetrievalAnalysis, null, 2),
-    '```',
+    formatPerFactRetrievalTables(report.perFactRetrievalAnalysis),
     '',
     '## Failures by fact',
     '',
-    '```json',
-    JSON.stringify(report.failuresByFact, null, 2),
-    '```'
+    formatFailuresByFactTable(report.failuresByFact)
   );
   return lines.join('\n') + '\n';
 }
@@ -1053,6 +1553,9 @@ export function buildReport(
     warnings,
     generationIndependenceNote: analysis.generationIndependenceNote,
     analysis,
+    cellICC: analysis.cellICC,
+    sensitivityExcludingEarlyTasks: analysis.sensitivityExcludingEarlyTasks,
+    cleanMigrationAnalysis: analysis.cleanMigrationAnalysis,
     sensitivityAnalysis: analysis.sensitivityAnalysis,
     perCellAnalysis: analysis.perCellAnalysis,
     failuresByFact: failuresByFact(trials),

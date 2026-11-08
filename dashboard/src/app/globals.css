@@ -133,9 +133,10 @@ body {
 }
 
 .anatomy-section {
-  max-width: 1180px;
+  width: 100%;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 120px 28px 160px;
+  padding: 80px clamp(16px, 2.5vw, 40px) 140px;
   color: var(--color-text);
 }
 

@@ -1,598 +1,1647 @@
-@import "./kit/iso.css";
+/* =========================================================================
+   Axiom Anatomy v2 - Industrial Precision Technical Design System
+   Philosophy: wheresryan22/anatomy
+   - Zero "violet-blue gradient slop": Matches Axiom Core palette exactly.
+   - Full container utilization: No dead space on left/right.
+   - High-density cockpit telemetry: Log terminal capped at fixed height.
+   - Spaced mechanical buildings: Generous channels to see bus lines.
+   - Unique 3D mechanical hardware per building (knobs, fins, dials, silos).
+   - Floating names: Clean mechanical roofs, floating callouts on hover/active.
+   ========================================================================= */
 
-.iso.axiom-anatomy-root {
-  /* Dashboard palette mapped to kit --anatomy-* tokens on near-black #05060a */
-  --anatomy-page: #05060a;
-  --anatomy-card: #05060a;
-  --anatomy-paper: #05060a;
-  --anatomy-text: #cbd5e1;
-  --anatomy-strong: #f8fafc;
-  --anatomy-muted: #7c8ba1;
+:root {
+  --axm-bg: #05060a;
+  --axm-chassis: #090a0f;
+  --axm-panel: #0d1017;
+  --axm-border: #181d2a;
+  --axm-border-strong: #252e42;
+  --axm-text: #e8eaf2;
+  --axm-text-dim: #8b90a8;
+  --axm-text-muted: #55627a;
 
-  --anatomy-face: #101624;
-  --anatomy-top: #182134;
-  --anatomy-shade-0: #090d16;
-  --anatomy-shade-1: #0c121e;
-  --anatomy-shade-2: #101827;
-  --anatomy-shade-3: #141e30;
+  /* Axiom Core Functional State Tones */
+  --axm-gen: #a855f7;       /* Violet (Executor / Compute) */
+  --axm-ver: #22d3ee;       /* Cyan (Oracle Crucible / Retrieval) */
+  --axm-fail: #f43f5e;      /* Carmine (Verdict / Tripped Facts) */
+  --axm-adv: #fbbf24;       /* Amber (Advisor / Distillation) */
+  --axm-pass: #34d399;      /* Emerald (Lesson Store / Checkpoint) */
+  --axm-slate: #94a3b8;     /* Milled Slate (Task Bank / Rig Chassis) */
 
-  --anatomy-lit-top: #2e1d4a;
-  --anatomy-lit-shade: #1f1435;
-  --anatomy-lit: #c084fc;
-
-  --anatomy-hi: #e2e8f0;
-  --anatomy-mid: #8896ab;
-  --anatomy-lo: #4b596e;
-  --anatomy-faint: #293446;
-
-  --anatomy-halo: #020305;
-  --anatomy-halo-opacity: 0.85;
-  --anatomy-dot: #22d3ee;
-
-  --anatomy-red: #f43f5e;
-  --anatomy-green: #34d399;
-  --anatomy-blue: #22d3ee;
-  --anatomy-weight: 0.72px;
-
-  color: var(--anatomy-strong);
-  margin: 28px 0;
+  --axm-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --axm-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Geist", "Inter", sans-serif;
 }
 
-.iso.axiom-anatomy-root .iso-plate {
-  background:
-    radial-gradient(circle at 22% 18%, rgba(168, 85, 247, 0.11), transparent 46%),
-    radial-gradient(circle at 78% 24%, rgba(34, 211, 238, 0.09), transparent 48%),
-    radial-gradient(circle at 52% 76%, rgba(251, 191, 36, 0.06), transparent 52%),
-    #05060a;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 16px;
-  padding: 46px 22px 50px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+.axiom-anatomy-root {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  font-family: var(--axm-font-sans);
+  color: var(--axm-text);
+  background: var(--axm-bg);
+  border: 1px solid var(--axm-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.iso.axiom-anatomy-root .iso-plate-corners {
-  inset: 16px 22px;
+.mono {
+  font-family: var(--axm-font-mono);
 }
 
-.iso.axiom-anatomy-root .iso-plate-corner[data-corner="fig"] {
-  color: #a855f7;
-  font-weight: 600;
-}
-
-.iso.axiom-anatomy-root .iso-plate-corner[data-corner="title"] {
-  color: #94a3b8;
-}
-
-.iso.axiom-anatomy-root .iso-plate-corner[data-corner="hint"] {
-  color: #64748b;
-}
-
-.iso.axiom-anatomy-root .iso-plate-corner[data-corner="readout"] {
-  color: #22d3ee;
-}
-
-.iso.axiom-anatomy-root .iso-legend {
+/* ---------- Top Controls Toolbar ---------- */
+.axm-bar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px 20px;
-  margin-top: 14px;
-  padding: 0 4px;
-  font-family: var(--anatomy-mono);
-  font-size: 11.5px;
-  color: #94a3b8;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 20px;
+  background: var(--axm-chassis);
+  border-bottom: 1px solid var(--axm-border);
+  position: relative;
+  z-index: 10;
 }
 
-.iso.axiom-anatomy-root .iso-caption {
-  color: #cbd5e1;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+.axm-btn-group,
+.axm-chips-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* Interactive Toolbar */
-.axiom-anatomy {
+.axm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--axm-font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--axm-text);
+  background: var(--axm-panel);
+  border: 1px solid var(--axm-border-strong);
+  transition: all 0.18s ease;
+}
+
+.axm-btn:hover {
+  border-color: var(--axm-ver);
+  background: #121622;
+}
+
+.axm-btn.is-active,
+.axm-btn[data-running="true"] {
+  border-color: var(--axm-adv);
+  background: rgba(251, 191, 36, 0.12);
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+}
+
+.axm-btn kbd {
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  color: var(--axm-text-dim);
+  background: #050609;
+  border: 1px solid var(--axm-border);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.axm-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--axm-pass);
+  box-shadow: 0 0 8px var(--axm-pass);
+}
+
+.axm-btn[data-running="true"] .axm-dot {
+  background: var(--axm-fail);
+  box-shadow: 0 0 8px var(--axm-fail);
+}
+
+.axm-chip {
+  position: relative;
+  font-family: var(--axm-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 6px 11px;
+  border-radius: 5px;
+  color: var(--axm-text-dim);
+  background: #07090f;
+  border: 1px solid var(--axm-border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.axm-chip:hover {
+  color: var(--axm-text);
+  border-color: var(--axm-border-strong);
+}
+
+.axm-chip.is-active {
+  color: #fff;
+  border-color: var(--axm-ver);
+  background: rgba(34, 211, 238, 0.12);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.25);
+}
+
+.axm-chip.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  background: var(--axm-ver);
+  animation: axm-chip-fill 1.3s linear forwards;
+}
+
+@keyframes axm-chip-fill {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+/* ---------- 3-Column Cockpit Layout (Full Width, Zero Dead Space) ---------- */
+.axm-layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 320px;
+  gap: 20px;
+  align-items: start;
+  padding: 24px 26px;
+  background: var(--axm-bg);
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .axm-layout {
+    grid-template-columns: 1fr;
+  }
+  .axm-stage-container {
+    order: -1;
+  }
+}
+
+.axm-side-col {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.axiom-anatomy__toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 8px 10px;
-  background: rgba(11, 15, 25, 0.88);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 10px;
-}
-
-.axiom-anatomy__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.axiom-anatomy__btn {
-  appearance: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--anatomy-mono);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  color: #e2e8f0;
-  background: rgba(24, 32, 50, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.28);
+.axm-card {
+  background: var(--axm-chassis);
+  border: 1px solid var(--axm-border);
   border-radius: 7px;
-  padding: 6px 12px;
-  cursor: pointer;
-  transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+  padding: 12px 14px;
 }
 
-.axiom-anatomy__btn:hover,
-.axiom-anatomy__btn:focus-visible {
-  border-color: #22d3ee;
-  background: rgba(34, 211, 238, 0.14);
-  color: #ffffff;
-  outline: none;
-}
-
-.axiom-anatomy__btn[aria-pressed="true"] {
-  border-color: #a855f7;
-  background: rgba(168, 85, 247, 0.2);
-  color: #f3e8ff;
-}
-
-.axiom-anatomy__btn--primary {
-  border-color: rgba(168, 85, 247, 0.6);
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.26), rgba(34, 211, 238, 0.18));
-  color: #f8fafc;
-}
-
-.axiom-anatomy__btn--primary:hover,
-.axiom-anatomy__btn--primary:focus-visible {
-  border-color: #c084fc;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.38), rgba(34, 211, 238, 0.26));
-}
-
-.axiom-anatomy__btn-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #34d399;
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.85);
-}
-
-.axiom-anatomy__phases {
+.axm-card-label {
+  font-family: var(--axm-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--axm-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 7px;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* =========================================================================
+   INDIVIDUAL UNIQUE CARD STYLES (Anatomy Side Panels)
+   ========================================================================= */
+
+/* ----- Card 1: TRIAL · VERIFIED RUN (Unique Blueprint Odometer) ----- */
+.axm-trial-card {
+  background: linear-gradient(180deg, #070914 0%, #04050a 100%);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  box-shadow: inset 0 0 16px rgba(34, 211, 238, 0.05), 0 4px 16px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.axm-badge-nominal {
+  font-size: 8px;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  padding: 1px 6px;
+  border-radius: 99px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.axm-counter {
+  font-family: var(--axm-font-mono);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  color: #f0fdfa;
+  text-shadow: none;
+}
+
+.axm-counter small {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--axm-text-muted);
+  text-shadow: none;
+}
+
+.axm-trial-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8.5px;
+  color: var(--axm-text-muted);
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.axm-trial-tag {
+  color: #22d3ee;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ----- Card 2: CONDITIONS ABLATION (Unique Logic Analyzer Style) ----- */
+.axm-cond-card {
+  background: linear-gradient(180deg, #090c1a 0%, #060810 100%);
+  border: 1px solid rgba(168, 85, 247, 0.24);
+  box-shadow: inset 0 0 16px rgba(168, 85, 247, 0.05), 0 4px 16px rgba(0, 0, 0, 0.5);
+}
+
+.axm-cond-pill {
+  font-size: 8px;
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+  background: rgba(168, 85, 247, 0.12);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.axm-cond-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.axm-cond-row {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 8px;
+  align-items: center;
+  font-family: var(--axm-font-mono);
+  font-size: 10.5px;
+  color: var(--axm-text-dim);
+  margin: 3.5px 0;
+}
+
+.axm-cond-key {
+  font-weight: 700;
+}
+
+.axm-cond-bar {
+  display: block;
+  height: 5px;
+  background: #0f1320;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.axm-cond-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  transition: width 0.4s ease, background 0.3s;
+}
+
+.axm-cond-row.is-active {
+  color: var(--axm-text);
+  font-weight: 600;
+}
+
+/* Segmented Latency Step-Blocks matching reference Image */
+.axm-latency-module {
+  margin-top: 9px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.axm-spark-head {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--axm-font-mono);
+  font-size: 9.5px;
+  color: var(--axm-text-muted);
+  margin-bottom: 4px;
+}
+
+.axm-lat-badge {
+  color: #22d3ee;
+  font-weight: 600;
+}
+
+.axm-lat-segments {
+  display: flex;
+  gap: 2.5px;
+  height: 12px;
+  margin-top: 3px;
+}
+
+.lat-seg {
+  flex: 1;
+  border-radius: 1px;
+}
+
+.lat-seg.seg-1 { background: #182030; }
+.lat-seg.seg-2 { background: #182030; }
+.lat-seg.seg-3 { background: #0369a1; }
+.lat-seg.seg-4 { background: #0284c7; }
+.lat-seg.seg-5 { background: #06b6d4; }
+.lat-seg.seg-6 { background: #22d3ee; box-shadow: 0 0 5px rgba(34, 211, 238, 0.7); }
+.lat-seg.seg-7 { background: #c084fc; }
+.lat-seg.seg-8 { background: #e879f9; box-shadow: 0 0 7px rgba(232, 121, 249, 0.75); }
+
+/* ----- Card 3: BENCH RIG SPECS (Unique Technical Specification Plate) ----- */
+.axm-bench-card {
+  background: linear-gradient(180deg, #090b10 0%, #06070a 100%);
+  border: 1px dashed rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 0 14px rgba(255, 255, 255, 0.02), 0 4px 16px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.axm-model-tag {
+  font-size: 8px;
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.axm-kv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  color: var(--axm-text-dim);
+  margin: 5px 0;
+}
+
+.axm-kv-row b {
+  color: var(--axm-text);
+  font-weight: 600;
+}
+
+/* ----- Card 4: SIMULATED EXECUTION STREAM (Unique Phosphor CRT Scope) ----- */
+.axm-stream-card {
+  background: #030407;
+  border: 1px solid rgba(251, 191, 36, 0.28);
+  box-shadow: inset 0 0 16px rgba(251, 191, 36, 0.04), 0 4px 16px rgba(0, 0, 0, 0.6);
+  min-height: 140px;
+  max-height: 155px;
+  display: flex;
+  flex-direction: column;
+}
+
+.axm-live-beacon {
+  color: #34d399;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  animation: axm-beacon-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes axm-beacon-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.axm-stream-log {
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  line-height: 1.55;
+  flex: 1;
+  height: 105px;
+  max-height: 105px;
+  overflow-y: auto;
+  color: #fbbf24;
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(251, 191, 36, 0.3) transparent;
+  padding-right: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.axm-stream-log::-webkit-scrollbar {
+  width: 3px;
+}
+.axm-stream-log::-webkit-scrollbar-thumb {
+  background: rgba(251, 191, 36, 0.35);
+  border-radius: 2px;
+}
+
+.axm-stream-log div {
+  padding: 1px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.axm-stream-log .log-pass { color: #34d399; }
+.axm-stream-log .log-fail { color: #f43f5e; }
+.axm-stream-log .log-info { color: #22d3ee; }
+.axm-stream-log .log-warn { color: #fbbf24; }
+
+/* ----- Card 5: EVIDENCE MATRIX // 720 TRIALS (Unique Silicon Micro-Registers) ----- */
+.axm-matrix-card {
+  background: linear-gradient(180deg, #050711 0%, #030408 100%);
+  border: 1px solid rgba(34, 211, 238, 0.22);
+  box-shadow: inset 0 0 16px rgba(34, 211, 238, 0.04), 0 4px 16px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.axm-matrix-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #020306;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  padding: 5px 6px;
+}
+
+.axm-matrix-row {
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  gap: 5px;
+  align-items: center;
+}
+
+.axm-matrix-row-key {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--axm-text-muted);
+  text-align: right;
+  font-family: var(--axm-font-mono);
+}
+
+.axm-matrix-row.is-active-row .axm-matrix-row-key {
+  color: #22d3ee;
+}
+
+.axm-matrix-cells {
+  display: flex;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.axm-matrix-cell {
+  width: 5.5px;
+  height: 6.5px;
+  border-radius: 1px;
+  background: #11141e;
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.axm-matrix-cell.cell-pass {
+  background: #22d3ee;
+  box-shadow: 0 0 2px rgba(34, 211, 238, 0.35);
+}
+
+.axm-matrix-cell.cell-fail {
+  background: #d946ef;
+  box-shadow: 0 0 2px rgba(217, 70, 239, 0.35);
+}
+
+/* Pulsating micro-cells: Light up only, no darkening, strict color fidelity */
+.axm-matrix-cell.is-pulse {
+  will-change: filter, background-color;
+  transform: translateZ(0);
+}
+.axm-matrix-cell.cell-pass.is-pulse {
+  animation: axm-pulse-pass 4.2s ease-in-out infinite;
+}
+.axm-matrix-cell.cell-fail.is-pulse {
+  animation: axm-pulse-fail 4.2s ease-in-out infinite;
+}
+
+.axm-matrix-cell.is-pulse-d0 { animation-delay: 0s; }
+.axm-matrix-cell.is-pulse-d1 { animation-delay: -0.7s; }
+.axm-matrix-cell.is-pulse-d2 { animation-delay: -1.4s; }
+.axm-matrix-cell.is-pulse-d3 { animation-delay: -2.1s; }
+.axm-matrix-cell.is-pulse-d4 { animation-delay: -2.8s; }
+.axm-matrix-cell.is-pulse-d5 { animation-delay: -3.5s; }
+
+@keyframes axm-pulse-pass {
+  0%, 100% {
+    background: #22d3ee;
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 2px rgba(34, 211, 238, 0.35));
+  }
+  50% {
+    background: #67e8f9;
+    opacity: 1;
+    filter: brightness(1.35) drop-shadow(0 0 4px #22d3ee) drop-shadow(0 0 7px rgba(34, 211, 238, 0.85));
+  }
+}
+
+@keyframes axm-pulse-fail {
+  0%, 100% {
+    background: #d946ef;
+    opacity: 1;
+    filter: brightness(1) drop-shadow(0 0 2px rgba(217, 70, 239, 0.35));
+  }
+  50% {
+    background: #f0abfc;
+    opacity: 1;
+    filter: brightness(1.35) drop-shadow(0 0 4px #d946ef) drop-shadow(0 0 7px rgba(217, 70, 239, 0.85));
+  }
+}
+
+.axm-matrix-cell.is-running {
+  background: #ffffff !important;
+  box-shadow: 0 0 6px #ffffff, 0 0 10px #22d3ee !important;
+  animation: axm-cell-glow 0.8s ease-in-out infinite alternate;
+  transform: scale(1.2);
+}
+
+@keyframes axm-cell-glow {
+  from { opacity: 0.6; }
+  to { opacity: 1; }
+}
+
+.axm-matrix-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 8.5px;
+  color: var(--axm-text-dim);
+  font-family: var(--axm-font-mono);
+  padding-top: 1px;
+}
+
+.leg-item {
+  display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
-.axiom-anatomy__phase-pill {
-  appearance: none;
-  font-family: var(--anatomy-mono);
-  font-size: 10.5px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #94a3b8;
-  background: rgba(11, 15, 26, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  border-radius: 999px;
-  padding: 3px 9px;
-  cursor: pointer;
-  transition: all 120ms ease;
+.leg-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 1px;
 }
 
-.axiom-anatomy__phase-pill:hover,
-.axiom-anatomy__phase-pill:focus-visible {
-  color: #f8fafc;
-  border-color: rgba(226, 232, 240, 0.45);
-  outline: none;
+.dot-pass { background: #22d3ee; box-shadow: 0 0 4px #22d3ee; }
+.dot-fail { background: #d946ef; box-shadow: 0 0 4px #d946ef; }
+.dot-pending { background: #11141e; }
+
+/* ----- Card 6: HARMONIC FREQUENCY SPECTRUM (Tactical Frequency Scope) ----- */
+.axm-freq-card {
+  background: linear-gradient(180deg, #070914 0%, #04050a 100%);
+  border: 1px solid rgba(52, 211, 153, 0.24);
+  box-shadow: inset 0 0 16px rgba(52, 211, 153, 0.04), 0 4px 16px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.axiom-anatomy__phase-pill[data-active="true"][data-accent="violet"] {
-  color: #f3e8ff;
-  border-color: #a855f7;
-  background: rgba(168, 85, 247, 0.26);
-}
-.axiom-anatomy__phase-pill[data-active="true"][data-accent="cyan"] {
-  color: #ecfeff;
-  border-color: #22d3ee;
-  background: rgba(34, 211, 238, 0.24);
-}
-.axiom-anatomy__phase-pill[data-active="true"][data-accent="rose"] {
-  color: #ffe4e6;
-  border-color: #f43f5e;
-  background: rgba(244, 63, 94, 0.26);
-}
-.axiom-anatomy__phase-pill[data-active="true"][data-accent="amber"] {
-  color: #fef3c7;
-  border-color: #fbbf24;
-  background: rgba(251, 191, 36, 0.24);
-}
-.axiom-anatomy__phase-pill[data-active="true"][data-accent="emerald"] {
-  color: #d1fae5;
-  border-color: #34d399;
-  background: rgba(52, 211, 153, 0.24);
-}
-
-/* Stage wrapper */
-.axiom-anatomy__stage-wrap {
+.axm-spectrogram-strip {
+  height: 5px;
+  border-radius: 2.5px;
   position: relative;
-  border-radius: 12px;
-  background:
-    radial-gradient(ellipse at 50% 52%, rgba(34, 211, 238, 0.07), rgba(168, 85, 247, 0.04) 42%, transparent 72%),
-    #05060a;
-  border: 1px solid rgba(148, 163, 184, 0.14);
-  padding: 4px 6px;
-  outline: none;
+  overflow: hidden;
+  background: linear-gradient(
+    90deg,
+    #06b6d4 0%,
+    #34d399 25%,
+    #fbbf24 50%,
+    #f43f5e 75%,
+    #a855f7 100%
+  );
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.3);
 }
 
-.axiom-anatomy__stage-wrap:focus-visible {
-  border-color: #22d3ee;
-  box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.25);
+.axm-spectro-cursor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 1px;
+  background: #ffffff;
+  box-shadow: 0 0 6px #ffffff;
+  transform: translateX(-50%);
+  transition: left 0.4s ease;
 }
 
-/* Station Hit Area & Accent Variables per Station mapped to --anatomy-lit-* */
-.axiom-anatomy__hit {
-  fill: rgba(0, 0, 0, 0.001);
-  stroke: none;
-  pointer-events: all;
-  cursor: pointer;
+.axm-freq-rack {
+  display: flex;
+  justify-content: space-between;
+  gap: 2px;
+  height: 44px;
+  padding: 3px 5px;
+  background: #030408;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  align-items: flex-end;
 }
 
-.axiom-anatomy__station {
-  cursor: pointer;
-  outline: none;
-}
-
-.axiom-anatomy__station[data-accent="violet"] {
-  --anatomy-lit-top: #2d1948;
-  --anatomy-lit-shade: #1e1133;
-  --anatomy-lit: #a855f7;
-}
-
-.axiom-anatomy__station[data-accent="cyan"] {
-  --anatomy-lit-top: #0f313d;
-  --anatomy-lit-shade: #0a222b;
-  --anatomy-lit: #22d3ee;
-}
-
-.axiom-anatomy__station[data-accent="amber"] {
-  --anatomy-lit-top: #382a10;
-  --anatomy-lit-shade: #261c0b;
-  --anatomy-lit: #fbbf24;
-}
-
-.axiom-anatomy__station[data-accent="rose"] {
-  --anatomy-lit-top: #3b1523;
-  --anatomy-lit-shade: #280e18;
-  --anatomy-lit: #f43f5e;
-}
-
-.axiom-anatomy__station[data-accent="emerald"] {
-  --anatomy-lit-top: #0f3328;
-  --anatomy-lit-shade: #0a231b;
-  --anatomy-lit: #34d399;
-}
-
-/* Selected / Hovered Station Highlighting */
-.axiom-anatomy__station[data-selected="true"] .iso-edge {
-  stroke-width: 1.05px;
-}
-
-.axiom-anatomy__station[data-selected="true"][data-accent="violet"] {
-  --anatomy-top: #26173e;
-  --anatomy-lit-top: #462373;
-  --anatomy-lit-shade: #301750;
-  --anatomy-lit: #d8b4fe;
-  --anatomy-hi: #f3e8ff;
-}
-
-.axiom-anatomy__station[data-selected="true"][data-accent="cyan"] {
-  --anatomy-top: #112b38;
-  --anatomy-lit-top: #154c5e;
-  --anatomy-lit-shade: #0e3542;
-  --anatomy-lit: #67e8f9;
-  --anatomy-hi: #ecfeff;
-}
-
-.axiom-anatomy__station[data-selected="true"][data-accent="amber"] {
-  --anatomy-top: #302410;
-  --anatomy-lit-top: #574014;
-  --anatomy-lit-shade: #3b2b0d;
-  --anatomy-lit: #fde68a;
-  --anatomy-hi: #fef3c7;
-}
-
-.axiom-anatomy__station[data-selected="true"][data-accent="rose"] {
-  --anatomy-top: #331420;
-  --anatomy-lit-top: #5c1d33;
-  --anatomy-lit-shade: #3f1323;
-  --anatomy-lit: #fda4af;
-  --anatomy-hi: #ffe4e6;
-}
-
-.axiom-anatomy__station[data-selected="true"][data-accent="emerald"] {
-  --anatomy-top: #112d24;
-  --anatomy-lit-top: #164f3d;
-  --anatomy-lit-shade: #0f372a;
-  --anatomy-lit: #6ee7b7;
-  --anatomy-hi: #d1fae5;
-}
-
-/* Moving trial blank tone mapping */
-.axiom-anatomy__trial-layer[data-tone="violet"] {
-  --anatomy-lit-top: #4c247d;
-  --anatomy-lit-shade: #341857;
-  --anatomy-lit: #d8b4fe;
-}
-.axiom-anatomy__trial-layer[data-tone="cyan"] {
-  --anatomy-lit-top: #145369;
-  --anatomy-lit-shade: #0d3948;
-  --anatomy-lit: #67e8f9;
-}
-.axiom-anatomy__trial-layer[data-tone="rose"] {
-  --anatomy-lit-top: #691e38;
-  --anatomy-lit-shade: #471426;
-  --anatomy-lit: #fda4af;
-}
-.axiom-anatomy__trial-layer[data-tone="amber"] {
-  --anatomy-lit-top: #634814;
-  --anatomy-lit-shade: #45320d;
-  --anatomy-lit: #fde68a;
-}
-.axiom-anatomy__trial-layer[data-tone="emerald"] {
-  --anatomy-lit-top: #165944;
-  --anatomy-lit-shade: #0e3d2e;
-  --anatomy-lit: #6ee7b7;
-}
-
-/* Station Readout Card & Inspector */
-.axiom-anatomy__inspector {
+.axm-freq-col {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: rgba(11, 15, 26, 0.92);
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  align-items: center;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
 }
 
-.axiom-anatomy__inspector[data-accent="violet"] {
-  border-left: 3px solid #a855f7;
-}
-.axiom-anatomy__inspector[data-accent="cyan"] {
-  border-left: 3px solid #22d3ee;
-}
-.axiom-anatomy__inspector[data-accent="amber"] {
-  border-left: 3px solid #fbbf24;
-}
-.axiom-anatomy__inspector[data-accent="rose"] {
-  border-left: 3px solid #f43f5e;
-}
-.axiom-anatomy__inspector[data-accent="emerald"] {
-  border-left: 3px solid #34d399;
-}
-
-.axiom-anatomy__readout-main {
+.axm-freq-meter {
+  flex: 1;
+  width: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+  gap: 1px;
+}
+
+.axm-freq-seg {
+  width: 100%;
+  height: 2.5px;
+  border-radius: 0.5px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.15s;
+}
+
+.axm-freq-seg.is-lit.seg-low { background: #22d3ee; box-shadow: 0 0 3px rgba(34, 211, 238, 0.6); }
+.axm-freq-seg.is-lit.seg-mid { background: #fbbf24; box-shadow: 0 0 3px rgba(251, 191, 36, 0.6); }
+.axm-freq-seg.is-lit.seg-peak { background: #f43f5e; box-shadow: 0 0 4px rgba(244, 63, 94, 0.8); }
+
+.axm-freq-lbl {
+  font-size: 6.5px;
+  color: var(--axm-text-muted);
+  margin-top: 2px;
+  line-height: 1;
+  transform: scale(0.9);
+}
+
+/* ----- Card 7: FAILED FACTS PROBE (Containment Safety Interlock) ----- */
+.axm-facts-card {
+  background: linear-gradient(180deg, #090a10 0%, #050609 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.axm-facts-card.is-alert {
+  border-color: rgba(244, 63, 94, 0.6);
+  box-shadow: inset 0 0 16px rgba(244, 63, 94, 0.16), 0 0 14px rgba(244, 63, 94, 0.22);
+  animation: axm-facts-strobe 1.8s ease-in-out infinite alternate;
+}
+
+@keyframes axm-facts-strobe {
+  0% { border-color: rgba(244, 63, 94, 0.4); }
+  100% { border-color: rgba(244, 63, 94, 0.9); box-shadow: inset 0 0 20px rgba(244, 63, 94, 0.24), 0 0 18px rgba(244, 63, 94, 0.3); }
+}
+
+.axm-facts-alert-tag {
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
+
+.axm-facts-secure-tag {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 7.5px;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.axm-facts-rack {
+  display: flex;
   gap: 6px;
-}
-
-.axiom-anatomy__readout-header {
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
+  min-height: 22px;
+}
+
+.axm-facts-nominal-msg {
+  font-size: 9.5px;
+  color: var(--axm-text-muted);
+  font-family: var(--axm-font-mono);
+}
+
+.axm-fact-tag {
+  font-family: var(--axm-font-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #f43f5e;
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  padding: 1px 6px;
+  border-radius: 3px;
+  box-shadow: 0 0 6px rgba(244, 63, 94, 0.3);
+}
+
+
+
+/* ---------- 3D Isometric Stage Container (Expanded & Deep Space Celestial Atmosphere) ---------- */
+.axm-stage-container {
+  background: radial-gradient(ellipse at 50% 50%, #0d1326 0%, #060914 55%, #020306 100%);
+  border: 1px solid var(--axm-border);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+  min-height: 680px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.95);
+}
+
+/* Celestial Starfield & Orbit Rings */
+.axm-starfield {
+  pointer-events: none;
+}
+
+.axm-twinkle-star {
+  animation: axm-twinkle 3.2s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+@keyframes axm-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+.axm-diamond-star {
+  animation: axm-shimmer 4s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+@keyframes axm-shimmer {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; filter: drop-shadow(0 0 5px #c7d2fe); }
+}
+
+.axm-outer-rings text {
+  user-select: none;
+}
+
+/* Axiom Blueprint Floor Grid */
+.axm-stage-container::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 50%, transparent 90%);
+  mask-image: radial-gradient(ellipse at center, #000 50%, transparent 90%);
+}
+
+.axm-svg-board {
+  display: block;
+  width: 100%;
+  height: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Isometric Building Blocks */
+.axm-building {
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+  outline: none;
+}
+
+/* Volumetric Physical Elevation when active or hovered (Boxes grow, not text!) */
+.axm-building:hover {
+  transform: translateY(-8px);
+}
+
+.axm-building.is-active,
+.axm-building.is-selected {
+  transform: translateY(-16px);
+}
+
+.axm-building.is-active .axm-roof,
+.axm-building.is-selected .axm-roof {
+  fill-opacity: 0.32 !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 16px var(--building-color));
+}
+
+.axm-building.is-input .axm-roof {
+  fill-opacity: 0.22 !important;
+  filter: drop-shadow(0 0 9px var(--building-color));
+}
+
+/* Explode view separates along building index normal */
+.axm-svg-board.is-exploded .axm-building {
+  transform: translateY(calc(var(--building-idx, 1) * -7px));
+}
+
+/* Cables and Wire Tracks Running in Open Channels */
+.axm-bus-track {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.45;
+  transition: opacity 0.3s;
+}
+
+.axm-bus-track.is-active {
+  opacity: 1;
+  stroke-width: 3;
+  stroke-dasharray: 6 7;
+  animation: axm-flow 0.85s linear infinite;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+@keyframes axm-flow {
+  to {
+    stroke-dashoffset: -26;
+  }
+}
+
+/* Floating Name Callout Badges */
+.axm-floating-callout {
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.axm-floating-callout.is-idle {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.axm-floating-callout.is-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.axm-callout-card {
+  fill: rgba(8, 10, 16, 0.94);
+  stroke-width: 1.2;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.8));
+}
+
+.axm-callout-tether {
+  stroke-width: 1.2;
+  stroke-dasharray: 3 3;
+}
+
+/* Bottom Inspection Bar */
+.axm-info-deck {
+  padding: 16px 20px;
+  border-top: 1px solid var(--axm-border);
+  background: var(--axm-chassis);
+}
+
+.axm-info-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.axm-info-id {
+  font-family: var(--axm-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.axm-info-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.axm-info-tag {
+  font-family: var(--axm-font-mono);
+  font-size: 11px;
+  color: var(--axm-text-dim);
+  background: var(--axm-panel);
+  border: 1px solid var(--axm-border);
+  padding: 3px 8px;
+  border-radius: 4px;
+}
+
+.axm-info-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--axm-text-dim);
+}
+
+/* =========================================================================
+   AXIOM ARCHITECTURAL PIPELINE BREAKDOWN (Directly Inspired by Image 2 & 3)
+   ========================================================================= */
+
+.axm-pipeline-card {
+  margin-top: 36px;
+  background: radial-gradient(ellipse at 50% 50%, #0c1228 0%, #060814 60%, #020308 100%);
+  border: 1px solid rgba(160, 170, 255, 0.2);
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 16px 54px rgba(0, 0, 0, 0.7), inset 0 0 40px rgba(34, 211, 238, 0.04);
+  position: relative;
+  overflow: hidden;
+}
+
+.axm-pipeline-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(160, 170, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(160, 170, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+  pointer-events: none;
+}
+
+.axm-pipeline-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(160, 170, 255, 0.12);
+  padding-bottom: 14px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 2;
+}
+
+.axm-pipe-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--axm-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--axm-text-muted);
+}
+
+.axm-pipe-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 8px #22d3ee;
+}
+
+.axm-pipe-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--axm-text-dim);
+}
+
+.axm-pipe-status b {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  padding: 2px 7px;
+  border-radius: 3px;
+}
+
+/* 3-Box Flow Grid */
+.axm-pipe-flow {
+  display: grid;
+  grid-template-columns: 1fr 60px 220px 60px 1.4fr;
+  align-items: center;
+  gap: 0;
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 1100px) {
+  .axm-pipe-flow {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .axm-pipe-bus {
+    display: none;
+  }
+}
+
+/* Common Pipe Box */
+.axm-pipe-box {
+  background: rgba(8, 11, 20, 0.85);
+  border: 1px solid rgba(160, 170, 255, 0.18);
+  border-radius: 10px;
+  padding: 18px 20px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Box 01: Ingress */
+.axm-box-ingress {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: inset 0 0 20px rgba(168, 85, 247, 0.05), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.axm-pipe-chip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--axm-font-mono);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: #c084fc;
+}
+
+.axm-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #a855f7;
+  box-shadow: 0 0 8px #a855f7;
+}
+
+.axm-pipe-label {
+  font-family: var(--axm-font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--axm-text-muted);
+}
+
+.axm-pipe-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #fff;
+}
+
+.axm-pipe-desc {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--axm-text-dim);
+}
+
+.axm-pipe-codeblock {
+  background: #030408;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.axm-code-comment {
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.axm-code-line {
+  display: flex;
+  gap: 6px;
+  color: var(--axm-text-dim);
+}
+
+.tok-str { color: #34d399; font-weight: 500; }
+.tok-val { color: #22d3ee; font-weight: 500; }
+.tok-key { color: #fbbf24; font-weight: 500; }
+
+.axm-pipe-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--axm-font-mono);
+  font-size: 10px;
+  color: #34d399;
+  padding-top: 4px;
+}
+
+.axm-check-icon {
+  font-weight: 700;
+}
+
+/* Connecting Dotted Signal Bus Line */
+.axm-pipe-bus {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  height: 100%;
+}
+
+.axm-bus-line {
+  width: 100%;
+  height: 2px;
+  border-top: 2px dotted rgba(34, 211, 238, 0.45);
+  position: relative;
+}
+
+.axm-bus-pulse {
+  position: absolute;
+  top: -4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee, 0 0 18px rgba(34, 211, 238, 0.9);
+  animation: axm-bus-flow 2.4s ease-in-out infinite;
+}
+
+.axm-bus-pulse.pulse-2 {
+  animation-delay: 1.2s;
+}
+
+@keyframes axm-bus-flow {
+  0% { left: 0%; opacity: 0; transform: scale(0.6); }
+  25% { opacity: 1; transform: scale(1.2); }
+  75% { opacity: 1; transform: scale(1.2); }
+  100% { left: 100%; opacity: 0; transform: scale(0.6); }
+}
+
+/* BOX 02: Policy Decision Point (Center Diamond Hub) */
+.axm-pipe-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.axm-diamond-hub {
+  width: 124px;
+  height: 124px;
+  margin: 22px 0 24px 0; /* Clear 45-deg rotated corners top and bottom so it never overlaps label */
+  transform: rotate(45deg);
+  background: radial-gradient(circle at center, #0e1e38 0%, #050a16 70%, #020409 100%);
+  border: 1.8px solid #22d3ee;
+  border-radius: 12px;
+  box-shadow: 0 0 28px rgba(34, 211, 238, 0.35), inset 0 0 20px rgba(34, 211, 238, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.axm-diamond-hub:hover {
+  box-shadow: 0 0 40px rgba(34, 211, 238, 0.55), inset 0 0 25px rgba(34, 211, 238, 0.3);
+  transform: rotate(45deg) scale(1.04);
+}
+
+.axm-diamond-inner {
+  transform: rotate(-45deg);
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.axm-diamond-content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.axm-diamond-icon {
+  font-size: 16px;
+  color: #22d3ee;
+  filter: drop-shadow(0 0 6px #22d3ee);
+  margin-bottom: 2px;
+}
+
+.axm-diamond-sub {
+  font-family: var(--axm-font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.axm-diamond-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+
+.axm-diamond-desc {
+  font-family: var(--axm-font-mono);
+  font-size: 7px;
+  color: var(--axm-text-muted);
+  line-height: 1.2;
+  margin-top: 2px;
+}
+
+.axm-diamond-label {
+  font-family: var(--axm-font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: var(--axm-text-muted);
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.25);
+  padding: 3px 8px;
+  border-radius: 99px;
+  margin-top: 4px;
+}
+
+/* Box 03: 3-Tier Execution Stack */
+.axm-box-execution {
+  border-color: rgba(34, 211, 238, 0.25);
   gap: 8px;
 }
 
-.axiom-anatomy__station-num {
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 700;
-  color: #22d3ee;
-  background: rgba(34, 211, 238, 0.12);
-  border: 1px solid rgba(34, 211, 238, 0.32);
-  border-radius: 5px;
-  padding: 2px 6px;
-}
-
-.axiom-anatomy__station-title {
-  margin: 0;
-  font-family: var(--anatomy-mono);
-  font-size: 14px;
-  font-weight: 600;
-  color: #f8fafc;
-}
-
-.axiom-anatomy__station-badge {
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  color: #cbd5e1;
-  background: rgba(30, 41, 59, 0.85);
-  border: 1px solid rgba(148, 163, 184, 0.26);
-  border-radius: 5px;
-  padding: 2px 7px;
-}
-
-.axiom-anatomy__trial-badge {
-  margin-left: auto;
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 2px 9px;
-  border: 1px solid rgba(168, 85, 247, 0.45);
-  color: #e9d5ff;
-  background: rgba(168, 85, 247, 0.16);
-}
-
-.axiom-anatomy__station-role {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: #e2e8f0;
-}
-
-.axiom-anatomy__trial-summary {
-  margin: 0;
-  font-family: var(--anatomy-mono);
-  font-size: 11.5px;
-  line-height: 1.45;
-  color: #94a3b8;
-}
-
-/* 9-Station Selector Strip */
-.axiom-anatomy__station-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
-  gap: 6px;
-}
-
-.axiom-anatomy__station-chip {
-  appearance: none;
+.axm-pipe-exec-head {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  text-align: left;
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  color: #94a3b8;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  border-radius: 6px;
-  padding: 5px 8px;
-  cursor: pointer;
-  transition: all 120ms ease;
+  margin-bottom: 2px;
 }
 
-.axiom-anatomy__station-chip:hover,
-.axiom-anatomy__station-chip:focus-visible {
-  color: #f8fafc;
-  border-color: rgba(226, 232, 240, 0.38);
-  outline: none;
+.axm-exec-sub {
+  font-family: var(--axm-font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  color: #38bdf8;
 }
 
-.axiom-anatomy__station-chip[data-active="true"] {
-  color: #f8fafc;
-  background: rgba(30, 41, 59, 0.95);
-  border-color: #22d3ee;
-}
-
-.axiom-anatomy__chip-num {
-  color: #64748b;
-  font-weight: 600;
-}
-
-.axiom-anatomy__station-chip[data-active="true"] .axiom-anatomy__chip-num {
-  color: #22d3ee;
-}
-
-.axiom-anatomy__chip-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* 6-Condition Summary Bar */
-.axiom-anatomy__conditions-bar {
+.axm-tiers-stack {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(148, 163, 184, 0.14);
+  gap: 7px;
 }
 
-.axiom-anatomy__conditions-title {
-  font-family: var(--anatomy-mono);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: #94a3b8;
-}
-
-.axiom-anatomy__conditions-list {
+.axm-tier-card {
+  background: #04050a;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  padding: 9px 12px;
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 3px;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
-.axiom-anatomy__condition-tag {
-  font-family: var(--anatomy-mono);
+.axm-tier-card:hover {
+  transform: translateX(4px);
+}
+
+.axm-tier-card.tier-1 {
+  border-color: rgba(52, 211, 153, 0.35);
+  box-shadow: inset 0 0 14px rgba(52, 211, 153, 0.05);
+}
+
+.axm-tier-card.tier-2 {
+  border-color: rgba(56, 189, 248, 0.35);
+  box-shadow: inset 0 0 14px rgba(56, 189, 248, 0.05);
+}
+
+.axm-tier-card.tier-3 {
+  border-color: rgba(192, 132, 252, 0.35);
+  box-shadow: inset 0 0 14px rgba(192, 132, 252, 0.05);
+}
+
+.axm-tier-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.axm-tier-head b {
+  font-size: 11px;
+  color: #ffffff;
+}
+
+.axm-tier-card.tier-1 .axm-tier-head b { color: #34d399; }
+.axm-tier-card.tier-2 .axm-tier-head b { color: #38bdf8; }
+.axm-tier-card.tier-3 .axm-tier-head b { color: #c084fc; }
+
+.axm-tier-metric {
+  font-family: var(--axm-font-mono);
+  font-size: 8.5px;
+  color: var(--axm-text-muted);
+}
+
+.axm-tier-card p {
+  margin: 0;
+  font-size: 10px;
+  line-height: 1.45;
+  color: var(--axm-text-dim);
+}
+
+/* =========================================================================
+   9-SUBSYSTEM ARCHITECTURAL BREAKDOWN GRID (Replacing Plain Text)
+   ========================================================================= */
+
+.axm-breakdown-section {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.axm-breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  border-bottom: 1px solid rgba(160, 170, 255, 0.14);
+  padding-bottom: 16px;
+}
+
+@media (max-width: 900px) {
+  .axm-breakdown-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.axm-breakdown-tag {
+  font-family: var(--axm-font-mono);
   font-size: 10.5px;
-  color: #cbd5e1;
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 5px;
-  padding: 3px 7px;
+  letter-spacing: 0.16em;
+  color: #38bdf8;
+  display: block;
+  margin-bottom: 4px;
 }
 
-.axiom-anatomy__condition-tag strong {
-  color: #fbbf24;
-  margin-right: 4px;
+.axm-breakdown-header h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.axm-breakdown-lead {
+  margin: 0;
+  max-width: 480px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--axm-text-dim);
+}
+
+/* 3x3 Responsive Grid — Compact Tactical Footprint */
+.axm-subsystems-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 1024px) {
+  .axm-subsystems-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 680px) {
-  .iso.axiom-anatomy-root .iso-plate {
-    padding: 46px 12px 78px;
+  .axm-subsystems-grid {
+    grid-template-columns: 1fr;
   }
+}
 
-  .iso.axiom-anatomy-root .iso-plate-corners {
-    inset: 14px 12px;
-  }
+/* Individual Subsystem Card — Sleek & Compact */
+.axm-sub-card {
+  background: linear-gradient(180deg, #070914 0%, #04050a 100%);
+  border: 1px solid rgba(160, 170, 255, 0.14);
+  border-radius: 7px;
+  padding: 11px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
 
-  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="title"] {
-    font-size: 9px;
-    letter-spacing: 0.06em;
-  }
+.axm-sub-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(34, 211, 238, 0.45);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
 
-  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="hint"] {
-    bottom: 28px;
-    left: 0;
-    right: 0;
-    white-space: normal;
-    line-height: 1.3;
-    font-size: 9px;
-  }
+.axm-sub-card.is-selected {
+  background: linear-gradient(180deg, #090e20 0%, #050812 100%);
+  border-color: #22d3ee;
+  transform: translateY(-2px);
+}
 
-  .iso.axiom-anatomy-root .iso-plate-corner[data-corner="readout"] {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    white-space: normal;
-    line-height: 1.3;
-    font-size: 9.5px;
-  }
+.axm-sub-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  .axiom-anatomy__toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
+.axm-sub-num {
+  font-family: var(--axm-font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+}
 
-  .axiom-anatomy__actions {
-    width: 100%;
-    justify-content: stretch;
-  }
+.axm-sub-badge {
+  font-family: var(--axm-font-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  padding: 1.5px 6px;
+  border-radius: 3px;
+  border: 1px solid;
+}
 
-  .axiom-anatomy__btn {
-    flex: 1 1 auto;
-    justify-content: center;
-  }
+.axm-sub-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
 
-  .axiom-anatomy__station-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.axm-sub-role {
+  font-family: var(--axm-font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  margin-top: -3px;
+}
 
-  .axiom-anatomy__trial-badge {
-    margin-left: 0;
+.axm-sub-desc {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--axm-text-dim);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.axm-sub-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.axm-sub-chip {
+  font-family: var(--axm-font-mono);
+  font-size: 8px;
+  color: var(--axm-text-muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  padding: 1.5px 5px;
+  border-radius: 3px;
+}
+
+/* Inspector Console for Selected Subsystem */
+.axm-inspector-console {
+  margin-top: 12px;
+  background: #04050a;
+  border: 1px solid #22d3ee;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.axm-inspector-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(160, 170, 255, 0.12);
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.axm-inspector-id {
+  font-family: var(--axm-font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.axm-inspector-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.axm-inspector-file {
+  margin-left: auto;
+  font-size: 9.5px;
+  color: var(--axm-text-muted);
+}
+
+.axm-inspector-body {
+  display: grid;
+  grid-template-columns: 1fr 1.6fr;
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .axm-inspector-body {
+    grid-template-columns: 1fr;
   }
+}
+
+.axm-inspector-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: #020306;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+
+.axm-spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--axm-font-mono);
+  font-size: 9px;
+  color: var(--axm-text-muted);
+}
+
+.axm-spec-row b {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.axm-sub-code {
+  background: #020306;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 5px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.axm-sub-code-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--axm-font-mono);
+  font-size: 8.5px;
+  color: #64748b;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding-bottom: 4px;
+}
+
+.axm-code-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22d3ee;
+}
+
+.axm-sub-code pre {
+  margin: 0;
+  font-size: 9.5px;
+  line-height: 1.5;
+  color: #fbbf24;
+  white-space: pre-wrap;
+  word-break: break-all;
 }

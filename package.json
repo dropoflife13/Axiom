@@ -8,6 +8,8 @@
     "typecheck": "tsc --noEmit",
     "benchmark": "tsx src/benchmark.ts",
     "harvest": "tsx src/harvest-cli.ts",
+    "export:snapshot": "tsx scripts/export-run-snapshot.ts",
+    "export:portfolio": "tsx scripts/export-portfolio-data.ts",
     "prepare": "husky"
   },
   "dependencies": {

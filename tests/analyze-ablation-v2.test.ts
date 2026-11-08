@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   analyzeTrials,
   buildReport,
+  cleanMigrationConditionAnalysis,
+  computeFeatureCellICC,
   exactCellSignFlip,
   formatCellKey,
   holmAdjust,
@@ -13,6 +15,7 @@ import {
   perCellAnalysis,
   retrievalOverlap,
   sensitivityAnalysis,
+  sensitivityAnalysisExcludingEarlyTasks,
   wilson,
   type Trial,
 } from '../scripts/analyze-ablation-v2.js';
@@ -518,5 +521,71 @@ describe('offline ablation analysis', () => {
     expect(cVsA.withinCellBootstrapCi95[1]).toBeLessThanOrEqual(0.7 + 1e-9);
     // With 2 cells both positive (0.4 and 0.8), 2 of 4 sign flips (++ and --) have |mean| >= 0.6 -> p = 0.5
     expect(cVsA.exactCellSignFlipPValue).toBeCloseTo(0.5, 6);
+  });
+
+  it('computes one-way ANOVA ICC by feature cell on synthetic trials', () => {
+    const cell1 = { tenant: true, append_only: false, ingestion: false };
+    const cell2 = { tenant: false, append_only: false, ingestion: false };
+    const trials: Trial[] = [
+      trial('A', 'SYN-1', 0.2, false, { features: cell1, failedFacts: ['F-01', 'F-02'] }),
+      trial('A', 'SYN-2', 0.4, false, { features: cell1, failedFacts: ['F-01'] }),
+      trial('A', 'SYN-3', 0.8, true, { features: cell2, failedFacts: [] }),
+      trial('A', 'SYN-4', 0.9, true, { features: cell2, failedFacts: [] }),
+    ];
+    const iccResult = computeFeatureCellICC(trials);
+    expect(iccResult.exploratory).toBe(true);
+    expect(iccResult.boundFactFraction.k).toBe(2);
+    expect(iccResult.boundFactFraction.N).toBe(4);
+    expect(iccResult.boundFactFraction.MSB).toBeGreaterThan(0);
+    expect(Number.isFinite(iccResult.boundFactFraction.icc)).toBe(true);
+    expect(Number.isFinite(iccResult.allFactPassRate.icc)).toBe(true);
+  });
+
+  it('computes clean migration condition analysis excluding migrationExitNonZero true', () => {
+    const trials: Trial[] = [
+      trial('A', 'SYN-1', 0.5, false, { migrationExitNonZero: false, promptTokens: 100, totalTokens: 200 }),
+      trial('A', 'SYN-2', 0.0, false, { migrationExitNonZero: true, promptTokens: 100, totalTokens: 200 }),
+      trial('B', 'SYN-1', 1.0, true, { migrationExitNonZero: false, promptTokens: 150, totalTokens: 300 }),
+    ];
+    const clean = cleanMigrationConditionAnalysis(trials);
+    expect(clean.A.n).toBe(1);
+    expect(clean.A.meanBoundFactFraction).toBe(0.5);
+    expect(clean.B.n).toBe(1);
+    expect(clean.B.meanBoundFactFraction).toBe(1.0);
+    expect(clean.C.n).toBe(0);
+  });
+
+  it('computes sensitivity analysis excluding H-001 to H-008 on synthetic trials', () => {
+    const trials: Trial[] = [
+      trial('A', 'H-001', 0.0, false),
+      trial('C', 'H-001', 1.0, true),
+      trial('A', 'H-009', 0.2, false),
+      trial('C', 'H-009', 0.8, true),
+    ];
+    const sens = sensitivityAnalysisExcludingEarlyTasks(trials, ['H-001']);
+    expect(sens.comparisons.C_vs_A.n).toBe(1);
+    expect(sens.comparisons.C_vs_A.excludedCount).toBe(1);
+    expect(sens.comparisons.C_vs_A.primary.meanDifference).toBeCloseTo(0.6, 6);
+  });
+
+  it('renders markdown tables for conditions, ICC, clean migration, comparisons, and per-fact tables', () => {
+    const syntheticTrials: Trial[] = [
+      trial('A', 'H-001', 0.2, false, { migrationExitNonZero: false }),
+      trial('B', 'H-001', 0.8, true, { migrationExitNonZero: false }),
+      trial('C', 'H-001', 0.9, true, { migrationExitNonZero: false }),
+      trial('C0', 'H-001', 0.7, true, { migrationExitNonZero: false }),
+      trial('D', 'H-001', 0.3, false, { migrationExitNonZero: false }),
+      trial('E_B', 'H-001', 0.8, true, { migrationExitNonZero: false }),
+    ];
+    const report = buildReport(syntheticTrials);
+    const md = markdownReport(report);
+    expect(md).toContain('## Conditions');
+    expect(md).toContain('| Condition | n | Mean bound fraction |');
+    expect(md).toContain('## Clean Migration Per-Condition Table (migrationExitNonZero = false)');
+    expect(md).toContain('## Paired comparisons');
+    expect(md).toContain('| Contrast | n | Mean Diff [95% CI] |');
+    expect(md).toContain('## Feature cell intraclass correlation (ICC) — Condition A Baseline');
+    expect(md).toContain('| Metric | Cells (k) | n per cell |');
+    expect(md).toContain('## Sensitivity analysis: excluding H-001 to H-008');
   });
 });

@@ -3,4 +3,5 @@ node_modules
 out
 .env.local
 *.log
+*.tsbuildinfo
 .axiom-state

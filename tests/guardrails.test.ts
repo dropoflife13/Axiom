@@ -302,7 +302,7 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
         /explicit required setting.*no silent default/i
       );
       expect(() => resolveExecutorModel('z-ai/glm-5.3-flash')).toThrowError(
-        /must equal "google\/gemma-4-31b-it"/i
+        /must be one of/i
       );
       expect(resolveExecutorModel(REQUIRED_EXECUTOR_MODEL)).toBe(REQUIRED_EXECUTOR_MODEL);
 

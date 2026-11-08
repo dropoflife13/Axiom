@@ -1,0 +1,75 @@
+{
+  "project": {
+    "name": "Axiom",
+    "tagline": "Self-healing engine that generates and tests architectural axioms",
+    "status": "COMPLETED",
+    "stage": "Ablation v2",
+    "updatedAt": "2026-11-08T07:12:06.177Z"
+  },
+  "metrics": {
+    "totalTrials": 720,
+    "completedTrials": 720,
+    "passed": 288,
+    "failed": 432,
+    "passRate": "40.0%",
+    "totalTokens": 1692794,
+    "convergence": 0.73
+  },
+  "conditions": [
+    {
+      "condition": "A",
+      "total": 120,
+      "passed": 4,
+      "passRate": "3.3%"
+    },
+    {
+      "condition": "B",
+      "total": 120,
+      "passed": 87,
+      "passRate": "72.5%"
+    },
+    {
+      "condition": "C",
+      "total": 120,
+      "passed": 30,
+      "passRate": "25.0%"
+    },
+    {
+      "condition": "C0",
+      "total": 120,
+      "passed": 76,
+      "passRate": "63.3%"
+    },
+    {
+      "condition": "D",
+      "total": 120,
+      "passed": 4,
+      "passRate": "3.3%"
+    },
+    {
+      "condition": "E_B",
+      "total": 120,
+      "passed": 87,
+      "passRate": "72.5%"
+    }
+  ],
+  "architecture": {
+    "engine": "Deterministic Verifier (No LLM)",
+    "oracle": "PostgreSQL 16 in Docker",
+    "memory": "Cryptographic Rule Vault (.axiom-state/memory.json)",
+    "framework": "Next.js 15, Three.js, React Three Fiber, TypeScript, Vitest",
+    "assembliesCount": 9,
+    "keyInvariants": [
+      "BN-00",
+      "SEC-01",
+      "SEC-02",
+      "PF-01",
+      "PF-02"
+    ]
+  },
+  "endpoints": {
+    "api": "http://localhost:3000/api/portfolio",
+    "checkpoint": "http://localhost:3000/api/ablation-checkpoint",
+    "results": "http://localhost:3000/api/ablation-results"
+  }
+}

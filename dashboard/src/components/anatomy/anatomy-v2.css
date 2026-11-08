@@ -1,0 +1,455 @@
+/* =========================================================================
+   AxiomAnatomyV2 - CSS 3D Isometric Board Stylesheet
+   Strict 3D Rules: No filter, backdrop-filter, opacity < 1, overflow, or mask
+   on any preserve-3d ancestor. Glow and filters belong on leaf elements ONLY.
+   ========================================================================= */
+
+.axmv2-root {
+  --axm-font: var(--anatomy-font, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Geist", "Inter", sans-serif);
+  position: relative;
+  width: 100%;
+  font-family: var(--axm-font);
+  color: #ece9ff;
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 45%, #1a0b2e 0%, #0a0714 45%, #050505 75%);
+  box-shadow: 0 32px 84px rgba(0, 0, 0, 0.7);
+  user-select: none;
+}
+
+/* ---------- Top Control Bar ---------- */
+.axmv2-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 16px 22px;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.14);
+  background: rgba(10, 7, 20, 0.7);
+  position: relative;
+  z-index: 10;
+}
+
+.axmv2-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.axmv2-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font: 600 13px/1 var(--axm-font);
+  color: #f4f1ff;
+  background: rgba(167, 139, 250, 0.1);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  transition: all 0.2s ease;
+}
+
+.axmv2-btn:hover {
+  background: rgba(167, 139, 250, 0.22);
+  border-color: #a855f7;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.4);
+}
+
+.axmv2-btn:focus-visible,
+.axmv2-lbl:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 3px;
+}
+
+.axmv2-btn--active {
+  background: rgba(168, 85, 247, 0.28);
+  border-color: #a855f7;
+  box-shadow: 0 0 16px rgba(168, 85, 247, 0.5);
+  color: #fff;
+}
+
+.axmv2-btn--run {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.5);
+  color: #cffafe;
+}
+
+.axmv2-btn--run:hover {
+  background: rgba(34, 211, 238, 0.24);
+  box-shadow: 0 0 18px rgba(34, 211, 238, 0.45);
+}
+
+.axmv2-btn__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.axmv2-btn[data-running="true"] .axmv2-btn__dot {
+  background: #fb7185;
+  box-shadow: 0 0 8px #fb7185;
+}
+
+.axmv2-btn kbd {
+  font: 500 10.5px/1 var(--axm-font);
+  padding: 3px 5px;
+  border-radius: 4px;
+  color: #94a3b8;
+  border: 1px solid rgba(167, 139, 250, 0.3);
+}
+
+.axmv2-stages {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.axmv2-stages li {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #8b85a8;
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  transition: all 0.25s ease;
+}
+
+.axmv2-stages li[data-state="active"] {
+  color: #fff;
+  border-color: #22d3ee;
+  background: rgba(34, 211, 238, 0.22);
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
+}
+
+.axmv2-stages li[data-state="done"] {
+  color: #cbd5e1;
+  border-color: rgba(167, 139, 250, 0.45);
+}
+
+/* ---------- 3D Stage & Viewport (NO PERSPECTIVE) ---------- */
+.axmv2-stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 3D Scene Container - Clean ancestor chain without filters */
+.axmv2-scene {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* The 3D Board: Parallel Isometric Projection (rotateX 60deg, rotateZ -45deg) */
+.axmv2-board {
+  position: absolute;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  pointer-events: auto;
+}
+
+/* ---------- Holographic Blueprint Floor (Leaf Element) ---------- */
+.axmv2-floor {
+  position: absolute;
+  left: -7.5%;
+  top: -7.5%;
+  width: 115%;
+  height: 115%;
+  transform: translateZ(0px);
+  pointer-events: none;
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.28) 0%, rgba(14, 10, 30, 0.1) 60%, transparent 80%),
+    repeating-linear-gradient(0deg, transparent 0 47px, rgba(34, 211, 238, 0.12) 47px 48px),
+    repeating-linear-gradient(90deg, transparent 0 47px, rgba(168, 85, 247, 0.10) 47px 48px),
+    repeating-linear-gradient(0deg, transparent 0 191px, rgba(34, 211, 238, 0.28) 191px 192px),
+    repeating-linear-gradient(90deg, transparent 0 191px, rgba(168, 85, 247, 0.26) 191px 192px);
+  box-shadow: 0 0 80px rgba(124, 58, 237, 0.35);
+  -webkit-mask-image: radial-gradient(circle at center, #000 48%, transparent 78%);
+  mask-image: radial-gradient(circle at center, #000 48%, transparent 78%);
+}
+
+/* ---------- 3D Blocks (Landing Platforms) ---------- */
+.axmv2-block {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-style: preserve-3d;
+  cursor: pointer;
+}
+
+.axmv2-block i {
+  position: absolute;
+  display: block;
+  box-sizing: border-box;
+}
+
+/* Top Face: Sits on the working plane */
+.axmv2-face-top {
+  left: 0.5px;
+  top: 0.5px;
+  width: calc(var(--w) - 1px);
+  height: calc(var(--d) - 1px);
+  transform: translateZ(var(--h));
+  border: 1.5px solid var(--color);
+  border-radius: 4px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.65)),
+              linear-gradient(to bottom right, var(--color-alpha-35), var(--color-alpha-08));
+  box-shadow: inset 0 0 24px var(--color-alpha-35);
+  filter: drop-shadow(0 0 12px var(--color-alpha-70));
+  transition: filter 0.25s ease, background 0.25s ease;
+}
+
+.axmv2-block:hover .axmv2-face-top {
+  filter: drop-shadow(0 0 24px var(--color));
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(0, 0, 0, 0.5)),
+              linear-gradient(to bottom right, var(--color-alpha-50), var(--color-alpha-15));
+}
+
+.axmv2-block.is-active .axmv2-face-top {
+  filter: drop-shadow(0 0 32px var(--color));
+  border-color: #fff;
+}
+
+/* Left Face */
+.axmv2-face-left {
+  left: 0;
+  top: 0;
+  width: var(--h);
+  height: var(--d);
+  transform-origin: 0 0;
+  transform: rotateY(-90deg);
+  border: 1px solid var(--color-alpha-50);
+  background: linear-gradient(to bottom, var(--color-alpha-30), var(--color-alpha-05)), rgba(5, 5, 12, 0.85);
+}
+
+/* Right Face */
+.axmv2-face-right {
+  left: 0;
+  top: var(--d);
+  width: var(--w);
+  height: var(--h);
+  transform-origin: 0 0;
+  transform: translateZ(var(--h)) rotateX(-90deg);
+  border: 1px solid var(--color-alpha-50);
+  background: linear-gradient(to bottom, var(--color-alpha-20), var(--color-alpha-03)), rgba(5, 5, 12, 0.9);
+}
+
+/* Oracle Center Hole */
+.axmv2-hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px 0 0 -28px;
+  border-radius: 50%;
+  border: 2px solid var(--color);
+  background: radial-gradient(circle, #000 0 60%, var(--color-alpha-50) 100%);
+  box-shadow: 0 0 20px var(--color), inset 0 0 16px var(--color);
+}
+
+/* Satellite Port Target Pad */
+.axmv2-target {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color);
+  background: radial-gradient(circle, #05060a 0 50%, var(--color-alpha-35) 100%);
+  box-shadow: 0 0 8px var(--color);
+}
+
+/* ---------- Cables (Working Plane SVG) ---------- */
+.axmv2-cables-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.6));
+}
+
+.axmv2-cable-base {
+  fill: none;
+  stroke: rgba(167, 139, 250, 0.22);
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+
+.axmv2-cable-port-dot {
+  fill: #ecfeff;
+  filter: drop-shadow(0 0 6px #22d3ee);
+}
+
+.axmv2-packet {
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+/* ---------- Detached 2D HTML Labels Layer ---------- */
+.axmv2-labels-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.axmv2-leader-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.axmv2-leader-line {
+  stroke: rgba(167, 139, 250, 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.axmv2-leader-line.is-active {
+  stroke: #22d3ee;
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 4px #22d3ee);
+}
+
+.axmv2-lbl {
+  position: absolute;
+  pointer-events: auto;
+  width: max-content;
+  max-width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+  cursor: pointer;
+  padding: 10px 14px;
+  border-radius: 12px;
+  color: #ece9ff;
+  font-family: var(--axm-font);
+  background: rgba(12, 8, 28, 0.75);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.axmv2-lbl:hover,
+.axmv2-lbl.is-active {
+  border-color: #22d3ee;
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+  background: rgba(18, 12, 42, 0.9);
+  z-index: 5;
+}
+
+.axmv2-lbl__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.axmv2-lbl__title {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: #ffffff;
+}
+
+.axmv2-lbl__badge {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 6px;
+  color: #cffafe;
+  background: rgba(34, 211, 238, 0.16);
+  border: 1px solid rgba(34, 211, 238, 0.4);
+}
+
+.axmv2-lbl__role {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #a5a0c5;
+}
+
+/* Numbered Pins for Small Viewports (<760px) */
+.axmv2-pin {
+  position: absolute;
+  pointer-events: auto;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(12, 8, 28, 0.9);
+  border: 1.5px solid #22d3ee;
+  box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+  cursor: pointer;
+}
+
+/* ---------- Bottom Readout & Caption ---------- */
+.axmv2-readout {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 22px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d1cbe8;
+  background: rgba(5, 5, 10, 0.6);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+}
+
+.axmv2-readout__chip {
+  flex: none;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: #7c3aed;
+}
+
+.axmv2-caption {
+  margin: 0;
+  padding: 10px 22px 16px;
+  font-size: 12px;
+  color: #8b85a8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .axmv2-btn,
+  .axmv2-lbl,
+  .axmv2-face-top {
+    transition: none !important;
+  }
+}

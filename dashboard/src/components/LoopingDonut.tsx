@@ -18,13 +18,16 @@ void main(){
   gl_FragColor=vec4((c*(.3+f*1.5)+vec3(p)*.8)*uGlow,clamp((f*.85+ln*.3+rg*.14+p*.9)*uGlow,0.,1.));
 }`;
 
+// Original imposing core scale matching Image 2 perfectly across all scroll states
+const BASE_CORE_SCALE = 1.95;
+
 function Knot({ color, running, progress }: { color: number; running: boolean; progress: MutableRefObject<number> }) {
   const group = useRef<THREE.Group>(null);
   const wire = useRef<THREE.Mesh>(null);
   const halo = useRef<THREE.Mesh>(null);
   const points = useRef<THREE.Points>(null);
   const speed = useRef(1);
-  const currentScale = useRef(1);
+  const currentScale = useRef(BASE_CORE_SCALE);
   const cur = useMemo(() => new THREE.Color(color), []); // eslint-disable-line react-hooks/exhaustive-deps
   const target = useMemo(() => new THREE.Color(), []);
   const uniforms = useMemo(
@@ -54,13 +57,12 @@ function Knot({ color, running, progress }: { color: number; running: boolean; p
   useFrame((_, delta) => {
     if (!group.current || !wire.current || !halo.current || !points.current) return;
     const dt = Math.min(0.05, delta);
-    const scene = sceneForProgress(progress.current);
     speed.current += ((running ? 1.6 : 0.15) - speed.current) * 0.05;
     const s = speed.current;
-    currentScale.current += (scene.scale - currentScale.current) * Math.min(1, dt * 5);
-    group.current.scale.setScalar(currentScale.current);
+    // Maintain the large original size from Image 2 throughout all scroll interactions
+    group.current.scale.setScalar(BASE_CORE_SCALE);
     uniforms.uT.value += dt * s;
-    uniforms.uGlow.value += (scene.glow - uniforms.uGlow.value) * Math.min(1, dt * 5);
+    uniforms.uGlow.value = 1.05;
     group.current.rotation.y += dt * 0.2 * s;
     group.current.rotation.x += dt * 0.08 * s;
     wire.current.rotation.y -= dt * 0.05 * s;
@@ -106,7 +108,12 @@ function Fit() {
 
 export default function LoopingDonut({ color, running, progress }: { color: number; running: boolean; progress: MutableRefObject<number> }) {
   return (
-    <Canvas camera={{ position: [0, 0.4, 5.4], fov: 45 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }} style={{ position: 'absolute', inset: 0, touchAction: 'pan-y' }}>
+    <Canvas
+      camera={{ position: [0, 0.4, 5.4], fov: 45 }}
+      dpr={[1, 1.5]}
+      gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+      style={{ position: 'absolute', inset: 0, touchAction: 'pan-y' }}
+    >
       <Fit />
       <Knot color={color} running={running} progress={progress} />
       <OrbitControls enablePan={false} enableZoom={false} enableDamping autoRotate={running} autoRotateSpeed={0.8} minDistance={3} maxDistance={10} />

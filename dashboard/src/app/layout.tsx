@@ -6,6 +6,9 @@ import Script from 'next/script';
 export const metadata: Metadata = {
   title: 'Axiom Mission Control',
   description: 'Axiom verification telemetry and ablation evidence.',
+  icons: {
+    icon: '/brand/axiom-mark.svg',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

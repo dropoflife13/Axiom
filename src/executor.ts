@@ -9,28 +9,37 @@ dotenv.config();
 const NVIDIA_BASE_URL =
   process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1';
 const CHAT_URL = `${NVIDIA_BASE_URL.replace(/\/+$/, '')}/chat/completions`;
-export const REQUIRED_EXECUTOR_MODEL = 'google/gemma-4-31b-it';
+
+export const ALLOWED_EXECUTOR_MODELS = [
+  'google/gemma-4-31b-it',
+  'nvidia/nemotron-3-ultra-550b-a55b',
+] as const;
+export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
+
 export const PROVIDER = 'nvidia';
 
 export function resolveExecutorModel(explicitModel?: string): string {
   const resolved = (explicitModel ?? process.env.NVIDIA_EXECUTOR_MODEL ?? '').trim();
   if (!resolved) {
     throw new Error(
-      `[ABORT_NON_RETRYABLE] Executor model is an explicit required setting (${REQUIRED_EXECUTOR_MODEL}) with no silent default. Pass options.model or set NVIDIA_EXECUTOR_MODEL=${REQUIRED_EXECUTOR_MODEL}.`
+      `[ABORT_NON_RETRYABLE] Executor model is an explicit required setting with no silent default. Set NVIDIA_EXECUTOR_MODEL in the environment or pass options.model. Allowed models: ${ALLOWED_EXECUTOR_MODELS.join(', ')}.`
     );
   }
-  if (resolved !== REQUIRED_EXECUTOR_MODEL) {
+  if (!ALLOWED_EXECUTOR_MODELS.includes(resolved as any)) {
     throw new Error(
-      `[ABORT_NON_RETRYABLE] Executor model must equal "${REQUIRED_EXECUTOR_MODEL}", got "${resolved}".`
+      `[ABORT_NON_RETRYABLE] Executor model must be one of [${ALLOWED_EXECUTOR_MODELS.join(', ')}], got "${resolved}".`
     );
   }
   return resolved;
 }
 
+export const REQUIRED_EXECUTOR_MODEL = process.env.NVIDIA_EXECUTOR_MODEL || 'google/gemma-4-31b-it';
+
 export function assertModelMatch(requestedModel: string, returnedModel: string): void {
-  if (requestedModel !== REQUIRED_EXECUTOR_MODEL) {
+  const configured = resolveExecutorModel(requestedModel);
+  if (requestedModel !== configured) {
     throw new Error(
-      `[ABORT_NON_RETRYABLE] Requested model "${requestedModel}" does not equal required model "${REQUIRED_EXECUTOR_MODEL}".`
+      `[ABORT_NON_RETRYABLE] Requested model "${requestedModel}" does not match configured model "${configured}".`
     );
   }
   if (returnedModel !== requestedModel) {

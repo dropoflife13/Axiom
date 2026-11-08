@@ -223,28 +223,16 @@ export interface RunMetadata {
   factsSha256: string;
   memorySha256: string;
   gitCommit: string;
+  requestedModel?: string;
+  topK?: number;
+  hintBSha256?: string;
+  hintDSha256?: string;
+  hintBuildersSha256?: string;
+  diffSha256?: string;
 }
 
 export function sha256File(filePath: string): string {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
-}
-
-export function getRunMetadata(root = path.resolve('.')): RunMetadata {
-  return {
-    oracleSha256: sha256File(path.join(root, 'scripts', 'oracle.ts')),
-    tasksSha256: sha256File(path.join(root, 'fixtures', 'task-v2', 'tasks.json')),
-    factsSha256: sha256File(path.join(root, 'fixtures', 'task-v2', 'facts.json')),
-    memorySha256: sha256File(path.join(root, '.axiom-state', 'memory.json')),
-    gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
-  };
-}
-
-export function assertRunMetadataMatches(expected: RunMetadata, actual: RunMetadata): void {
-  for (const key of Object.keys(expected) as Array<keyof RunMetadata>) {
-    if (expected[key] !== actual[key]) {
-      throw new Error(`Ablation provenance mismatch for ${key}: checkpoint=${expected[key]} current=${actual[key]}`);
-    }
-  }
 }
 
 export function verifyCalibrationContentHashes(
@@ -381,6 +369,113 @@ export function buildConditionHint(
   return undefined;
 }
 
+export function computeHintBSha256(): string {
+  return crypto
+    .createHash('sha256')
+    .update(`ORACLE STATIC FACTS. Satisfy every applicable fact below:\n${STATIC_FACTS}`)
+    .digest('hex');
+}
+
+export function computeHintDSha256(): string {
+  return crypto.createHash('sha256').update(buildPlaceboHint()).digest('hex');
+}
+
+export function computeHintBuildersSha256(root = path.resolve('.')): string {
+  const ablationPath = path.join(root, 'src', 'eval', 'ablation.ts');
+  const code = fs.readFileSync(ablationPath, 'utf8');
+  const match = code.match(/export function buildConditionHint[\s\S]*?\n\}/m);
+  if (!match) throw new Error('Could not extract buildConditionHint source');
+  return crypto.createHash('sha256').update(match[0].trim()).digest('hex');
+}
+
+export function getRunMetadata(
+  root = path.resolve('.'),
+  requestedModel = resolveExecutorModel(),
+  allowDirty = false
+): RunMetadata {
+  const meta: RunMetadata = {
+    oracleSha256: sha256File(path.join(root, 'scripts', 'oracle.ts')),
+    tasksSha256: sha256File(path.join(root, 'fixtures', 'task-v2', 'tasks.json')),
+    factsSha256: sha256File(path.join(root, 'fixtures', 'task-v2', 'facts.json')),
+    memorySha256: sha256File(path.join(root, '.axiom-state', 'memory.json')),
+    gitCommit: execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
+    requestedModel,
+    topK: SQL_RETRIEVAL_TOP_K,
+    hintBSha256: computeHintBSha256(),
+    hintDSha256: computeHintDSha256(),
+    hintBuildersSha256: computeHintBuildersSha256(root),
+  };
+  if (allowDirty) {
+    const gitDiff = execFileSync('git', ['diff', 'HEAD'], { cwd: root, encoding: 'utf8' });
+    meta.diffSha256 = crypto.createHash('sha256').update(gitDiff).digest('hex');
+  }
+  return meta;
+}
+
+export function assertRunMetadataMatches(expected: Partial<RunMetadata>, actual: RunMetadata): void {
+  const keysToCheck = [
+    'oracleSha256',
+    'tasksSha256',
+    'factsSha256',
+    'memorySha256',
+    'gitCommit',
+    'requestedModel',
+  ] as const;
+  for (const key of keysToCheck) {
+    if (expected[key] !== undefined && actual[key] !== undefined && expected[key] !== actual[key]) {
+      throw new Error(`Ablation provenance mismatch for ${key}: checkpoint=${expected[key]} current=${actual[key]}`);
+    }
+  }
+}
+
+export function findRunCheckpoint(runId: string, root = path.resolve('.')): string {
+  const candidatePaths = [
+    path.join(root, '.axiom-state', 'runs', runId, 'checkpoint.json'),
+    path.join(root, '.axiom-state', 'runs', runId, 'results.json'),
+    path.join(root, 'out', 'archive', `run-${runId}`, 'ablation-v2-checkpoint.json'),
+    path.join(root, 'out', 'archive', `run-${runId}`, 'checkpoint.json'),
+    ...(runId === 'nemotron-1' ? [path.join(root, '.axiom-state', 'ablation-v2-checkpoint.json')] : []),
+  ];
+  for (const p of candidatePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  throw new Error(`[ABORT_NON_RETRYABLE] Cannot find checkpoint for expected run "${runId}". Looked in: ${candidatePaths.join(', ')}`);
+}
+
+export function assertComparabilityWithRun(
+  expectRunId: string,
+  currentMetadata: RunMetadata,
+  root = path.resolve('.')
+): void {
+  const checkpointPath = findRunCheckpoint(expectRunId, root);
+  const parsed = JSON.parse(fs.readFileSync(checkpointPath, 'utf8'));
+  const expMeta: Partial<RunMetadata> = parsed.metadata ?? parsed.runMetadata ?? {};
+
+  const baselineTopK = 10;
+  const baselineHintBSha = '2a0ceeb947d7facd67bc74a1875618d6aa6301a40ff7d5326795c608fbf5d3d6';
+  const baselineHintDSha = '130f12410b698480620ba5e12cead5e56f71931dd324b22cf836476f9372f1cd';
+  const baselineHintBuildersSha = '19033ced3b39e13399d0de8be86cb3cec4040b69f51da36880fdf42aed35b299';
+
+  const checks: Array<{ key: string; expected: any; actual: any }> = [
+    { key: 'oracleSha256', expected: expMeta.oracleSha256, actual: currentMetadata.oracleSha256 },
+    { key: 'tasksSha256', expected: expMeta.tasksSha256, actual: currentMetadata.tasksSha256 },
+    { key: 'factsSha256', expected: expMeta.factsSha256, actual: currentMetadata.factsSha256 },
+    { key: 'memorySha256', expected: expMeta.memorySha256, actual: currentMetadata.memorySha256 },
+    { key: 'SQL_RETRIEVAL_TOP_K', expected: expMeta.topK ?? baselineTopK, actual: currentMetadata.topK },
+    { key: 'hintBSha256', expected: expMeta.hintBSha256 ?? baselineHintBSha, actual: currentMetadata.hintBSha256 },
+    { key: 'hintDSha256', expected: expMeta.hintDSha256 ?? baselineHintDSha, actual: currentMetadata.hintDSha256 },
+    { key: 'hintBuildersSha256', expected: expMeta.hintBuildersSha256 ?? baselineHintBuildersSha, actual: currentMetadata.hintBuildersSha256 },
+  ];
+
+  for (const check of checks) {
+    if (check.expected !== check.actual) {
+      throw new Error(
+        `[ABORT_NON_RETRYABLE] Comparability check failed against run "${expectRunId}" for ${check.key}: expected="${check.expected}", current="${check.actual}".`
+      );
+    }
+  }
+}
+
 export function buildTrial(
   containerName: string,
   task: TaskV2Item,
@@ -389,15 +484,16 @@ export function buildTrial(
   usage: { promptTokens: number; completionTokens: number; totalTokens: number },
   retrievedFactIds: string[],
   genMeta: TrialGenerationMeta = {
-    requestedModel: REQUIRED_EXECUTOR_MODEL,
-    returnedModel: REQUIRED_EXECUTOR_MODEL,
+    requestedModel: resolveExecutorModel(),
+    returnedModel: resolveExecutorModel(),
     finishReason: 'stop',
   },
   oracleEvalFn: typeof evaluateMigrationSqlInContainer = evaluateMigrationSqlInContainer,
-  runMetadata: RunMetadata = getRunMetadata()
+  runMetadata?: RunMetadata
 ): Trial {
   assertModelMatch(genMeta.requestedModel, genMeta.returnedModel);
   const provenance = getProviderProvenance(genMeta.requestedModel, genMeta.returnedModel);
+  const meta = runMetadata ?? getRunMetadata();
   const generationStatus = classifyGenerationStatus(
     genMeta.finishReason,
     sql,
@@ -431,11 +527,15 @@ export function buildTrial(
       llmCalls: 1,
       provider: provenance.provider,
       baseUrl: provenance.baseUrl,
-      requestedModel: provenance.requestedModel,
+      requestedModel: meta.requestedModel ?? provenance.requestedModel,
       returnedModel: provenance.returnedModel,
       finishReason: genMeta.finishReason,
       oracleCommit: provenance.oracleCommit,
-      ...runMetadata,
+      factsSha256: meta.factsSha256,
+      oracleSha256: meta.oracleSha256,
+      tasksSha256: meta.tasksSha256,
+      memorySha256: meta.memorySha256,
+      gitCommit: meta.gitCommit,
       ...(reusedFromCondition ? { reusedFromCondition } : {}),
     };
   }
@@ -500,11 +600,15 @@ export function buildTrial(
     llmCalls: 1,
     provider: provenance.provider,
     baseUrl: provenance.baseUrl,
-    requestedModel: provenance.requestedModel,
+    requestedModel: meta.requestedModel ?? provenance.requestedModel,
     returnedModel: provenance.returnedModel,
     finishReason: genMeta.finishReason,
     oracleCommit: provenance.oracleCommit,
-    ...runMetadata,
+    factsSha256: meta.factsSha256,
+    oracleSha256: meta.oracleSha256,
+    tasksSha256: meta.tasksSha256,
+    memorySha256: meta.memorySha256,
+    gitCommit: meta.gitCommit,
     ...(reusedFromCondition ? { reusedFromCondition } : {}),
   };
 }
@@ -845,9 +949,17 @@ export function assertMemoryUnchanged(
   return actualSha256;
 }
 
-function parseCliArg(flag: string): string | undefined {
-  const idx = process.argv.indexOf(flag);
-  return idx >= 0 && process.argv[idx + 1] ? process.argv[idx + 1] : undefined;
+export function parseCliArg(flag: string): string | undefined {
+  for (let i = 0; i < process.argv.length; i++) {
+    const arg = process.argv[i];
+    if (arg === flag && process.argv[i + 1] && !process.argv[i + 1].startsWith('--')) {
+      return process.argv[i + 1];
+    }
+    if (arg.startsWith(`${flag}=`)) {
+      return arg.slice(flag.length + 1);
+    }
+  }
+  return undefined;
 }
 
 async function main(): Promise<void> {
@@ -893,6 +1005,12 @@ async function main(): Promise<void> {
   const configuredModel = resolveExecutorModel();
   assertModelMatch(configuredModel, configuredModel);
 
+  const runId = parseCliArg('--run-id');
+  if (!runId || !runId.trim()) {
+    throw new Error('Ablation runner requires an explicit --run-id <id> argument (e.g. --run-id gemma-2).');
+  }
+  const expectRunId = parseCliArg('--expect-run');
+
   process.env.AXIOM_DAILY_CALLS = String(
     Math.max(Number(process.env.AXIOM_DAILY_CALLS || 1000), 1000)
   );
@@ -906,17 +1024,21 @@ async function main(): Promise<void> {
   const outArg = parseCliArg('--out');
   const checkpointPath = checkpointArg
     ? path.resolve(checkpointArg)
-    : path.join(stateDir, 'ablation-v2-checkpoint.json');
+    : path.join(stateDir, 'runs', runId, 'checkpoint.json');
   const resultPath = outArg
     ? path.resolve(outArg)
-    : path.join(stateDir, 'ablation-v2-results.json');
+    : path.join(stateDir, 'runs', runId, 'results.json');
   fs.mkdirSync(stateDir, { recursive: true });
   fs.mkdirSync(path.dirname(checkpointPath), { recursive: true });
   fs.mkdirSync(path.dirname(resultPath), { recursive: true });
 
   // Load memory once in read-only mode and record its SHA-256 at startup
   const { memory, sha256: memorySha256AtStart } = loadReadOnlyMemorySnapshot(memoryPath);
-  const runMetadata = getRunMetadata(root);
+  const runMetadata = getRunMetadata(root, configuredModel, allowDirty);
+
+  if (expectRunId) {
+    assertComparabilityWithRun(expectRunId, runMetadata, root);
+  }
 
   const conditions: ConditionId[] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
   const totalExpectedTrials = targetTasks.length * conditions.length;
@@ -929,8 +1051,16 @@ async function main(): Promise<void> {
           throw new Error('Cannot resume from a checkpoint flagged with memoryMutated=true.');
         }
         checkpointMetadata = Array.isArray(parsed) ? undefined : parsed.metadata;
-        if (checkpointMetadata) assertRunMetadataMatches(checkpointMetadata, runMetadata);
-        else throw new Error('Checkpoint is missing provenance metadata.');
+        if (checkpointMetadata) {
+          if (checkpointMetadata.requestedModel && checkpointMetadata.requestedModel !== configuredModel) {
+            throw new Error(
+              `[ABORT_NON_RETRYABLE] Checkpoint model mismatch: checkpoint requestedModel="${checkpointMetadata.requestedModel}" does not match configuredModel="${configuredModel}".`
+            );
+          }
+          assertRunMetadataMatches(checkpointMetadata, runMetadata);
+        } else {
+          throw new Error('Checkpoint is missing provenance metadata.');
+        }
         return (Array.isArray(parsed) ? parsed : parsed.trials ?? []) as Trial[];
       })()
     : [];
@@ -976,7 +1106,14 @@ async function main(): Promise<void> {
   const report = {
     generatedAt: new Date().toISOString(),
     protocol: 'Ablation v2',
+    runId,
     model: configuredModel,
+    requestedModel: runMetadata.requestedModel,
+    topK: runMetadata.topK,
+    hintBSha256: runMetadata.hintBSha256,
+    hintDSha256: runMetadata.hintDSha256,
+    hintBuildersSha256: runMetadata.hintBuildersSha256,
+    diffSha256: runMetadata.diffSha256,
     temperature: 0,
     repeats: 1,
     testTasks: targetTasks.length,
@@ -987,6 +1124,7 @@ async function main(): Promise<void> {
     tasksSha256: runMetadata.tasksSha256,
     factsSha256: runMetadata.factsSha256,
     gitCommit: runMetadata.gitCommit,
+    metadata: runMetadata,
     eligibleFacts: Object.keys(FACT_STATEMENTS).filter((id) =>
       ELIGIBLE_FACTS.some((fact) => fact.id === id)
     ),
