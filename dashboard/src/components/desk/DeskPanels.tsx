@@ -85,8 +85,8 @@ export function ConvergenceGauge({ value, done }: { value: number | null; done: 
 }
 
 /* Precomputed asynchronous live-stream pulse styles for the 720 matrix squares.
- * Provides randomized delays (0 to 5s) and durations (2 to 5s) that never pulse in unison,
- * while maintaining deterministic values across SSR hydration to prevent React warnings.
+ * Provides randomized delays (0 to 7s) and calm, natural blinking durations (4.5 to 7.5s)
+ * with zero harsh white shadows, while maintaining deterministic SSR hydration consistency.
  */
 const MATRIX_PULSE_STYLES = Array.from({ length: TOTAL_TRIALS }, (_, i) => {
   const row = Math.floor(i / 60);
@@ -98,8 +98,8 @@ const MATRIX_PULSE_STYLES = Array.from({ length: TOTAL_TRIALS }, (_, i) => {
   const rand2 = Math.abs(h2 - Math.floor(h2));
 
   return {
-    animationDelay: `${(rand1 * 5).toFixed(2)}s`,
-    animationDuration: `${(rand2 * 3 + 2).toFixed(2)}s`,
+    animationDelay: `${(rand1 * 7).toFixed(2)}s`,
+    animationDuration: `${(rand2 * 3 + 4.5).toFixed(2)}s`,
   };
 });
 

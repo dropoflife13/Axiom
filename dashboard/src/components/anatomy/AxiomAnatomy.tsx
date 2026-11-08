@@ -5,7 +5,6 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
-import './anatomy-360.css';
 
 export interface AxiomAnatomyProps {
   checkpoint?: CheckpointTrial[];

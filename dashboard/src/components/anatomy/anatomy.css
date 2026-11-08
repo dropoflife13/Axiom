@@ -525,12 +525,12 @@
   box-shadow: 0 0 2px rgba(217, 70, 239, 0.35);
 }
 
-/* Pulsating micro-cells: Live data stream pulse with randomized delays */
+/* Pulsating micro-cells: Calm live data stream pulse with gentle brighter hues and zero white shadows */
 .axm-matrix-cell.matrix-pulse {
   animation-name: matrix-pulse;
   animation-iteration-count: infinite;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: opacity, filter, box-shadow;
+  animation-timing-function: ease-in-out;
+  will-change: opacity, box-shadow, background-color;
   transform: translateZ(0);
 }
 .axm-matrix-cell.cell-pass.matrix-pulse {
@@ -561,26 +561,26 @@
 @keyframes axm-pulse-pass {
   0%, 100% {
     background: #22d3ee;
-    opacity: 1;
-    filter: brightness(1) drop-shadow(0 0 2px rgba(34, 211, 238, 0.35));
+    opacity: 0.88;
+    box-shadow: 0 0 2px rgba(34, 211, 238, 0.35);
   }
   50% {
     background: #67e8f9;
     opacity: 1;
-    filter: brightness(1.35) drop-shadow(0 0 4px #22d3ee) drop-shadow(0 0 7px rgba(34, 211, 238, 0.85));
+    box-shadow: 0 0 3px rgba(34, 211, 238, 0.6);
   }
 }
 
 @keyframes axm-pulse-fail {
   0%, 100% {
     background: #d946ef;
-    opacity: 1;
-    filter: brightness(1) drop-shadow(0 0 2px rgba(217, 70, 239, 0.35));
+    opacity: 0.88;
+    box-shadow: 0 0 2px rgba(217, 70, 239, 0.35);
   }
   50% {
     background: #f0abfc;
     opacity: 1;
-    filter: brightness(1.35) drop-shadow(0 0 4px #d946ef) drop-shadow(0 0 7px rgba(217, 70, 239, 0.85));
+    box-shadow: 0 0 3px rgba(217, 70, 239, 0.6);
   }
 }
 

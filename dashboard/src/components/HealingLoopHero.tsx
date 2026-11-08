@@ -303,25 +303,25 @@ const css = `
 .dk-cell--pass{background:#22d3ee;box-shadow:0 0 2px rgba(34,211,238,.35)}
 .dk-cell--fail{background:#d946ef;box-shadow:0 0 2px rgba(217,70,239,.35)}
 
-/* High-vibrancy live data stream: pure CSS asynchronous pulse with randomized per-element delays */
-.matrix-pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(0.4,0,0.2,1);will-change:opacity,filter,box-shadow;transform:translateZ(0)}
+/* Calm, natural live data stream pulse with gentle brighter hues and zero white shadows */
+.matrix-pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;will-change:opacity,box-shadow,background-color;transform:translateZ(0)}
 .dk-cell--pass.matrix-pulse{animation-name:matrix-pulse-pass}
 .dk-cell--fail.matrix-pulse{animation-name:matrix-pulse-fail}
-.dk-cell--pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:cubic-bezier(0.4,0,0.2,1);will-change:opacity,filter,box-shadow;transform:translateZ(0)}
+.dk-cell--pulse{animation-name:matrix-pulse;animation-iteration-count:infinite;animation-timing-function:ease-in-out;will-change:opacity,box-shadow,background-color;transform:translateZ(0)}
 .dk-cell--pass.dk-cell--pulse{animation-name:matrix-pulse-pass}
 .dk-cell--fail.dk-cell--pulse{animation-name:matrix-pulse-fail}
 
 @keyframes matrix-pulse{
-  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(255,255,255,.2)}
-  86%{opacity:1;filter:brightness(1.75);box-shadow:0 0 5px #ffffff,0 0 9px rgba(34,211,238,.85)}
+  0%,60%,100%{opacity:.88;box-shadow:0 0 2px rgba(34,211,238,.35)}
+  80%{opacity:1;box-shadow:0 0 3px rgba(103,232,249,.6)}
 }
 @keyframes matrix-pulse-pass{
-  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(34,211,238,.35)}
-  86%{opacity:1;filter:brightness(1.7);box-shadow:0 0 5px #ffffff,0 0 9px #22d3ee}
+  0%,60%,100%{background:#22d3ee;opacity:.88;box-shadow:0 0 2px rgba(34,211,238,.35)}
+  80%{background:#67e8f9;opacity:1;box-shadow:0 0 3px rgba(34,211,238,.6)}
 }
 @keyframes matrix-pulse-fail{
-  0%,72%,100%{opacity:.85;filter:brightness(1);box-shadow:0 0 2px rgba(217,70,239,.35)}
-  86%{opacity:1;filter:brightness(1.7);box-shadow:0 0 5px #ffffff,0 0 9px #d946ef}
+  0%,60%,100%{background:#d946ef;opacity:.88;box-shadow:0 0 2px rgba(217,70,239,.35)}
+  80%{background:#f0abfc;opacity:1;box-shadow:0 0 3px rgba(217,70,239,.6)}
 }
 
 .dk-cell--running{background:#ffffff!important;box-shadow:0 0 6px #22d3ee,0 0 12px rgba(34,211,238,.85)!important;animation:dk-runner-pulse .75s ease-in-out infinite alternate;transform:scale(1.25);z-index:2}

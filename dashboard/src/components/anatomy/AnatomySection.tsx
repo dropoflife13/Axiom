@@ -1,8 +1,20 @@
 'use client';
 
 import React, { useState } from 'react';
-import { AxiomAnatomy } from './AxiomAnatomy';
+import dynamic from 'next/dynamic';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
+
+const AxiomAnatomy = dynamic(
+  () => import('./AxiomAnatomy').then((mod) => mod.AxiomAnatomy),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="axm-360-fallback">
+        <span>INITIALIZING AXIOM 360 WEBGL CORE...</span>
+      </div>
+    ),
+  }
+);
 export { AxiomAnatomy };
 
 interface Subsystem {
