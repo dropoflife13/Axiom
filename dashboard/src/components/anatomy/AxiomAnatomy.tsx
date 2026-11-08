@@ -212,12 +212,48 @@ const ek = (a: string, b: string) => `${a}-${b}`;
 
 /* The Healing Loop Stages */
 export const STAGES = [
-  { name: 'GENERATE', node: '05', edges: ['06-05', '02-06'], color: C_GEN, msg: '[EXECUTOR] Prompt compiled at T=0 · candidate SQL generated' },
-  { name: 'VERIFY',   node: '07', edges: ['05-07'],           color: C_VER, msg: '[ORACLE CRUCIBLE] Fresh PG 16 container · migration deployed as deployer' },
-  { name: 'FAIL',     node: '08', edges: ['07-08', '08-12'],  color: C_FAIL, msg: '[VERDICT] 34 facts probed · tripped invariants: F-05 F-19 F-20' },
-  { name: 'ADVISE',   node: '12', edges: ['08-12'],           color: C_ADV, msg: '[ADVISOR] Failure distilled into a lesson under 24 words · queued for retry' },
-  { name: 'RETRY',    node: '05', edges: ['12-05'],           color: C_GEN, msg: '[EXECUTOR] Retry with advice injected · regenerating migration SQL' },
-  { name: 'PASS',     node: '10', edges: ['08-10', '10-03'],  color: C_PASS, msg: '[CHECKPOINT] Bound facts 100% verified · provenance hash committed to ledger' },
+  {
+    name: 'GENERATE',
+    node: '05',
+    edges: ['01-04', '04-02', '02-03', '02-06', '06-05'],
+    color: C_GEN,
+    msg: '[EXECUTOR] Task ingress from 01 Task Bank -> 04 Conditions -> 02 Retrieval -> 06 Guardrails -> 05 Executor compiles SQL',
+  },
+  {
+    name: 'VERIFY',
+    node: '07',
+    edges: ['05-07'],
+    color: C_VER,
+    msg: '[ORACLE CRUCIBLE] Fresh PG 16 container · migration deployed as deployer',
+  },
+  {
+    name: 'FAIL',
+    node: '08',
+    edges: ['07-08'],
+    color: C_FAIL,
+    msg: '[VERDICT] 34 facts probed under role application · tripped invariants: F-05 F-19 F-20',
+  },
+  {
+    name: 'ADVISE',
+    node: '12',
+    edges: ['08-12'],
+    color: C_ADV,
+    msg: '[ADVISOR] Failure distilled into a lesson under 24 words · queued for retry',
+  },
+  {
+    name: 'RETRY',
+    node: '05',
+    edges: ['12-05', '05-07'],
+    color: C_GEN,
+    msg: '[EXECUTOR] Retry with advice injected · regenerating migration SQL to Oracle Crucible',
+  },
+  {
+    name: 'PASS',
+    node: '10',
+    edges: ['07-08', '08-10', '10-03', '10-11'],
+    color: C_PASS,
+    msg: '[CHECKPOINT] Bound facts 100% verified · provenance hash committed to ledger & memory vault',
+  },
 ];
 
 /* Shaders: Holographic Fresnel & Scanline Sweep */
@@ -599,7 +635,10 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       rec[n.id] = { n, g, uni, edgeMat, core, drop, el, shell };
     });
 
-    // Buses
+    // Buses with Smooth Luminous Data Packets
+    const packetBoxGeo = new THREE.BoxGeometry(0.14, 0.14, 0.14);
+    const packetCoreGeo = new THREE.BoxGeometry(0.09, 0.09, 0.09);
+
     const buses = EDGES.map((e, i) => {
       const pos = new Float32Array(12);
       const A = BY_ID[e[0]].pos;
@@ -614,15 +653,53 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       const mat = new THREE.LineBasicMaterial({
         color: e[2],
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.22,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
       const line = new THREE.Line(geom, mat);
       scene.add(line);
-      const pk = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.12, 0.12), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      scene.add(pk);
-      return { a: e[0], b: e[1], key: ek(e[0], e[1]), pos, geom, mat, pk, phase: i / EDGES.length };
+
+      // Primary glowing data packet
+      const pkMat1 = new THREE.MeshBasicMaterial({
+        color: e[2],
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pk1 = new THREE.Mesh(packetBoxGeo, pkMat1);
+      pk1.visible = false;
+      scene.add(pk1);
+
+      // Secondary glowing data packet for streaming pulse effect
+      const pkMat2 = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pk2 = new THREE.Mesh(packetCoreGeo, pkMat2);
+      pk2.visible = false;
+      scene.add(pk2);
+
+      return {
+        a: e[0],
+        b: e[1],
+        key: ek(e[0], e[1]),
+        color: e[2],
+        pos,
+        geom,
+        mat,
+        line,
+        pk1,
+        pkMat1,
+        pk2,
+        pkMat2,
+        progress: i / EDGES.length,
+        pkOpacity: 0,
+      };
     });
 
     // Spherical Camera Helpers
@@ -854,30 +931,70 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
 
         const isAct = Boolean(active[b.key]);
         const touches = b.a === curSel || b.b === curSel;
-        const tO = isAct ? 1 : touches ? 0.7 : 0.3;
-        b.mat.opacity += (tO - b.mat.opacity) * 0.15;
+        const targetLineOpacity = isAct ? 0.95 : touches ? 0.65 : 0.2;
+        b.mat.opacity += (targetLineOpacity - b.mat.opacity) * 0.12;
 
         const segs: [number, number][] = [];
         let total = 0;
         for (let i = 0; i < 3; i++) {
-          const len = Math.hypot(p[(i + 1) * 3] - p[i * 3], p[(i + 1) * 3 + 1] - p[i * 3 + 1], p[(i + 1) * 3 + 2] - p[i * 3 + 2]);
+          const len = Math.hypot(
+            p[(i + 1) * 3] - p[i * 3],
+            p[(i + 1) * 3 + 1] - p[i * 3 + 1],
+            p[(i + 1) * 3 + 2] - p[i * 3 + 2]
+          );
           segs.push([total, len]);
           total += len;
         }
 
-        const u = ((T.value * (isAct ? 0.45 : 0.12) + b.phase) % 1) * total;
-        for (let j = 0; j < 3; j++) {
-          if (u <= segs[j][0] + segs[j][1] || j === 2) {
-            const k = segs[j][1] > 0 ? Math.min(1, Math.max(0, (u - segs[j][0]) / segs[j][1])) : 0;
-            b.pk.position.set(
-              p[j * 3] + (p[(j + 1) * 3] - p[j * 3]) * k,
-              p[j * 3 + 1] + (p[(j + 1) * 3 + 1] - p[j * 3 + 1]) * k,
-              p[j * 3 + 2] + (p[(j + 1) * 3 + 2] - p[j * 3 + 2]) * k
-            );
-            break;
-          }
+        // Data Transmission / Packet Activity
+        const isPassingData = isAct || (touches && curSel !== null);
+        const targetPkOpacity = isPassingData ? 1.0 : 0.0;
+        // Smoothly fade in/out so in-flight packets complete their journey gracefully without vanishing
+        b.pkOpacity += (targetPkOpacity - b.pkOpacity) * (isPassingData ? 0.18 : 0.08);
+
+        if (b.pkOpacity > 0.01) {
+          b.pk1.visible = true;
+          b.pk2.visible = true;
+
+          // Continuous integration: progress strictly advances forward!
+          // ZERO discontinuous teleportation or hard resets when stages switch!
+          const speed = isAct ? 0.9 : 0.55;
+          b.progress = (b.progress + dt * speed) % 1.0;
+
+          // Helper to map 0..1 progress onto 3D 3-segment conduit
+          const setPosOnPath = (mesh: THREE.Mesh, prog: number) => {
+            const u = (prog % 1) * total;
+            for (let j = 0; j < 3; j++) {
+              if (u <= segs[j][0] + segs[j][1] || j === 2) {
+                const k = segs[j][1] > 0 ? Math.min(1, Math.max(0, (u - segs[j][0]) / segs[j][1])) : 0;
+                mesh.position.set(
+                  p[j * 3] + (p[(j + 1) * 3] - p[j * 3]) * k,
+                  p[j * 3 + 1] + (p[(j + 1) * 3 + 1] - p[j * 3 + 1]) * k,
+                  p[j * 3 + 2] + (p[(j + 1) * 3 + 2] - p[j * 3 + 2]) * k
+                );
+                break;
+              }
+            }
+          };
+
+          // Primary packet
+          setPosOnPath(b.pk1, b.progress);
+          b.pkMat1.opacity = b.pkOpacity * (0.8 + 0.2 * Math.sin(T.value * 8));
+          b.pk1.rotation.y += dt * 3.0;
+          b.pk1.rotation.x += dt * 2.0;
+          b.pk1.scale.setScalar(isAct ? 1.35 : 1.0);
+
+          // Secondary follower packet (offset by 0.5 along conduit)
+          const p2Prog = (b.progress + 0.5) % 1.0;
+          setPosOnPath(b.pk2, p2Prog);
+          b.pkMat2.opacity = b.pkOpacity * 0.7;
+          b.pk2.rotation.y -= dt * 2.5;
+          b.pk2.rotation.z += dt * 2.0;
+          b.pk2.scale.setScalar(isAct ? 0.95 : 0.7);
+        } else {
+          b.pk1.visible = false;
+          b.pk2.visible = false;
         }
-        b.pk.scale.setScalar(isAct ? 1.5 : 0.9);
       });
 
       // Target View Camera Tween
@@ -943,11 +1060,15 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       buses.forEach((b) => {
         b.geom.dispose();
         b.mat.dispose();
+        b.pkMat1.dispose();
+        b.pkMat2.dispose();
       });
+      packetBoxGeo.dispose();
+      packetCoreGeo.dispose();
     };
   }, []);
 
-  // Stage Cycle Timer (1.5s per step when loop is active)
+  // Stage Cycle Timer (1.8s per step when loop is active)
   React.useEffect(() => {
     if (!looping) return;
     const interval = setInterval(() => {
@@ -956,7 +1077,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
         setSelId(STAGES[next].node);
         return next;
       });
-    }, 1500);
+    }, 1800);
     return () => clearInterval(interval);
   }, [looping]);
 
@@ -1260,12 +1381,13 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
                 type="button"
                 className="axm-360-btn"
                 aria-pressed={looping}
+                style={looping ? { borderColor: 'rgba(34, 211, 238, 0.6)', color: '#22d3ee' } : undefined}
                 onClick={() => {
                   setLooping(!looping);
                   if (!looping) setSelId(STAGES[stageIdx].node);
                 }}
               >
-                Run loop<kbd>L</kbd>
+                {looping ? 'Halt loop' : 'Run loop'}<kbd>L</kbd>
               </button>
 
               <button
