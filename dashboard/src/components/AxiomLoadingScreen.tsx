@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { AxiomKnotLoader } from './loader/AxiomKnotLoader';
 
 export interface AxiomLoadingScreenProps {
   onComplete?: () => void;
@@ -284,11 +285,10 @@ export function AxiomLoadingScreen({
           100% { transform: translate(-50%, -50%) scale(2.2); opacity: 0; }
         }
 
+        .axiom-knot-loader,
         .axiom-logo-img {
           position: relative;
           z-index: 3;
-          width: 110px;
-          height: 110px;
           display: block;
           filter: drop-shadow(0 0 25px rgba(34, 211, 238, 0.65)) drop-shadow(0 0 50px rgba(168, 85, 247, 0.45));
           animation: axiom-core-breathe 2.6s ease-in-out infinite alternate;
@@ -451,12 +451,10 @@ export function AxiomLoadingScreen({
           <div className="axiom-reticle-mid" />
           <div className="axiom-reticle-inner" />
           <div className="axiom-sonar-pulse" />
-          <img
-            src="/brand/axiom-mark.svg"
-            alt="Axiom"
-            className="axiom-logo-img"
-            width={110}
-            height={110}
+          <AxiomKnotLoader
+            progress={progress}
+            reducedMotion={reducedMotion}
+            size={160}
           />
         </div>
 
