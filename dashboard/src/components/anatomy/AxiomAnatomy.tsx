@@ -9,7 +9,45 @@ import './anatomy.css';
 
 const Soft3DAnatomyStage = dynamic(
   () => import('./Soft3DAnatomyStage').then((mod) => mod.Soft3DAnatomyStage),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: '680px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          background: 'radial-gradient(ellipse at 50% 50%, #0d1326 0%, #060914 55%, #020306 100%)',
+        }}
+      >
+        <div
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            border: '2px solid rgba(56, 189, 248, 0.2)',
+            borderTopColor: '#38bdf8',
+            animation: 'spin 1s linear infinite',
+          }}
+        />
+        <div
+          style={{
+            fontFamily: 'var(--axm-font-mono, monospace)',
+            fontSize: '11px',
+            color: '#38bdf8',
+            letterSpacing: '0.15em',
+          }}
+        >
+          INITIALIZING SOFT 3D STAGE...
+        </div>
+      </div>
+    ),
+  }
 );
 
 export interface AxiomAnatomyProps {
