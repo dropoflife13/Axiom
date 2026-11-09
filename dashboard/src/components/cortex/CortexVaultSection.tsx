@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { AxiomLogo } from '../AxiomLogo';
-import { RUN_OPTIONS, modelForRun } from '@/lib/runs';
+import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
 import './cortex.css';
 
@@ -224,12 +224,14 @@ const FACT_NAME_MAP: Record<string, { name: string; domain: string }> = {
 interface CortexVaultSectionProps {
   fleet?: RunStatus[];
   activeRunId?: string;
+  runOptions?: readonly RunOption[];
   onSelectRun?: (runId: string) => void;
 }
 
 export function CortexVaultSection({
   fleet = [],
-  activeRunId = 'nemotron-1',
+  activeRunId = DEFAULT_RUN_ID,
+  runOptions = RUN_OPTIONS,
   onSelectRun,
 }: CortexVaultSectionProps) {
   const [showAllContracts, setShowAllContracts] = useState(false);
@@ -337,26 +339,24 @@ export function CortexVaultSection({
             </div>
 
             <div className="cortex-fleet-grid">
-              {RUN_OPTIONS.map((runOpt, idx) => {
+              {runOptions.map((runOpt) => {
                 const st = fleet.find((f) => f.run.id === runOpt.id);
                 const isSelected = activeRunId === runOpt.id;
-                const done = st ? st.done : idx === 0 ? 720 : 0;
+                const done = st ? st.done : 0;
                 const total = st ? st.total : 720;
                 const pct = Math.min(100, Math.round((done / total) * 100));
                 const conv =
                   st?.convergence !== null && st?.convergence !== undefined
                     ? `${(st.convergence * 100).toFixed(1)}%`
-                    : idx === 0
-                    ? '68.4%'
                     : 'CALIBRATING';
                 const statusBadge =
                   st?.state === 'live'
                     ? `LIVE · ${done}/${total}`
                     : done >= total
-                    ? `VERIFIED · 720/720`
+                    ? `VERIFIED · ${done}/${total}`
                     : done > 0
                     ? `IN PROGRESS · ${done}/${total}`
-                    : `PARALLEL BG · 720 QUEUED`;
+                    : `PARALLEL BG · ${done}/${total}`;
 
                 return (
                   <button
@@ -792,14 +792,15 @@ export function CortexVaultSection({
                 </div>
                 <div className="cortex-kr-divider" />
                 <div className="cortex-kr-parallel">
-                  <span className="cortex-kr-parallel-lbl">PARALLEL 2×720 ABLATIONS</span>
+                  <span className="cortex-kr-parallel-lbl">PARALLEL ABLATIONS</span>
                   <div className="cortex-kr-parallel-chips">
-                    <span className="cortex-kr-pchip cortex-kr-pchip--qwen">
-                      <i /> QWEN 3.8 27B
-                    </span>
-                    <span className="cortex-kr-pchip cortex-kr-pchip--glm">
-                      <i /> GLM-5.3
-                    </span>
+                    {runOptions
+                      .filter((r) => r.id !== activeRunId)
+                      .map((r) => (
+                        <span key={r.id} className="cortex-kr-pchip" style={{ color: r.accent }}>
+                          <i style={{ background: r.accent }} /> {r.label}
+                        </span>
+                      ))}
                   </div>
                 </div>
               </div>

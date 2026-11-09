@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
 import type { DeskData } from '@/lib/desk';
 import { AxiomLogo } from './AxiomLogo';
-import { RUN_OPTIONS, modelForRun } from '@/lib/runs';
+import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
 import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
 
@@ -42,13 +42,26 @@ interface HealingLoopHeroProps {
   error: string | null;
   snapshot?: SnapshotMeta;
   activeRunId?: string;
+  runOptions?: readonly RunOption[];
   fleet?: RunStatus[];
   onSelectRun?: (runId: string) => void;
   onCopyLogs?: () => void;
   onReplayIntro?: () => void;
 }
 
-export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', fleet, onSelectRun, onCopyLogs, onReplayIntro }: HealingLoopHeroProps) {
+export default function HealingLoopHero({
+  live,
+  desk,
+  stamp,
+  error,
+  snapshot,
+  activeRunId = DEFAULT_RUN_ID,
+  runOptions = RUN_OPTIONS,
+  fleet,
+  onSelectRun,
+  onCopyLogs,
+  onReplayIntro,
+}: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -124,31 +137,25 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                 <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN">
                   <span className="hl-run-label">ACTIVE MODEL / RUN</span>
                   <div className="hl-run-tabs">
-                    {RUN_OPTIONS.map((r) => {
+                    {runOptions.map((r) => {
                       const st = fleet?.find((f) => f.run.id === r.id);
                       const isActive = activeRunId === r.id;
+                      const doneCount = isActive ? live.done : (st?.done ?? 0);
+                      const totalCount = TOTAL;
                       return (
                         <button
                           key={r.id}
                           type="button"
-                          className={`hl-run-tab ${isActive ? 'is-active' : ''} ${st?.state === 'live' ? 'is-live' : ''}`}
+                          className={`hl-run-tab ${isActive ? 'is-active' : ''} ${st?.state === 'live' || (isActive && live.running) ? 'is-live' : ''}`}
                           onClick={() => onSelectRun?.(r.id)}
-                          title={`Switch to ${r.label} (${r.model})${st ? ` · ${st.done}/${st.total} trials` : ''}`}
+                          title={`Switch to ${r.label} (${r.model}) · ${doneCount}/${totalCount} trials`}
                           style={{ '--run-accent': r.accent } as React.CSSProperties}
                         >
                           <span className="hl-run-dot" />
                           {r.label}
-                          {st ? (
-                            <span className="hl-run-prog">
-                              {st.state === 'awaiting'
-                                ? 'BG 720'
-                                : st.done >= st.total
-                                ? '720/720'
-                                : `${st.done}/${st.total}`}
-                            </span>
-                          ) : (
-                            <span className="hl-run-prog">720</span>
-                          )}
+                          <span className="hl-run-prog">
+                            {`${doneCount}/${totalCount}`}
+                          </span>
                         </button>
                       );
                     })}
@@ -225,10 +232,15 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                 ))}
               </div>
               <div className="hl-footer-model">
-                <span>PARALLEL 2×720 BG:</span>
-                <b style={{ color: '#ff8a3d' }}>QWEN 3.8 27B</b>
-                <span>+</span>
-                <b style={{ color: '#2dd4bf' }}>GLM-5.3</b>
+                <span>PARALLEL BG:</span>
+                {runOptions
+                  .filter((r) => r.id !== activeRunId)
+                  .map((r, i) => (
+                    <span key={r.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                      {i > 0 && <span>+</span>}
+                      <b style={{ color: r.accent }}>{r.label}</b>
+                    </span>
+                  ))}
                 <span style={{ opacity: 0.4 }}>|</span>
                 <span>ACTIVE MODEL:</span>
                 <b>{snapshot?.model ?? modelForRun(activeRunId)}</b>

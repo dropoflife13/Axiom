@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
 import { AIModelsMarquee } from './AIModelsMarquee';
-import { modelForRun } from '@/lib/runs';
+import { modelForRun, DEFAULT_RUN_ID } from '@/lib/runs';
 
 const AxiomAnatomy = dynamic(
   () => import('./AxiomAnatomy').then((mod) => mod.AxiomAnatomy),
@@ -195,7 +195,7 @@ export function AnatomySection({
 } = {}) {
   const [selectedSubsystem, setSelectedSubsystem] = useState<string>('03'); // Default to Oracle Crucible
 
-  const activeModel = snapshot?.model ?? modelForRun(snapshot?.runId ?? 'nemotron-1');
+  const activeModel = snapshot?.model ?? modelForRun(snapshot?.runId ?? DEFAULT_RUN_ID);
 
   const subsystems = React.useMemo(() => {
     return SUBSYSTEMS.map((sub) => {

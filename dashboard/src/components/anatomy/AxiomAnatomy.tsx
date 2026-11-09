@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { AxiomLogo } from '@/components/AxiomLogo';
 import type { CheckpointTrial, DeskData } from '@/lib/desk';
-import { modelForRun } from '@/lib/runs';
+import { modelForRun, DEFAULT_RUN_ID } from '@/lib/runs';
 
 export interface AxiomAnatomyProps {
   checkpoint?: CheckpointTrial[];
@@ -382,20 +382,15 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
   stateRef.current.exploded = exploded;
 
   // Active Model & Metadata
-  const activeRunId = snapshot?.runId ?? 'nemotron-1';
-  const activeCommit = snapshot?.commit ?? '7ebae83';
+  const activeRunId = snapshot?.runId ?? DEFAULT_RUN_ID;
+  const activeCommit = snapshot?.commit ?? 'live';
   const isLive = Boolean(snapshot?.isLive);
   const activeModel =
     snapshot?.model ??
     modelForRun(activeRunId);
 
   // Compute live telemetry from checkpoint
-  const trialCount =
-    checkpoint && checkpoint.length > 0
-      ? checkpoint.length
-      : activeRunId === 'qwen27b-1' || activeRunId === 'glm53-1'
-      ? 720
-      : 720;
+  const trialCount = checkpoint && checkpoint.length > 0 ? checkpoint.length : 0;
 
   const convergenceVal = React.useMemo(() => {
     if (desk?.convergence !== null && desk?.convergence !== undefined) return desk.convergence;
@@ -403,7 +398,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       const sum = checkpoint.reduce((s, t) => s + (t.boundFactFraction ?? 0), 0);
       return sum / checkpoint.length;
     }
-    return 0.684;
+    return 0;
   }, [desk?.convergence, checkpoint]);
 
   const conditionCounts = React.useMemo(() => {
@@ -411,9 +406,9 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       if (checkpoint && checkpoint.length > 0) {
         return checkpoint.filter((t) => t.condition === c).length;
       }
-      return Math.min(120, Math.floor(trialCount / 6));
+      return 0;
     });
-  }, [checkpoint, trialCount]);
+  }, [checkpoint]);
 
   // Preset Views
   const setCameraView = React.useCallback((view: 'front' | 'side' | 'top' | 'iso') => {

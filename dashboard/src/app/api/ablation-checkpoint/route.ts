@@ -3,21 +3,14 @@ import path from 'node:path';
 import { NextResponse, type NextRequest } from 'next/server';
 import { modelForRun } from '@/lib/runs';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedRun = searchParams.get('run');
 
-    // A requested run must resolve to its own data only; falling back to another
-    // run would mislabel one model's trials as another's.
-    const candidateRuns = requestedRun
-      ? [requestedRun]
-      : ['qwen27b-1', 'nemotron-1', 'ablation-v2'];
-
-    const runsToTry = Array.from(new Set(candidateRuns));
-
-    let foundPath: string | null = null;
-    let resolvedRunId = requestedRun || 'qwen27b-1';
+    const runId = requestedRun || 'nemotron-2';
 
     if (process.env.VERCEL) {
       return NextResponse.json(
@@ -26,49 +19,42 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    for (const runId of runsToTry) {
-      const candidates = [
-        // Working directory inside dashboard/
-        path.resolve(process.cwd(), `../.axiom-state/runs/${runId}/checkpoint.json`),
-        path.resolve(process.cwd(), `../.axiom-state/${runId}-checkpoint.json`),
-        path.resolve(process.cwd(), `../.axiom-state/${runId}.json`),
-        // Working directory in project root
-        path.resolve(process.cwd(), `.axiom-state/runs/${runId}/checkpoint.json`),
-        path.resolve(process.cwd(), `.axiom-state/${runId}-checkpoint.json`),
-        path.resolve(process.cwd(), `.axiom-state/${runId}.json`),
-      ];
+    const candidatePaths = [
+      path.resolve(process.cwd(), `../../.axiom-state/runs/${runId}/checkpoint.json`),
+      path.resolve(process.cwd(), `../.axiom-state/runs/${runId}/checkpoint.json`),
+      path.resolve(process.cwd(), `.axiom-state/runs/${runId}/checkpoint.json`),
+      path.resolve(process.cwd(), `../../.axiom-state/${runId}-checkpoint.json`),
+      path.resolve(process.cwd(), `../.axiom-state/${runId}-checkpoint.json`),
+      path.resolve(process.cwd(), `.axiom-state/${runId}-checkpoint.json`),
+      path.resolve(process.cwd(), `../../.axiom-state/${runId}.json`),
+      path.resolve(process.cwd(), `../.axiom-state/${runId}.json`),
+      path.resolve(process.cwd(), `.axiom-state/${runId}.json`),
+    ];
 
-      if (runId === 'nemotron-1' || runId === 'ablation-v2') {
-        candidates.push(
-          path.resolve(process.cwd(), '../.axiom-state/ablation-v2-checkpoint.json'),
-          path.resolve(process.cwd(), '.axiom-state/ablation-v2-checkpoint.json'),
-        );
-      }
-
-      if (runId === 'glm53-1') {
-        candidates.push(
-          path.resolve(process.cwd(), '../.axiom-state/runs/glm5-1/checkpoint.json'),
-          path.resolve(process.cwd(), '.axiom-state/runs/glm5-1/checkpoint.json'),
-          path.resolve(process.cwd(), '../.axiom-state/runs/glm-5.3/checkpoint.json'),
-          path.resolve(process.cwd(), '.axiom-state/runs/glm-5.3/checkpoint.json'),
-        );
-      }
-
-      for (const p of candidates) {
+    let foundPath: string | null = null;
+    for (const p of candidatePaths) {
+      try {
         if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
           foundPath = p;
-          resolvedRunId = runId;
           break;
         }
+      } catch {
+        // Continue searching
       }
-      if (foundPath) break;
     }
 
     if (!foundPath) {
-      return NextResponse.json(
-        { error: `Checkpoint data not available for run "${requestedRun || 'qwen27b-1'}"` },
-        { status: 404 },
-      );
+      // Run is initializing or has no trials yet: return empty trials with status 200
+      // This resets state cleanly without triggering 404 issue indicators in Next.js
+      return NextResponse.json({
+        id: runId,
+        runId,
+        commit: 'live',
+        model: modelForRun(runId),
+        lastModified: new Date().toISOString(),
+        trials: [],
+        status: 'initializing',
+      });
     }
 
     const raw = fs.readFileSync(/*turbopackIgnore: true*/ foundPath, 'utf8');
@@ -90,22 +76,20 @@ export async function GET(request: NextRequest) {
     const model =
       data.metadata?.requestedModel ||
       data.requestedModel ||
-      modelForRun(resolvedRunId === 'ablation-v2' ? 'nemotron-1' : resolvedRunId);
+      modelForRun(runId);
 
     return NextResponse.json({
-      id: resolvedRunId,
-      runId: resolvedRunId,
+      id: runId,
+      runId,
       commit,
       model,
       lastModified: stats.mtime.toISOString(),
-      metadata: data.metadata ?? {},
       trials,
-      isLive: true,
+      metadata: data.metadata ?? null,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json(
-      { error: `Unable to read checkpoint data: ${message}` },
+      { error: 'Internal server error while resolving checkpoint', details: String(err), trials: [] },
       { status: 500 },
     );
   }

@@ -84,8 +84,7 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
     let res: Response | null = null;
     if (isLocal) {
       res = await fetch(`/api/ablation-checkpoint?run=${run.id}`, { signal, cache: 'no-store' });
-    }
-    if (!res || !res.ok) {
+    } else {
       res = await fetch(`/data/run-${run.id}.json`, { signal, cache: 'no-store' });
     }
     if (!res.ok) return empty;
