@@ -19,6 +19,15 @@ export const RUN_DISPLAY_NAMES: Record<string, string> = {
   'glm53-1': 'GLM-5.3',
   'liquid17b-mini': 'LIQUID 1.7B MINI',
   'liquid-mini': 'LIQUID 1.7B MINI',
+  'gemini-mini': 'GEMINI 3.6 FLASH MINI',
+  'gemini-flash-lite-full': 'GEMINI 3.5 FLASH LITE',
+  'gemini-3.1-flash-lite': 'GEMINI 3.1 FLASH LITE',
+  'gemma4-26b-full': 'GEMMA 4 26B',
+  'smoke-nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING (SMOKE)',
+  'nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING',
+  'nemotron-lightning-full': 'NEMOTRON 3.5 LIGHTNING',
+  'llama33-mini': 'LLAMA 3.3',
+  'xingchen-mini': 'XINGCHEN MINI',
 };
 
 export function getDisplayName(runId: string): string {
@@ -26,6 +35,12 @@ export function getDisplayName(runId: string): string {
     return RUN_DISPLAY_NAMES[runId];
   }
   const lower = runId.toLowerCase();
+  if (lower.includes('smoke-nemotron') || lower.includes('smoke_nemotron')) return 'NEMOTRON 3.5 LIGHTNING (SMOKE)';
+  if (lower.includes('gemma4') || lower.includes('gemma-4')) return 'GEMMA 4 26B';
+  if (lower.includes('3.1-flash-lite') || lower.includes('3.1_flash_lite')) return 'GEMINI 3.1 FLASH LITE';
+  if (lower.includes('flash-lite') || lower.includes('flash_lite')) return 'GEMINI 3.5 FLASH LITE';
+  if (lower.includes('lightning')) return 'NEMOTRON 3.5 LIGHTNING';
+  if (lower.includes('gemini')) return 'GEMINI 3.6 FLASH MINI';
   if (lower.includes('liquid')) return 'LIQUID 1.7B MINI';
   if (lower.includes('nemotron')) return 'NEMOTRON 550B';
   if (lower.includes('qwen')) return 'QWEN 3.8 27B';
@@ -42,7 +57,22 @@ export function inferRunOption(id: string): RunOption {
   let model = id;
   let accent = '#38bdf8';
 
-  if (lower.includes('nemotron')) {
+  if (lower.includes('gemma4') || lower.includes('gemma-4')) {
+    model = 'gemma-4-26b-it';
+    accent = '#a78bfa';
+  } else if (lower.includes('3.1-flash-lite') || lower.includes('3.1_flash_lite')) {
+    model = 'gemini-3.1-flash-lite';
+    accent = '#10b981';
+  } else if (lower.includes('flash-lite') || lower.includes('flash_lite')) {
+    model = 'gemini-3.5-flash-lite';
+    accent = '#34a853';
+  } else if (lower.includes('lightning')) {
+    model = 'nvidia/nemotron-3.5-lightning:free';
+    accent = '#eab308';
+  } else if (lower.includes('gemini')) {
+    model = 'gemini-3.6-flash';
+    accent = '#4285f4';
+  } else if (lower.includes('nemotron')) {
     model = 'nvidia/nemotron-3-ultra-550b-a55b';
     accent = '#76b900';
   } else if (lower.includes('qwen')) {
@@ -74,6 +104,7 @@ export const DEFAULT_RUN_OPTIONS: readonly RunOption[] = [
   inferRunOption('nemotron-2'),
   inferRunOption('qwen27b-2'),
   inferRunOption('glm5-2'),
+  inferRunOption('gemini-flash-lite-full'),
   inferRunOption('liquid17b-mini'),
 ];
 

@@ -173,18 +173,22 @@ export default function HealingLoopHero({
                       title={`Active model: ${getDisplayName(activeRunId)} (${live.done}/${totalTrials} trials)`}
                       style={{ '--run-accent': activeOption.accent } as React.CSSProperties}
                     >
-                      <span className="hl-run-dot" />
-                      <span className="hl-run-trigger-name">{getDisplayName(activeRunId)}</span>
-                      <span className="hl-run-prog">{`${live.done}/${totalTrials}`}</span>
-                      <svg
-                        className={`hl-run-chevron ${dropdownOpen ? 'is-rotated' : ''}`}
-                        width="10"
-                        height="6"
-                        viewBox="0 0 10 6"
-                        fill="none"
-                      >
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
+                      <div className="hl-run-trigger-left">
+                        <span className="hl-run-dot" />
+                        <span className="hl-run-trigger-name">{getDisplayName(activeRunId)}</span>
+                      </div>
+                      <div className="hl-run-trigger-right">
+                        <span className="hl-run-prog">{`${live.done}/${totalTrials}`}</span>
+                        <svg
+                          className={`hl-run-chevron ${dropdownOpen ? 'is-rotated' : ''}`}
+                          width="10"
+                          height="6"
+                          viewBox="0 0 10 6"
+                          fill="none"
+                        >
+                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
                     </button>
                     {dropdownOpen && (
                       <div className="hl-run-menu" role="listbox">
@@ -220,13 +224,20 @@ export default function HealingLoopHero({
                   </div>
                 </div>
 
-                <div className={`hl-chip ${snapshot?.awaiting ? 'hl-chip--awaiting' : ''}`} role="status">
+                <div
+                  className={`hl-chip ${snapshot?.awaiting ? 'hl-chip--awaiting' : snapshot?.isLive ? 'hl-chip--live' : 'hl-chip--snapshot'}`}
+                  role="status"
+                  title={snapshot?.isLive ? `Live telemetry stream for ${snapshot?.runId ?? activeRunId}` : `Checkpoint snapshot for ${snapshot?.runId ?? activeRunId}`}
+                >
                   {snapshot?.awaiting ? (
-                    <span>AWAITING SNAPSHOT // {snapshot.runId}</span>
+                    <span>AWAITING // {snapshot.runId}</span>
                   ) : snapshot && !snapshot.isLive ? (
                     <span>SNAPSHOT // {snapshot.runId} @ {snapshot.commit}</span>
                   ) : (
-                    <span>{live.label ?? 'LIVE'}</span>
+                    <>
+                      <span className="hl-chip-live-dot" />
+                      <span>LIVE // {snapshot?.runId ?? activeRunId} @ {snapshot?.commit ?? 'live'}</span>
+                    </>
                   )}
                 </div>
               </div>
@@ -321,16 +332,18 @@ const css = `
 .hl-brand{display:flex;align-items:center;gap:8px;cursor:pointer;transition:filter .3s ease;pointer-events:auto}
 .hl-brand:hover{filter:drop-shadow(0 0 10px rgba(34,211,238,.85))}
 .hl header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;position:relative;z-index:500;pointer-events:auto}
-.hl-header-controls{display:flex;align-items:center;gap:12px;position:relative;z-index:510}
-.hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto;position:relative;z-index:520}
-.hl-run-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600}
-.hl-run-dropdown-wrap{position:relative;display:inline-block;z-index:530}
+.hl-header-controls{display:flex;align-items:center;gap:14px;position:relative;z-index:510;flex-shrink:0}
+.hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto;position:relative;z-index:520;flex-shrink:0}
+.hl-run-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600;white-space:nowrap;flex-shrink:0}
+.hl-run-dropdown-wrap{position:relative;display:inline-block;z-index:530;flex-shrink:0}
 .hl-run-trigger{
   all:unset;
   cursor:pointer;
   display:inline-flex;
   align-items:center;
-  gap:8px;
+  justify-content:space-between;
+  gap:10px;
+  min-width:215px;
   font-size:10px;
   letter-spacing:.08em;
   font-weight:600;
@@ -341,24 +354,34 @@ const css = `
   color:#f1f5f9;
   transition:all .2s ease;
   min-height:24px;
+  box-sizing:border-box;
+  flex-shrink:0;
 }
 .hl-run-trigger:hover,.hl-run-trigger.is-open{
   border-color:var(--run-accent,#22d3ee);
   background:color-mix(in srgb,var(--run-accent,#22d3ee) 12%,transparent);
   box-shadow:0 0 10px color-mix(in srgb,var(--run-accent,#22d3ee) 35%,transparent);
 }
-.hl-run-trigger-name{font-weight:700}
+.hl-run-trigger-left{display:inline-flex;align-items:center;gap:8px;min-width:0}
+.hl-run-trigger-right{display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.hl-run-trigger-name{font-weight:700;white-space:nowrap}
 .hl-run-trigger .hl-run-dot{width:6px;height:6px;border-radius:50%;background:var(--run-accent,#22d3ee);box-shadow:0 0 6px var(--run-accent,#22d3ee);flex-shrink:0}
 .hl-run-trigger.is-live .hl-run-dot{animation:hl-run-pulse 1.4s ease-in-out infinite}
-.hl-run-chevron{transition:transform .2s ease;color:var(--dim);margin-left:2px;flex-shrink:0}
+.hl-run-chevron{transition:transform .2s ease;color:var(--dim);flex-shrink:0}
 .hl-run-chevron.is-rotated{transform:rotate(180deg);color:#22d3ee}
 .hl-run-menu{
   position:absolute;
   top:calc(100% + 6px);
   left:0;
-  min-width:220px;
+  min-width:100%;
   width:max-content;
-  max-width:300px;
+  min-width:230px;
+  max-width:320px;
+  max-height:min(440px,calc(100vh - 120px));
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(160,170,255,.3) transparent;
   background:#070910;
   background:rgba(7,9,16,.98);
   border:1px solid rgba(160,170,255,.35);
@@ -374,6 +397,8 @@ const css = `
   pointer-events:auto;
   animation:hl-menu-fade .15s cubic-bezier(0.16,1,0.3,1) both;
 }
+.hl-run-menu::-webkit-scrollbar{width:4px}
+.hl-run-menu::-webkit-scrollbar-thumb{background:rgba(160,170,255,.3);border-radius:2px}
 @keyframes hl-menu-fade{
   from{opacity:0;transform:translateY(-4px) scale(0.98)}
   to{opacity:1;transform:translateY(0) scale(1)}
@@ -408,6 +433,52 @@ const css = `
 .hl-run-option-name{font-weight:600}
 .hl-run-option-prog{font-size:8.5px;color:var(--dim);font-variant-numeric:tabular-nums}
 .hl-run-option.is-selected .hl-run-option-prog{color:var(--run-accent,#22d3ee);font-weight:600}
+.hl-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-width:230px;
+  max-width:280px;
+  padding:3px 12px;
+  border-radius:99px;
+  letter-spacing:.08em;
+  font-size:10px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  flex-shrink:0;
+  transition:border-color .2s ease,background-color .2s ease,color .2s ease,box-shadow .2s ease;
+  font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+}
+.hl-chip--snapshot{
+  color:#34d399;
+  border:1px solid rgba(52,211,153,.4);
+  background:rgba(52,211,153,.06);
+  box-shadow:0 0 10px rgba(52,211,153,.12);
+}
+.hl-chip--live{
+  color:#22d3ee;
+  border:1px solid rgba(34,211,238,.45);
+  background:rgba(34,211,238,.08);
+  box-shadow:0 0 12px rgba(34,211,238,.2);
+}
+.hl-chip-live-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#22d3ee;
+  box-shadow:0 0 6px #22d3ee;
+  animation:hl-run-pulse 1.4s ease-in-out infinite;
+  flex-shrink:0;
+}
+.hl-chip--awaiting{
+  color:#fbbf24!important;
+  border-color:rgba(251,191,36,.5)!important;
+  background:rgba(251,191,36,.06)!important;
+  box-shadow:0 0 10px rgba(251,191,36,.2)!important;
+  animation:hl-awaiting-pulse 2s ease-in-out infinite;
+}
 .hl-run-tabs{display:inline-flex;align-items:center;padding:2px;background:rgba(5,6,10,.85);border:1px solid rgba(160,170,255,.2);border-radius:4px;gap:2px}
 .hl-run-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;letter-spacing:.08em;font-weight:600;padding:3px 9px;border-radius:3px;color:#8b90a8;transition:all .2s ease;border:1px solid transparent}
 .hl-run-tab:hover{color:#e8eaf2;background:rgba(255,255,255,.05);border-color:rgba(160,170,255,.3)}
@@ -417,8 +488,6 @@ const css = `
 .hl-run-tab.is-live .hl-run-dot{opacity:1;animation:hl-run-pulse 1.4s ease-in-out infinite}
 .hl-run-prog{font-size:8px;padding:1px 4px;border-radius:2px;background:rgba(255,255,255,.06);color:var(--run-accent,#8b90a8);letter-spacing:.06em}
 @keyframes hl-run-pulse{0%,100%{box-shadow:0 0 0 0 var(--run-accent)}50%{box-shadow:0 0 0 4px transparent}}
-.hl-chip--awaiting{color:#fbbf24!important;border-color:rgba(251,191,36,.5)!important;animation:hl-awaiting-pulse 2s ease-in-out infinite}
-@keyframes hl-awaiting-pulse{0%,100%{box-shadow:0 0 4px rgba(251,191,36,.3)}50%{box-shadow:0 0 12px rgba(251,191,36,.8)}}
 .hl-footer-model{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-family:var(--font-mono,monospace)}
 .hl-footer-model b{color:#22d3ee;font-weight:600}
 @keyframes dk-progress-awaiting{
@@ -426,7 +495,7 @@ const css = `
   50%{background:linear-gradient(90deg,rgba(34,211,238,.2),#22d3ee,rgba(34,211,238,.2));opacity:1}
   100%{background:linear-gradient(90deg,rgba(251,191,36,.2),#fbbf24,rgba(251,191,36,.2));opacity:.6}
 }
-.hl-brand{display:flex;align-items:center;gap:8px}.hl-brand b{letter-spacing:.18em;font-size:13px;font-weight:700;color:#ffffff;text-shadow:none}.hl-brand span{color:var(--dim);margin-left:2px}.hl-m{display:flex;gap:20px;color:var(--dim)}.hl-m b{display:block;color:#e8eaf2;font-weight:500;text-shadow:none}.hl-chip{color:#34d399;border:1px solid rgba(52,211,153,.4);padding:3px 10px;border-radius:99px;letter-spacing:.08em}
+.hl-brand{display:flex;align-items:center;gap:8px}.hl-brand b{letter-spacing:.18em;font-size:13px;font-weight:700;color:#ffffff;text-shadow:none}.hl-brand span{color:var(--dim);margin-left:2px}.hl-m{display:flex;gap:20px;color:var(--dim)}.hl-m b{display:block;color:#e8eaf2;font-weight:500;text-shadow:none}
 .hl-hero{max-width:min(420px,34vw);position:relative;z-index:2;pointer-events:auto;margin:0}
 .hl-k{display:inline-flex;align-items:center;gap:6px;color:#c4b5fd;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);font-size:10.5px;font-weight:600;letter-spacing:.18em;margin:0 0 8px;text-shadow:none}
 .hl h1{font:600 clamp(26px,2.8vw,44px)/1.04 var(--font-sans,'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);letter-spacing:-.03em;color:#f5eff7;margin:0 0 10px;text-shadow:none}
