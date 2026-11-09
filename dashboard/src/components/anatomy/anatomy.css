@@ -2201,6 +2201,19 @@
   border-color: var(--c);
 }
 
+.rlbl {
+  font-family: var(--font-mono, var(--mono), monospace);
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.22em;
+  color: var(--dim);
+  white-space: nowrap;
+  user-select: none;
+  padding: 2px 0;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
 .axm-360-fallback {
   position: absolute;
   inset: 0;
@@ -2227,6 +2240,7 @@
   .axm-360-insp p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .axm-360-insp dl { display: none; }
   .lbl small { display: none !important; }
+  .rlbl { display: none; }
 }
 
 /* =========================================================================
