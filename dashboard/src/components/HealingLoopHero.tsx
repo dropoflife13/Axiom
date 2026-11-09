@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
 import type { DeskData } from '@/lib/desk';
 import { AxiomLogo } from './AxiomLogo';
-import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, getDisplayName, type RunOption } from '@/lib/runs';
+import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, getDisplayName, inferRunOption, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
 import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
 
@@ -15,7 +15,6 @@ const STAGES: [string, number][] = [
   ['GENERATE', 0xa855f7], ['VERIFY', 0x22d3ee], ['FAIL', 0xf43f5e],
   ['ADVISE', 0xfbbf24], ['RETRY', 0xa855f7], ['PASS', 0x34d399],
 ];
-const TOTAL = 720;
 const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
 
 export interface SnapshotMeta {
@@ -28,6 +27,7 @@ export interface SnapshotMeta {
 
 export type LiveRun = {
   done: number;
+  total?: number;
   counts: number[];
   stage: number;
   running?: boolean;
@@ -63,6 +63,8 @@ export default function HealingLoopHero({
   onReplayIntro,
 }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
@@ -70,9 +72,34 @@ export default function HealingLoopHero({
   const color = hex(STAGES[stage][1]);
   const running = live.running ?? true;
 
+  const totalTrials = live.total ?? desk.totalTrials ?? (activeRunId.toLowerCase().includes('mini') ? 48 : 720);
+  const activeOption = runOptions.find((r) => r.id === activeRunId) ?? inferRunOption(activeRunId);
+  const activeFleetStatus = fleet?.find((f) => f.run.id === activeRunId);
+
   useEffect(() => {
     setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+      }
+    }
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [dropdownOpen]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -133,33 +160,63 @@ export default function HealingLoopHero({
                 <div>CONDITIONS<b>06</b></div><div>STAGE<b style={{ color }}>{STAGES[stage][0]}</b></div>
               </div>
               <div className="hl-header-controls">
-                {/* ACTIVE MODEL / RUN Selector (Futuristic Sci-Fi Glow Toggle) */}
-                <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN">
+                {/* ACTIVE MODEL / RUN Dropdown Selector */}
+                <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN" ref={dropdownRef}>
                   <span className="hl-run-label">ACTIVE MODEL / RUN</span>
-                  <div className="hl-run-tabs">
-                    {runOptions.map((r) => {
-                      const st = fleet?.find((f) => f.run.id === r.id);
-                      const isActive = activeRunId === r.id;
-                      const doneCount = isActive ? live.done : (st?.done ?? 0);
-                      const totalCount = TOTAL;
-                      const displayName = getDisplayName(r.id);
-                      return (
-                        <button
-                          key={r.id}
-                          type="button"
-                          className={`hl-run-tab ${isActive ? 'is-active' : ''} ${st?.state === 'live' || (isActive && live.running) ? 'is-live' : ''}`}
-                          onClick={() => onSelectRun?.(r.id)}
-                          title={`Switch to ${displayName} (${doneCount}/${totalCount} trials)`}
-                          style={{ '--run-accent': r.accent } as React.CSSProperties}
-                        >
-                          <span className="hl-run-dot" />
-                          {displayName}
-                          <span className="hl-run-prog">
-                            {`${doneCount}/${totalCount}`}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  <div className="hl-run-dropdown-wrap">
+                    <button
+                      type="button"
+                      className={`hl-run-trigger ${dropdownOpen ? 'is-open' : ''} ${activeFleetStatus?.state === 'live' || (activeRunId && live.running) ? 'is-live' : ''}`}
+                      onClick={() => setDropdownOpen((v) => !v)}
+                      aria-expanded={dropdownOpen}
+                      aria-haspopup="listbox"
+                      title={`Active model: ${getDisplayName(activeRunId)} (${live.done}/${totalTrials} trials)`}
+                      style={{ '--run-accent': activeOption.accent } as React.CSSProperties}
+                    >
+                      <span className="hl-run-dot" />
+                      <span className="hl-run-trigger-name">{getDisplayName(activeRunId)}</span>
+                      <span className="hl-run-prog">{`${live.done}/${totalTrials}`}</span>
+                      <svg
+                        className={`hl-run-chevron ${dropdownOpen ? 'is-rotated' : ''}`}
+                        width="10"
+                        height="6"
+                        viewBox="0 0 10 6"
+                        fill="none"
+                      >
+                        <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    {dropdownOpen && (
+                      <div className="hl-run-menu" role="listbox">
+                        {runOptions.map((r) => {
+                          const st = fleet?.find((f) => f.run.id === r.id);
+                          const isSelected = activeRunId === r.id;
+                          const rTotal = st?.total ?? (r.id.toLowerCase().includes('mini') ? 48 : (desk.totalTrials ?? 720));
+                          const rDone = isSelected ? live.done : (st?.done ?? 0);
+                          const name = getDisplayName(r.id);
+                          return (
+                            <button
+                              key={r.id}
+                              type="button"
+                              role="option"
+                              aria-selected={isSelected}
+                              className={`hl-run-option ${isSelected ? 'is-selected' : ''}`}
+                              style={{ '--run-accent': r.accent } as React.CSSProperties}
+                              onClick={() => {
+                                onSelectRun?.(r.id);
+                                setDropdownOpen(false);
+                              }}
+                            >
+                              <div className="hl-run-option-left">
+                                <span className="hl-run-dot" />
+                                <span className="hl-run-option-name">{name}</span>
+                              </div>
+                              <span className="hl-run-option-prog">{`${rDone}/${rTotal}`}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -189,18 +246,18 @@ export default function HealingLoopHero({
                 <div className="hl-run">
                   <div className="hl-big">
                     {snapshot?.awaiting ? (
-                      <><b>0</b><span> / {TOTAL}</span></>
+                      <><b>0</b><span> / {totalTrials}</span></>
                     ) : (
-                      <><b>{live.done}</b><span> / {TOTAL}</span></>
+                      <><b>{live.done}</b><span> / {totalTrials}</span></>
                     )}
                   </div>
-                  <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
-                    <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${(live.done / TOTAL) * 100}%` }} />
+                  <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={totalTrials} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
+                    <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${Math.min(100, (live.done / Math.max(1, totalTrials)) * 100)}%` }} />
                   </div>
                   <p className="hl-dim">
                     {snapshot?.awaiting
-                      ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${activeRunId}`
-                      : `${desk.totalTokens.toLocaleString()} tokens · ${TOTAL - live.done} trials remain`}
+                      ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${getDisplayName(activeRunId)}`
+                      : `${desk.totalTokens.toLocaleString()} tokens · ${Math.max(0, totalTrials - live.done)} trials remain`}
                   </p>
                   {onCopyLogs && <button onClick={onCopyLogs}>COPY LOGS</button>}
                 </div>
@@ -217,11 +274,12 @@ export default function HealingLoopHero({
                 memoryHits={desk.memoryHits}
                 convergence={desk.convergence}
                 snapshot={snapshot}
+                total={totalTrials}
               />
             </div>
 
             <div className="dk-bottom">
-              <EvidenceMatrix cells={desk.cells} passed={desk.passed} failed={desk.failed} snapshot={snapshot} />
+              <EvidenceMatrix cells={desk.cells} passed={desk.passed} failed={desk.failed} totalTrials={totalTrials} snapshot={snapshot} />
               <LiveTerminal lines={desk.log} stamp={stamp} error={error} isLive={snapshot?.isLive} />
               <ConvergenceGauge value={desk.convergence} done={desk.done} />
             </div>
@@ -266,6 +324,79 @@ const css = `
 .hl-header-controls{display:flex;align-items:center;gap:12px}
 .hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto}
 .hl-run-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600}
+.hl-run-dropdown-wrap{position:relative;display:inline-block}
+.hl-run-trigger{
+  all:unset;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  font-size:10px;
+  letter-spacing:.08em;
+  font-weight:600;
+  padding:4px 10px;
+  border-radius:4px;
+  background:rgba(5,6,10,.88);
+  border:1px solid rgba(160,170,255,.25);
+  color:#f1f5f9;
+  transition:all .2s ease;
+  min-height:24px;
+}
+.hl-run-trigger:hover,.hl-run-trigger.is-open{
+  border-color:var(--run-accent,#22d3ee);
+  background:color-mix(in srgb,var(--run-accent,#22d3ee) 12%,transparent);
+  box-shadow:0 0 10px color-mix(in srgb,var(--run-accent,#22d3ee) 35%,transparent);
+}
+.hl-run-trigger-name{font-weight:700}
+.hl-run-trigger .hl-run-dot{width:6px;height:6px;border-radius:50%;background:var(--run-accent,#22d3ee);box-shadow:0 0 6px var(--run-accent,#22d3ee);flex-shrink:0}
+.hl-run-trigger.is-live .hl-run-dot{animation:hl-run-pulse 1.4s ease-in-out infinite}
+.hl-run-chevron{transition:transform .2s ease;color:var(--dim);margin-left:2px;flex-shrink:0}
+.hl-run-chevron.is-rotated{transform:rotate(180deg);color:#22d3ee}
+.hl-run-menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  right:0;
+  min-width:220px;
+  background:rgba(5,6,10,.97);
+  border:1px solid rgba(160,170,255,.25);
+  border-radius:6px;
+  box-shadow:0 12px 32px rgba(0,0,0,.85),0 0 16px rgba(34,211,238,.08);
+  backdrop-filter:blur(14px);
+  padding:4px;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  z-index:999;
+}
+.hl-run-option{
+  all:unset;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  padding:6px 10px;
+  border-radius:4px;
+  font-size:9.5px;
+  letter-spacing:.06em;
+  color:#8b90a8;
+  transition:all .15s ease;
+}
+.hl-run-option:hover{
+  background:rgba(255,255,255,.06);
+  color:#f1f5f9;
+}
+.hl-run-option.is-selected{
+  background:color-mix(in srgb,var(--run-accent,#22d3ee) 14%,transparent);
+  color:#f1f5f9;
+  border-left:2px solid var(--run-accent,#22d3ee);
+}
+.hl-run-option-left{display:flex;align-items:center;gap:7px}
+.hl-run-option .hl-run-dot{width:5px;height:5px;border-radius:50%;background:var(--run-accent,#8b90a8);flex-shrink:0}
+.hl-run-option.is-selected .hl-run-dot{box-shadow:0 0 5px var(--run-accent,#22d3ee)}
+.hl-run-option-name{font-weight:600}
+.hl-run-option-prog{font-size:8.5px;color:var(--dim);font-variant-numeric:tabular-nums}
+.hl-run-option.is-selected .hl-run-option-prog{color:var(--run-accent,#22d3ee);font-weight:600}
 .hl-run-tabs{display:inline-flex;align-items:center;padding:2px;background:rgba(5,6,10,.85);border:1px solid rgba(160,170,255,.2);border-radius:4px;gap:2px}
 .hl-run-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;letter-spacing:.08em;font-weight:600;padding:3px 9px;border-radius:3px;color:#8b90a8;transition:all .2s ease;border:1px solid transparent}
 .hl-run-tab:hover{color:#e8eaf2;background:rgba(255,255,255,.05);border-color:rgba(160,170,255,.3)}

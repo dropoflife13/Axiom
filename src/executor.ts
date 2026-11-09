@@ -18,6 +18,7 @@ export const ALLOWED_EXECUTOR_MODELS = [
   'qwen/qwen3.8-27b',
   'meta-llama/llama-3.3-70b-instruct',
   'z-ai/glm-5.3-flash',
+  'liquid/lfm-3-1.7b',
 ] as const;
 export const REQUIRED_MODELS = ALLOWED_EXECUTOR_MODELS;
 export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
@@ -84,7 +85,11 @@ export function assertModelMatch(requestedModel: string, returnedModel: string):
       `[ABORT_NON_RETRYABLE] Requested model "${requestedModel}" does not match configured model "${configured}".`
     );
   }
-  if (returnedModel !== requestedModel) {
+  if (
+    returnedModel !== requestedModel &&
+    returnedModel !== `${requestedModel}:free` &&
+    !returnedModel.startsWith(`${requestedModel}:`)
+  ) {
     throw new Error(
       `[ABORT_NON_RETRYABLE] Returned model "${returnedModel}" does not match requested model "${requestedModel}".`
     );

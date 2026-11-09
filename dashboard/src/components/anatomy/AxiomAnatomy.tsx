@@ -2026,7 +2026,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
                 TRIAL <i>{isLive ? 'LIVE STREAM' : 'SIMULATED'}</i>
               </h3>
               <div className="axm-360-big">
-                {trialCount} <small>/ 720</small>
+                {trialCount} <small>/ {desk?.totalTrials ?? (checkpoint && checkpoint.length > 0 && new Set(checkpoint.map((t) => t.taskId)).size <= 8 ? 48 : 720)}</small>
               </div>
               <div className="axm-360-rw" style={{ gridTemplateColumns: '1fr auto', marginTop: 6 }}>
                 <span>active model</span>

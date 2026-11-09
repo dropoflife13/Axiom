@@ -35,6 +35,7 @@ export interface DeskData {
   done: number;
   passed: number;
   failed: number;
+  totalTrials?: number;
   /** Mean boundFactFraction over completed trials, or null with no trials. */
   convergence: number | null;
   cells: CellState[];
@@ -47,16 +48,17 @@ export interface DeskData {
   log: LogLine[];
 }
 
-/** Condition-major order: trial slot = conditionIndex * 120 + taskOrdinal. */
-export function cellIndex(trial: CheckpointTrial, taskOrder: Map<string, number>): number {
+/** Condition-major order: trial slot = conditionIndex * tasksPerCondition + taskOrdinal. */
+export function cellIndex(trial: CheckpointTrial, taskOrder: Map<string, number>, totalTrials = TOTAL_TRIALS): number {
   const c = CONDITIONS.indexOf(trial.condition as (typeof CONDITIONS)[number]);
   const t = taskOrder.get(trial.taskId);
   if (c < 0 || t === undefined) return -1;
-  return c * (TOTAL_TRIALS / CONDITIONS.length) + t;
+  const tasksPerCondition = Math.max(1, Math.round(totalTrials / CONDITIONS.length));
+  return c * tasksPerCondition + t;
 }
 
-export function deriveDesk(trials: CheckpointTrial[], logLimit = 60): DeskData {
-  const cells: CellState[] = Array.from({ length: TOTAL_TRIALS }, () => 'pending');
+export function deriveDesk(trials: CheckpointTrial[], logLimit = 60, totalTrials = TOTAL_TRIALS): DeskData {
+  const cells: CellState[] = Array.from({ length: totalTrials }, () => 'pending');
   const taskOrder = new Map<string, number>();
   for (const t of trials) if (!taskOrder.has(t.taskId)) taskOrder.set(t.taskId, taskOrder.size);
 
@@ -65,8 +67,8 @@ export function deriveDesk(trials: CheckpointTrial[], logLimit = 60): DeskData {
   for (const t of trials) {
     if (t.boundPassed) passed++;
     fractionSum += t.boundFactFraction ?? 0;
-    const i = cellIndex(t, taskOrder);
-    if (i >= 0 && i < TOTAL_TRIALS) cells[i] = t.boundPassed ? 'pass' : 'fail';
+    const i = cellIndex(t, taskOrder, totalTrials);
+    if (i >= 0 && i < totalTrials) cells[i] = t.boundPassed ? 'pass' : 'fail';
   }
 
   const latencyKnown = trials.length > 0 && trials.every((t) => typeof t.latencyMs === 'number');
@@ -102,6 +104,7 @@ export function deriveDesk(trials: CheckpointTrial[], logLimit = 60): DeskData {
     done: trials.length,
     passed,
     failed: trials.length - passed,
+    totalTrials,
     convergence: trials.length ? fractionSum / trials.length : null,
     cells,
     tokens: trials.map((t) => t.totalTokens ?? 0),

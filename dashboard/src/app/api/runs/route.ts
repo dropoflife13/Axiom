@@ -29,8 +29,8 @@ export async function GET() {
       .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'archive')
       .map((entry) => entry.name);
 
-    // Natural sort prioritizing nemotron, qwen, glm
-    const preferredOrder = ['nemotron', 'qwen', 'glm'];
+    // Natural sort prioritizing nemotron, qwen, glm, liquid
+    const preferredOrder = ['nemotron', 'qwen', 'glm', 'liquid'];
     runFolders.sort((a, b) => {
       const idxA = preferredOrder.findIndex((p) => a.toLowerCase().includes(p));
       const idxB = preferredOrder.findIndex((p) => b.toLowerCase().includes(p));

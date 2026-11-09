@@ -17,6 +17,8 @@ export const RUN_DISPLAY_NAMES: Record<string, string> = {
   'qwen27b-1': 'QWEN 3.8 27B',
   'glm5-2': 'GLM-5.3',
   'glm53-1': 'GLM-5.3',
+  'liquid17b-mini': 'LIQUID 1.7B MINI',
+  'liquid-mini': 'LIQUID 1.7B MINI',
 };
 
 export function getDisplayName(runId: string): string {
@@ -24,14 +26,15 @@ export function getDisplayName(runId: string): string {
     return RUN_DISPLAY_NAMES[runId];
   }
   const lower = runId.toLowerCase();
+  if (lower.includes('liquid')) return 'LIQUID 1.7B MINI';
   if (lower.includes('nemotron')) return 'NEMOTRON 550B';
   if (lower.includes('qwen')) return 'QWEN 3.8 27B';
   if (lower.includes('glm')) return 'GLM-5.3';
   if (lower.includes('llama33') || lower.includes('llama-3.3')) return 'LLAMA 3.3';
   if (lower.includes('gemma')) return 'GEMMA 2';
 
-  // Fallback: If a run ID is not in the map (e.g., a future run), strip the -2 suffix and uppercase it
-  return runId.replace(/-\d+$/, '').toUpperCase();
+  // Fallback: If a run ID is not in the map (e.g., a future run), strip the -2 suffix and format cleanly
+  return runId.replace(/-\d+$/, '').replace(/-/g, ' ').toUpperCase();
 }
 
 export function inferRunOption(id: string): RunOption {
@@ -48,6 +51,9 @@ export function inferRunOption(id: string): RunOption {
   } else if (lower.includes('glm')) {
     model = 'z-ai/glm-5.3-flash';
     accent = '#2dd4bf';
+  } else if (lower.includes('liquid')) {
+    model = 'liquid/lfm-3-1.7b';
+    accent = '#38bdf8';
   } else if (lower.includes('llama')) {
     model = 'meta-llama/llama-3.3-70b-instruct';
     accent = '#60a5fa';
@@ -68,6 +74,7 @@ export const DEFAULT_RUN_OPTIONS: readonly RunOption[] = [
   inferRunOption('nemotron-2'),
   inferRunOption('qwen27b-2'),
   inferRunOption('glm5-2'),
+  inferRunOption('liquid17b-mini'),
 ];
 
 export const RUN_OPTIONS: readonly RunOption[] = DEFAULT_RUN_OPTIONS;

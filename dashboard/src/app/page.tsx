@@ -194,23 +194,49 @@ export default function Page() {
     };
   }, [activeRunId]);
 
+  const totalTrials = useMemo(() => {
+    const rawData = results as any;
+    if (typeof rawData?.totalTrials === 'number' && rawData.totalTrials > 0) {
+      return rawData.totalTrials;
+    }
+    if (typeof rawData?.metadata?.totalTrials === 'number' && rawData.metadata.totalTrials > 0) {
+      return rawData.metadata.totalTrials;
+    }
+    if (Array.isArray(rawData?.tasks) && rawData.tasks.length > 0) {
+      return rawData.tasks.length * 6;
+    }
+    if (Array.isArray(rawData?.metadata?.tasks) && rawData.metadata.tasks.length > 0) {
+      return rawData.metadata.tasks.length * 6;
+    }
+    const isMini = activeRunId.toLowerCase().includes('mini');
+    const taskIds = new Set(checkpoint.map((t) => t.taskId));
+    if (isMini) {
+      return taskIds.size > 0 ? taskIds.size * 6 : 48;
+    }
+    if (taskIds.size > 0 && taskIds.size <= 8 && checkpoint.length >= 24) {
+      return taskIds.size * 6;
+    }
+    return TOTAL_TRIALS;
+  }, [results, checkpoint, activeRunId]);
+
   const desk = useMemo(() => {
-    return deriveDesk(checkpoint);
-  }, [checkpoint]);
+    return deriveDesk(checkpoint, 60, totalTrials);
+  }, [checkpoint, totalTrials]);
 
   const live = useMemo<LiveRun>(() => {
-    const done = Math.min(TOTAL_TRIALS, checkpoint.length);
+    const done = Math.min(totalTrials, checkpoint.length);
     const counts = CONDITIONS.map((condition) => checkpoint.filter((trial) => trial.condition === condition).length);
     const running = done > 0 && !checkpointError;
     return {
       done,
+      total: totalTrials,
       counts,
       stage: stageFor(checkpoint[checkpoint.length - 1]),
       running,
       label: snapshotMeta.isLive ? 'LIVE' : 'SNAPSHOT',
       awaiting: awaitingSnapshot,
     };
-  }, [checkpoint, checkpointError, snapshotMeta.isLive, awaitingSnapshot]);
+  }, [checkpoint, checkpointError, snapshotMeta.isLive, awaitingSnapshot, totalTrials]);
 
   const copyLogs = () => {
     const logs = JSON.stringify({ snapshotMeta, checkpoint, results, fetchedAt: new Date().toISOString() }, null, 2);

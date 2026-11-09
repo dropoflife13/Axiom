@@ -69,11 +69,12 @@ export function summarizeTrials(trials: CheckpointTrial[]) {
 async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus> {
   const isLocal =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  const defaultTotal = run.id.toLowerCase().includes('mini') ? 48 : TRIALS_PER_RUN;
   const empty: RunStatus = {
     run,
     state: 'awaiting',
     done: 0,
-    total: TRIALS_PER_RUN,
+    total: defaultTotal,
     convergence: null,
     convergenceSeries: [],
     conditions: summarizeTrials([]).conditions,
@@ -90,13 +91,19 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
     if (!res.ok) return empty;
     const data = await res.json();
     const trials: CheckpointTrial[] = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
+    const total = typeof data.totalTrials === 'number' && data.totalTrials > 0
+      ? data.totalTrials
+      : run.id.toLowerCase().includes('mini')
+      ? 48
+      : TRIALS_PER_RUN;
     const mtime = data.lastModified ? new Date(data.lastModified).getTime() : 0;
-    const live = Boolean(mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < TRIALS_PER_RUN);
+    const live = Boolean(mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total);
     return {
       ...empty,
       ...summarizeTrials(trials),
       state: trials.length === 0 ? 'awaiting' : live ? 'live' : 'snapshot',
-      done: Math.min(TRIALS_PER_RUN, trials.length),
+      done: Math.min(total, trials.length),
+      total,
       lastModified: data.lastModified ?? null,
     };
   } catch (err) {

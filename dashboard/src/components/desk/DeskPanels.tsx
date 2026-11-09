@@ -108,23 +108,28 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
   cells,
   passed,
   failed,
+  totalTrials,
   snapshot,
 }: {
   cells: CellState[];
   passed: number;
   failed: number;
+  totalTrials?: number;
   snapshot?: { runId: string; commit: string; isLive?: boolean; model?: string; awaiting?: boolean };
 }) {
   const isAwaiting = Boolean(snapshot?.awaiting);
-  const pending = TOTAL_TRIALS - passed - failed;
-  const runningIdx = passed + failed < TOTAL_TRIALS ? passed + failed : -1;
+  const total = totalTrials ?? (cells.length > 0 ? cells.length : TOTAL_TRIALS);
+  const pending = Math.max(0, total - passed - failed);
+  const runningIdx = passed + failed < total ? passed + failed : -1;
   const isLive = Boolean(snapshot?.isLive);
+  const isMini = total <= 60;
+  const tasksPerCondition = Math.max(1, Math.round(total / 6));
 
   return (
     <div className="dk-panel dk-matrix" style={{ position: 'relative' }}>
       <div className="dk-head">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span>EVIDENCE MATRIX // 720 TRIALS</span>
+          <span>EVIDENCE MATRIX // {total} TRIALS</span>
           <span
             className="dk-snapshot-badge"
             style={{
@@ -193,7 +198,8 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
       <div
         className="dk-grid"
         role="img"
-        aria-label={`${passed} passed, ${failed} failed, ${pending} pending out of 720 trials. Rows are conditions A, B, C, C0, D, E_B.`}
+        aria-label={`${passed} passed, ${failed} failed, ${pending} pending out of ${total} trials. Rows are conditions A, B, C, C0, D, E_B.`}
+        style={isMini ? { gridTemplateColumns: `repeat(${tasksPerCondition}, minmax(0, 1fr))`, maxWidth: `${tasksPerCondition * 28}px`, margin: '0 auto' } : undefined}
       >
         {cells.map((c, i) => {
           // Pending squares must remain dark gray and completely static (zero animation, zero pulse)
@@ -261,6 +267,7 @@ export const FrequencyRack = memo(function FrequencyRack({
   memoryHits,
   convergence,
   snapshot,
+  total = TOTAL_TRIALS,
 }: {
   tokens: number[] | null;
   latency: number[] | null;
@@ -271,6 +278,7 @@ export const FrequencyRack = memo(function FrequencyRack({
   memoryHits?: number[] | null;
   convergence?: number | null;
   snapshot?: { model?: string; runId?: string; awaiting?: boolean };
+  total?: number;
 }) {
   const reduce = useReducedMotion();
   const [phase, setPhase] = useState(0);
@@ -512,7 +520,7 @@ export const FrequencyRack = memo(function FrequencyRack({
         {/* Module 3: Active Routing Channels & Convergence */}
         <div className="hl-telem-row">
           <span>CONVERGENCE</span>
-          <b style={{ color: '#22d3ee' }}>{convPct} ({done}/720)</b>
+          <b style={{ color: '#22d3ee' }}>{convPct} ({done}/{total})</b>
         </div>
         <div className="hl-telem-row">
           <span>AVG TOKENS</span>
