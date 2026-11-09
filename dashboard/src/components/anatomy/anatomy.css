@@ -2271,38 +2271,55 @@
   width: 100%;
   overflow: hidden;
   display: flex;
+  position: relative;
   background: transparent !important;
 }
 
-.aim-pure-track {
+.aim-pure-marquee {
+  display: flex;
+  width: max-content;
+  flex-shrink: 0;
+  will-change: transform;
+  gap: 0;
+  background: transparent !important;
+}
+
+.aim-pure-group {
   display: flex;
   align-items: center;
-  gap: 36px;
-  width: max-content;
-  will-change: transform;
-  background: transparent !important;
+  gap: 32px;
+  padding-right: 32px; /* Matches gap perfectly for mathematical zero-jump infinite looping */
+  flex-shrink: 0;
 }
 
-.aim-pure-track:hover {
+.aim-pure-row:hover .aim-pure-marquee {
   animation-play-state: paused;
 }
 
-.aim-pure-track--left {
-  animation: aim-scroll-left 34s linear infinite;
+.aim-pure-marquee--left {
+  animation: aim-infinite-scroll-left 50s linear infinite;
 }
 
-.aim-pure-track--right {
-  animation: aim-scroll-right 38s linear infinite;
+.aim-pure-marquee--right {
+  animation: aim-infinite-scroll-right 54s linear infinite;
 }
 
-@keyframes aim-scroll-left {
-  0% { transform: translate3d(0, 0, 0); }
-  100% { transform: translate3d(-50%, 0, 0); }
+@keyframes aim-infinite-scroll-left {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
 }
 
-@keyframes aim-scroll-right {
-  0% { transform: translate3d(-50%, 0, 0); }
-  100% { transform: translate3d(0, 0, 0); }
+@keyframes aim-infinite-scroll-right {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* Pure Icon - Glowing SVG, No Box, No Border, No Pill */
@@ -2336,7 +2353,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aim-pure-track {
+  .aim-pure-marquee {
     animation: none !important;
   }
 }
