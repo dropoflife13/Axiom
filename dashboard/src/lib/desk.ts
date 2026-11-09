@@ -64,7 +64,8 @@ export function deriveDesk(
   trials: CheckpointTrial[],
   logLimit = 60,
   totalTrials = TOTAL_TRIALS,
-  lastModified?: string | number
+  lastModified?: string | number,
+  startedAt?: string | number
 ): DeskData {
   const cells: CellState[] = Array.from({ length: totalTrials }, () => 'pending');
   const taskOrder = new Map<string, number>();
@@ -86,6 +87,22 @@ export function deriveDesk(
     : [];
 
   const endMs = lastModified ? new Date(lastModified).getTime() : Date.now();
+  let startMs = startedAt ? new Date(startedAt).getTime() : NaN;
+
+  // If startMs is missing, invalid, or identical to endMs, estimate total duration realistically
+  if (isNaN(startMs) || startMs >= endMs || endMs - startMs < 5000) {
+    // Realistic average per-trial duration in milliseconds: ~20-25s per trial for LLM + Postgres Docker evaluation
+    const avgLatencyMs =
+      trials.length > 0 && trials.some((t) => t.latencyMs)
+        ? trials.reduce((s, t) => s + (t.latencyMs ?? 0), 0) / trials.filter((t) => t.latencyMs).length
+        : 22000;
+    const stepMs = Math.max(12000, avgLatencyMs + 3000);
+    startMs = endMs - trials.length * stepMs;
+  }
+
+  const totalDurationMs = Math.max(1000, endMs - startMs);
+  const avgTrialMs = totalDurationMs / Math.max(1, trials.length);
+
   const formatStamp = (ms: number): string => {
     const d = new Date(ms);
     if (isNaN(d.getTime())) return '--:--:--';
@@ -98,15 +115,24 @@ export function deriveDesk(
     const gen = t.generationStatus ?? 'ok';
 
     // Calculate individual historical timestamp for this trial
-    let trialMs: number;
+    let trialStartMs: number;
+    let trialExecMs: number;
+    let trialOracleMs: number;
+
     if (t.timestamp) {
-      trialMs = new Date(t.timestamp).getTime();
+      trialOracleMs = new Date(t.timestamp).getTime();
+      const trialSpan = Math.max(5000, avgTrialMs);
+      trialStartMs = trialOracleMs - trialSpan;
+      trialExecMs = trialOracleMs - Math.max(2000, Math.round(trialSpan * 0.2));
     } else if (t.completedAt) {
-      trialMs = new Date(t.completedAt).getTime();
+      trialOracleMs = new Date(t.completedAt).getTime();
+      const trialSpan = Math.max(5000, avgTrialMs);
+      trialStartMs = trialOracleMs - trialSpan;
+      trialExecMs = trialOracleMs - Math.max(2000, Math.round(trialSpan * 0.2));
     } else {
-      const step = (t.latencyMs && t.latencyMs > 0 ? t.latencyMs : 1400) + 1800;
-      const offsetMs = (trials.length - 1 - n) * step;
-      trialMs = (isNaN(endMs) ? Date.now() : endMs) - offsetMs;
+      trialStartMs = startMs + Math.round(n * avgTrialMs);
+      trialExecMs = trialStartMs + Math.max(2000, Math.round(avgTrialMs * 0.75));
+      trialOracleMs = trialStartMs + Math.max(3000, Math.round(avgTrialMs * 0.95));
     }
 
     const hits = t.retrievedFactIds?.length ?? 0;
@@ -116,7 +142,7 @@ export function deriveDesk(
         stage: 'MEMORY',
         text: `Retrieved ${hits} lessons for ${id}`,
         status: 'OK',
-        stamp: formatStamp(trialMs),
+        stamp: formatStamp(trialStartMs),
       });
     }
 
@@ -125,7 +151,7 @@ export function deriveDesk(
       stage: 'EXECUTOR',
       text: `Generated SQL for ${id} · ${t.totalTokens ?? 0} tok · finish=${t.finishReason ?? 'n/a'}`,
       status: gen === 'ok' ? 'OK' : 'WARN',
-      stamp: formatStamp(trialMs + 1000),
+      stamp: formatStamp(trialExecMs),
     });
 
     const failed = t.failedFacts ?? [];
@@ -136,7 +162,7 @@ export function deriveDesk(
         ? `${id} bound facts ${Math.round((t.boundFactFraction ?? 0) * 100)}% · PASS`
         : `${id} failed ${failed.length} facts: ${failed.slice(0, 4).join(', ')}${failed.length > 4 ? '…' : ''}`,
       status: t.boundPassed ? 'OK' : 'FAIL',
-      stamp: formatStamp(trialMs + 2000),
+      stamp: formatStamp(trialOracleMs),
     });
   });
 

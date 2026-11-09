@@ -137,13 +137,19 @@ export default function Page() {
           return;
         }
 
-        // Attach or preserve stable chronological timestamps for every trial
+        // Attach or preserve stable chronological timestamps for every trial based on actual run duration
         const lastMod = data.lastModified ? new Date(data.lastModified).getTime() : Date.now();
+        const startMod = data.startedAt ? new Date(data.startedAt).getTime() : NaN;
+        const totalDuration = (!isNaN(startMod) && lastMod > startMod && lastMod - startMod >= 5000)
+          ? lastMod - startMod
+          : rawTrials.length * 22000;
+        const trialSpanMs = totalDuration / Math.max(1, rawTrials.length);
+
         const trials: CheckpointTrial[] = rawTrials.map((t: CheckpointTrial, idx: number) => {
           if (t.timestamp || t.completedAt) return t;
-          const step = (t.latencyMs && t.latencyMs > 0 ? t.latencyMs : 1400) + 1800;
-          const offsetMs = (rawTrials.length - 1 - idx) * step;
-          const assignedMs = (isNaN(lastMod) ? Date.now() : lastMod) - offsetMs;
+          const assignedMs = (!isNaN(startMod) && lastMod - startMod >= 5000)
+            ? startMod + idx * trialSpanMs
+            : lastMod - (rawTrials.length - 1 - idx) * trialSpanMs;
           return {
             ...t,
             timestamp: new Date(assignedMs).toISOString(),
@@ -244,9 +250,10 @@ export default function Page() {
   }, [results, checkpoint, activeRunId]);
 
   const lastModified = (results as { lastModified?: string } | null)?.lastModified;
+  const startedAt = (results as { startedAt?: string } | null)?.startedAt;
   const desk = useMemo(() => {
-    return deriveDesk(checkpoint, 60, totalTrials, lastModified);
-  }, [checkpoint, totalTrials, lastModified]);
+    return deriveDesk(checkpoint, 60, totalTrials, lastModified, startedAt);
+  }, [checkpoint, totalTrials, lastModified, startedAt]);
 
   const live = useMemo<LiveRun>(() => {
     const done = Math.min(totalTrials, checkpoint.length);
