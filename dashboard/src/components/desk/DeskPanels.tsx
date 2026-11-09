@@ -196,8 +196,19 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
         aria-label={`${passed} passed, ${failed} failed, ${pending} pending out of 720 trials. Rows are conditions A, B, C, C0, D, E_B.`}
       >
         {cells.map((c, i) => {
-          const isRunning = i === runningIdx;
+          // Pending squares must remain dark gray and completely static (zero animation, zero pulse)
+          if (c === 'pending') {
+            return (
+              <i
+                key={i}
+                suppressHydrationWarning
+                className="dk-cell dk-cell--pending"
+              />
+            );
+          }
+
           // Asynchronous live-stream pulse on a calibrated subset (~20-25 active pulses at any given moment)
+          // ONLY apply to squares with status PASS or FAIL
           const shouldPulse = (c === 'pass' || c === 'fail') && ((i * 11) % 5 === 0 || (i * 7) % 13 === 0);
           const pulseStyle = MATRIX_PULSE_STYLES[i] ?? {
             animationDelay: `${((i * 17) % 50) / 10}s`,
@@ -208,8 +219,8 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
             <i
               key={i}
               suppressHydrationWarning
-              className={`dk-cell dk-cell--${c} ${shouldPulse ? 'matrix-pulse' : ''} ${isRunning ? 'dk-cell--running' : ''}`}
-              style={shouldPulse && !isRunning ? pulseStyle : undefined}
+              className={`dk-cell dk-cell--${c} ${shouldPulse ? 'matrix-pulse' : ''}`}
+              style={shouldPulse ? pulseStyle : undefined}
             />
           );
         })}

@@ -10,6 +10,30 @@ export interface RunOption {
   accent: string;
 }
 
+export const RUN_DISPLAY_NAMES: Record<string, string> = {
+  'nemotron-2': 'NEMOTRON 550B',
+  'nemotron-1': 'NEMOTRON 550B',
+  'qwen27b-2': 'QWEN 3.8 27B',
+  'qwen27b-1': 'QWEN 3.8 27B',
+  'glm5-2': 'GLM-5.3',
+  'glm53-1': 'GLM-5.3',
+};
+
+export function getDisplayName(runId: string): string {
+  if (RUN_DISPLAY_NAMES[runId]) {
+    return RUN_DISPLAY_NAMES[runId];
+  }
+  const lower = runId.toLowerCase();
+  if (lower.includes('nemotron')) return 'NEMOTRON 550B';
+  if (lower.includes('qwen')) return 'QWEN 3.8 27B';
+  if (lower.includes('glm')) return 'GLM-5.3';
+  if (lower.includes('llama33') || lower.includes('llama-3.3')) return 'LLAMA 3.3';
+  if (lower.includes('gemma')) return 'GEMMA 2';
+
+  // Fallback: If a run ID is not in the map (e.g., a future run), strip the -2 suffix and uppercase it
+  return runId.replace(/-\d+$/, '').toUpperCase();
+}
+
 export function inferRunOption(id: string): RunOption {
   const lower = id.toLowerCase();
   let model = id;
@@ -34,7 +58,7 @@ export function inferRunOption(id: string): RunOption {
 
   return {
     id,
-    label: id, // Requirement: The label should just be the run ID
+    label: getDisplayName(id),
     model,
     accent,
   };

@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
 import type { DeskData } from '@/lib/desk';
 import { AxiomLogo } from './AxiomLogo';
-import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, type RunOption } from '@/lib/runs';
+import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, getDisplayName, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
 import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
 
@@ -126,7 +126,7 @@ export default function HealingLoopHero({
               >
                 <AxiomLogo size={24} variant="duo" title="Axiom" />
                 <b>AXIOM</b>
-                <span>Verifier / {snapshot?.runId ?? 'nemotron-1'}</span>
+                <span>Verifier / {getDisplayName(activeRunId ?? snapshot?.runId ?? DEFAULT_RUN_ID)}</span>
               </div>
               <div className="hl-m">
                 <div>ORACLE<b>locked</b></div><div>TEMP<b>0</b></div>
@@ -142,17 +142,18 @@ export default function HealingLoopHero({
                       const isActive = activeRunId === r.id;
                       const doneCount = isActive ? live.done : (st?.done ?? 0);
                       const totalCount = TOTAL;
+                      const displayName = getDisplayName(r.id);
                       return (
                         <button
                           key={r.id}
                           type="button"
                           className={`hl-run-tab ${isActive ? 'is-active' : ''} ${st?.state === 'live' || (isActive && live.running) ? 'is-live' : ''}`}
                           onClick={() => onSelectRun?.(r.id)}
-                          title={`Switch to ${r.label} (${r.model}) · ${doneCount}/${totalCount} trials`}
+                          title={`Switch to ${displayName} (${doneCount}/${totalCount} trials)`}
                           style={{ '--run-accent': r.accent } as React.CSSProperties}
                         >
                           <span className="hl-run-dot" />
-                          {r.label}
+                          {displayName}
                           <span className="hl-run-prog">
                             {`${doneCount}/${totalCount}`}
                           </span>
@@ -349,7 +350,8 @@ const css = `
 .hl-sig-dot{width:4px;height:4px;border-radius:50%;background:#22d3ee;box-shadow:0 0 6px #22d3ee}
 .dk-grid{display:grid;grid-template-columns:repeat(60,1fr);gap:1px;contain:paint}
 .dk-cell{display:block;aspect-ratio:1;border-radius:1px;contain:strict}
-.dk-cell--pending{background:#18181b}
+.dk-cell--pending{background:#18181b!important;box-shadow:none!important;animation:none!important;transform:none!important}
+.dk-cell--pending.matrix-pulse,.dk-cell--pending.dk-cell--pulse,.dk-cell--pending.dk-cell--running{background:#18181b!important;box-shadow:none!important;animation:none!important;transform:none!important}
 .dk-cell--pass{background:#22d3ee;box-shadow:0 0 2px rgba(34,211,238,.35)}
 .dk-cell--fail{background:#d946ef;box-shadow:0 0 2px rgba(217,70,239,.35)}
 

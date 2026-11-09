@@ -513,6 +513,14 @@ button, input, select, textarea {
 }
 
 /* 2D Evidence Matrix: Live Data Stream Pulse (Natural Calm Blinking) */
+.dk-cell--pending,
+.dk-cell--pending.matrix-pulse {
+  background: #18181b !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transform: none !important;
+}
+
 .matrix-pulse {
   animation-name: matrix-pulse;
   animation-iteration-count: infinite;
