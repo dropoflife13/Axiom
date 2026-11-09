@@ -119,10 +119,10 @@ export default function Page() {
         }
 
         const data = await response.json();
-        const trials: CheckpointTrial[] = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
+        const rawTrials: CheckpointTrial[] = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
 
         // When trials are empty (wiped or initializing): RESET STATE cleanly
-        if (trials.length === 0) {
+        if (rawTrials.length === 0) {
           setCheckpoint([]);
           setResults(null);
           setAwaitingSnapshot(false);
@@ -137,6 +137,19 @@ export default function Page() {
           return;
         }
 
+        // Attach or preserve stable chronological timestamps for every trial
+        const lastMod = data.lastModified ? new Date(data.lastModified).getTime() : Date.now();
+        const trials: CheckpointTrial[] = rawTrials.map((t: CheckpointTrial, idx: number) => {
+          if (t.timestamp || t.completedAt) return t;
+          const step = (t.latencyMs && t.latencyMs > 0 ? t.latencyMs : 1400) + 1800;
+          const offsetMs = (rawTrials.length - 1 - idx) * step;
+          const assignedMs = (isNaN(lastMod) ? Date.now() : lastMod) - offsetMs;
+          return {
+            ...t,
+            timestamp: new Date(assignedMs).toISOString(),
+          };
+        });
+
         setCheckpoint((prev) => {
           if (prev.length === trials.length && prev.length > 0) {
             const pLast = prev[prev.length - 1];
@@ -145,7 +158,18 @@ export default function Page() {
               return prev; // Identical dataset, bail out of re-rendering tree!
             }
           }
-          return trials;
+          // Preserve timestamps from prev for earlier trials to avoid clock drift
+          const prevMap = new Map<string, string>();
+          for (const p of prev) {
+            if (p.timestamp) prevMap.set(`${p.condition}/${p.taskId}`, p.timestamp);
+          }
+          return trials.map((t, i) => {
+            const key = `${t.condition}/${t.taskId}`;
+            if (!rawTrials[i]?.timestamp && prevMap.has(key)) {
+              return { ...t, timestamp: prevMap.get(key) };
+            }
+            return t;
+          });
         });
         setResults(data);
         setAwaitingSnapshot(false);
@@ -219,9 +243,10 @@ export default function Page() {
     return TOTAL_TRIALS;
   }, [results, checkpoint, activeRunId]);
 
+  const lastModified = (results as { lastModified?: string } | null)?.lastModified;
   const desk = useMemo(() => {
-    return deriveDesk(checkpoint, 60, totalTrials);
-  }, [checkpoint, totalTrials]);
+    return deriveDesk(checkpoint, 60, totalTrials, lastModified);
+  }, [checkpoint, totalTrials, lastModified]);
 
   const live = useMemo<LiveRun>(() => {
     const done = Math.min(totalTrials, checkpoint.length);

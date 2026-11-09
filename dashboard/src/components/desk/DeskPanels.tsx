@@ -569,7 +569,7 @@ export const LiveTerminal = memo(function LiveTerminal({
         <AnimatePresence initial={false}>
           {lines.map((l) => (
             <motion.p key={l.key} className={`dk-line dk-line--${l.status}`} initial={reduce ? false : { opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25 }}>
-              [{stamp}] [{l.stage}] {l.text} <b>[{l.status}]</b>
+              [{l.stamp ?? stamp}] [{l.stage}] {l.text} <b>[{l.status}]</b>
             </motion.p>
           ))}
         </AnimatePresence>

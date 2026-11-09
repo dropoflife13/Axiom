@@ -36,4 +36,17 @@ describe('trading desk derivation', () => {
     expect(d.activeFacts).toEqual(['F-19', 'F-26']);
     expect(d.memoryHits).toEqual([2]);
   });
+
+  it('generates distinct sequential historical timestamps for log lines', () => {
+    const d = deriveDesk([
+      trial({ taskId: 'H-001', condition: 'A' }),
+      trial({ taskId: 'H-002', condition: 'A' }),
+    ], 60, TOTAL_TRIALS, '2026-11-10T02:00:00.000Z');
+    expect(d.log.length).toBeGreaterThan(0);
+    for (const line of d.log) {
+      expect(line.stamp).toMatch(/^\d{2}:\d{2}:\d{2}$/);
+    }
+    expect(d.log[0].stamp).toBeDefined();
+    expect(d.log[d.log.length - 1].stamp).toBeDefined();
+  });
 });

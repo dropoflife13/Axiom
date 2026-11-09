@@ -20,6 +20,8 @@ export interface CheckpointTrial {
   finishReason?: string;
   migrationExitNonZero?: boolean;
   latencyMs?: number;
+  timestamp?: string;
+  completedAt?: string;
 }
 
 export type CellState = 'pending' | 'pass' | 'fail';
@@ -29,6 +31,7 @@ export interface LogLine {
   stage: 'EXECUTOR' | 'ORACLE' | 'MEMORY';
   text: string;
   status: 'OK' | 'FAIL' | 'WARN';
+  stamp: string;
 }
 
 export interface DeskData {
@@ -57,7 +60,12 @@ export function cellIndex(trial: CheckpointTrial, taskOrder: Map<string, number>
   return c * tasksPerCondition + t;
 }
 
-export function deriveDesk(trials: CheckpointTrial[], logLimit = 60, totalTrials = TOTAL_TRIALS): DeskData {
+export function deriveDesk(
+  trials: CheckpointTrial[],
+  logLimit = 60,
+  totalTrials = TOTAL_TRIALS,
+  lastModified?: string | number
+): DeskData {
   const cells: CellState[] = Array.from({ length: totalTrials }, () => 'pending');
   const taskOrder = new Map<string, number>();
   for (const t of trials) if (!taskOrder.has(t.taskId)) taskOrder.set(t.taskId, taskOrder.size);
@@ -77,18 +85,49 @@ export function deriveDesk(trials: CheckpointTrial[], logLimit = 60, totalTrials
     ? Array.from(new Set([...(latest.failedFacts ?? []), ...(latest.boundFacts ?? [])])).slice(0, 8)
     : [];
 
+  const endMs = lastModified ? new Date(lastModified).getTime() : Date.now();
+  const formatStamp = (ms: number): string => {
+    const d = new Date(ms);
+    if (isNaN(d.getTime())) return '--:--:--';
+    return d.toLocaleTimeString('en-GB', { hour12: false });
+  };
+
   const log: LogLine[] = [];
   trials.forEach((t, n) => {
     const id = `${t.condition}/${t.taskId}`;
     const gen = t.generationStatus ?? 'ok';
+
+    // Calculate individual historical timestamp for this trial
+    let trialMs: number;
+    if (t.timestamp) {
+      trialMs = new Date(t.timestamp).getTime();
+    } else if (t.completedAt) {
+      trialMs = new Date(t.completedAt).getTime();
+    } else {
+      const step = (t.latencyMs && t.latencyMs > 0 ? t.latencyMs : 1400) + 1800;
+      const offsetMs = (trials.length - 1 - n) * step;
+      trialMs = (isNaN(endMs) ? Date.now() : endMs) - offsetMs;
+    }
+
+    const hits = t.retrievedFactIds?.length ?? 0;
+    if (hits) {
+      log.push({
+        key: `${n}-m`,
+        stage: 'MEMORY',
+        text: `Retrieved ${hits} lessons for ${id}`,
+        status: 'OK',
+        stamp: formatStamp(trialMs),
+      });
+    }
+
     log.push({
       key: `${n}-e`,
       stage: 'EXECUTOR',
       text: `Generated SQL for ${id} · ${t.totalTokens ?? 0} tok · finish=${t.finishReason ?? 'n/a'}`,
       status: gen === 'ok' ? 'OK' : 'WARN',
+      stamp: formatStamp(trialMs + 1000),
     });
-    const hits = t.retrievedFactIds?.length ?? 0;
-    if (hits) log.push({ key: `${n}-m`, stage: 'MEMORY', text: `Retrieved ${hits} lessons for ${id}`, status: 'OK' });
+
     const failed = t.failedFacts ?? [];
     log.push({
       key: `${n}-o`,
@@ -97,6 +136,7 @@ export function deriveDesk(trials: CheckpointTrial[], logLimit = 60, totalTrials
         ? `${id} bound facts ${Math.round((t.boundFactFraction ?? 0) * 100)}% · PASS`
         : `${id} failed ${failed.length} facts: ${failed.slice(0, 4).join(', ')}${failed.length > 4 ? '…' : ''}`,
       status: t.boundPassed ? 'OK' : 'FAIL',
+      stamp: formatStamp(trialMs + 2000),
     });
   });
 

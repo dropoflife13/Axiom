@@ -178,6 +178,7 @@ export interface Trial {
   condition: ConditionId;
   taskId: string;
   generationStatus: GenerationStatus;
+  timestamp?: string;
   generatedSql: string;
   passRaw: boolean;
   passWithTier0: boolean;
@@ -513,6 +514,7 @@ export function buildTrial(
       condition,
       taskId: task.id,
       generationStatus,
+      timestamp: new Date().toISOString(),
       generatedSql: '',
       passRaw: false,
       passWithTier0: false,
@@ -586,6 +588,7 @@ export function buildTrial(
     condition,
     taskId: task.id,
     generationStatus: 'ok',
+    timestamp: new Date().toISOString(),
     generatedSql: sql,
     passRaw,
     passWithTier0: passRaw,
@@ -966,6 +969,19 @@ export function parseCliArg(flag: string): string | undefined {
   return undefined;
 }
 
+function ensurePostgresContainerRunning(containerName: string): void {
+  try {
+    const res = execFileSync('docker', ['inspect', '-f', '{{.State.Running}}', containerName], {
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+    if (res === 'true') return;
+  } catch {
+    // not running or doesn't exist
+  }
+  startPostgresContainer(containerName);
+}
+
 async function main(): Promise<void> {
   const root = path.resolve('.');
   const allowDirty = process.argv.includes('--allow-dirty');
@@ -1021,7 +1037,11 @@ async function main(): Promise<void> {
   );
   const dailyCap = getDailyCap();
   BUDGET_GUARD.maxTotalLlmCallsPerProcess = Math.max(dailyCap, 1000);
-  BUDGET_GUARD.callTimeoutMs = Math.max(BUDGET_GUARD.callTimeoutMs, 180_000);
+  BUDGET_GUARD.callTimeoutMs = Math.max(
+    BUDGET_GUARD.callTimeoutMs,
+    Number(process.env.AXIOM_CALL_TIMEOUT_MS || 180_000),
+    180_000
+  );
 
   const stateDir = path.join(root, '.axiom-state');
   const memoryPath = path.join(stateDir, 'memory.json');
@@ -1077,6 +1097,7 @@ async function main(): Promise<void> {
         if (trials.some((trial) => trial.taskId === task.id && trial.condition === condition)) {
           continue;
         }
+        ensurePostgresContainerRunning(containerName);
         const { trial, fromCache } = await runAblationTaskCondition({
           containerName,
           task,
