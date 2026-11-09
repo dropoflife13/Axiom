@@ -1,8 +1,7 @@
 /* =========================================================================
    Axiom Scale & Invariant Topology Architecture
-   Integrates:
-   1. Scale & Efficiency Empirical Telemetry (Image 1)
-   2. Axiom Autonomous Kernel & 3-Tier Invariant Vault (Image 2 Elevated)
+   Precision Tactical Dark UI: Electric Cyan / Tactical Emerald / Precision Amber
+   Replaced generic violet slop with crisp engineering telemetry & 720-trial multi-model fleet
    ========================================================================= */
 
 .cortex-section {
@@ -12,9 +11,9 @@
   margin: 0 auto;
   padding: 100px clamp(16px, 3vw, 48px) 140px;
   background-color: #05060a;
-  color: var(--color-text, #f5eff7);
+  color: #f1f5f9;
   overflow: hidden;
-  border-top: 1px solid rgba(160, 170, 255, 0.12);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .cortex-bg-grid {
@@ -22,8 +21,8 @@
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(160, 170, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(160, 170, 255, 0.05) 1px, transparent 1px);
+    linear-gradient(rgba(148, 163, 184, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.04) 1px, transparent 1px);
   background-size: 48px 48px;
   mask-image: radial-gradient(ellipse at 50% 25%, #000 20%, transparent 85%);
   -webkit-mask-image: radial-gradient(ellipse at 50% 25%, #000 20%, transparent 85%);
@@ -32,31 +31,57 @@
 
 .cortex-bg-glow {
   position: absolute;
-  top: 15%;
+  top: 12%;
   left: 20%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, rgba(168, 85, 247, 0.06) 50%, transparent 70%);
-  filter: blur(80px);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.08) 0%, rgba(16, 185, 129, 0.04) 45%, transparent 70%);
+  filter: blur(90px);
   pointer-events: none;
   z-index: 0;
+}
+
+.cortex-bg-watermark {
+  position: absolute;
+  top: 45%;
+  right: -8%;
+  transform: translateY(-50%);
+  width: 680px;
+  height: 680px;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(1px);
+}
+
+.cortex-bg-axiom-knot {
+  width: 100%;
+  height: 100%;
 }
 
 .cortex-container {
   position: relative;
   z-index: 1;
-  max-width: 1320px;
+  max-width: 1360px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 80px;
+  gap: 90px;
 }
 
 /* =========================================================================
-   PART 1: SCALE & EFFICIENCY CARD (Directly from User Reference Image 1)
+   PART 1: SCALE & EFFICIENCY TELEMETRY CARD
+   Spacious, de-compacted layout with 720-Trial Fleet, KPI cards, Dual Charts
    ========================================================================= */
 
 .cortex-scale-block {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  width: 100%;
+}
+
+.cortex-scale-head {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -65,9 +90,9 @@
 }
 
 .cortex-scale-eyebrow {
-  color: #22d3ee;
-  font: 700 11px var(--font-mono, monospace);
-  letter-spacing: 0.2em;
+  color: #00f0ff;
+  font: 700 11.5px var(--font-mono, monospace);
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   margin: 0;
 }
@@ -82,165 +107,492 @@
 }
 
 .cortex-scale-subtitle {
-  color: #8b90a8;
-  font-size: 15px;
-  margin: 0 0 28px;
-  max-width: 580px;
+  color: #94a3b8;
+  font-size: 15.5px;
+  margin: 0;
+  max-width: 680px;
   line-height: 1.6;
 }
 
-/* Main Scale & Telemetry Container */
-.cortex-scale-card {
+/* -------------------------------------------------------------------------
+   PARALLEL 720-TRIAL ABLATION FLEET STRIP
+   ------------------------------------------------------------------------- */
+.cortex-fleet-strip {
   width: 100%;
-  background: rgba(9, 12, 21, 0.94);
-  border: 1px solid rgba(160, 170, 255, 0.14);
-  border-radius: 20px;
-  padding: 40px clamp(20px, 4vw, 48px);
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.7);
+  background: rgba(11, 15, 26, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  padding: 20px 24px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(16px);
-  position: relative;
-  overflow: hidden;
-}
-
-.cortex-scale-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 10%;
-  right: 10%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.6), rgba(168, 85, 247, 0.6), transparent);
-}
-
-/* Top 3 Metric Stat Callouts */
-.cortex-metrics-row {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  padding-bottom: 36px;
-  border-bottom: 1px solid rgba(160, 170, 255, 0.1);
-  text-align: left;
-}
-
-@media (max-width: 680px) {
-  .cortex-metrics-row {
-    grid-template-columns: 1fr;
-    gap: 20px;
-  }
-}
-
-.cortex-metric-stat {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.cortex-metric-number {
-  font-family: var(--font-sans, sans-serif);
-  font-size: clamp(48px, 6vw, 76px);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
-  color: #ffffff;
-}
-
-.cortex-metric-number--cyan {
-  color: #22d3ee;
-  text-shadow: 0 0 24px rgba(34, 211, 238, 0.4);
-}
-
-.cortex-metric-label {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #7c829e;
-  text-transform: uppercase;
-}
-
-/* Bottom Dual Charts Grid */
-.cortex-charts-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 36px;
-  padding-top: 36px;
-}
-
-@media (min-width: 900px) {
-  .cortex-charts-row {
-    grid-template-columns: 1fr 1fr;
-    gap: 48px;
-  }
-}
-
-.cortex-chart-box {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.cortex-chart-head {
+.cortex-fleet-strip-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
 }
 
-.cortex-chart-title {
+.cortex-fleet-strip-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #e8eaf2;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #e2e8f0;
 }
 
-.cortex-chart-tag {
+.cortex-live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: cortex-pulse 1.8s ease-in-out infinite;
+}
+
+.cortex-fleet-strip-meta {
   font-family: var(--font-mono, monospace);
   font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: #7b819a;
+  letter-spacing: 0.08em;
+  color: #64748b;
   text-transform: uppercase;
 }
 
-.cortex-svg-chart {
-  width: 100%;
-  height: 160px;
-  overflow: visible;
+.cortex-fleet-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
 }
 
-/* Chart Sub-Captions */
-.cortex-chart-caption {
+@media (min-width: 840px) {
+  .cortex-fleet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.cortex-fleet-card {
+  all: unset;
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+.cortex-fleet-card:hover {
+  background: rgba(22, 32, 54, 0.9);
+  border-color: var(--fleet-accent, #00f0ff);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px color-mix(in srgb, var(--fleet-accent, #00f0ff) 25%, transparent);
+}
+
+.cortex-fleet-card.is-selected {
+  background: color-mix(in srgb, var(--fleet-accent, #00f0ff) 10%, rgba(15, 23, 42, 0.95));
+  border-color: var(--fleet-accent, #00f0ff);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--fleet-accent, #00f0ff) 35%, transparent);
+}
+
+.cortex-fleet-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.cortex-fleet-model-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: #ffffff;
+}
+
+.cortex-fleet-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fleet-accent, #00f0ff);
+  box-shadow: 0 0 6px var(--fleet-accent, #00f0ff);
+}
+
+.cortex-fleet-active-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: var(--fleet-accent, #00f0ff);
+  color: #05060a;
+  letter-spacing: 0.08em;
+}
+
+.cortex-fleet-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--fleet-accent, #94a3b8);
+  letter-spacing: 0.06em;
+}
+
+.cortex-fleet-model-slug {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  color: #94a3b8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cortex-fleet-progress-track {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(51, 65, 85, 0.5);
+  overflow: hidden;
+  position: relative;
+}
+
+.cortex-fleet-progress-fill {
+  height: 100%;
+  background: var(--fleet-accent, #00f0ff);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 6px var(--fleet-accent, #00f0ff);
+}
+
+.cortex-fleet-progress-fill.is-indeterminate {
+  animation: cortex-shimmer 2.2s infinite ease-in-out;
+  background: linear-gradient(90deg, transparent, var(--fleet-accent, #00f0ff), transparent);
+}
+
+.cortex-fleet-card-foot {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   font-family: var(--font-mono, monospace);
   font-size: 10px;
   color: #64748b;
-  letter-spacing: 0.02em;
-  padding-top: 4px;
+  letter-spacing: 0.04em;
 }
 
-.cortex-chart-caption span.is-active {
-  color: #22d3ee;
+.cortex-fleet-card-foot b {
+  color: #cbd5e1;
+}
+
+/* -------------------------------------------------------------------------
+   4 SPACIOUS KPI METRIC CARDS
+   ------------------------------------------------------------------------- */
+.cortex-kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+@media (min-width: 640px) {
+  .cortex-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1080px) {
+  .cortex-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cortex-kpi-card {
+  background: rgba(11, 15, 26, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 16px;
+  padding: 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.22s ease, border-color 0.22s ease;
+}
+
+.cortex-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 240, 255, 0.35);
+}
+
+.cortex-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cortex-kpi-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #64748b;
+  text-transform: uppercase;
 }
 
-.cortex-chart-caption--bars {
-  font-size: 9.5px;
+.cortex-kpi-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.cortex-kpi-dot--emerald {
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+.cortex-kpi-dot--cyan {
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff;
+}
+
+.cortex-kpi-dot--amber {
+  background: #f59e0b;
+  box-shadow: 0 0 6px #f59e0b;
+}
+
+.cortex-kpi-value {
+  font-family: var(--font-sans, sans-serif);
+  font-size: clamp(38px, 4.2vw, 54px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #ffffff;
+  margin-top: 4px;
+}
+
+.cortex-kpi-value--cyan {
+  color: #00f0ff;
+  text-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+}
+
+.cortex-kpi-value--emerald {
+  color: #10b981;
+  text-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+}
+
+.cortex-kpi-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #cbd5e1;
+  text-transform: uppercase;
+}
+
+.cortex-kpi-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
   color: #64748b;
 }
 
-/* =========================================================================
-   CONDITION DECODER & ABLATION MATRIX (Explaining A, B, C, C0, D, E_B)
-   ========================================================================= */
+/* -------------------------------------------------------------------------
+   DUAL FULL-SIZE TELEMETRY CHARTS
+   ------------------------------------------------------------------------- */
+.cortex-charts-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+}
 
-.cortex-decoder-block {
-  margin-top: 36px;
-  padding-top: 28px;
-  border-top: 1px solid rgba(160, 170, 255, 0.12);
+@media (min-width: 980px) {
+  .cortex-charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.cortex-chart-panel {
+  background: rgba(11, 15, 26, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  padding: 26px 28px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
+  gap: 20px;
+}
+
+.cortex-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
   gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cortex-chart-eyebrow {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #00f0ff;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cortex-chart-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.cortex-chart-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.cortex-svg-chart {
+  width: 100%;
+  height: 220px;
+  overflow: visible;
+}
+
+/* -------------------------------------------------------------------------
+   EMPIRICAL FACT-FAILURE FREQUENCY SPECTRUM PANEL
+   ------------------------------------------------------------------------- */
+.cortex-freq-panel {
+  background: rgba(11, 15, 26, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  padding: 26px 28px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cortex-freq-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.cortex-freq-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 780px) {
+  .cortex-freq-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 28px;
+  }
+}
+
+.cortex-freq-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cortex-freq-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+}
+
+.cortex-freq-code {
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.cortex-freq-name {
+  color: #e2e8f0;
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cortex-freq-domain {
+  font-size: 9.5px;
+  color: #64748b;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: rgba(51, 65, 85, 0.4);
+}
+
+.cortex-freq-count {
+  color: #00f0ff;
+  font-size: 11px;
+}
+
+.cortex-freq-bar-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 2.5px;
+  background: rgba(51, 65, 85, 0.4);
+  overflow: hidden;
+}
+
+.cortex-freq-bar-fill {
+  height: 100%;
+  border-radius: 2.5px;
+  background: linear-gradient(90deg, #10b981 0%, #00f0ff 70%, #f59e0b 100%);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 6px rgba(0, 240, 255, 0.4);
+}
+
+/* -------------------------------------------------------------------------
+   CONDITION DECODER PANEL
+   ------------------------------------------------------------------------- */
+.cortex-decoder-block {
+  background: rgba(11, 15, 26, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 18px;
+  padding: 26px 28px;
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   text-align: left;
 }
 
@@ -256,24 +608,23 @@
   font-family: var(--font-mono, monospace);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  color: #22d3ee;
+  letter-spacing: 0.16em;
+  color: #00f0ff;
   text-transform: uppercase;
 }
 
 .cortex-decoder-hint {
   font-family: var(--font-mono, monospace);
-  font-size: 9.5px;
+  font-size: 10px;
   letter-spacing: 0.08em;
   color: #64748b;
   text-transform: uppercase;
 }
 
-/* 6 Condition Selector Tabs */
 .cortex-cond-pills-row {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -290,58 +641,58 @@
 }
 
 .cortex-cond-pill {
+  all: unset;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(15, 23, 42, 0.65);
-  border: 1px solid rgba(160, 170, 255, 0.14);
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.14);
   color: #94a3b8;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--font-mono, monospace);
   font-size: 11px;
-  user-select: none;
+  box-sizing: border-box;
 }
 
 .cortex-cond-pill:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(34, 211, 238, 0.4);
+  background: rgba(22, 32, 54, 0.9);
+  border-color: var(--pill-accent, #00f0ff);
   color: #f1f5f9;
   transform: translateY(-1px);
 }
 
 .cortex-cond-pill.is-active {
-  background: rgba(34, 211, 238, 0.12);
-  border-color: #22d3ee;
+  background: color-mix(in srgb, var(--pill-accent, #00f0ff) 12%, rgba(15, 23, 42, 0.95));
+  border-color: var(--pill-accent, #00f0ff);
   color: #ffffff;
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.25);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--pill-accent, #00f0ff) 35%, transparent);
 }
 
 .cortex-cond-pill-code {
   font-weight: 800;
-  color: #22d3ee;
-  background: rgba(34, 211, 238, 0.15);
-  padding: 2px 6px;
+  color: var(--pill-accent, #00f0ff);
+  background: color-mix(in srgb, var(--pill-accent, #00f0ff) 16%, transparent);
+  padding: 2px 7px;
   border-radius: 4px;
-  font-size: 10.5px;
+  font-size: 11px;
 }
 
 .cortex-cond-pill.is-active .cortex-cond-pill-code {
-  background: #22d3ee;
+  background: var(--pill-accent, #00f0ff);
   color: #05060a;
 }
 
 .cortex-cond-pill-name {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   flex: 1;
-  text-align: left;
 }
 
 .cortex-cond-pill-pct {
@@ -351,20 +702,19 @@
 }
 
 .cortex-cond-pill.is-active .cortex-cond-pill-pct {
-  color: #22d3ee;
+  color: var(--pill-accent, #00f0ff);
 }
 
-/* Active Condition Detailed Explainer Card */
 .cortex-cond-detail-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(8, 12, 22, 0.98) 100%);
-  border: 1px solid var(--cond-accent, #22d3ee);
-  border-radius: 12px;
-  padding: 22px 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(34, 211, 238, 0.1);
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(9, 13, 24, 0.98) 100%);
+  border: 1px solid var(--cond-accent, #00f0ff);
+  border-radius: 14px;
+  padding: 24px 28px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 24px color-mix(in srgb, var(--cond-accent, #00f0ff) 15%, transparent);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
   animation: cortex-fade-in 0.25s ease-out;
 }
 
@@ -374,53 +724,53 @@
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(160, 170, 255, 0.1);
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .cortex-cond-detail-title-group {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .cortex-cond-code-badge {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  height: 44px;
-  padding: 0 10px;
-  border-radius: 8px;
-  background: var(--cond-accent, #22d3ee);
+  min-width: 48px;
+  height: 48px;
+  padding: 0 12px;
+  border-radius: 10px;
+  background: var(--cond-accent, #00f0ff);
   color: #05060a;
   font-family: var(--font-mono, monospace);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 900;
   letter-spacing: 0.05em;
-  box-shadow: 0 0 16px rgba(34, 211, 238, 0.4);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--cond-accent, #00f0ff) 40%, transparent);
 }
 
 .cortex-cond-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: #ffffff;
 }
 
 .cortex-cond-role {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-family: var(--font-mono, monospace);
-  font-size: 11.5px;
-  color: var(--cond-accent, #22d3ee);
+  font-size: 12px;
+  color: var(--cond-accent, #00f0ff);
   letter-spacing: 0.04em;
 }
 
 .cortex-cond-metrics-group {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 28px;
   flex-wrap: wrap;
 }
 
@@ -432,15 +782,14 @@
 
 .cortex-cond-metric-val {
   font-family: var(--font-mono, monospace);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   color: #f1f5f9;
-  letter-spacing: -0.02em;
 }
 
-.cortex-cond-metric-val--cyan {
-  color: #22d3ee;
-  text-shadow: 0 0 12px rgba(34, 211, 238, 0.4);
+.cortex-cond-metric-val--accent {
+  color: var(--cond-accent, #00f0ff);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--cond-accent, #00f0ff) 45%, transparent);
 }
 
 .cortex-cond-metric-lbl {
@@ -448,7 +797,7 @@
   font-size: 9.5px;
   font-weight: 700;
   color: #64748b;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -460,26 +809,26 @@
 
 @media (min-width: 840px) {
   .cortex-cond-detail-body {
-    grid-template-columns: 1.1fr 1fr;
-    gap: 28px;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 32px;
   }
 }
 
 .cortex-cond-section-title {
   font-family: var(--font-mono, monospace);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: #7c829e;
+  color: #94a3b8;
   text-transform: uppercase;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .cortex-cond-desc-text,
 .cortex-cond-finding-text {
   margin: 0;
-  font-size: 13.5px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.65;
   color: #cbd5e1;
 }
 
@@ -491,38 +840,28 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 10px;
-  padding: 4px 8px;
+  margin-top: 12px;
+  padding: 4px 10px;
   border-radius: 4px;
-  background: rgba(34, 211, 238, 0.08);
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  color: #22d3ee;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
   font-family: var(--font-mono, monospace);
   font-size: 9.5px;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .cortex-cond-meta-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 4px #22d3ee;
-}
-
-@keyframes cortex-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  background: #10b981;
+  box-shadow: 0 0 5px #10b981;
 }
 
 /* =========================================================================
-   PART 2: AXIOM KERNEL & 3-TIER INVARIANT VAULT (Elevated Image 2)
+   PART 2: AXIOM KERNEL & 3-TIER INVARIANT VAULT
+   Tactical Engineering Palette: Electric Ice Cyan, Tactical Emerald, Precision Amber
    ========================================================================= */
 
 .cortex-kernel-block {
@@ -532,22 +871,22 @@
 }
 
 .cortex-header {
-  max-width: 760px;
+  max-width: 820px;
 }
 
 .cortex-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 4px 10px;
+  padding: 5px 12px;
   border-radius: 4px;
-  border: 1px solid rgba(34, 211, 238, 0.4);
-  background: rgba(34, 211, 238, 0.08);
-  color: #22d3ee;
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  background: rgba(0, 240, 255, 0.08);
+  color: #00f0ff;
   font-family: var(--font-mono, monospace);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   margin-bottom: 14px;
 }
@@ -556,22 +895,22 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #22d3ee;
-  box-shadow: 0 0 6px #22d3ee;
+  background: #00f0ff;
+  box-shadow: 0 0 6px #00f0ff;
 }
 
 .cortex-eyebrow {
   margin: 0 0 10px;
-  color: #a855f7;
-  font: 11px var(--font-mono, monospace);
-  letter-spacing: 0.14em;
+  color: #10b981;
+  font: 700 11.5px var(--font-mono, monospace);
+  letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 .cortex-title {
   margin: 0 0 16px;
   font-size: clamp(32px, 4.5vw, 56px);
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.05;
   color: #ffffff;
@@ -579,10 +918,10 @@
 
 .cortex-desc {
   margin: 0;
-  color: #8b90a8;
-  font-size: 15px;
+  color: #94a3b8;
+  font-size: 15.5px;
   line-height: 1.65;
-  max-width: 660px;
+  max-width: 720px;
 }
 
 /* Main Interactive Stage: Left Kernel + Bus Lines + Right 3 Layers */
@@ -593,23 +932,26 @@
   position: relative;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1040px) {
   .cortex-stage {
     display: grid;
-    grid-template-columns: 240px 100px minmax(0, 1fr);
+    grid-template-columns: 260px 100px minmax(0, 1fr);
     align-items: center;
     gap: 0;
   }
 }
 
-/* Left: Axiom Autonomous Kernel Sphere */
+/* -------------------------------------------------------------------------
+   COLUMN 1: AXIOM KERNEL SPHERE & LIVE REACTOR READOUT
+   ------------------------------------------------------------------------- */
 .cortex-node-col {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 22px;
   position: relative;
-  padding: 20px 0;
+  padding: 10px 0;
 }
 
 .cortex-core-wrapper {
@@ -625,7 +967,7 @@
   width: 180px;
   height: 180px;
   border-radius: 50%;
-  border: 1px dashed rgba(34, 211, 238, 0.28);
+  border: 1px dashed rgba(0, 240, 255, 0.35);
   animation: cortex-orbit-spin 25s linear infinite;
   pointer-events: none;
 }
@@ -633,25 +975,25 @@
 .cortex-orbit-ring--wide {
   width: 224px;
   height: 224px;
-  border-color: rgba(168, 85, 247, 0.2);
-  animation-duration: 40s;
+  border-color: rgba(16, 185, 129, 0.25);
+  animation-duration: 38s;
   animation-direction: reverse;
 }
 
 .cortex-core-sphere {
   position: relative;
-  width: 128px;
-  height: 128px;
+  width: 132px;
+  height: 132px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #0a1124 0%, #050814 60%, #020308 100%);
-  border: 2px solid #22d3ee;
+  background: radial-gradient(circle at 35% 35%, #08111e 0%, #040810 65%, #020408 100%);
+  border: 2px solid #00f0ff;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow:
-    0 0 30px rgba(34, 211, 238, 0.5),
-    0 0 70px rgba(168, 85, 247, 0.25),
-    inset 0 0 20px rgba(34, 211, 238, 0.25);
+    0 0 32px rgba(0, 240, 255, 0.5),
+    0 0 70px rgba(16, 185, 129, 0.2),
+    inset 0 0 24px rgba(0, 240, 255, 0.25);
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
   user-select: none;
@@ -660,44 +1002,152 @@
 .cortex-core-sphere:hover {
   transform: scale(1.08);
   box-shadow:
-    0 0 45px rgba(34, 211, 238, 0.8),
-    0 0 90px rgba(168, 85, 247, 0.4),
-    inset 0 0 25px rgba(34, 211, 238, 0.4);
+    0 0 45px rgba(0, 240, 255, 0.8),
+    0 0 90px rgba(16, 185, 129, 0.35),
+    inset 0 0 30px rgba(0, 240, 255, 0.4);
 }
 
 .cortex-axiom-knot-icon {
-  width: 68px;
-  height: 68px;
-  filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.8));
+  width: 72px;
+  height: 72px;
+  filter: drop-shadow(0 0 10px rgba(0, 240, 255, 0.8));
   transition: transform 0.3s ease;
 }
 
 .cortex-core-sphere:hover .cortex-axiom-knot-icon {
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.1) rotate(6deg);
 }
 
 .cortex-core-label {
   font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  color: #22d3ee;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #00f0ff;
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(34, 211, 238, 0.6);
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
 }
 
-/* Middle: SVG Connection Bus Lines */
+/* Live Kernel Telemetry Readout Box */
+.cortex-kernel-readout {
+  width: 100%;
+  max-width: 230px;
+  background: rgba(11, 15, 26, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.cortex-kr-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #94a3b8;
+}
+
+.cortex-kr-cyan {
+  color: #00f0ff;
+  font-weight: 700;
+}
+
+.cortex-kr-emerald {
+  color: #10b981;
+  font-weight: 700;
+}
+
+.cortex-kr-amber {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.cortex-kr-divider {
+  width: 100%;
+  height: 1px;
+  background: rgba(148, 163, 184, 0.12);
+  margin: 4px 0;
+}
+
+.cortex-kr-parallel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cortex-kr-parallel-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.cortex-kr-parallel-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cortex-kr-pchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 4px;
+}
+
+.cortex-kr-pchip--qwen {
+  background: rgba(255, 138, 61, 0.14);
+  border: 1px solid rgba(255, 138, 61, 0.35);
+  color: #ff8a3d;
+}
+
+.cortex-kr-pchip--qwen i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ff8a3d;
+  box-shadow: 0 0 5px #ff8a3d;
+  display: inline-block;
+}
+
+.cortex-kr-pchip--glm {
+  background: rgba(45, 212, 191, 0.14);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  color: #2dd4bf;
+}
+
+.cortex-kr-pchip--glm i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #2dd4bf;
+  box-shadow: 0 0 5px #2dd4bf;
+  display: inline-block;
+}
+
+/* -------------------------------------------------------------------------
+   COLUMN 2: TRI-COLOR SVG CONNECTING BUS LINES
+   ------------------------------------------------------------------------- */
 .cortex-bus-col {
   display: none;
   height: 100%;
   position: relative;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1040px) {
   .cortex-bus-col {
     display: block;
     width: 100%;
-    min-height: 480px;
+    min-height: 520px;
   }
 }
 
@@ -711,21 +1161,446 @@
 
 .cortex-bus-path {
   fill: none;
-  stroke: rgba(34, 211, 238, 0.35);
-  stroke-width: 1.5;
+  stroke-width: 1.8;
   stroke-dasharray: 4 6;
   animation: cortex-bus-flow 3s linear infinite;
 }
 
-.cortex-bus-path--active {
-  stroke: #22d3ee;
-  stroke-width: 2;
-  filter: drop-shadow(0 0 6px #22d3ee);
+.cortex-bus-path--cyan {
+  stroke: rgba(0, 240, 255, 0.6);
+  filter: drop-shadow(0 0 4px rgba(0, 240, 255, 0.4));
 }
 
-.cortex-bus-node {
-  fill: #22d3ee;
-  filter: drop-shadow(0 0 5px #22d3ee);
+.cortex-bus-path--emerald {
+  stroke: rgba(16, 185, 129, 0.7);
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+}
+
+.cortex-bus-path--amber {
+  stroke: rgba(245, 158, 11, 0.6);
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+}
+
+/* -------------------------------------------------------------------------
+   COLUMN 3: 3 DISTINCTLY STYLED ARCHITECTURAL LAYER CARDS
+   ------------------------------------------------------------------------- */
+.cortex-cards-col {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  width: 100%;
+}
+
+.cortex-card {
+  position: relative;
+  border-radius: 18px;
+  padding: 26px 30px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.cortex-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.cortex-layer-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.cortex-layer-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.cortex-layer-tag--cyan {
+  color: #00f0ff;
+}
+
+.cortex-layer-tag--emerald {
+  color: #10b981;
+}
+
+.cortex-layer-tag--amber {
+  color: #f59e0b;
+}
+
+.cortex-layer-meta {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #64748b;
+  padding: 2px 7px;
+  border-radius: 3px;
+  background: rgba(30, 41, 59, 0.6);
+}
+
+.cortex-card-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+}
+
+.cortex-card-sub {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  color: #94a3b8;
+  line-height: 1.55;
+}
+
+.cortex-card-sub code {
+  color: #00f0ff;
+  font-family: var(--font-mono, monospace);
+  background: rgba(0, 240, 255, 0.1);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.cortex-card-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+/* Tier 01: Electric Ice Cyan */
+.cortex-card--tier1 {
+  background: linear-gradient(135deg, rgba(8, 16, 30, 0.96) 0%, rgba(4, 9, 18, 0.98) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.28);
+}
+
+.cortex-card--tier1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #00f0ff;
+  box-shadow: 0 0 12px #00f0ff;
+}
+
+.cortex-card--tier1:hover {
+  border-color: #00f0ff;
+  box-shadow: 0 0 32px rgba(0, 240, 255, 0.2), 0 12px 40px rgba(0, 0, 0, 0.7);
+  transform: translateY(-2px);
+}
+
+.cortex-card-icon--cyan {
+  background: rgba(0, 240, 255, 0.1);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: #00f0ff;
+}
+
+/* Tier 02: Tactical Emerald */
+.cortex-card--tier2 {
+  background: linear-gradient(135deg, rgba(8, 22, 18, 0.96) 0%, rgba(4, 12, 10, 0.98) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.28);
+}
+
+.cortex-card--tier2::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #10b981;
+  box-shadow: 0 0 12px #10b981;
+}
+
+.cortex-card--tier2:hover {
+  border-color: #10b981;
+  box-shadow: 0 0 32px rgba(16, 185, 129, 0.2), 0 12px 40px rgba(0, 0, 0, 0.7);
+  transform: translateY(-2px);
+}
+
+.cortex-card-icon--emerald {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+/* Tier 03: Precision Amber */
+.cortex-card--tier3 {
+  background: linear-gradient(135deg, rgba(24, 18, 8, 0.96) 0%, rgba(14, 10, 4, 0.98) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+}
+
+.cortex-card--tier3::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: #f59e0b;
+  box-shadow: 0 0 12px #f59e0b;
+}
+
+.cortex-card--tier3:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 0 32px rgba(245, 158, 11, 0.2), 0 12px 40px rgba(0, 0, 0, 0.7);
+  transform: translateY(-2px);
+}
+
+.cortex-card-icon--amber {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+/* Chips Wrap */
+.cortex-chips-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.cortex-tag {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 13px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  color: #cbd5e1;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.cortex-tag:hover {
+  background: rgba(30, 41, 59, 0.95);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.cortex-tag--cyan:hover,
+.cortex-tag--cyan.is-active {
+  background: rgba(0, 240, 255, 0.14);
+  border-color: #00f0ff;
+  color: #00f0ff;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.4);
+}
+
+.cortex-tag--emerald:hover,
+.cortex-tag--emerald.is-active {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: #10b981;
+  color: #10b981;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+}
+
+.cortex-tag-code {
+  font-weight: 800;
+  color: #f59e0b;
+  font-size: 10px;
+}
+
+.cortex-tag-name {
+  font-weight: 700;
+}
+
+.cortex-tag-spec {
+  font-size: 9px;
+  color: #64748b;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: rgba(51, 65, 85, 0.4);
+}
+
+.cortex-tag-freq {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #00f0ff;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(0, 240, 255, 0.12);
+}
+
+.cortex-tag-badge {
+  font-size: 9px;
+  color: #00f0ff;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(0, 240, 255, 0.1);
+}
+
+.cortex-tag-more {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+.cortex-tag-more:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5);
+}
+
+/* Layer 03 Circuit Grid */
+.cortex-circuit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 680px) {
+  .cortex-circuit-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1080px) {
+  .cortex-circuit-grid {
+    grid-template-columns: repeat(7, 1fr);
+  }
+}
+
+.cortex-circuit-step {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.cortex-circuit-step:hover {
+  background: rgba(245, 158, 11, 0.14);
+  border-color: #f59e0b;
+  transform: translateY(-2px);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35);
+}
+
+.cortex-circuit-step.is-active {
+  background: rgba(245, 158, 11, 0.2);
+  border-color: #f59e0b;
+  box-shadow: 0 0 18px rgba(245, 158, 11, 0.5);
+}
+
+.cortex-circuit-step-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.cortex-circuit-num {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 800;
+  color: #f59e0b;
+}
+
+.cortex-circuit-badge {
+  font-family: var(--font-mono, monospace);
+  font-size: 8px;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.cortex-circuit-name {
+  font-family: var(--font-mono, monospace);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+/* Detail Banner */
+.cortex-detail-banner {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: rgba(8, 12, 22, 0.98);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  animation: cortex-fade-in 0.2s ease both;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.15);
+}
+
+.cortex-detail-info {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.cortex-detail-tag {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(0, 240, 255, 0.15);
+  color: #00f0ff;
+  border: 1px solid rgba(0, 240, 255, 0.35);
+}
+
+.cortex-detail-info b {
+  color: #00f0ff;
+}
+
+.cortex-detail-badge {
+  font-size: 9.5px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  color: #10b981;
+  font-family: var(--font-mono, monospace);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+}
+
+/* Animations */
+@keyframes cortex-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes cortex-bus-flow {
@@ -735,206 +1610,39 @@
 }
 
 @keyframes cortex-orbit-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* Right: 3 Stacked Cards */
-.cortex-cards-col {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
+@keyframes cortex-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
 }
 
-.cortex-card {
-  position: relative;
-  background: rgba(9, 12, 21, 0.94);
-  border: 1px solid rgba(160, 170, 255, 0.14);
-  border-radius: 16px;
-  padding: 24px 28px;
-  backdrop-filter: blur(14px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-  transition: all 0.26s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden;
-}
-
-.cortex-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 3px;
-  height: 100%;
-  background: var(--card-accent, #22d3ee);
-  opacity: 0.6;
-  transition: opacity 0.25s ease;
-}
-
-.cortex-card:hover {
-  background: rgba(13, 17, 30, 0.98);
-  border-color: rgba(34, 211, 238, 0.35);
-  box-shadow: 0 0 28px rgba(34, 211, 238, 0.12), 0 12px 40px rgba(0, 0, 0, 0.7);
-  transform: translateY(-2px);
-}
-
-.cortex-card:hover::before {
-  opacity: 1;
-  box-shadow: 0 0 12px var(--card-accent, #22d3ee);
-}
-
-.cortex-card-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 8px;
-}
-
-.cortex-layer-tag {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  color: #22d3ee;
-  text-transform: uppercase;
-}
-
-.cortex-card-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: rgba(34, 211, 238, 0.08);
-  border: 1px solid rgba(34, 211, 238, 0.25);
-  color: #22d3ee;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.cortex-card:hover .cortex-card-icon {
-  background: rgba(34, 211, 238, 0.16);
-  border-color: #22d3ee;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.4);
-}
-
-.cortex-card-title {
-  margin: 0 0 6px;
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #ffffff;
-}
-
-.cortex-card-sub {
-  margin: 0 0 18px;
-  font-size: 13px;
-  color: #8b90a8;
-  line-height: 1.5;
-}
-
-/* Chip Tags */
-.cortex-chips-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
-}
-
-.cortex-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: rgba(18, 24, 38, 0.85);
-  border: 1px solid rgba(160, 170, 255, 0.14);
-  color: #c4b5fd;
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  user-select: none;
-}
-
-.cortex-tag:hover {
-  background: rgba(34, 211, 238, 0.12);
-  border-color: #22d3ee;
-  color: #ffffff;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.35);
-  transform: translateY(-1px);
-}
-
-.cortex-tag.is-active {
-  background: rgba(34, 211, 238, 0.2);
-  border-color: #22d3ee;
-  color: #22d3ee;
-  box-shadow: 0 0 12px rgba(34, 211, 238, 0.5);
-}
-
-.cortex-tag-more {
-  background: rgba(168, 85, 247, 0.12);
-  border-color: rgba(168, 85, 247, 0.35);
-  color: #d8b4fe;
-}
-
-.cortex-tag-more:hover {
-  background: rgba(168, 85, 247, 0.22);
-  border-color: #a855f7;
-  color: #ffffff;
-  box-shadow: 0 0 12px rgba(168, 85, 247, 0.5);
-}
-
-/* Interactive Inspector Detail Banner */
-.cortex-detail-banner {
-  margin-top: 14px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  background: rgba(7, 9, 16, 0.96);
-  border: 1px solid rgba(34, 211, 238, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  animation: cortex-fade-in 0.2s ease both;
-}
-
-@keyframes cortex-fade-in {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.cortex-detail-info {
-  font-family: var(--font-mono, monospace);
-  font-size: 11px;
-  color: #e8eaf2;
-  line-height: 1.5;
-}
-
-.cortex-detail-info b {
-  color: #22d3ee;
-}
-
-.cortex-detail-badge {
-  font-size: 9px;
-  padding: 3px 7px;
-  border-radius: 3px;
-  background: rgba(52, 211, 153, 0.15);
-  border: 1px solid #34d399;
-  color: #34d399;
-  font-family: var(--font-mono, monospace);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  flex-shrink: 0;
+@keyframes cortex-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cortex-orbit-ring,
-  .cortex-bus-path {
+  .cortex-bus-path,
+  .cortex-live-pulse-dot,
+  .cortex-fleet-progress-fill.is-indeterminate {
     animation: none !important;
   }
 }

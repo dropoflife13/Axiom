@@ -1974,18 +1974,20 @@
   font-size: 11px;
 }
 .axm-360-insp h2,
-.anatomy-section .axm-360-insp h2 {
+.axm-360-insp .axm-360-insp-title,
+.anatomy-section .axm-360-insp h2,
+.anatomy-section .axm-360-insp .axm-360-insp-title {
   margin: 0 0 4px !important;
-  font-family: var(--mono);
-  font-size: 20px !important;
-  font-weight: 700;
+  font-family: var(--font-mono, var(--mono), monospace) !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
   line-height: 1.2 !important;
   letter-spacing: 0.04em !important;
-  text-transform: uppercase;
-  color: var(--fg);
-  word-break: break-word;
-  overflow-wrap: break-word;
-  white-space: normal;
+  text-transform: uppercase !important;
+  color: var(--fg, #f8fafc) !important;
+  word-break: break-word !important;
+  overflow-wrap: break-word !important;
+  white-space: normal !important;
 }
 .axm-360-insp .badge {
   color: var(--dim);

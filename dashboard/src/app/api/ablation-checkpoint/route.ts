@@ -1,15 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextResponse, type NextRequest } from 'next/server';
+import { modelForRun } from '@/lib/runs';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedRun = searchParams.get('run');
 
-    // Candidate runs to check in priority order
+    // A requested run must resolve to its own data only; falling back to another
+    // run would mislabel one model's trials as another's.
     const candidateRuns = requestedRun
-      ? [requestedRun, 'qwen27b-1', 'nemotron-1', 'ablation-v2']
+      ? [requestedRun]
       : ['qwen27b-1', 'nemotron-1', 'ablation-v2'];
 
     const runsToTry = Array.from(new Set(candidateRuns));
@@ -40,6 +42,15 @@ export async function GET(request: NextRequest) {
         candidates.push(
           path.resolve(process.cwd(), '../.axiom-state/ablation-v2-checkpoint.json'),
           path.resolve(process.cwd(), '.axiom-state/ablation-v2-checkpoint.json'),
+        );
+      }
+
+      if (runId === 'glm53-1') {
+        candidates.push(
+          path.resolve(process.cwd(), '../.axiom-state/runs/glm5-1/checkpoint.json'),
+          path.resolve(process.cwd(), '.axiom-state/runs/glm5-1/checkpoint.json'),
+          path.resolve(process.cwd(), '../.axiom-state/runs/glm-5.3/checkpoint.json'),
+          path.resolve(process.cwd(), '.axiom-state/runs/glm-5.3/checkpoint.json'),
         );
       }
 
@@ -79,7 +90,7 @@ export async function GET(request: NextRequest) {
     const model =
       data.metadata?.requestedModel ||
       data.requestedModel ||
-      (resolvedRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b');
+      modelForRun(resolvedRunId === 'ablation-v2' ? 'nemotron-1' : resolvedRunId);
 
     return NextResponse.json({
       id: resolvedRunId,

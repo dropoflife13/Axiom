@@ -5,6 +5,8 @@ import { useRef } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
 import type { DeskData } from '@/lib/desk';
 import { AxiomLogo } from './AxiomLogo';
+import { RUN_OPTIONS, modelForRun } from '@/lib/runs';
+import type { RunStatus } from '@/lib/useFleetStatus';
 import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
 
 const LoopingDonut = dynamic(() => import('./LoopingDonut'), { ssr: false });
@@ -40,12 +42,13 @@ interface HealingLoopHeroProps {
   error: string | null;
   snapshot?: SnapshotMeta;
   activeRunId?: string;
+  fleet?: RunStatus[];
   onSelectRun?: (runId: string) => void;
   onCopyLogs?: () => void;
   onReplayIntro?: () => void;
 }
 
-export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', onSelectRun, onCopyLogs, onReplayIntro }: HealingLoopHeroProps) {
+export default function HealingLoopHero({ live, desk, stamp, error, snapshot, activeRunId = 'nemotron-1', fleet, onSelectRun, onCopyLogs, onReplayIntro }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -121,24 +124,34 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                 <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN">
                   <span className="hl-run-label">ACTIVE MODEL / RUN</span>
                   <div className="hl-run-tabs">
-                    <button
-                      type="button"
-                      className={`hl-run-tab ${activeRunId === 'nemotron-1' ? 'is-active' : ''}`}
-                      onClick={() => onSelectRun?.('nemotron-1')}
-                      title="Switch to NEMOTRON 550B snapshot"
-                    >
-                      <span className="hl-run-dot" />
-                      NEMOTRON 550B
-                    </button>
-                    <button
-                      type="button"
-                      className={`hl-run-tab ${activeRunId === 'qwen27b-1' ? 'is-active' : ''}`}
-                      onClick={() => onSelectRun?.('qwen27b-1')}
-                      title="Switch to QWEN 3.8 27B snapshot"
-                    >
-                      <span className="hl-run-dot" />
-                      QWEN 3.8 27B
-                    </button>
+                    {RUN_OPTIONS.map((r) => {
+                      const st = fleet?.find((f) => f.run.id === r.id);
+                      const isActive = activeRunId === r.id;
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          className={`hl-run-tab ${isActive ? 'is-active' : ''} ${st?.state === 'live' ? 'is-live' : ''}`}
+                          onClick={() => onSelectRun?.(r.id)}
+                          title={`Switch to ${r.label} (${r.model})${st ? ` · ${st.done}/${st.total} trials` : ''}`}
+                          style={{ '--run-accent': r.accent } as React.CSSProperties}
+                        >
+                          <span className="hl-run-dot" />
+                          {r.label}
+                          {st ? (
+                            <span className="hl-run-prog">
+                              {st.state === 'awaiting'
+                                ? 'BG 720'
+                                : st.done >= st.total
+                                ? '720/720'
+                                : `${st.done}/${st.total}`}
+                            </span>
+                          ) : (
+                            <span className="hl-run-prog">720</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -190,6 +203,9 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                 tokens={desk.tokens}
                 latency={desk.latency}
                 done={desk.done}
+                passed={desk.passed}
+                failed={desk.failed}
+                activeFacts={desk.activeFacts}
                 memoryHits={desk.memoryHits}
                 convergence={desk.convergence}
                 snapshot={snapshot}
@@ -209,8 +225,13 @@ export default function HealingLoopHero({ live, desk, stamp, error, snapshot, ac
                 ))}
               </div>
               <div className="hl-footer-model">
+                <span>PARALLEL 2×720 BG:</span>
+                <b style={{ color: '#ff8a3d' }}>QWEN 3.8 27B</b>
+                <span>+</span>
+                <b style={{ color: '#2dd4bf' }}>GLM-5.3</b>
+                <span style={{ opacity: 0.4 }}>|</span>
                 <span>ACTIVE MODEL:</span>
-                <b>{snapshot?.model ?? (activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b')}</b>
+                <b>{snapshot?.model ?? modelForRun(activeRunId)}</b>
               </div>
             </footer>
           </div>
@@ -235,9 +256,12 @@ const css = `
 .hl-run-tabs{display:inline-flex;align-items:center;padding:2px;background:rgba(5,6,10,.85);border:1px solid rgba(160,170,255,.2);border-radius:4px;gap:2px}
 .hl-run-tab{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-size:9.5px;letter-spacing:.08em;font-weight:600;padding:3px 9px;border-radius:3px;color:#8b90a8;transition:all .2s ease;border:1px solid transparent}
 .hl-run-tab:hover{color:#e8eaf2;background:rgba(255,255,255,.05);border-color:rgba(160,170,255,.3)}
-.hl-run-tab.is-active{color:#22d3ee;background:rgba(34,211,238,.12);border:1px solid #22d3ee;box-shadow:0 0 10px rgba(34,211,238,.5),inset 0 0 6px rgba(34,211,238,.2)}
-.hl-run-tab .hl-run-dot{width:4.5px;height:4.5px;border-radius:50%;background:#4b5563;transition:all .2s ease}
-.hl-run-tab.is-active .hl-run-dot{background:#22d3ee;box-shadow:0 0 6px #22d3ee}
+.hl-run-tab.is-active{color:#f1f5f9;background:color-mix(in srgb,var(--run-accent,#22d3ee) 14%,transparent);border:1px solid var(--run-accent,#22d3ee);box-shadow:0 0 10px color-mix(in srgb,var(--run-accent,#22d3ee) 45%,transparent)}
+.hl-run-tab .hl-run-dot{width:5px;height:5px;border-radius:50%;background:var(--run-accent,#4b5563);opacity:.45;transition:all .2s ease}
+.hl-run-tab.is-active .hl-run-dot{opacity:1;box-shadow:0 0 6px var(--run-accent,#22d3ee)}
+.hl-run-tab.is-live .hl-run-dot{opacity:1;animation:hl-run-pulse 1.4s ease-in-out infinite}
+.hl-run-prog{font-size:8px;padding:1px 4px;border-radius:2px;background:rgba(255,255,255,.06);color:var(--run-accent,#8b90a8);letter-spacing:.06em}
+@keyframes hl-run-pulse{0%,100%{box-shadow:0 0 0 0 var(--run-accent)}50%{box-shadow:0 0 0 4px transparent}}
 .hl-chip--awaiting{color:#fbbf24!important;border-color:rgba(251,191,36,.5)!important;animation:hl-awaiting-pulse 2s ease-in-out infinite}
 @keyframes hl-awaiting-pulse{0%,100%{box-shadow:0 0 4px rgba(251,191,36,.3)}50%{box-shadow:0 0 12px rgba(251,191,36,.8)}}
 .hl-footer-model{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-family:var(--font-mono,monospace)}

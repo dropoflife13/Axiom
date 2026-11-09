@@ -7,19 +7,9 @@ import { CortexVaultSection } from '@/components/cortex/CortexVaultSection';
 import { AxiomFooter } from '@/components/footer/AxiomFooter';
 import { AxiomLoadingScreen } from '@/components/AxiomLoadingScreen';
 import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial, type LogLine } from '@/lib/desk';
+import { DEFAULT_RUN_ID, RUN_OPTIONS, modelForRun } from '@/lib/runs';
+import { useFleetStatus } from '@/lib/useFleetStatus';
 
-interface RunOption {
-  id: string;
-  label: string;
-  model: string;
-}
-
-const RUN_OPTIONS: RunOption[] = [
-  { id: 'nemotron-1', label: 'NEMOTRON 550B', model: 'nvidia/nemotron-3-ultra-550b-a55b' },
-  { id: 'qwen27b-1', label: 'QWEN 3.8 27B', model: 'qwen/qwen3.8-27b' },
-];
-
-const DEFAULT_RUN_ID = 'nemotron-1';
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 const stageFor = (t?: CheckpointTrial): number => {
@@ -98,7 +88,7 @@ export default function Page() {
               runId: activeRunId,
               commit: 'pending',
               isLive: false,
-              model: activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b',
+              model: modelForRun(activeRunId),
               awaiting: true,
             });
             setCheckpointError(null);
@@ -131,21 +121,21 @@ export default function Page() {
           runId: data.id || data.runId || activeRunId,
           commit,
           isLive,
-          model: data.model || (activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : 'nvidia/nemotron-3-ultra-550b-a55b'),
+          model: data.model || modelForRun(activeRunId),
           awaiting: false,
         });
         setCheckpointError(null);
       } catch (error) {
         if (error instanceof DOMException && error.name === 'AbortError') return;
-        // Graceful fallback on network or missing JSON for Qwen
-        if (activeRunId === 'qwen27b-1') {
+        // Runs still in progress (no snapshot yet) fall back to Awaiting mode
+        if (activeRunId !== DEFAULT_RUN_ID) {
           setAwaitingSnapshot(true);
           setCheckpoint([]);
           setSnapshotMeta({
             runId: activeRunId,
             commit: 'pending',
             isLive: false,
-            model: 'qwen/qwen3.8-27b',
+            model: modelForRun(activeRunId),
             awaiting: true,
           });
           setCheckpointError(null);
@@ -172,7 +162,7 @@ export default function Page() {
 
   const desk = useMemo(() => {
     if (awaitingSnapshot) {
-      const activeModel = activeRunId === 'qwen27b-1' ? 'qwen/qwen3.8-27b' : activeRunId;
+      const activeModel = modelForRun(activeRunId);
       const awaitingLog: LogLine[] = [
         { key: 'aw-1', stage: 'ORACLE', text: `Target run: ${activeRunId} (${activeModel})`, status: 'OK' },
         { key: 'aw-2', stage: 'EXECUTOR', text: `Awaiting run snapshot at /data/run-${activeRunId}.json...`, status: 'WARN' },
@@ -217,6 +207,8 @@ export default function Page() {
     window.dispatchEvent(new CustomEvent('axiom-toast', { detail: { kind: 'success', message: 'Snapshot data copied to clipboard' } }));
   };
 
+  const fleet = useFleetStatus(RUN_OPTIONS);
+
   return (
     <>
       {showLoading && (
@@ -234,6 +226,7 @@ export default function Page() {
         error={checkpointError}
         snapshot={snapshotMeta}
         activeRunId={activeRunId}
+        fleet={fleet}
         onSelectRun={setActiveRunId}
         onCopyLogs={copyLogs}
         onReplayIntro={() => setShowLoading(true)}
@@ -244,7 +237,7 @@ export default function Page() {
         running={live.running}
         snapshot={snapshotMeta}
       />
-      <CortexVaultSection />
+      <CortexVaultSection fleet={fleet} activeRunId={activeRunId} onSelectRun={setActiveRunId} />
       <AxiomFooter />
     </>
   );
