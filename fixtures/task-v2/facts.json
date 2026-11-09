@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "facts": [
     { "id": "F-01", "statement": "Primary key column id must be uuid NOT NULL with default gen_random_uuid().", "applicability": { "all": [] }, "check": "primary-key", "status": "OWNER-ADOPTED" },
     { "id": "F-02", "statement": "Multi-tenant tables must include tenant_id uuid NOT NULL.", "applicability": { "all": [{ "flag": "tenant", "equals": true }] }, "check": "tenant-column", "status": "CONFIRMED" },
@@ -20,7 +20,7 @@
     { "id": "F-17", "statement": "Check constraints must be named chk_<table>_<column>.", "applicability": { "all": [] }, "check": "check-name", "status": "OWNER-ADOPTED" },
     { "id": "F-18", "statement": "Explicit non-constraint indexes must be named idx_<table>_<column> (skipping constraint-backed indexes).", "applicability": { "all": [] }, "check": "index-name", "status": "CONFIRMED" },
     { "id": "F-19", "statement": "Append-only tables must revoke UPDATE, DELETE, and TRUNCATE from PUBLIC, application, and readonly_user.", "applicability": { "all": [{ "flag": "append_only", "equals": true }] }, "check": "append-only-privileges", "status": "CONFIRMED" },
-    { "id": "F-20", "statement": "Append-only tables must have a BEFORE UPDATE OR DELETE trigger that raises Update/Delete operation rejected on audit log.", "applicability": { "all": [{ "flag": "append_only", "equals": true }] }, "check": "append-only-trigger", "status": "CONFIRMED" },
+    { "id": "F-20", "statement": "Append-only tables must have a BEFORE UPDATE OR DELETE trigger that raises 'Update/Delete operation rejected on audit log'.", "applicability": { "all": [{ "flag": "append_only", "equals": true }] }, "check": "append-only-trigger", "status": "CONFIRMED" },
     { "id": "F-21", "statement": "Mutable tables must have a BEFORE UPDATE trigger that advances updated_at.", "applicability": { "all": [{ "flag": "append_only", "equals": false }] }, "check": "updated-at-trigger", "status": "OWNER-ADOPTED" },
     { "id": "F-22", "statement": "Every foreign key column must be covered as the leading column of an index.", "applicability": { "all": [] }, "check": "foreign-key-index", "status": "CONFIRMED" },
     { "id": "F-23", "statement": "Multi-tenant tables must index tenant_id as the leading column of an index.", "applicability": { "all": [{ "flag": "tenant", "equals": true }] }, "check": "tenant-index", "status": "CONFIRMED" },
