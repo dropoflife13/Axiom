@@ -241,7 +241,7 @@ export const EDGES: [string, string, number][] = [
   ['05', '07', C_GEN],
   ['07', '08', C_FAIL],
   ['08', '12', C_FAIL],
-  ['12', '05', C_GEN],
+  ['12', '05', C_ADV],
   ['08', '10', C_PASS],
   ['10', '03', C_PASS],
   ['10', '11', C_VER],
@@ -1372,6 +1372,11 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
 
     // 12 Buses: 3D Arcs with travelling packet photons
     const SEG = 28;
+    const leadBoxGeo = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+    const leadCoreGeo = new THREE.BoxGeometry(0.08, 0.08, 0.08);
+    const followBoxGeo = new THREE.BoxGeometry(0.12, 0.12, 0.12);
+    const followCoreGeo = new THREE.BoxGeometry(0.05, 0.05, 0.05);
+
     const buses = EDGES.map((e, i) => {
       const pos = new Float32Array((SEG + 1) * 3);
       const geom = new THREE.BufferGeometry();
@@ -1379,7 +1384,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       const mat = new THREE.LineBasicMaterial({
         color: e[2],
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.18,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       });
@@ -1387,17 +1392,65 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       line.frustumCulled = false;
       scene.add(line);
 
-      const pk = new THREE.Mesh(new THREE.OctahedronGeometry(0.1, 0), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-      scene.add(pk);
+      // Lead packet: outer luminous colored envelope + bright white photon core
+      const pkMat1 = new THREE.MeshBasicMaterial({
+        color: e[2],
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pk1 = new THREE.Mesh(leadBoxGeo, pkMat1);
+      const pkCoreMat1 = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pkCore1 = new THREE.Mesh(leadCoreGeo, pkCoreMat1);
+      pk1.add(pkCore1);
+      pk1.visible = false;
+      scene.add(pk1);
+
+      // Follower packet: streaming trailing pulse offset along conduit
+      const pkMat2 = new THREE.MeshBasicMaterial({
+        color: e[2],
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pk2 = new THREE.Mesh(followBoxGeo, pkMat2);
+      const pkCoreMat2 = new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity: 0,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const pkCore2 = new THREE.Mesh(followCoreGeo, pkCoreMat2);
+      pk2.add(pkCore2);
+      pk2.visible = false;
+      scene.add(pk2);
 
       return {
         a: e[0],
         b: e[1],
         key: ek(e[0], e[1]),
+        baseColor: e[2],
         pos,
         geom,
         mat,
-        pk,
+        line,
+        pk1,
+        pkMat1,
+        pkCoreMat1,
+        pk2,
+        pkMat2,
+        pkCoreMat2,
+        progress: i / EDGES.length,
+        pkOpacity: 0,
         phase: i / EDGES.length,
         C: new THREE.Vector3(),
       };
@@ -1668,20 +1721,68 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
         b.geom.attributes.position.needsUpdate = true;
 
         const isAct = Boolean(active[b.key]);
-        const touches = b.a === curSel || b.b === curSel;
-        const targetLineOpacity = isAct ? 1.0 : touches ? 0.72 : 0.25;
-        b.mat.opacity += (targetLineOpacity - b.mat.opacity) * 0.15;
+        const touches = curSel !== null && (b.a === curSel || b.b === curSel);
+        const isPassingData = isAct || touches;
 
-        const speed = isAct ? 0.45 : 0.14;
-        const q = (T.value * speed + b.phase) % 1.0;
-        const mq = 1.0 - q;
-        b.pk.position.set(
-          mq * mq * A.x + 2 * mq * q * C.x + q * q * B.x,
-          mq * mq * A.y + 2 * mq * q * C.y + q * q * B.y,
-          mq * mq * A.z + 2 * mq * q * C.z + q * q * B.z
-        );
-        b.pk.rotation.y += dt * 3;
-        b.pk.scale.setScalar(isAct ? 1.6 : 0.9);
+        // Dynamic Color: On 07-08 (Crucible -> Verdict), switch between PASS (Emerald) and FAIL (Rose)
+        let activeColor = b.baseColor;
+        if (b.key === '07-08') {
+          activeColor = curStage === 5 ? C_PASS : C_FAIL;
+        }
+        b.mat.color.setHex(activeColor);
+        b.pkMat1.color.setHex(activeColor);
+        b.pkMat2.color.setHex(activeColor);
+
+        // Accurate Conduit Opacity: active conduits glow luminous; inactive rest faint
+        const targetLineOpacity = isAct ? 0.95 : touches ? 0.65 : 0.15;
+        b.mat.opacity += (targetLineOpacity - b.mat.opacity) * 0.14;
+
+        // Accurate Data Sending: only active stage or selected conduits transmit packets
+        const targetPkOpacity = isPassingData ? 1.0 : 0.0;
+        b.pkOpacity += (targetPkOpacity - b.pkOpacity) * (isPassingData ? 0.22 : 0.08);
+
+        if (b.pkOpacity > 0.01) {
+          b.pk1.visible = true;
+          b.pk2.visible = true;
+
+          // Continuous integration: progress strictly advances forward along parabolic arc
+          const speed = isAct ? 0.85 : 0.45;
+          b.progress = (b.progress + dt * speed) % 1.0;
+
+          // Lead packet: travels from A (u=0) to B (u=1) along the 3D parabolic curve
+          const q1 = b.progress;
+          const mq1 = 1.0 - q1;
+          b.pk1.position.set(
+            mq1 * mq1 * A.x + 2 * mq1 * q1 * C.x + q1 * q1 * B.x,
+            mq1 * mq1 * A.y + 2 * mq1 * q1 * C.y + q1 * q1 * B.y,
+            mq1 * mq1 * A.z + 2 * mq1 * q1 * C.z + q1 * q1 * B.z
+          );
+          b.pk1.rotation.y += dt * 3.5;
+          b.pk1.rotation.x += dt * 2.2;
+          const pulse1 = 1.0 + 0.15 * Math.sin(T.value * 8 + b.phase * 5);
+          b.pk1.scale.setScalar((isAct ? 1.35 : 1.0) * pulse1);
+
+          b.pkMat1.opacity = b.pkOpacity * (0.85 + 0.15 * Math.sin(T.value * 7));
+          b.pkCoreMat1.opacity = b.pkOpacity * 0.95;
+
+          // Follower packet: streaming pulse offset by 0.42 along conduit
+          const q2 = (b.progress + 0.42) % 1.0;
+          const mq2 = 1.0 - q2;
+          b.pk2.position.set(
+            mq2 * mq2 * A.x + 2 * mq2 * q2 * C.x + q2 * q2 * B.x,
+            mq2 * mq2 * A.y + 2 * mq2 * q2 * C.y + q2 * q2 * B.y,
+            mq2 * mq2 * A.z + 2 * mq2 * q2 * C.z + q2 * q2 * B.z
+          );
+          b.pk2.rotation.y -= dt * 2.8;
+          b.pk2.rotation.z += dt * 2.0;
+          b.pk2.scale.setScalar((isAct ? 0.95 : 0.7) * pulse1);
+
+          b.pkMat2.opacity = b.pkOpacity * 0.65;
+          b.pkCoreMat2.opacity = b.pkOpacity * 0.75;
+        } else {
+          b.pk1.visible = false;
+          b.pk2.visible = false;
+        }
       });
 
       // Update Oracle Sun Fact Flares (tripped facts flare red during FAIL stage)
@@ -1758,7 +1859,15 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
       buses.forEach((b) => {
         b.geom.dispose();
         b.mat.dispose();
+        b.pkMat1.dispose();
+        b.pkCoreMat1.dispose();
+        b.pkMat2.dispose();
+        b.pkCoreMat2.dispose();
       });
+      leadBoxGeo.dispose();
+      leadCoreGeo.dispose();
+      followBoxGeo.dispose();
+      followCoreGeo.dispose();
       floorGeo.dispose();
     };
   }, []);
