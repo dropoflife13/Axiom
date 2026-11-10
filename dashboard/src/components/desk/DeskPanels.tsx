@@ -42,12 +42,29 @@ const polar = (t: number, r = R): [number, number] => {
   ];
 };
 
-export const ConvergenceGauge = memo(function ConvergenceGauge({ value, done }: { value: number | null; done: number }) {
+export const ConvergenceGauge = memo(function ConvergenceGauge({
+  value,
+  done,
+  totalTrials = TOTAL_TRIALS,
+}: {
+  value: number | null;
+  done: number;
+  totalTrials?: number;
+}) {
   const reduce = useReducedMotion();
   const v = value ?? 0;
-  const [nx, ny] = polar(v, R - 14);
+  const angleDeg = (v - 0.5) * 180;
   const pct = value === null ? '—' : `${Math.round(v * 100)}%`;
   const band = value === null ? 'NO DATA' : v >= 0.9 ? 'OVERCLOCKED' : v >= 0.6 ? 'CONVERGING' : 'LEARNING';
+  const tierColor =
+    v >= 0.9
+      ? '#c084fc'
+      : v >= 0.6
+      ? '#22d3ee'
+      : v >= 0.35
+      ? '#e879f9'
+      : '#f43f5e';
+
   return (
     <div className="dk-panel dk-gauge" data-band={band}>
       <div className="dk-head">
@@ -57,29 +74,149 @@ export const ConvergenceGauge = memo(function ConvergenceGauge({ value, done }: 
       <svg viewBox="0 0 200 118" role="img" aria-label={`System convergence, mean bound fact fraction ${pct} over ${done} trials, state ${band}`}>
         <defs>
           <linearGradient id="dk-arc" x1="0" x2="1">
-            <stop offset="0" stopColor="#f43f5e" />
-            <stop offset="0.5" stopColor="#a855f7" />
-            <stop offset="1" stopColor="#22d3ee" />
+            <stop offset="0%" stopColor="#f43f5e" />
+            <stop offset="35%" stopColor="#ec4899" />
+            <stop offset="65%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#22d3ee" />
           </linearGradient>
-          <filter id="dk-glow"><feGaussianBlur stdDeviation="2.2" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+          <linearGradient id="dk-needle-grad" x1="0" y1="1" x2="0" y2="0">
+            <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#475569" stopOpacity="0.95" />
+            <stop offset="100%" stopColor={tierColor} />
+          </linearGradient>
+          <filter id="dk-glow">
+            <feGaussianBlur stdDeviation="2.2" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="dk-needle-tip-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2.8" result="b" />
+            <feMerge>
+              <feMergeNode in="b" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
+
+        {/* Telemetry reticle & radar guide arcs */}
+        <path d={`M ${polar(0, 56)} A 56 56 0 0 1 ${polar(1, 56)}`} fill="none" stroke="rgba(160,170,255,0.07)" strokeDasharray="2 4" strokeWidth="1" />
+        <path d={`M ${polar(0, 38)} A 38 38 0 0 1 ${polar(1, 38)}`} fill="none" stroke="rgba(160,170,255,0.05)" strokeDasharray="1 3" strokeWidth="1" />
+        <line x1={polar(0.5, 42)[0]} y1={polar(0.5, 42)[1]} x2={polar(0.5, 72)[0]} y2={polar(0.5, 72)[1]} stroke="rgba(160,170,255,0.12)" strokeDasharray="1 3" strokeWidth="1" />
+
+        {/* Track background and animated value arc */}
         <path d={`M ${polar(0)} A ${R} ${R} 0 0 1 ${polar(1)}`} className="dk-arc-bg" />
-        <motion.path d={`M ${polar(0)} A ${R} ${R} 0 0 1 ${polar(1)}`} stroke="url(#dk-arc)" className="dk-arc" filter="url(#dk-glow)" initial={false} animate={{ pathLength: Math.max(0.001, v) }} transition={{ duration: reduce ? 0 : 0.9 }} />
+        <motion.path
+          d={`M ${polar(0)} A ${R} ${R} 0 0 1 ${polar(1)}`}
+          stroke="url(#dk-arc)"
+          className="dk-arc"
+          filter="url(#dk-glow)"
+          initial={false}
+          animate={{ pathLength: Math.max(0.001, v) }}
+          transition={{ duration: reduce ? 0 : 0.9 }}
+        />
+
+        {/* Radial perimeter ticks */}
         {Array.from({ length: 21 }, (_, i) => {
           const t = i / 20;
+          const isMajor = i % 5 === 0;
           const [x1, y1] = polar(t, R + 4);
-          const [x2, y2] = polar(t, R + (i % 5 === 0 ? 11 : 7));
-          return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className={t <= v && value !== null ? 'dk-tick dk-tick--on' : 'dk-tick'} />;
+          const [x2, y2] = polar(t, R + (isMajor ? 11 : 7));
+          const isOn = t <= v && value !== null;
+          return (
+            <line
+              key={i}
+              x1={x1}
+              y1={y1}
+              x2={x2}
+              y2={y2}
+              className={isOn ? 'dk-tick dk-tick--on' : 'dk-tick'}
+              style={isOn ? { stroke: tierColor } : undefined}
+            />
+          );
         })}
+
+        {/* Cardinal tick labels */}
         {[0, 0.5, 1].map((t) => {
           const [x, y] = polar(t, R + 20);
           return <text key={t} x={x} y={y + 3} className="dk-tick-label" textAnchor="middle">{Math.round(t * 100)}</text>;
         })}
-        <motion.line x1={100} y1={100} initial={false} animate={{ x2: nx, y2: ny }} transition={{ type: reduce ? 'tween' : 'spring', duration: reduce ? 0 : undefined, stiffness: 60, damping: 12 }} className="dk-needle" filter="url(#dk-glow)" />
-        <circle cx={100} cy={100} r={5} className="dk-hub" />
-        <text x={100} y={84} textAnchor="middle" className="dk-gauge-value">{pct}</text>
+
+        {/* Dynamic rotating aerospace pointer */}
+        <motion.g
+          style={{ transformOrigin: '100px 100px', transformBox: 'view-box' }}
+          initial={false}
+          animate={{ rotate: angleDeg }}
+          transition={{
+            type: reduce ? 'tween' : 'spring',
+            duration: reduce ? 0 : undefined,
+            stiffness: 90,
+            damping: 18,
+            mass: 0.75,
+          }}
+        >
+          {/* Centering bounding anchor to guarantee exact (100, 100) origin across all SVG renderers */}
+          <circle cx={100} cy={100} r={72} fill="none" stroke="none" pointerEvents="none" />
+
+          {/* Counterweight rear tail */}
+          <path
+            d="M 98.4 104 L 98 112 A 2 2 0 0 0 102 112 L 101.6 104 Z"
+            fill="#090d19"
+            stroke={tierColor}
+            strokeWidth="0.8"
+            opacity="0.85"
+          />
+          <circle cx={100} cy={108} r={1.1} fill="#1e293b" />
+
+          {/* Tapered needle blade */}
+          <path
+            d="M 98.2 96 L 99.3 35 L 100 29 L 100.7 35 L 101.8 96 Z"
+            fill="url(#dk-needle-grad)"
+            stroke="rgba(255,255,255,0.22)"
+            strokeWidth="0.6"
+            filter="url(#dk-glow)"
+          />
+
+          {/* Razor illuminated center spine */}
+          <line
+            x1={100}
+            y1={96}
+            x2={100}
+            y2={31}
+            stroke="#ffffff"
+            strokeWidth="1.2"
+            strokeLinecap="round"
+          />
+
+          {/* Laser contact pip at pointer apex */}
+          <circle
+            cx={100}
+            cy={29}
+            r={4.2}
+            fill={tierColor}
+            opacity={0.4}
+            filter="url(#dk-needle-tip-glow)"
+          />
+          <circle
+            cx={100}
+            cy={29}
+            r={1.8}
+            fill="#ffffff"
+          />
+        </motion.g>
+
+        {/* Layered precision cockpit pivot hub */}
+        <circle cx={100} cy={100} r={8} fill="#060810" stroke="rgba(160,170,255,0.25)" strokeWidth="1" />
+        <circle cx={100} cy={100} r={5.2} fill="#0d111d" stroke={tierColor} strokeWidth="1.5" filter="url(#dk-glow)" />
+        <circle cx={100} cy={100} r={2.4} fill="#ffffff" />
+        <circle cx={99.3} cy={99.3} r={0.7} fill={tierColor} />
+
+        {/* Digital Telemetry Readout */}
+        <text x={100} y={76} textAnchor="middle" className="dk-gauge-value">{pct}</text>
+        <text x={100} y={88} textAnchor="middle" className="dk-gauge-sub" style={{ fill: tierColor }}>{band}</text>
       </svg>
-      <p className="dk-sub">mean boundFactFraction · {done}/{TOTAL_TRIALS}</p>
+      <p className="dk-sub">mean boundFactFraction · {done}/{totalTrials}</p>
     </div>
   );
 });

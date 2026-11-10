@@ -292,7 +292,7 @@ export default function HealingLoopHero({
             <div className="dk-bottom">
               <EvidenceMatrix cells={desk.cells} passed={desk.passed} failed={desk.failed} totalTrials={totalTrials} snapshot={snapshot} />
               <LiveTerminal lines={desk.log} stamp={stamp} error={error} isLive={snapshot?.isLive} />
-              <ConvergenceGauge value={desk.convergence} done={desk.done} />
+              <ConvergenceGauge value={desk.convergence} done={desk.done} totalTrials={totalTrials} />
             </div>
 
             <footer>
@@ -595,10 +595,13 @@ const css = `
 .dk-cursor{color:#22d3ee;animation:dk-blink 1s steps(1) infinite}
 .dk-gauge svg{display:block;width:100%;max-height:120px}
 .dk-arc-bg{fill:none;stroke:rgba(160,170,255,.12);stroke-width:10;stroke-linecap:round}.dk-arc{fill:none;stroke-width:10;stroke-linecap:round}
-.dk-tick{stroke:rgba(160,170,255,.25);stroke-width:1.2}.dk-tick--on{stroke:#22d3ee;filter:drop-shadow(0 0 2px #22d3ee)}
-.dk-tick-label{fill:var(--dim);font-size:8px}.dk-needle{stroke:#f5f3ff;stroke-width:2.4;stroke-linecap:round}.dk-hub{fill:#05060a;stroke:#c4b5fd;stroke-width:2}
-.dk-gauge-value{fill:#f5eff7;font:600 20px var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);text-shadow:none}
-.dk-gauge[data-band=OVERCLOCKED]{border-color:#a855f7;box-shadow:0 0 16px rgba(168,85,247,.3)}.dk-gauge[data-band=OVERCLOCKED] .dk-head b{color:#d8b4fe}
+.dk-tick{stroke:rgba(160,170,255,.25);stroke-width:1.2;transition:stroke .3s,filter .3s}.dk-tick--on{stroke:#22d3ee;filter:drop-shadow(0 0 2px currentColor)}
+.dk-tick-label{fill:var(--dim);font-size:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace)}
+.dk-gauge-value{fill:#f8fafc;font:700 21px var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);text-shadow:0 0 10px rgba(160,170,255,.25)}
+.dk-gauge-sub{font:600 8.5px var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);letter-spacing:.18em;text-transform:uppercase}
+.dk-gauge[data-band=OVERCLOCKED]{border-color:rgba(168,85,247,.6);box-shadow:0 0 20px rgba(168,85,247,.22)}.dk-gauge[data-band=OVERCLOCKED] .dk-head b{color:#d8b4fe}
+.dk-gauge[data-band=CONVERGING]{border-color:rgba(34,211,238,.45);box-shadow:0 0 16px rgba(34,211,238,.16)}.dk-gauge[data-band=CONVERGING] .dk-head b{color:#67e8f9}
+.dk-gauge[data-band=LEARNING]{border-color:rgba(232,121,249,.4);box-shadow:0 0 16px rgba(232,121,249,.14)}.dk-gauge[data-band=LEARNING] .dk-head b{color:#f0abfc}
 .dk-wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
 .dk-wire{fill:none;stroke:rgba(34,211,238,.35);stroke-width:1;vector-effect:non-scaling-stroke;stroke-dasharray:3 5;animation:dk-flow 2.4s linear infinite}
 .dk-wire-end{fill:#22d3ee}
