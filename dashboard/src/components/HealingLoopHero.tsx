@@ -8,6 +8,7 @@ import { AxiomLogo } from './AxiomLogo';
 import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, getDisplayName, inferRunOption, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
 import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
+import { DataIntelPanel, dataIntelCss } from './desk/DataIntelPanel';
 
 const LoopingDonut = dynamic(() => import('./LoopingDonut'), { ssr: false });
 
@@ -64,6 +65,7 @@ export default function HealingLoopHero({
 }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [intelOpen, setIntelOpen] = useState(true);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -134,8 +136,16 @@ export default function HealingLoopHero({
   return (
     <section ref={trackRef} className="hl-track" aria-label="Axiom healing loop">
       <style>{css}</style>
+      <style>{dataIntelCss}</style>
       <div ref={stickyRef} className="hl-sticky">
-        <div className="hl">
+        <div className="hl" data-intel={intelOpen ? 'open' : 'closed'}>
+          <DataIntelPanel
+            runId={activeRunId}
+            label={getDisplayName(activeRunId)}
+            isLive={snapshot?.isLive}
+            open={intelOpen}
+            onToggle={() => setIntelOpen((o) => !o)}
+          />
           <div className="hl-grid" />
           <div className="hl-canvas">
             <LoopingDonut color={STAGES[stage][1]} running={running && !reducedMotion} progress={progress} />
@@ -325,7 +335,10 @@ export default function HealingLoopHero({
 
 const css = `
 .hl-track{height:320vh;background:#05060a}.hl-sticky{--hud:1;--canvas:1;position:sticky;top:0;height:100svh;overflow:hidden}.hl{--line:rgba(160,170,255,.14);--dim:#8b90a8;position:relative;height:100%;background:#05060a;color:#e8eaf2;font:12px/1.45 var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);overflow:hidden}
-.hl-canvas{position:absolute;inset:0;opacity:var(--canvas);transform:translateY(-2vh)}
+.hl-canvas{position:absolute;inset:0;opacity:var(--canvas);transform:translateY(-2vh);transition:right .35s cubic-bezier(.16,1,.3,1)}
+.hl{--di-w:clamp(300px,24vw,380px)}
+.hl[data-intel=open] .hl-canvas,.hl[data-intel=open] .hl-hud{right:var(--di-w)}
+.hl-hud{transition:right .35s cubic-bezier(.16,1,.3,1)}
 .hl *{box-sizing:border-box}.hl-grid{position:absolute;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%)}
 .hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:12px;padding:12px 18px;animation:hl-hud-reveal 1.2s cubic-bezier(0.16,1,0.3,1) both}
 @keyframes hl-hud-reveal{0%{opacity:0;transform:scale(0.985)}100%{opacity:var(--hud);transform:scale(1)}}
