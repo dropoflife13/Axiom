@@ -1,22 +1,21 @@
 'use client';
 import dynamic from 'next/dynamic';
-import { useEffect, useState } from 'react';
-import { useRef } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import { sceneForProgress } from '@/lib/scroll-scene';
 import type { DeskData } from '@/lib/desk';
 import { AxiomLogo } from './AxiomLogo';
 import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, getDisplayName, inferRunOption, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
-import { Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
-import { DataIntelPanel, dataIntelCss } from './desk/DataIntelPanel';
+import { ApiLatencyPanel, Connectors, ConvergenceGauge, EvidenceMatrix, FactNodes, FrequencyRack, LiveTerminal, Sparkline } from './desk/DeskPanels';
 
 const LoopingDonut = dynamic(() => import('./LoopingDonut'), { ssr: false });
 
-const STAGES: [string, number][] = [
+export const STAGES: [string, number][] = [
   ['GENERATE', 0xa855f7], ['VERIFY', 0x22d3ee], ['FAIL', 0xf43f5e],
   ['ADVISE', 0xfbbf24], ['RETRY', 0xa855f7], ['PASS', 0x34d399],
 ];
-const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
+export const hex = (n: number) => '#' + n.toString(16).padStart(6, '0');
 
 export interface SnapshotMeta {
   runId: string;
@@ -43,8 +42,11 @@ interface HealingLoopHeroProps {
   error: string | null;
   snapshot?: SnapshotMeta;
   activeRunId?: string;
+  displayRunId?: string;
   runOptions?: readonly RunOption[];
   fleet?: RunStatus[];
+  intelOpen?: boolean;
+  onToggleIntel?: () => void;
   onSelectRun?: (runId: string) => void;
   onCopyLogs?: () => void;
   onReplayIntro?: () => void;
@@ -57,51 +59,29 @@ export default function HealingLoopHero({
   error,
   snapshot,
   activeRunId = DEFAULT_RUN_ID,
+  displayRunId,
   runOptions = RUN_OPTIONS,
   fleet,
+  intelOpen = true,
+  onToggleIntel,
   onSelectRun,
   onCopyLogs,
   onReplayIntro,
 }: HealingLoopHeroProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [intelOpen, setIntelOpen] = useState(true);
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement>(null);
   const stickyRef = useRef<HTMLDivElement>(null);
   const progress = useRef(0);
+  const transitionKey = displayRunId ?? snapshot?.runId ?? activeRunId;
   const stage = Math.max(0, Math.min(STAGES.length - 1, live.stage));
   const color = hex(STAGES[stage][1]);
   const running = live.running ?? true;
 
-  const totalTrials = live.total ?? desk.totalTrials ?? (activeRunId.toLowerCase().includes('mini') ? 48 : 720);
-  const activeOption = runOptions.find((r) => r.id === activeRunId) ?? inferRunOption(activeRunId);
-  const activeFleetStatus = fleet?.find((f) => f.run.id === activeRunId);
+  const totalTrials = live.total ?? desk.totalTrials ?? (transitionKey.toLowerCase().includes('mini') ? 48 : 720);
 
   useEffect(() => {
     setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDropdownOpen(false);
-      }
-    }
-    function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === 'Escape') {
-        setDropdownOpen(false);
-      }
-    }
-    if (dropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [dropdownOpen]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -136,196 +116,110 @@ export default function HealingLoopHero({
   return (
     <section ref={trackRef} className="hl-track" aria-label="Axiom healing loop">
       <style>{css}</style>
-      <style>{dataIntelCss}</style>
       <div ref={stickyRef} className="hl-sticky">
         <div className="hl" data-intel={intelOpen ? 'open' : 'closed'}>
-          <DataIntelPanel
-            runId={activeRunId}
-            label={getDisplayName(activeRunId)}
-            isLive={snapshot?.isLive}
-            open={intelOpen}
-            onToggle={() => setIntelOpen((o) => !o)}
-          />
           <div className="hl-grid" />
           <div className="hl-canvas">
-            <LoopingDonut color={STAGES[stage][1]} running={running && !reducedMotion} progress={progress} />
+            <div className="hl-torus-shell">
+              <LoopingDonut
+                color={STAGES[stage][1]}
+                running={running && !reducedMotion}
+                progress={progress}
+                transitionKey={transitionKey}
+              />
+            </div>
           </div>
           <div className="hl-hud">
             <Connectors />
             <FactNodes facts={desk.activeFacts} />
-            <header>
-              <div
-                className="hl-brand"
-                onClick={onReplayIntro}
-                role={onReplayIntro ? 'button' : undefined}
-                tabIndex={onReplayIntro ? 0 : undefined}
-                title={onReplayIntro ? 'Click to replay boot intro sequence' : undefined}
-              >
-                <AxiomLogo size={24} variant="duo" title="Axiom" />
-                <b>AXIOM</b>
-                <span>Verifier / {getDisplayName(activeRunId ?? snapshot?.runId ?? DEFAULT_RUN_ID)}</span>
+
+            <div className="hl-central-stage">
+              <div className="dk-top">
+                <Sparkline label="TOKENS USED" values={desk.tokens} unit=" tok" empty="" />
+                <Sparkline label="MEMORY HITS" values={desk.memoryHits} unit="" empty="" />
               </div>
-              <div className="hl-m">
-                <div>ORACLE<b>locked</b></div><div>TEMP<b>0</b></div>
-                <div>CONDITIONS<b>06</b></div><div>STAGE<b style={{ color }}>{STAGES[stage][0]}</b></div>
-              </div>
-              <div className="hl-header-controls">
-                {/* ACTIVE MODEL / RUN Dropdown Selector */}
-                <div className="hl-run-selector" role="group" aria-label="ACTIVE MODEL / RUN" ref={dropdownRef}>
-                  <span className="hl-run-label">ACTIVE MODEL / RUN</span>
-                  <div className="hl-run-dropdown-wrap">
-                    <button
-                      type="button"
-                      className={`hl-run-trigger ${dropdownOpen ? 'is-open' : ''} ${activeFleetStatus?.state === 'live' || (activeRunId && live.running) ? 'is-live' : ''}`}
-                      onClick={() => setDropdownOpen((v) => !v)}
-                      aria-expanded={dropdownOpen}
-                      aria-haspopup="listbox"
-                      title={`Active model: ${getDisplayName(activeRunId)} (${live.done}/${totalTrials} trials)`}
-                      style={{ '--run-accent': activeOption.accent } as React.CSSProperties}
-                    >
-                      <div className="hl-run-trigger-left">
-                        <span className="hl-run-dot" />
-                        <span className="hl-run-trigger-name">{getDisplayName(activeRunId)}</span>
-                      </div>
-                      <div className="hl-run-trigger-right">
-                        <span className="hl-run-prog">{`${live.done}/${totalTrials}`}</span>
-                        <svg
-                          className={`hl-run-chevron ${dropdownOpen ? 'is-rotated' : ''}`}
-                          width="10"
-                          height="6"
-                          viewBox="0 0 10 6"
-                          fill="none"
-                        >
-                          <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                    </button>
-                    {dropdownOpen && (
-                      <div className="hl-run-menu" role="listbox">
-                        {runOptions.map((r) => {
-                          const st = fleet?.find((f) => f.run.id === r.id);
-                          const isSelected = activeRunId === r.id;
-                          const rTotal = st?.total ?? (r.id.toLowerCase().includes('mini') ? 48 : (desk.totalTrials ?? 720));
-                          const rDone = isSelected ? live.done : (st?.done ?? 0);
-                          const name = getDisplayName(r.id);
-                          return (
-                            <button
-                              key={r.id}
-                              type="button"
-                              role="option"
-                              aria-selected={isSelected}
-                              className={`hl-run-option ${isSelected ? 'is-selected' : ''}`}
-                              style={{ '--run-accent': r.accent } as React.CSSProperties}
-                              onClick={() => {
-                                onSelectRun?.(r.id);
-                                setDropdownOpen(false);
-                              }}
-                            >
-                              <div className="hl-run-option-left">
-                                <span className="hl-run-dot" />
-                                <span className="hl-run-option-name">{name}</span>
-                              </div>
-                              <span className="hl-run-option-prog">{`${rDone}/${rTotal}`}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )}
+
+              <div className="hl-hero-row">
+                <div className="hl-hero">
+                  <p className="hl-k">● HEALING LOOP</p>
+                  <h1>Architecture<br />under pressure.</h1>
+                  <p className="hl-s">Generate, verify, fail, advise, retry. Axiom tests generated migrations against the rules they claim to satisfy.</p>
+                  <div className="hl-run">
+                    <div className="hl-big">
+                      {snapshot?.awaiting ? (
+                        <><b>0</b><span> / {totalTrials}</span></>
+                      ) : (
+                        <><b>{live.done}</b><span> / {totalTrials}</span></>
+                      )}
+                    </div>
+                    <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={totalTrials} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
+                      <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${Math.min(100, (live.done / Math.max(1, totalTrials)) * 100)}%` }} />
+                    </div>
+                    <p className="hl-dim">
+                      {snapshot?.awaiting
+                        ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${getDisplayName(transitionKey)}`
+                        : `${desk.totalTokens.toLocaleString()} tokens · ${Math.max(0, totalTrials - live.done)} trials remain`}
+                    </p>
+                    {onCopyLogs && <button onClick={onCopyLogs}>COPY LOGS</button>}
                   </div>
                 </div>
 
-                <div
-                  className={`hl-chip ${snapshot?.awaiting ? 'hl-chip--awaiting' : snapshot?.isLive ? 'hl-chip--live' : 'hl-chip--snapshot'}`}
-                  role="status"
-                  title={snapshot?.isLive ? `Live telemetry stream for ${snapshot?.runId ?? activeRunId}` : `Checkpoint snapshot for ${snapshot?.runId ?? activeRunId}`}
-                >
-                  {snapshot?.awaiting ? (
-                    <span>AWAITING // {snapshot.runId}</span>
-                  ) : snapshot && !snapshot.isLive ? (
-                    <span>SNAPSHOT // {snapshot.runId} @ {snapshot.commit}</span>
-                  ) : (
-                    <>
-                      <span className="hl-chip-live-dot" />
-                      <span>LIVE // {snapshot?.runId ?? activeRunId} @ {snapshot?.commit ?? 'live'}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </header>
-
-            <div className="dk-top">
-              <Sparkline label="TOKENS USED" values={desk.tokens} unit=" tok" empty="" />
-              <Sparkline label="API LATENCY" values={desk.latency} unit=" ms" empty="Not recorded in checkpoint" />
-              <Sparkline label="MEMORY HITS" values={desk.memoryHits} unit="" empty="" />
-            </div>
-
-            <div className="hl-hero-row">
-              <div className="hl-hero">
-                <p className="hl-k">● HEALING LOOP</p>
-                <h1>Architecture<br />under pressure.</h1>
-                <p className="hl-s">Generate, verify, fail, advise, retry. Axiom tests generated migrations against the rules they claim to satisfy.</p>
-                <div className="hl-run">
-                  <div className="hl-big">
-                    {snapshot?.awaiting ? (
-                      <><b>0</b><span> / {totalTrials}</span></>
-                    ) : (
-                      <><b>{live.done}</b><span> / {totalTrials}</span></>
-                    )}
-                  </div>
-                  <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={totalTrials} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
-                    <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${Math.min(100, (live.done / Math.max(1, totalTrials)) * 100)}%` }} />
-                  </div>
-                  <p className="hl-dim">
-                    {snapshot?.awaiting
-                      ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${getDisplayName(activeRunId)}`
-                      : `${desk.totalTokens.toLocaleString()} tokens · ${Math.max(0, totalTrials - live.done)} trials remain`}
-                  </p>
-                  {onCopyLogs && <button onClick={onCopyLogs}>COPY LOGS</button>}
+                {/* Right-Side Tactical Frequency Rack & API Latency Telemetry */}
+                <div className="hl-right-col">
+                  <FrequencyRack
+                    tokens={desk.tokens}
+                    latency={desk.latency}
+                    done={desk.done}
+                    passed={desk.passed}
+                    failed={desk.failed}
+                    activeFacts={desk.activeFacts}
+                    memoryHits={desk.memoryHits}
+                    convergence={desk.convergence}
+                    snapshot={snapshot}
+                    total={totalTrials}
+                  />
+                  <ApiLatencyPanel
+                    latency={desk.latency}
+                    stageName={STAGES[stage][0]}
+                    stageColor={color}
+                  />
                 </div>
               </div>
 
-              {/* Right-Side Tactical Frequency & Telemetry Rack (Inspired by Images 2 & 3) */}
-              <FrequencyRack
-                tokens={desk.tokens}
-                latency={desk.latency}
-                done={desk.done}
-                passed={desk.passed}
-                failed={desk.failed}
-                activeFacts={desk.activeFacts}
-                memoryHits={desk.memoryHits}
-                convergence={desk.convergence}
-                snapshot={snapshot}
-                total={totalTrials}
-              />
-            </div>
-
-            <div className="dk-bottom">
-              <EvidenceMatrix cells={desk.cells} passed={desk.passed} failed={desk.failed} totalTrials={totalTrials} snapshot={snapshot} />
-              <LiveTerminal lines={desk.log} stamp={stamp} error={error} isLive={snapshot?.isLive} />
-              <ConvergenceGauge value={desk.convergence} done={desk.done} totalTrials={totalTrials} />
-            </div>
-
-            <footer>
-              <div className="hl-stages">
-                {STAGES.map(([name, c], i) => (
-                  <span key={name} style={i === stage ? { color: hex(c), borderColor: hex(c) } : undefined}>{name}</span>
-                ))}
+              <div className="dk-bottom">
+                <EvidenceMatrix cells={desk.cells} passed={desk.passed} failed={desk.failed} totalTrials={totalTrials} snapshot={snapshot} />
+                <LiveTerminal lines={desk.log} stamp={stamp} error={error} isLive={snapshot?.isLive} />
+                <ConvergenceGauge value={desk.convergence} done={desk.done} totalTrials={totalTrials} />
               </div>
-              <div className="hl-footer-model">
-                <span>PARALLEL BG:</span>
-                {runOptions
-                  .filter((r) => r.id !== activeRunId)
-                  .map((r, i) => (
-                    <span key={r.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                      {i > 0 && <span>+</span>}
-                      <b style={{ color: r.accent }}>{r.label}</b>
-                    </span>
+
+              <footer>
+                <div className="hl-stages">
+                  {STAGES.map(([name, c], i) => (
+                    <span key={name} style={i === stage ? { color: hex(c), borderColor: hex(c) } : undefined}>{name}</span>
                   ))}
-                <span style={{ opacity: 0.4 }}>|</span>
-                <span>ACTIVE MODEL:</span>
-                <b>{snapshot?.model ?? modelForRun(activeRunId)}</b>
-              </div>
-            </footer>
+                </div>
+                <div className="hl-footer-model">
+                  <span>PARALLEL BG:</span>
+                  {runOptions
+                    .filter((r) => r.id !== transitionKey)
+                    .slice(0, 2)
+                    .map((r, i) => (
+                      <span key={r.id} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+                        {i > 0 && <span>+</span>}
+                        <b style={{ color: r.accent }}>{r.label}</b>
+                      </span>
+                    ))}
+                  {runOptions.filter((r) => r.id !== transitionKey).length > 2 && (
+                    <span style={{ opacity: 0.7, whiteSpace: 'nowrap' }}>
+                      +{runOptions.filter((r) => r.id !== transitionKey).length - 2} more
+                    </span>
+                  )}
+                  <span style={{ opacity: 0.4 }}>|</span>
+                  <span>ACTIVE MODEL:</span>
+                  <b>{snapshot?.model ?? modelForRun(transitionKey)}</b>
+                </div>
+              </footer>
+            </div>
           </div>
         </div>
       </div>
@@ -335,17 +229,41 @@ export default function HealingLoopHero({
 
 const css = `
 .hl-track{height:320vh;background:#05060a}.hl-sticky{--hud:1;--canvas:1;position:sticky;top:0;height:100svh;overflow:hidden}.hl{--line:rgba(160,170,255,.14);--dim:#8b90a8;position:relative;height:100%;background:#05060a;color:#e8eaf2;font:12px/1.45 var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);overflow:hidden}
-.hl-canvas{position:absolute;inset:0;opacity:var(--canvas);transform:translateY(-2vh);transition:right .35s cubic-bezier(.16,1,.3,1)}
-.hl{--di-w:clamp(300px,24vw,380px)}
-.hl[data-intel=open] .hl-canvas,.hl[data-intel=open] .hl-hud{right:var(--di-w)}
-.hl-hud{transition:right .35s cubic-bezier(.16,1,.3,1)}
+.hl-canvas{position:absolute;inset:0;opacity:var(--canvas);transform:translateY(-2vh)}
+.hl-torus-shell{position:absolute;inset:0;width:100%;height:100%;transform-origin:center center}
 .hl *{box-sizing:border-box}.hl-grid{position:absolute;inset:0;background:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:48px 48px;-webkit-mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%);mask-image:radial-gradient(ellipse at center,#000 25%,transparent 78%)}
-.hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:grid;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:12px;padding:12px 18px;animation:hl-hud-reveal 1.2s cubic-bezier(0.16,1,0.3,1) both}
+.hl-hud{position:absolute;inset:0;pointer-events:none;opacity:var(--hud);display:flex;flex-direction:column;padding:10px 18px 14px;animation:hl-hud-reveal 1.2s cubic-bezier(0.16,1,0.3,1) both}
+.hl-central-stage{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;gap:12px;min-height:0;height:100%;flex:1}
 @keyframes hl-hud-reveal{0%{opacity:0;transform:scale(0.985)}100%{opacity:var(--hud);transform:scale(1)}}
 .hl-brand{display:flex;align-items:center;gap:8px;cursor:pointer;transition:filter .3s ease;pointer-events:auto}
 .hl-brand:hover{filter:drop-shadow(0 0 10px rgba(34,211,238,.85))}
-.hl header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding-bottom:8px;position:relative;z-index:500;pointer-events:auto}
-.hl-header-controls{display:flex;align-items:center;gap:14px;position:relative;z-index:510;flex-shrink:0}
+.hl header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px 12px;border-bottom:1px solid var(--line);padding-bottom:8px;position:relative;z-index:500;pointer-events:auto}
+.hl-header-controls{display:flex;align-items:center;flex-wrap:wrap;gap:8px 10px;position:relative;z-index:510;flex-shrink:0}
+.hl .hl-intel-btn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:4px 10px;
+  min-height:24px;
+  background:#050505;
+  border:1px solid #27272a;
+  color:#a1a1aa;
+  font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.1em;
+  white-space:nowrap;
+  border-radius:3px;
+  transition:border-color .18s ease,background-color .18s ease,color .18s ease;
+  flex-shrink:0;
+}
+.hl .hl-intel-btn.is-open{border-color:rgba(34,211,238,.45);color:#22d3ee}
+.hl .hl-intel-btn:hover,.hl .hl-intel-btn:focus-visible{
+  border-color:#22d3ee;
+  background:rgba(34,211,238,.1);
+  color:#ffffff;
+  outline:none;
+}
 .hl-run-selector{display:flex;align-items:center;gap:8px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);pointer-events:auto;position:relative;z-index:520;flex-shrink:0}
 .hl-run-label{font-size:9px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;font-weight:600;white-space:nowrap;flex-shrink:0}
 .hl-run-dropdown-wrap{position:relative;display:inline-block;z-index:530;flex-shrink:0}
@@ -356,7 +274,7 @@ const css = `
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  min-width:215px;
+  min-width:195px;
   font-size:10px;
   letter-spacing:.08em;
   font-weight:600;
@@ -451,8 +369,8 @@ const css = `
   align-items:center;
   justify-content:center;
   gap:6px;
-  min-width:230px;
-  max-width:280px;
+  min-width:195px;
+  max-width:255px;
   padding:3px 12px;
   border-radius:99px;
   letter-spacing:.08em;
@@ -501,7 +419,7 @@ const css = `
 .hl-run-tab.is-live .hl-run-dot{opacity:1;animation:hl-run-pulse 1.4s ease-in-out infinite}
 .hl-run-prog{font-size:8px;padding:1px 4px;border-radius:2px;background:rgba(255,255,255,.06);color:var(--run-accent,#8b90a8);letter-spacing:.06em}
 @keyframes hl-run-pulse{0%,100%{box-shadow:0 0 0 0 var(--run-accent)}50%{box-shadow:0 0 0 4px transparent}}
-.hl-footer-model{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.12em;color:var(--dim);font-family:var(--font-mono,monospace)}
+.hl-footer-model{display:flex;align-items:center;gap:6px;font-size:9.5px;letter-spacing:.1em;color:var(--dim);font-family:var(--font-mono,monospace);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hl-footer-model b{color:#22d3ee;font-weight:600}
 @keyframes dk-progress-awaiting{
   0%{background:linear-gradient(90deg,rgba(251,191,36,.2),#fbbf24,rgba(251,191,36,.2));opacity:.6}
@@ -516,11 +434,11 @@ const css = `
 .hl-run{margin-top:10px}
 .hl-big b{font-size:clamp(30px,3.2vw,46px);font-weight:600;letter-spacing:-.03em;color:#f5eff7;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);text-shadow:none}.hl-big span{color:var(--dim);font-size:14px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace)}
 .hl button{pointer-events:auto;background:rgba(5,6,10,.7);color:inherit;border:1px solid var(--line);padding:6px 14px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);font-size:11px;letter-spacing:.12em;cursor:pointer;min-height:30px}.hl button:hover,.hl button:focus-visible{border-color:#a78bfa;outline:2px solid #a78bfa;outline-offset:2px}
-.hl footer{border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;position:relative;z-index:2}.hl-stages{display:flex;gap:8px;flex-wrap:wrap}.hl-stages span{padding:2px 8px;border:1px solid var(--line);color:var(--dim);font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)}
+.hl footer{border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;z-index:2}.hl-stages{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}.hl-stages span{padding:2px 7px;border:1px solid var(--line);color:var(--dim);font-size:10.5px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)}
 .dk-progress{height:6px;background:rgba(160,170,255,.12);margin-top:6px;overflow:hidden}.dk-progress i{display:block;height:100%;background:linear-gradient(90deg,#a855f7,#22d3ee);box-shadow:0 0 10px #a855f7;transition:width .6s}
 
 /* desk panels */
-.dk-top{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;position:relative;z-index:2;margin-bottom:2px}
+.dk-top{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;position:relative;z-index:2;margin-bottom:2px}
 .dk-bottom{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) minmax(0,.9fr);gap:10px;position:relative;z-index:2;min-height:0}
 .dk-panel{pointer-events:auto;background:rgba(7,9,16,.88);border:1px solid rgba(160,170,255,.2);box-shadow:0 0 0 1px rgba(168,85,247,.08),0 0 24px rgba(34,211,238,.06) inset,0 8px 32px rgba(0,0,0,.7);backdrop-filter:blur(12px);padding:8px 10px;min-width:0}
 .dk-head{display:flex;justify-content:space-between;gap:8px;color:var(--dim);font-size:10px;letter-spacing:.14em;margin-bottom:6px}.dk-head b{color:#e8eaf2;font-weight:500;letter-spacing:.04em;text-shadow:none}
@@ -530,7 +448,15 @@ const css = `
 /* Hero Row with Left Text & Right Tactical Frequency Rack */
 .hl-hero-row{display:flex;justify-content:space-between;align-items:flex-start;position:relative;z-index:2;min-height:0;pointer-events:none;gap:24px;padding-top:4px}
 .hl-hero{max-width:min(400px,32vw);pointer-events:auto}
-.hl-freq-rack{width:min(340px,28vw);pointer-events:auto;display:flex;flex-direction:column;gap:7px;padding:9px 11px;background:rgba(7,9,16,.88);border:1px solid rgba(160,170,255,.2);box-shadow:0 0 24px rgba(34,211,238,.06) inset,0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.hl-right-col{width:min(340px,28vw);pointer-events:auto;display:flex;flex-direction:column;gap:8px;position:relative;z-index:2;flex-shrink:0}
+.hl-freq-rack{width:100%;pointer-events:auto;display:flex;flex-direction:column;gap:7px;padding:9px 11px;background:rgba(7,9,16,.88);border:1px solid rgba(160,170,255,.2);box-shadow:0 0 24px rgba(34,211,238,.06) inset,0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.dk-api-latency-panel{width:100%;display:flex;flex-direction:column;gap:5px;padding:8px 10px;background:rgba(7,9,16,.88);border:1px solid rgba(160,170,255,.2);box-shadow:0 0 24px rgba(34,211,238,.06) inset,0 8px 32px rgba(0,0,0,.6);backdrop-filter:blur(10px)}
+.dk-latency-spark-wrap{min-height:18px;display:flex;align-items:center}
+.dk-latency-spark-wrap svg{display:block;width:100%;height:18px}
+.dk-latency-telemetry{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;border-top:1px solid rgba(160,170,255,.12);padding-top:6px;margin-top:2px}
+.dk-telem-tag{display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(4,5,9,.55);border:1px solid rgba(160,170,255,.1);border-radius:3px;padding:3px 2px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);letter-spacing:.08em;line-height:1.2;text-align:center}
+.dk-telem-tag span{font-size:7.5px;color:var(--dim,#8b90a8);text-transform:uppercase}
+.dk-telem-tag b{font-size:8.5px;font-weight:600;margin-top:1px;letter-spacing:.06em}
 .hl-spectrogram-container{width:100%}
 .hl-spectrogram-strip{position:relative;height:5px;width:100%;border-radius:3px;background:linear-gradient(90deg,#22d3ee 0%,#34d399 25%,#fbbf24 50%,#f43f5e 75%,#a855f7 100%);overflow:hidden;box-shadow:0 0 8px rgba(34,211,238,.35)}
 .hl-spectro-cursor{position:absolute;top:0;bottom:0;width:8px;transform:translateX(-50%);background:#ffffff;box-shadow:0 0 6px #ffffff,0 0 10px #22d3ee;border-radius:2px}
@@ -621,11 +547,13 @@ const css = `
 .dk-facts{position:absolute;inset:0;pointer-events:none;z-index:10}
 .dk-fact{position:absolute;transform:translate(-50%,-50%);padding:3px 8px;border:1px solid rgba(232,121,249,.65);background:rgba(5,6,10,.94);color:#f0abfc;font-size:10px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);letter-spacing:.08em;text-shadow:0 0 6px rgba(232,121,249,.35);box-shadow:0 0 10px rgba(217,70,239,.3),0 2px 8px rgba(0,0,0,.85);border-radius:3px;white-space:nowrap;z-index:10;pointer-events:auto}
 @keyframes dk-flow{to{stroke-dashoffset:-32}}@keyframes dk-blink{50%{opacity:0}}
+@media(max-width:1520px){.hl[data-intel=open] .hl-m,.hl[data-intel=open] .hl-run-label{display:none}}
 @media(max-width:1100px){.hl-m{display:none}.hl-hero{max-width:none}.dk-top{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){
   .hl-track{height:auto}.hl-sticky{position:relative;height:auto;overflow:visible}.hl{height:auto;overflow:visible}
   .hl-canvas{position:relative;height:340px;inset:auto}
   .hl-hud{position:relative;inset:auto;opacity:1;grid-template-rows:none;padding:12px}
+  .hl-central-stage{display:flex;flex-direction:column;height:auto}
   .dk-top,.dk-bottom{grid-template-columns:1fr}.dk-wires,.dk-facts{display:none}
   .hl-hud>header{order:-2}.hl-canvas{order:-1}
   .dk-grid{grid-template-columns:repeat(40,1fr)}

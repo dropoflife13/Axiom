@@ -1,313 +1,447 @@
 'use client';
-import { memo, useEffect, useMemo, useState } from 'react';
 
-/* Data Intel sidebar — dense, structured run explanation panel. */
+import { memo, useMemo, useState } from 'react';
+import type { CheckpointTrial } from '@/lib/desk';
+import { getDisplayName, inferRunOption, type RunOption } from '@/lib/runs';
+import type { RunStatus } from '@/lib/useFleetStatus';
+import {
+  CONDITION_ORDER,
+  buildHypothesisSummary,
+  formatPValue,
+  normalizeAnalysisRun,
+} from '@/lib/analysis';
 
-interface Intel {
-  runId: string;
-  available: boolean;
-  source?: string;
-  provider?: string;
-  baseUrl?: string | null;
-  requestedModel?: string;
-  returnedModels?: { name: string; n: number }[];
-  reasoning?: { mode: string; label: string };
-  gitCommit?: string | null;
-  generatedAt?: string | null;
-  integrity?: Record<'facts' | 'oracle', { recorded: string | null; actual: string | null; ok: boolean }>;
-  means?: Record<string, number>;
-  counts?: Record<string, number>;
-  failures?: Record<string, Record<string, number>>;
-  statements?: Record<string, string>;
-  pairedCvsC0?: { key: string; meanDifference: number | null; pValue: number | null } | null;
-}
-
-const pct = (v: number) => `${(v * 100).toFixed(1)}%`;
-const pts = (v: number) => `${v >= 0 ? '+' : '−'}${Math.abs(v * 100).toFixed(1)} pts`;
-const short = (h: string | null | undefined) => (h ? `${h.slice(0, 10)}…${h.slice(-6)}` : '—');
-
-/** Deterministic C0-vs-C explanation from recorded numbers only. */
-export function explainHypothesis(intel: Intel): { tone: 'c0' | 'null' | 'c' | 'na'; headline: string; body: string[] } {
-  const m = intel.means ?? {};
-  if (m.C0 === undefined || m.C === undefined) {
-    return { tone: 'na', headline: 'C0 / C comparison not yet available', body: ['Both the verbatim-rules (C0) and distilled-lessons (C) conditions need completed trials before the effect can be computed.'] };
-  }
-  const delta = m.C0 - m.C;
-  const fC = intel.failures?.C ?? {};
-  const fC0 = intel.failures?.C0 ?? {};
-  const gaps = Object.keys({ ...fC, ...fC0 })
-    .map((id) => ({ id, gap: (fC[id] ?? 0) - (fC0[id] ?? 0) }))
-    .sort((a, b) => b.gap - a.gap);
-  const lost = gaps.filter((g) => g.gap > 0).slice(0, 3);
-  const gained = [...gaps].reverse().filter((g) => g.gap < 0).slice(0, 3);
-  const fmt = (list: { id: string; gap: number }[]) => list.map((g) => `${g.id} (${g.gap > 0 ? '+' : ''}${g.gap})`).join(', ');
-  const stat = `C0 ${pct(m.C0)} vs C ${pct(m.C)} mean bound-fact fraction.`;
-  const p = intel.pairedCvsC0?.pValue;
-  const pLine = typeof p === 'number' ? ` Paired sign-flip p = ${p < 0.0001 ? p.toExponential(1) : p.toFixed(4)}.` : '';
-
-  if (delta >= 0.05) {
-    return {
-      tone: 'c0',
-      headline: `Verbatim rules (C0) outperformed distilled lessons (C) by ${pts(delta)}`,
-      body: [
-        stat + pLine,
-        'The Advisor’s distillation step loses exact literals that the verbatim rules carry, so the Executor misses facts it otherwise satisfies.',
-        lost.length ? `Facts C fails more often than C0: ${fmt(lost)}.` : '',
-      ].filter(Boolean),
-    };
-  }
-  if (delta <= -0.05) {
-    return {
-      tone: 'c',
-      headline: `Distilled lessons (C) outperformed verbatim rules (C0) by ${pts(-delta)}`,
-      body: [
-        stat + pLine,
-        'On this model the distilled lessons are more actionable than the raw rule text.',
-        gained.length ? `Facts C0 fails more often than C: ${fmt(gained.map((g) => ({ id: g.id, gap: -g.gap })))}.` : '',
-      ].filter(Boolean),
-    };
-  }
-  return {
-    tone: 'null',
-    headline: `Null effect on this model (${pts(delta)})`,
-    body: [
-      stat + pLine,
-      'Within ±5 pts: this model resolves placeholder semantics in distilled lessons about as well as it follows verbatim rules.',
-      lost.length ? `Largest residual C-only misses: ${fmt(lost)}.` : '',
-    ].filter(Boolean),
-  };
-}
-
-const CONDITION_ORDER = ['A', 'B', 'C0', 'C', 'D', 'E', 'E_B'];
-
-export const DataIntelPanel = memo(function DataIntelPanel({
-  runId,
-  label,
-  isLive,
-  open,
-  onToggle,
-}: {
-  runId: string;
-  label: string;
-  isLive?: boolean;
+export interface DataIntelSidebarProps {
+  activeRunId: string;
+  displayRunId: string;
+  pendingRunId?: string | null;
+  runOptions: readonly RunOption[];
+  fleet?: RunStatus[];
+  checkpoint: CheckpointTrial[];
+  results: unknown;
+  totalTrials: number;
   open: boolean;
   onToggle: () => void;
-}) {
-  const [intel, setIntel] = useState<Intel | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [cond, setCond] = useState('ALL');
-  const [expanded, setExpanded] = useState<string | null>(null);
+  onSelectRun: (runId: string) => void;
+}
 
-  useEffect(() => {
-    let alive = true;
-    const ctrl = new AbortController();
-    setLoading(true);
-    setIntel(null);
-    setCond('ALL');
-    setExpanded(null);
-    const load = async () => {
-      try {
-        const res = await fetch(`/api/run-intel?run=${encodeURIComponent(runId)}`, { cache: 'no-store', signal: ctrl.signal });
-        const data = (await res.json()) as Intel;
-        if (alive) setIntel(data);
-      } catch {
-        if (alive) setIntel({ runId, available: false });
-      } finally {
-        if (alive) setLoading(false);
+export const DataIntelSidebar = memo(function DataIntelSidebar({
+  activeRunId,
+  displayRunId,
+  pendingRunId,
+  runOptions,
+  fleet,
+  checkpoint,
+  results,
+  totalTrials,
+  open,
+  onToggle,
+  onSelectRun,
+}: DataIntelSidebarProps) {
+  const [failScope, setFailScope] = useState<'ALL' | 'C' | 'C0'>('ALL');
+  const [expandedFact, setExpandedFact] = useState<string | null>(null);
+  const [modelQuery, setModelQuery] = useState('');
+
+  const rawObj = (results && typeof results === 'object' ? results : {}) as Record<string, unknown>;
+  const factStatements = (rawObj.factStatements ?? undefined) as Record<string, string> | undefined;
+
+  const analysis = useMemo(() => {
+    const opt = inferRunOption(displayRunId);
+    const mergedRaw: Record<string, unknown> = {
+      ...rawObj,
+      trials: checkpoint,
+      totalTrials,
+    };
+    return normalizeAnalysisRun(mergedRaw, {
+      id: displayRunId,
+      displayName: getDisplayName(displayRunId),
+      accent: opt.accent,
+      model: opt.model,
+      totalTrialsHint: totalTrials,
+    });
+  }, [rawObj, checkpoint, displayRunId, totalTrials]);
+
+  const hypothesis = useMemo(
+    () => buildHypothesisSummary(analysis, factStatements),
+    [analysis, factStatements],
+  );
+
+  // Top 3 failed facts for the active model (scoped ALL | C | C0)
+  const topFailures = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (failScope === 'ALL') {
+      for (const t of checkpoint) {
+        for (const f of t.failedFacts ?? []) {
+          counts.set(f, (counts.get(f) ?? 0) + 1);
+        }
       }
-    };
-    load();
-    const id = isLive ? window.setInterval(load, 20_000) : null;
-    return () => {
-      alive = false;
-      ctrl.abort();
-      if (id !== null) window.clearInterval(id);
-    };
-  }, [runId, isLive]);
-
-  const conditions = useMemo(() => {
-    const keys = Object.keys(intel?.failures ?? {});
-    const rank = (k: string) => (CONDITION_ORDER.includes(k) ? CONDITION_ORDER.indexOf(k) : CONDITION_ORDER.length);
-    return keys.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
-  }, [intel]);
-
-  const topFacts = useMemo(() => {
-    const f = intel?.failures ?? {};
-    const agg: Record<string, number> = {};
-    for (const [c, map] of Object.entries(f)) {
-      if (cond !== 'ALL' && c !== cond) continue;
-      for (const [id, n] of Object.entries(map)) agg[id] = (agg[id] ?? 0) + n;
+      if (counts.size === 0 && analysis.failuresByFact) {
+        for (const fMap of Object.values(analysis.failuresByFact)) {
+          for (const [f, n] of Object.entries(fMap)) {
+            counts.set(f, (counts.get(f) ?? 0) + n);
+          }
+        }
+      }
+    } else {
+      const fMap = analysis.failuresByFact[failScope] ?? {};
+      for (const [f, n] of Object.entries(fMap)) {
+        if (n > 0) counts.set(f, n);
+      }
     }
-    return Object.entries(agg).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5);
-  }, [intel, cond]);
+    return [...counts.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .slice(0, 3);
+  }, [checkpoint, analysis.failuresByFact, failScope]);
 
-  const hyp = intel?.available ? explainHypothesis(intel) : null;
-  const maxFail = topFacts[0]?.[1] ?? 1;
+  const maxFailCount = topFailures[0]?.[1] ?? 1;
+  const c0Comp = analysis.pairedComparisons.C_vs_C0;
 
   return (
     <>
-      <button
-        type="button"
-        className={`di-toggle${open ? ' di-toggle--open' : ''}`}
-        onClick={onToggle}
-        aria-expanded={open}
-        aria-controls="data-intel"
-        title={open ? 'Hide Data Intel (full-screen torus)' : 'Show Data Intel'}
-      >
-        {open ? '›' : '‹'} <span>DATA INTEL</span>
-      </button>
-      <aside id="data-intel" className="di" hidden={!open} aria-label={`Data Intel for ${label}`}>
-        <div className="di-head">
-          <span>DATA INTEL</span>
-          <b>{label}</b>
-        </div>
+      {/* Reopen handle when sidebar is collapsed */}
+      {!open && (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={false}
+          aria-controls="axiom-data-intel-sidebar"
+          title="Show Data Intel sidebar"
+          className="fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-[#070913] border border-r-0 border-zinc-800 hover:border-cyan-400 text-cyan-400 px-1.5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase cursor-pointer transition-colors shadow-2xl"
+          style={{ writingMode: 'vertical-rl' }}
+        >
+          ‹ DATA INTEL
+        </button>
+      )}
 
-        {loading && !intel ? (
-          <p className="di-empty">Loading run intelligence…</p>
-        ) : !intel?.available ? (
-          <p className="di-empty">No results file for <code>{runId}</code> yet. Intel appears once the run writes results.json.</p>
-        ) : (
-          <>
-            {/* A. Run metadata */}
-            <section className="di-sec">
-              <h4>RUN METADATA <i>{intel.source === 'results.json' ? 'results.json' : 'snapshot'}</i></h4>
-              <dl className="di-kv">
-                <dt>Provider</dt><dd>{intel.provider}</dd>
-                <dt>Requested</dt><dd className="di-mono">{intel.requestedModel}</dd>
-                <dt>Returned</dt>
-                <dd className="di-mono">
-                  {intel.returnedModels && intel.returnedModels.length ? (
-                    intel.returnedModels.map((r) => (
-                      <span key={r.name} className={r.name === intel.requestedModel ? 'di-ok' : 'di-warn'}>
-                        {r.name} <small>×{r.n}</small>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="di-dim">not recorded</span>
-                  )}
-                </dd>
-                <dt>Reasoning</dt><dd>{intel.reasoning?.mode} <small className="di-dim di-mono">{intel.reasoning?.label}</small></dd>
-                <dt>Commit</dt><dd className="di-mono">{intel.gitCommit ? intel.gitCommit.slice(0, 7) : '—'}</dd>
-              </dl>
-              <ul className="di-hash">
-                {(['facts', 'oracle'] as const).map((k) => {
-                  const h = intel.integrity?.[k];
+      <aside
+        id="axiom-data-intel-sidebar"
+        aria-label="Data Intel Sidebar"
+        aria-hidden={!open}
+        className={`fixed top-12 right-0 bottom-0 z-40 w-[360px] max-w-[90vw] bg-black/70 backdrop-blur-2xl text-zinc-200 border-l border-white/10 shadow-[-16px_0_40px_rgba(0,0,0,0.95),0_0_24px_rgba(34,211,238,0.12)] transition-transform duration-300 ease-in-out flex flex-col ${
+          open ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+        }`}
+      >
+        <div className="w-full h-full overflow-y-auto flex flex-col divide-y divide-white/10 scrollbar-thin">
+          {/* Sidebar Header */}
+          <div className="px-3.5 py-2.5 flex items-center justify-between gap-2 bg-white/5 backdrop-blur-md sticky top-0 z-10 border-b border-white/10">
+            <div className="min-w-0">
+              <div className="font-mono text-[10px] tracking-[0.2em] text-cyan-400 uppercase font-semibold flex items-center gap-2">
+                <span>AXIOM DATA INTEL</span>
+                {pendingRunId && (
+                  <span className="text-[9px] text-cyan-300 animate-pulse">SYNC…</span>
+                )}
+              </div>
+              <div className="font-mono text-[11px] text-white font-bold truncate">
+                {analysis.displayName} · {analysis.completedTrials}/{analysis.totalTrials}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onToggle}
+              aria-expanded={open}
+              aria-controls="axiom-data-intel-sidebar"
+              title="Collapse Data Intel sidebar"
+              className="shrink-0 border border-white/10 hover:border-cyan-400 bg-white/5 hover:bg-cyan-500/10 px-2 py-1 font-mono text-[10px] tracking-[0.14em] text-zinc-300 hover:text-cyan-300 uppercase cursor-pointer transition-colors rounded shadow-sm"
+            >
+              HIDE ›
+            </button>
+          </div>
+
+          {/* SECTION 1: ACTIVE RUN & MODELS */}
+          <section className="px-3.5 py-2.5 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between font-mono text-[9.5px] tracking-[0.18em] text-zinc-400 uppercase">
+              <span>01 // ACTIVE MODEL / RUN</span>
+              <span>{runOptions.length} MODELS</span>
+            </div>
+
+            {/* Quick search input */}
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                value={modelQuery}
+                onChange={(e) => setModelQuery(e.target.value)}
+                placeholder="Filter models..."
+                className="w-full bg-white/5 text-zinc-100 placeholder-zinc-500 text-[10px] font-mono px-2.5 py-1 rounded border border-white/10 focus:outline-none focus:border-cyan-500/60 shadow-inner"
+              />
+              {modelQuery && (
+                <button
+                  type="button"
+                  onClick={() => setModelQuery('')}
+                  className="absolute right-2 text-zinc-400 hover:text-zinc-200 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            <div className="flex flex-col border border-white/10 divide-y divide-white/5 bg-white/[0.02] rounded-lg max-h-[200px] overflow-y-auto scrollbar-thin shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              {runOptions
+                .filter((opt) =>
+                  !modelQuery.trim()
+                    ? true
+                    : opt.label.toLowerCase().includes(modelQuery.toLowerCase()) ||
+                      opt.id.toLowerCase().includes(modelQuery.toLowerCase()),
+                )
+                .map((opt) => {
+                  const st = fleet?.find((f) => f.run.id === opt.id);
+                  const isSelected = activeRunId === opt.id;
+                  const isLoadingTarget = pendingRunId === opt.id;
+                  const rTotal =
+                    isSelected && displayRunId === opt.id
+                      ? totalTrials
+                      : st?.total ?? (opt.id.toLowerCase().includes('mini') ? 48 : 720);
+                  const rDone =
+                    isSelected && displayRunId === opt.id ? checkpoint.length : st?.done ?? 0;
+                  const isLive = st?.state === 'live';
+
                   return (
-                    <li key={k} className={h?.ok ? 'di-ok' : 'di-bad'} title={`recorded ${h?.recorded ?? '—'}\nactual   ${h?.actual ?? '—'}`}>
-                      <span aria-hidden="true">{h?.ok ? '✓' : '✗'}</span>
-                      <b>{k}Sha256</b>
-                      <code>{short(h?.recorded)}</code>
-                      <em>{h?.ok ? 'verified' : h?.recorded ? 'mismatch' : 'missing'}</em>
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => onSelectRun(opt.id)}
+                      aria-pressed={isSelected}
+                      className={`w-full px-2.5 py-1.5 flex items-center justify-between gap-2 text-left font-mono text-[10.5px] cursor-pointer transition-all border-l-2 ${
+                        isSelected
+                          ? 'bg-cyan-500/15 text-white border-l-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.2)]'
+                          : 'bg-transparent text-zinc-400 hover:bg-white/5 hover:text-zinc-200 border-l-transparent'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 min-w-0">
+                        <span
+                          className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${
+                            isLive ? 'animate-pulse' : ''
+                          }`}
+                          style={{
+                            backgroundColor: opt.accent,
+                            boxShadow: isSelected ? `0 0 8px ${opt.accent}` : undefined,
+                          }}
+                        />
+                        <span className="truncate font-medium tracking-wide">{opt.label}</span>
+                      </span>
+                      <span
+                        className={`shrink-0 text-[9.5px] tabular-nums ${
+                          isLoadingTarget
+                            ? 'text-cyan-400 animate-pulse'
+                            : isSelected
+                            ? 'text-cyan-300 font-bold'
+                            : rDone > 0 && rDone < rTotal
+                            ? 'text-amber-400'
+                            : 'text-zinc-500'
+                        }`}
+                      >
+                        {isLoadingTarget ? 'LOADING' : `${rDone}/${rTotal}`}
+                      </span>
+                    </button>
+                  );
+                })}
+            </div>
+          </section>
+
+          {/* SECTION 2: HYPOTHESIS CONTEXT */}
+          <section className="px-3.5 py-2.5 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2 font-mono text-[9.5px] tracking-[0.18em] text-zinc-400 uppercase">
+              <span>02 // HYPOTHESIS CONTEXT</span>
+              <span
+                className={`px-1.5 py-0.5 border text-[8.5px] tracking-[0.14em] rounded ${
+                  hypothesis.tone === 'cyan'
+                    ? 'border-cyan-400/50 bg-cyan-400/10 text-cyan-300 shadow-[0_0_8px_rgba(34,211,238,0.2)]'
+                    : hypothesis.tone === 'orange'
+                    ? 'border-fuchsia-400/50 bg-fuchsia-400/10 text-fuchsia-300'
+                    : hypothesis.tone === 'amber'
+                    ? 'border-amber-400/50 bg-amber-400/10 text-amber-300'
+                    : 'border-zinc-700 bg-zinc-900 text-zinc-400'
+                }`}
+              >
+                {hypothesis.badge}
+              </span>
+            </div>
+
+            <div
+              className={`border border-white/10 border-l-2 bg-white/5 backdrop-blur-md rounded-lg p-3 flex flex-col gap-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.5)] ${
+                hypothesis.tone === 'cyan'
+                  ? 'border-l-cyan-400'
+                  : hypothesis.tone === 'orange'
+                  ? 'border-l-fuchsia-400'
+                  : hypothesis.tone === 'amber'
+                  ? 'border-l-amber-400'
+                  : 'border-l-zinc-500'
+              }`}
+            >
+              <p className="m-0 text-[12px] font-semibold text-white leading-snug font-sans">
+                {hypothesis.headline}
+              </p>
+              <p className="m-0 text-[11px] text-zinc-300 leading-relaxed font-sans">
+                {hypothesis.context}
+              </p>
+              <div className="pt-2 mt-0.5 border-t border-white/10 flex items-center justify-between font-mono text-[9.5px] text-zinc-400 tabular-nums">
+                <span>
+                  p={formatPValue(c0Comp.holmPrimaryPValue ?? c0Comp.signFlipPValue)}
+                </span>
+                <span className="truncate max-w-[175px] text-zinc-400" title={analysis.model}>
+                  {analysis.model}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 3: CONDITION STATS */}
+          <section className="px-3.5 py-2.5 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between font-mono text-[9.5px] tracking-[0.18em] text-zinc-400 uppercase">
+              <span>03 // CONDITION STATS</span>
+              <span className="text-[9px]">
+                <b className="text-cyan-400 font-normal">C0</b> ·{' '}
+                <b className="text-fuchsia-400 font-normal">C</b>
+              </span>
+            </div>
+            <div className="border border-white/10 divide-y divide-white/5 bg-white/5 backdrop-blur-md rounded-lg font-mono overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+              {CONDITION_ORDER.map((cond) => {
+                const st = analysis.conditions[cond];
+                const pctVal = st.n > 0 ? st.meanBoundFactFraction * 100 : 0;
+                const isC0 = cond === 'C0';
+                const isC = cond === 'C';
+
+                const rowAccentClass = isC0
+                  ? 'bg-cyan-500/10 border-l-2 border-l-cyan-400'
+                  : isC
+                  ? 'bg-fuchsia-500/10 border-l-2 border-l-fuchsia-400'
+                  : 'border-l-2 border-l-transparent';
+
+                const labelColor = isC0
+                  ? 'text-cyan-300 font-bold'
+                  : isC
+                  ? 'text-fuchsia-300 font-bold'
+                  : 'text-zinc-300 font-semibold';
+
+                const barColor = isC0
+                  ? '#22d3ee'
+                  : isC
+                  ? '#e879f9'
+                  : cond === 'B' || cond === 'E_B'
+                  ? '#34d399'
+                  : '#52525b';
+
+                return (
+                  <div
+                    key={cond}
+                    className={`px-2.5 py-1.5 flex flex-col gap-1 ${rowAccentClass}`}
+                  >
+                    <div className="flex items-center justify-between text-[10.5px] tabular-nums">
+                      <span className="flex items-center gap-2">
+                        <span className={`w-6 ${labelColor}`}>{cond}</span>
+                        <span className="text-[9.5px] text-zinc-500">
+                          {isC0 ? 'VERBATIM' : isC ? 'DISTILLED' : `n=${st.n}`}
+                        </span>
+                      </span>
+                      <span className="flex items-center gap-2.5">
+                        <span className="text-[9.5px] text-zinc-500">
+                          {st.n > 0 ? `${st.strictPassCount}/${st.n}` : '—'}
+                        </span>
+                        <span
+                          className={`w-12 text-right font-semibold ${
+                            isC0 ? 'text-cyan-300' : isC ? 'text-fuchsia-300' : 'text-zinc-100'
+                          }`}
+                        >
+                          {st.n > 0 ? `${pctVal.toFixed(1)}%` : '—'}
+                        </span>
+                      </span>
+                    </div>
+                    <div className="h-[3px] w-full bg-zinc-900 overflow-hidden">
+                      <div
+                        className="h-full transition-[width] duration-300"
+                        style={{
+                          width: `${Math.min(100, pctVal)}%`,
+                          backgroundColor: barColor,
+                          boxShadow:
+                            isC0 || isC ? `0 0 6px ${barColor}` : undefined,
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* SECTION 4: TOP FAILURES (Top 3) */}
+          <section className="px-3.5 py-2.5 flex flex-col gap-1.5">
+            <div className="flex items-center justify-between gap-2 font-mono text-[9.5px] tracking-[0.18em] text-zinc-500 uppercase">
+              <span>04 // TOP FAILURES</span>
+              <div className="inline-flex border border-zinc-800 bg-[#080808]">
+                {(['ALL', 'C', 'C0'] as const).map((sc) => (
+                  <button
+                    key={sc}
+                    type="button"
+                    onClick={() => setFailScope(sc)}
+                    aria-pressed={failScope === sc}
+                    className={`px-1.5 py-0.5 text-[8.5px] tracking-[0.1em] cursor-pointer ${
+                      failScope === sc
+                        ? 'bg-fuchsia-500/20 text-fuchsia-300 font-semibold'
+                        : 'text-zinc-500 hover:text-zinc-300'
+                    }`}
+                  >
+                    {sc}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {topFailures.length === 0 ? (
+              <p className="m-0 font-mono text-[10.5px] text-zinc-500 py-2">
+                No failures recorded in {failScope}.
+              </p>
+            ) : (
+              <ol className="m-0 p-0 list-none flex flex-col gap-1.5 font-mono">
+                {topFailures.map(([factId, count], idx) => {
+                  const stmt = factStatements?.[factId];
+                  const isOpen = expandedFact === factId;
+                  return (
+                    <li
+                      key={factId}
+                      className="border border-zinc-800 bg-[#080808] transition-colors hover:border-zinc-700"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFact(isOpen ? null : factId)}
+                        title={stmt ?? factId}
+                        aria-expanded={isOpen}
+                        className="w-full px-2.5 py-2 flex flex-col gap-1.5 text-left cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between text-[10.5px] tabular-nums">
+                          <span className="flex items-center gap-2">
+                            <span className="text-[9px] text-zinc-600">#{idx + 1}</span>
+                            <span className="font-bold text-fuchsia-300">{factId}</span>
+                          </span>
+                          <span className="text-zinc-200 font-semibold">
+                            {count} {count === 1 ? 'failure' : 'failures'}
+                          </span>
+                        </div>
+                        <div className="h-[3px] w-full bg-zinc-900 overflow-hidden">
+                          <div
+                            className="h-full bg-fuchsia-400"
+                            style={{
+                              width: `${Math.max(4, (count / maxFailCount) * 100)}%`,
+                              boxShadow: '0 0 6px rgba(232,121,249,0.5)',
+                            }}
+                          />
+                        </div>
+                        {stmt && (
+                          <p
+                            className={`m-0 font-sans text-[10.5px] text-zinc-400 leading-snug ${
+                              isOpen ? '' : 'line-clamp-1'
+                            }`}
+                          >
+                            {stmt}
+                          </p>
+                        )}
+                      </button>
                     </li>
                   );
                 })}
-              </ul>
-            </section>
-
-            {/* B. Hypothesis */}
-            {hyp && (
-              <section className="di-sec">
-                <h4>HYPOTHESIS · C0 vs C</h4>
-                <div className={`di-hyp di-hyp--${hyp.tone}`}>
-                  <strong>{hyp.headline}</strong>
-                  {hyp.body.map((line) => <p key={line}>{line}</p>)}
-                </div>
-                <div className="di-means">
-                  {conditions.filter((c) => intel.means?.[c] !== undefined).map((c) => (
-                    <div key={c} className="di-mean">
-                      <span>{c}</span>
-                      <i><b style={{ width: pct(intel.means![c]) }} /></i>
-                      <em>{pct(intel.means![c])}</em>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* C. Fact failures */}
-            <section className="di-sec">
-              <h4>TOP RULES MISSED</h4>
-              <div className="di-chips" role="tablist" aria-label="Filter by condition">
-                {['ALL', ...conditions].map((c) => (
-                  <button key={c} type="button" role="tab" aria-selected={cond === c} onClick={() => setCond(c)}>{c}</button>
-                ))}
-              </div>
-              <ol className="di-facts">
-                {topFacts.length === 0 && <li className="di-dim">No failures recorded.</li>}
-                {topFacts.map(([id, n]) => (
-                  <li key={id}>
-                    <button
-                      type="button"
-                      className="di-fact"
-                      aria-expanded={expanded === id}
-                      onClick={() => setExpanded(expanded === id ? null : id)}
-                      title={intel.statements?.[id] ?? ''}
-                    >
-                      <span className="di-mono">{id}</span>
-                      <i><b style={{ width: `${(n / maxFail) * 100}%` }} /></i>
-                      <em>{n} fail{n === 1 ? '' : 's'}</em>
-                    </button>
-                    {expanded === id && <p className="di-rule">{intel.statements?.[id] ?? 'Statement not found in facts.json.'}</p>}
-                  </li>
-                ))}
               </ol>
-            </section>
-          </>
-        )}
+            )}
+          </section>
+        </div>
       </aside>
     </>
   );
 });
-
-export const dataIntelCss = `
-.di-toggle{position:absolute;top:50%;right:0;z-index:600;transform:translateY(-50%);writing-mode:vertical-rl;padding:12px 6px!important;min-height:0!important;background:#050505!important;border:1px solid #27272a!important;border-right:none!important;color:#22d3ee!important;font-size:10px!important;letter-spacing:.2em!important;transition:right .35s cubic-bezier(.16,1,.3,1)}
-.di-toggle span{margin-top:6px}
-.di-toggle--open{right:var(--di-w)}
-.di{position:absolute;top:0;right:0;bottom:0;width:var(--di-w);z-index:550;background:#050505;border-left:1px solid #27272a;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3f3f46 transparent;padding:14px 14px 24px;display:flex;flex-direction:column;gap:14px;pointer-events:auto;font:12px/1.5 var(--font-sans,'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif);color:#d4d4d8}
-.di[hidden]{display:none}
-.di-mono,.di code,.di-head,.di h4,.di-chips button,.di-mean,.di-fact{font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)}
-.di-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #27272a;padding-bottom:10px;font-size:10px;letter-spacing:.2em;color:#71717a}
-.di-head b{color:#fafafa;font-weight:600;letter-spacing:.12em}
-.di-sec{border-bottom:1px solid #27272a;padding-bottom:14px;display:flex;flex-direction:column;gap:8px}
-.di h4{margin:0;font-size:9.5px;font-weight:600;letter-spacing:.18em;color:#71717a;display:flex;justify-content:space-between}
-.di h4 i{font-style:normal;color:#52525b;letter-spacing:.06em}
-.di-kv{display:grid;grid-template-columns:78px 1fr;gap:5px 10px;margin:0;font-size:11.5px}
-.di-kv dt{color:#71717a}.di-kv dd{margin:0;color:#fafafa;overflow-wrap:anywhere;display:flex;flex-direction:column;gap:2px}
-.di-kv dd.di-mono{font-size:10.5px}
-.di small{font-size:9.5px}
-.di-dim{color:#71717a}
-.di-ok{color:#22d3ee}.di-warn{color:#fbbf24}.di-bad{color:#e879f9}
-.di-hash{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
-.di-hash li{display:grid;grid-template-columns:14px 92px 1fr auto;gap:6px;align-items:center;font-size:10px;border:1px solid #27272a;padding:5px 7px;background:#0a0a0a}
-.di-hash li b{font-weight:500;color:#a1a1aa;font-family:var(--font-mono,ui-monospace,monospace)}
-.di-hash code{color:#71717a;font-size:9.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.di-hash em{font-style:normal;font-size:9px;letter-spacing:.12em;text-transform:uppercase}
-.di-hash li.di-ok span{color:#34d399;text-shadow:0 0 6px rgba(52,211,153,.6)}
-.di-hyp{border:1px solid #27272a;border-left:2px solid #71717a;background:#0a0a0a;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
-.di-hyp strong{color:#fafafa;font-weight:600;font-size:12.5px;line-height:1.35}
-.di-hyp p{margin:0;color:#a1a1aa;font-size:11.5px}
-.di-hyp--c0{border-left-color:#22d3ee}.di-hyp--c0 strong{color:#a5f3fc}
-.di-hyp--c{border-left-color:#e879f9}.di-hyp--c strong{color:#f5d0fe}
-.di-hyp--null{border-left-color:#fbbf24}
-.di-means{display:flex;flex-direction:column;gap:3px}
-.di-mean,.di-fact{display:grid;grid-template-columns:36px 1fr 62px;gap:8px;align-items:center;font-size:10px;color:#a1a1aa}
-.di-mean i,.di-fact i{height:3px;background:#18181b;display:block}
-.di-mean i b{display:block;height:100%;background:#22d3ee;box-shadow:0 0 6px rgba(34,211,238,.5)}
-.di-mean em,.di-fact em{font-style:normal;text-align:right;color:#fafafa;font-variant-numeric:tabular-nums}
-.di-chips{display:flex;flex-wrap:wrap;gap:4px}
-.di-chips button{padding:2px 8px!important;min-height:0!important;font-size:9.5px!important;letter-spacing:.08em!important;background:#0a0a0a!important;border:1px solid #27272a!important;color:#71717a!important}
-.di-chips button[aria-selected=true]{color:#fafafa!important;border-color:#e879f9!important}
-.di-facts{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
-.di-fact{width:100%;background:none!important;border:1px solid transparent!important;padding:4px 4px!important;min-height:0!important;text-align:left;letter-spacing:normal!important;font-size:10.5px!important}
-.di-fact:hover{border-color:#27272a!important}
-.di-fact span{color:#f0abfc}
-.di-fact i b{display:block;height:100%;background:#e879f9;box-shadow:0 0 6px rgba(232,121,249,.55)}
-.di-rule{margin:2px 4px 4px;padding:7px 9px;border-left:2px solid #e879f9;background:#0a0a0a;color:#d4d4d8;font-size:11.5px}
-.di-empty{color:#71717a;font-size:11.5px}
-@media(max-width:900px){
-  .di-toggle{display:none}
-  .di{position:relative;width:auto;border-left:none;border-top:1px solid #27272a;max-height:none}
-  .di[hidden]{display:flex}
-  .hl[data-intel=open] .hl-canvas,.hl[data-intel=open] .hl-hud{right:auto}
-}
-`;

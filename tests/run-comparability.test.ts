@@ -8,6 +8,10 @@ import {
   assertModelMatch,
   ALLOWED_EXECUTOR_MODELS,
   computeExecutorCacheKey,
+  getExecutorSha256,
+  getProviderProvenance,
+  SQL_GENERATION_MAX_RETRIES,
+  generateSqlMigration,
 } from '../src/executor.js';
 import {
   computeHintBSha256,
@@ -25,6 +29,7 @@ import { migrateRun1 } from '../scripts/migrate-run1.js';
 
 describe('Model Configuration and Guardrails', () => {
   const originalEnv = process.env.NVIDIA_EXECUTOR_MODEL;
+  const originalGemini = process.env.GEMINI_EXECUTOR_MODEL;
 
   afterEach(() => {
     if (originalEnv !== undefined) {
@@ -32,10 +37,16 @@ describe('Model Configuration and Guardrails', () => {
     } else {
       delete process.env.NVIDIA_EXECUTOR_MODEL;
     }
+    if (originalGemini !== undefined) {
+      process.env.GEMINI_EXECUTOR_MODEL = originalGemini;
+    } else {
+      delete process.env.GEMINI_EXECUTOR_MODEL;
+    }
   });
 
   it('rejects missing NVIDIA_EXECUTOR_MODEL environment variable', () => {
     delete process.env.NVIDIA_EXECUTOR_MODEL;
+    delete process.env.GEMINI_EXECUTOR_MODEL;
     expect(() => resolveExecutorModel()).toThrow(/Set NVIDIA_EXECUTOR_MODEL in the environment/i);
   });
 
@@ -112,7 +123,7 @@ describe('Ablation Run Provenance and Metadata', () => {
     expect(dHash).toMatch(/^[0-9a-f]{64}$/);
     expect(buildersHash).toMatch(/^[0-9a-f]{64}$/);
 
-    expect(bHash).toBe('2a0ceeb947d7facd67bc74a1875618d6aa6301a40ff7d5326795c608fbf5d3d6');
+    expect(bHash).toBe('1876a65e41ca490f336328b3f41816ea9c83046494ca3f96ae265abc0e12ae95');
     expect(dHash).toBe('130f12410b698480620ba5e12cead5e56f71931dd324b22cf836476f9372f1cd');
     expect(buildersHash).toBe('19033ced3b39e13399d0de8be86cb3cec4040b69f51da36880fdf42aed35b299');
   });
@@ -155,15 +166,15 @@ describe('Ablation Run Provenance and Metadata', () => {
     );
   });
 
-  it('assertComparabilityWithRun verifies run comparability against nemotron-1 baseline', () => {
+  it('assertComparabilityWithRun verifies run comparability against nemotron-2 baseline', () => {
     const root = path.resolve('.');
     const currentMeta = getRunMetadata(root, 'google/gemma-4-31b-it', true);
 
-    expect(() => assertComparabilityWithRun('nemotron-1', currentMeta, root)).not.toThrow();
+    expect(() => assertComparabilityWithRun('nemotron-2', currentMeta, root)).not.toThrow();
 
     const tamperedMeta = { ...currentMeta, topK: 12 };
-    expect(() => assertComparabilityWithRun('nemotron-1', tamperedMeta, root)).toThrow(
-      /Comparability check failed against run "nemotron-1" for SQL_RETRIEVAL_TOP_K/
+    expect(() => assertComparabilityWithRun('nemotron-2', tamperedMeta, root)).toThrow(
+      /Comparability check failed against run "nemotron-2" for SQL_RETRIEVAL_TOP_K/
     );
   });
 });
@@ -265,6 +276,69 @@ describe('Migration Script Logic', () => {
       expect(fs.existsSync(path.join(stateDir, 'runs', 'nemotron-1', 'results.json'))).toBe(true);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('Executor SHA Provenance and Retry Cap', () => {
+  it('records consistent executorSha256 on getExecutorSha256, getProviderProvenance, and getRunMetadata', () => {
+    const expectedSha = crypto
+      .createHash('sha256')
+      .update(fs.readFileSync(path.resolve('src/executor.ts'), 'utf8'))
+      .digest('hex');
+
+    expect(getExecutorSha256()).toBe(expectedSha);
+
+    const prov = getProviderProvenance('z-ai/glm-5.3-flash', 'z-ai/glm-5.3-flash');
+    expect(prov.executorSha256).toBe(expectedSha);
+
+    const prevModel = process.env.NVIDIA_EXECUTOR_MODEL;
+    process.env.NVIDIA_EXECUTOR_MODEL = 'z-ai/glm-5.3-flash';
+    try {
+      const meta = getRunMetadata(process.cwd(), 'z-ai/glm-5.3-flash', true);
+      expect(meta.executorSha256).toBe(expectedSha);
+    } finally {
+      if (prevModel === undefined) {
+        delete process.env.NVIDIA_EXECUTOR_MODEL;
+      } else {
+        process.env.NVIDIA_EXECUTOR_MODEL = prevModel;
+      }
+    }
+  });
+
+  it('caps SQL generation retries at 3 so repeated 5xx errors fail after 3 attempts', async () => {
+    expect(SQL_GENERATION_MAX_RETRIES).toBe(3);
+
+    const tmpCache = fs.mkdtempSync(path.join(os.tmpdir(), 'axiom-retry-test-'));
+    const fetchMock = vi.fn().mockImplementation(async () => new Response('upstream error', { status: 500 }));
+    const prevFetch = globalThis.fetch;
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    vi.useFakeTimers();
+
+    try {
+      let caughtError: Error | undefined;
+      const promise = generateSqlMigration(
+        'Create test table',
+        'audit_logs',
+        { tenant: true, append_only: true, ingestion: false },
+        undefined,
+        {
+          model: 'z-ai/glm-5.3-flash',
+          disableCache: true,
+          cacheDir: tmpCache,
+        }
+      ).catch((err: Error) => {
+        caughtError = err;
+      });
+      await vi.runAllTimersAsync();
+      await promise;
+      expect(caughtError).toBeDefined();
+      expect(caughtError?.message).toMatch(/5xx 500/);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    } finally {
+      vi.useRealTimers();
+      globalThis.fetch = prevFetch;
+      fs.rmSync(tmpCache, { recursive: true, force: true });
     }
   });
 });

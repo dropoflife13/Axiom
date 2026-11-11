@@ -32,6 +32,72 @@ export const Sparkline = memo(function Sparkline({ label, values, unit, empty }:
   );
 });
 
+/* ---------- API Latency Panel with Internal System Telemetry ---------- */
+export const ApiLatencyPanel = memo(function ApiLatencyPanel({
+  latency,
+  stageName = 'PASS',
+  stageColor = '#34d399',
+}: {
+  latency: number[] | null;
+  stageName?: string;
+  stageColor?: string;
+}) {
+  const series = (latency ?? []).slice(-32);
+  const max = Math.max(1, ...series);
+  const last = series[series.length - 1];
+
+  return (
+    <div className="dk-panel dk-api-latency-panel">
+      <div className="dk-head">
+        <span>API LATENCY</span>
+        <b>{latency === null ? '—' : last === undefined ? '—' : `${last.toLocaleString()} ms`}</b>
+      </div>
+      <div className="dk-latency-spark-wrap">
+        {latency === null || series.length === 0 ? (
+          <p className="dk-empty">Not recorded in checkpoint</p>
+        ) : (
+          <svg viewBox="0 0 64 16" preserveAspectRatio="none" role="img" aria-label={`API Latency: latest ${last} ms`}>
+            {series.map((v, i) => {
+              const h = Math.max(1, (v / max) * 15);
+              return (
+                <motion.rect
+                  key={i}
+                  x={i * 2}
+                  width={1.4}
+                  initial={false}
+                  animate={{ y: 16 - h, height: h }}
+                  transition={{ duration: 0.4 }}
+                  className={i === series.length - 1 ? 'dk-bar dk-bar--now' : 'dk-bar'}
+                />
+              );
+            })}
+          </svg>
+        )}
+      </div>
+
+      {/* Internal System Telemetry Strip (Moved from Global Header) */}
+      <div className="dk-latency-telemetry">
+        <div className="dk-telem-tag">
+          <span>ORACLE</span>
+          <b className="text-zinc-200">LOCKED</b>
+        </div>
+        <div className="dk-telem-tag">
+          <span>TEMP</span>
+          <b className="text-zinc-200">0</b>
+        </div>
+        <div className="dk-telem-tag">
+          <span>CONDITIONS</span>
+          <b className="text-zinc-200">06</b>
+        </div>
+        <div className="dk-telem-tag">
+          <span>STAGE</span>
+          <b style={{ color: stageColor }}>{stageName}</b>
+        </div>
+      </div>
+    </div>
+  );
+});
+
 /* ---------- Risk / convergence gauge ---------- */
 const R = 80;
 const polar = (t: number, r = R): [number, number] => {
@@ -143,17 +209,15 @@ export const ConvergenceGauge = memo(function ConvergenceGauge({
           return <text key={t} x={x} y={y + 3} className="dk-tick-label" textAnchor="middle">{Math.round(t * 100)}</text>;
         })}
 
-        {/* Dynamic rotating aerospace pointer */}
+        {/* Dynamic rotating aerospace pointer with stabilized SVG pivot */}
         <motion.g
-          style={{ transformOrigin: '100px 100px', transformBox: 'view-box' }}
+          style={{ transformOrigin: '100px 100px' }}
           initial={false}
           animate={{ rotate: angleDeg }}
           transition={{
-            type: reduce ? 'tween' : 'spring',
-            duration: reduce ? 0 : undefined,
-            stiffness: 90,
-            damping: 18,
-            mass: 0.75,
+            type: 'tween',
+            duration: reduce ? 0 : 0.75,
+            ease: [0.16, 1, 0.3, 1],
           }}
         >
           {/* Centering bounding anchor to guarantee exact (100, 100) origin across all SVG renderers */}
@@ -189,19 +253,18 @@ export const ConvergenceGauge = memo(function ConvergenceGauge({
             strokeLinecap="round"
           />
 
-          {/* Laser contact pip at pointer apex */}
+          {/* Laser contact pip at pointer apex without blurry shadow artifacts */}
           <circle
             cx={100}
             cy={29}
-            r={4.2}
+            r={3}
             fill={tierColor}
-            opacity={0.4}
-            filter="url(#dk-needle-tip-glow)"
+            opacity={0.85}
           />
           <circle
             cx={100}
             cy={29}
-            r={1.8}
+            r={1.4}
             fill="#ffffff"
           />
         </motion.g>

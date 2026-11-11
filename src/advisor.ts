@@ -28,21 +28,27 @@ export async function generateLesson(
     process.env.NVIDIA_EXECUTOR_MODEL ||
     'z-ai/glm-5.3-flash'
   ).trim();
-  const isGroq = executorModel === 'qwen/qwen3.8-27b' || executorModel.startsWith('qwen/');
+  const isGemini = executorModel === 'gemini-3.6-flash' || executorModel.startsWith('gemini-');
+  const isGroq = !isGemini && (executorModel === 'qwen/qwen3.8-27b' || executorModel.startsWith('qwen/'));
   const isNvidia =
-    executorModel.startsWith('nvidia/') ||
-    executorModel.startsWith('google/') ||
-    executorModel.startsWith('z-ai/');
-  const isOpenRouter = !isGroq && !isNvidia;
+    !isGemini &&
+    (executorModel.startsWith('nvidia/') ||
+      executorModel.startsWith('google/') ||
+      executorModel.startsWith('z-ai/'));
+  const isOpenRouter = !isGemini && !isGroq && !isNvidia;
 
-  const apiKey = isGroq
+  const apiKey = isGemini
+    ? process.env.GEMINI_API_KEY
+    : isGroq
     ? process.env.GROQ_API_KEY
     : isNvidia
     ? process.env.NVIDIA_API_KEY
     : process.env.OPENROUTER_API_KEY;
 
   if (!apiKey || apiKey === 'your_key_here') {
-    const keyName = isGroq
+    const keyName = isGemini
+      ? 'GEMINI_API_KEY'
+      : isGroq
       ? 'GROQ_API_KEY'
       : isNvidia
       ? 'NVIDIA_API_KEY'
@@ -50,14 +56,18 @@ export async function generateLesson(
     throw new Error(`${keyName} is not set or is still the placeholder. Please set a valid key in .env`);
   }
 
-  const baseUrl = isGroq
+  const baseUrl = isGemini
+    ? (process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai/')
+    : isGroq
     ? (process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1')
     : isNvidia
     ? (process.env.NVIDIA_BASE_URL || 'https://integrate.api.nvidia.com/v1')
     : OPENROUTER_BASE_URL;
 
   const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
-  const rawModel = isGroq
+  const rawModel = isGemini
+    ? (process.env.GEMINI_ADVISOR_MODEL || 'gemini-3.5-flash')
+    : isGroq
     ? (process.env.GROQ_ADVISOR_MODEL || 'qwen/qwen3.8-27b')
     : isNvidia
     ? (process.env.NVIDIA_ADVISOR_MODEL || 'z-ai/glm-5.3-flash')
@@ -109,7 +119,7 @@ export async function generateLesson(
 
       if (!response.ok) {
         const errText = await response.text();
-        const providerName = isOpenRouter ? 'OpenRouter' : isGroq ? 'Groq' : 'NVIDIA';
+        const providerName = isGemini ? 'Gemini' : isOpenRouter ? 'OpenRouter' : isGroq ? 'Groq' : 'NVIDIA';
         if (response.status < 500) {
           throw new Error(`[ABORT_NON_RETRYABLE] ${providerName} Advisor ${response.status}: ${errText}`);
         }

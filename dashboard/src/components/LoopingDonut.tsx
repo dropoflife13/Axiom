@@ -46,9 +46,10 @@ export interface LoopingDonutProps {
   color: number;
   running: boolean;
   progress: React.MutableRefObject<number>;
+  transitionKey?: string;
 }
 
-export default function LoopingDonut({ color, running, progress }: LoopingDonutProps) {
+export default function LoopingDonut({ color, running, progress, transitionKey }: LoopingDonutProps) {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -56,6 +57,8 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
   const targetColorRef = React.useRef(new THREE.Color(color));
   const runningRef = React.useRef(running);
   const progressRef = React.useRef(progress);
+  const prevTransitionKeyRef = React.useRef(transitionKey);
+  const glitchRemainingRef = React.useRef(0);
 
   React.useEffect(() => {
     targetColorRef.current.set(color);
@@ -68,6 +71,16 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
   React.useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+
+  React.useEffect(() => {
+    if (prevTransitionKeyRef.current !== undefined && transitionKey !== undefined && prevTransitionKeyRef.current !== transitionKey) {
+      const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduced) {
+        glitchRemainingRef.current = 0.3;
+      }
+    }
+    prevTransitionKeyRef.current = transitionKey;
+  }, [transitionKey]);
 
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -270,7 +283,7 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
       haloMat.color.copy(curColor);
       pointsMat.color.copy(curColor);
 
-      // Scroll-driven zoom transition
+      // Scroll-driven zoom transition + breakage/glitch rapid 1->0->1 flicker on model switch
       const curProgress = progressRef.current?.current ?? 0;
       const sceneValues = sceneForProgress(curProgress);
       const zoomProgress = Math.max(0, Math.min(1, (sceneValues.scale - 1) / 1.6));
@@ -279,9 +292,29 @@ export default function LoopingDonut({ color, running, progress }: LoopingDonutP
         BASE_CORE_SCALE + zoomProgress * (MAX_CORE_SCALE - BASE_CORE_SCALE)
       );
       currentScale += (targetScale - currentScale) * Math.min(1, dt * 6);
-      group.scale.setScalar(currentScale * introZoom);
 
-      mat.uniforms.uGlow.value += (sceneValues.glow - mat.uniforms.uGlow.value) * Math.min(1, dt * 6);
+      let glitchScale = 1.0;
+      let glitchFlicker = 1.0;
+      if (glitchRemainingRef.current > 0) {
+        glitchRemainingRef.current = Math.max(0, glitchRemainingRef.current - dt);
+        const gp = 1 - glitchRemainingRef.current / 0.3;
+        if (gp < 0.46) {
+          glitchScale = Math.max(0.01, Math.pow(1 - gp / 0.46, 2));
+        } else if (gp < 0.56) {
+          glitchScale = 0.01;
+        } else {
+          glitchScale = Math.min(1.06, Math.pow((gp - 0.56) / 0.44, 0.65) * 1.04);
+        }
+        glitchFlicker = Math.sin(gp * Math.PI * 14) > -0.15 ? 1.35 : 0.08;
+        group.rotation.y += dt * 6.0;
+      }
+
+      group.scale.setScalar(currentScale * introZoom * glitchScale);
+
+      const baseGlow = mat.uniforms.uGlow.value + (sceneValues.glow - mat.uniforms.uGlow.value) * Math.min(1, dt * 6);
+      mat.uniforms.uGlow.value = glitchRemainingRef.current > 0 ? baseGlow * glitchFlicker : baseGlow;
+      wireMat.opacity = glitchRemainingRef.current > 0 ? 0.1 * glitchFlicker : 0.1;
+      pointsMat.opacity = glitchRemainingRef.current > 0 ? 0.7 * glitchFlicker : 0.7;
 
       controls.autoRotate = isRunning;
       controls.update();

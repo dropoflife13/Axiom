@@ -22,12 +22,15 @@ export const RUN_DISPLAY_NAMES: Record<string, string> = {
   'gemini-mini': 'GEMINI 3.6 FLASH MINI',
   'gemini-flash-lite-full': 'GEMINI 3.5 FLASH LITE',
   'gemini-3.1-flash-lite': 'GEMINI 3.1 FLASH LITE',
+  'gemma4-31b-full': 'GEMMA 4 31B DENSE',
   'gemma4-26b-full': 'GEMMA 4 26B',
   'smoke-nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING (SMOKE)',
   'nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING',
   'nemotron-lightning-full': 'NEMOTRON 3.5 LIGHTNING',
   'llama33-mini': 'LLAMA 3.3',
   'xingchen-mini': 'XINGCHEN MINI',
+  'gptoss-120b-expanded': 'GPT-OSS 120B (EXP)',
+  'gptoss-mini': 'GPT-OSS 120B MINI',
 };
 
 export function getDisplayName(runId: string): string {
@@ -36,6 +39,7 @@ export function getDisplayName(runId: string): string {
   }
   const lower = runId.toLowerCase();
   if (lower.includes('smoke-nemotron') || lower.includes('smoke_nemotron')) return 'NEMOTRON 3.5 LIGHTNING (SMOKE)';
+  if (lower.includes('gemma4-31b') || lower.includes('gemma-4-31b')) return 'GEMMA 4 31B DENSE';
   if (lower.includes('gemma4') || lower.includes('gemma-4')) return 'GEMMA 4 26B';
   if (lower.includes('3.1-flash-lite') || lower.includes('3.1_flash_lite')) return 'GEMINI 3.1 FLASH LITE';
   if (lower.includes('flash-lite') || lower.includes('flash_lite')) return 'GEMINI 3.5 FLASH LITE';
@@ -46,6 +50,7 @@ export function getDisplayName(runId: string): string {
   if (lower.includes('qwen')) return 'QWEN 3.8 27B';
   if (lower.includes('glm')) return 'GLM-5.3';
   if (lower.includes('llama33') || lower.includes('llama-3.3')) return 'LLAMA 3.3';
+  if (lower.includes('gptoss') || lower.includes('gpt-oss')) return 'GPT-OSS 120B';
   if (lower.includes('gemma')) return 'GEMMA 2';
 
   // Fallback: If a run ID is not in the map (e.g., a future run), strip the -2 suffix and format cleanly
@@ -57,7 +62,10 @@ export function inferRunOption(id: string): RunOption {
   let model = id;
   let accent = '#38bdf8';
 
-  if (lower.includes('gemma4') || lower.includes('gemma-4')) {
+  if (lower.includes('gemma4-31b') || lower.includes('gemma-4-31b')) {
+    model = 'gemma-4-31b-it';
+    accent = '#c084fc';
+  } else if (lower.includes('gemma4') || lower.includes('gemma-4')) {
     model = 'gemma-4-26b-it';
     accent = '#a78bfa';
   } else if (lower.includes('3.1-flash-lite') || lower.includes('3.1_flash_lite')) {
@@ -87,6 +95,9 @@ export function inferRunOption(id: string): RunOption {
   } else if (lower.includes('llama')) {
     model = 'meta-llama/llama-3.3-70b-instruct';
     accent = '#60a5fa';
+  } else if (lower.includes('gptoss') || lower.includes('gpt-oss')) {
+    model = 'openai/gpt-oss-120b';
+    accent = '#10b981';
   } else if (lower.includes('gemma')) {
     model = 'google/gemma-2-27b-it';
     accent = '#a78bfa';

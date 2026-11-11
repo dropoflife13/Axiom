@@ -304,8 +304,10 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
 
   it('requires an explicit Executor model with no silent default and asserts returnedModel === requestedModel', () => {
     const prevEnv = process.env.NVIDIA_EXECUTOR_MODEL;
+    const prevGemini = process.env.GEMINI_EXECUTOR_MODEL;
     try {
       delete process.env.NVIDIA_EXECUTOR_MODEL;
+      delete process.env.GEMINI_EXECUTOR_MODEL;
       expect(() => resolveExecutorModel(undefined)).toThrowError(
         /explicit required setting.*no silent default/i
       );
@@ -320,6 +322,9 @@ describe('Ablation v2 Integrity: F-13 Scoring, Provenance Fields, and Model Asse
     } finally {
       if (prevEnv !== undefined) {
         process.env.NVIDIA_EXECUTOR_MODEL = prevEnv;
+      }
+      if (prevGemini !== undefined) {
+        process.env.GEMINI_EXECUTOR_MODEL = prevGemini;
       }
     }
   });

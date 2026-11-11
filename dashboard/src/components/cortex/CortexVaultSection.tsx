@@ -4,7 +4,6 @@ import React, { useMemo, useState } from 'react';
 import { AxiomLogo } from '../AxiomLogo';
 import { RUN_OPTIONS, DEFAULT_RUN_ID, modelForRun, type RunOption } from '@/lib/runs';
 import type { RunStatus } from '@/lib/useFleetStatus';
-import './cortex.css';
 
 interface TagItem {
   id: string;

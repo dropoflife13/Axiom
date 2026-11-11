@@ -25,9 +25,11 @@ import {
   classifyGenerationStatus,
   executeSqlWithPolicy,
   generateSqlMigration,
+  getExecutorSha256,
   getProviderProvenance,
   resolveExecutorModel,
   type GenerationStatus,
+  type ReasoningTagError,
 } from '../executor.js';
 import { generateLesson } from '../advisor.js';
 import { execFileSync } from 'node:child_process';
@@ -180,6 +182,10 @@ export interface Trial {
   generationStatus: GenerationStatus;
   timestamp?: string;
   generatedSql: string;
+  rawResponse?: string;
+  rawSha256?: string;
+  sanitizedSql?: string;
+  sanitizedSha256?: string;
   passRaw: boolean;
   passWithTier0: boolean;
   boundFacts: string[];
@@ -205,6 +211,7 @@ export interface Trial {
   oracleSha256: string;
   tasksSha256: string;
   memorySha256: string;
+  executorSha256?: string;
   gitCommit: string;
   reusedFromCondition?: 'B';
 }
@@ -214,6 +221,11 @@ export interface TrialGenerationMeta {
   returnedModel: string;
   finishReason: string;
   generationStatus?: GenerationStatus;
+  rawResponse?: string;
+  rawSha256?: string;
+  sanitizedSql?: string;
+  sanitizedSha256?: string;
+  tagError?: ReasoningTagError | null;
   fromCache?: boolean;
   reusedFromCondition?: 'B';
 }
@@ -229,11 +241,18 @@ export interface RunMetadata {
   hintBSha256?: string;
   hintDSha256?: string;
   hintBuildersSha256?: string;
+  executorSha256?: string;
   diffSha256?: string;
+  targetTasks?: string[];
+  totalTrials?: number;
 }
 
 export function sha256File(filePath: string): string {
   return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
+}
+
+function sha256String(text: string): string {
+  return crypto.createHash('sha256').update(text).digest('hex');
 }
 
 export function verifyCalibrationContentHashes(
@@ -405,6 +424,7 @@ export function getRunMetadata(
     hintBSha256: computeHintBSha256(),
     hintDSha256: computeHintDSha256(),
     hintBuildersSha256: computeHintBuildersSha256(root),
+    executorSha256: getExecutorSha256(path.join(root, 'src', 'executor.ts')),
   };
   if (allowDirty) {
     const gitDiff = execFileSync('git', ['diff', 'HEAD'], { cwd: root, encoding: 'utf8' });
@@ -499,10 +519,15 @@ export function buildTrial(
   assertModelMatch(genMeta.requestedModel, genMeta.returnedModel);
   const provenance = getProviderProvenance(genMeta.requestedModel, genMeta.returnedModel);
   const meta = runMetadata ?? getRunMetadata(undefined, genMeta.requestedModel);
+  const rawResponse = genMeta.rawResponse ?? sql;
+  const rawSha256 = genMeta.rawSha256 ?? sha256String(rawResponse);
+  const sanitizedSql = genMeta.sanitizedSql ?? sql;
+  const sanitizedSha256 = genMeta.sanitizedSha256 ?? sha256String(sanitizedSql);
   const generationStatus = classifyGenerationStatus(
     genMeta.finishReason,
-    sql,
-    genMeta.generationStatus
+    sanitizedSql,
+    genMeta.generationStatus,
+    genMeta.tagError
   );
   const boundFacts = task.boundFacts ?? [];
   const reusedFromCondition =
@@ -516,6 +541,10 @@ export function buildTrial(
       generationStatus,
       timestamp: new Date().toISOString(),
       generatedSql: '',
+      rawResponse,
+      rawSha256,
+      sanitizedSql,
+      sanitizedSha256,
       passRaw: false,
       passWithTier0: false,
       boundFacts,
@@ -541,6 +570,7 @@ export function buildTrial(
       oracleSha256: meta.oracleSha256,
       tasksSha256: meta.tasksSha256,
       memorySha256: meta.memorySha256,
+      executorSha256: provenance.executorSha256 ?? meta.executorSha256,
       gitCommit: meta.gitCommit,
       ...(reusedFromCondition ? { reusedFromCondition } : {}),
     };
@@ -590,6 +620,10 @@ export function buildTrial(
     generationStatus: 'ok',
     timestamp: new Date().toISOString(),
     generatedSql: sql,
+    rawResponse,
+    rawSha256,
+    sanitizedSql,
+    sanitizedSha256,
     passRaw,
     passWithTier0: passRaw,
     boundFacts,
@@ -615,6 +649,7 @@ export function buildTrial(
     oracleSha256: meta.oracleSha256,
     tasksSha256: meta.tasksSha256,
     memorySha256: meta.memorySha256,
+    executorSha256: provenance.executorSha256 ?? meta.executorSha256,
     gitCommit: meta.gitCommit,
     ...(reusedFromCondition ? { reusedFromCondition } : {}),
   };
@@ -659,6 +694,11 @@ export async function runAblationTaskCondition(options: {
       returnedModel: generated.returnedModel,
       finishReason: generated.finishReason,
       generationStatus: generated.generationStatus,
+      rawResponse: generated.rawResponse,
+      rawSha256: generated.rawSha256,
+      sanitizedSql: generated.sanitizedSql,
+      sanitizedSha256: generated.sanitizedSha256,
+      tagError: generated.tagError,
       fromCache: generated.fromCache,
       ...(options.condition === 'E_B' ? { reusedFromCondition: 'B' as const } : {}),
     },
@@ -1067,6 +1107,8 @@ async function main(): Promise<void> {
 
   const conditions: ConditionId[] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
   const totalExpectedTrials = targetTasks.length * conditions.length;
+  runMetadata.targetTasks = targetTasks.map((t) => t.id);
+  runMetadata.totalTrials = totalExpectedTrials;
   const containerName = `axiom-ablation-v2-${process.pid}`;
   let checkpointMetadata: RunMetadata | undefined;
   const trials: Trial[] = fs.existsSync(checkpointPath)

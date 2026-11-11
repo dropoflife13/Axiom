@@ -1,12 +1,17 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   analyzeTrials,
   buildReport,
   cleanMigrationConditionAnalysis,
   computeFeatureCellICC,
+  evaluateValidityGate,
   exactCellSignFlip,
   formatCellKey,
   holmAdjust,
+  isRawAllFactPass,
   lessonOriginAnalysis,
   lessonOrigins,
   markdownReport,
@@ -587,5 +592,231 @@ describe('offline ablation analysis', () => {
     expect(md).toContain('## Feature cell intraclass correlation (ICC) — Condition A Baseline');
     expect(md).toContain('| Metric | Cells (k) | n per cell |');
     expect(md).toContain('## Sensitivity analysis: excluding H-001 to H-008');
+  });
+
+  it('judges provenance by content hashes while ignoring oracleCommit drift when file hashes match', () => {
+    const contentHashes = {
+      oracleSha256: 'o'.repeat(64),
+      tasksSha256: 't'.repeat(64),
+      factsSha256: 'f'.repeat(64),
+      memorySha256: 'm'.repeat(64),
+      hintBSha256: 'hb'.repeat(32),
+      hintDSha256: 'hd'.repeat(32),
+      hintBuildersSha256: 'hu'.repeat(32),
+      hintCSha256: 'hc'.repeat(32),
+      hintC0Sha256: 'h0'.repeat(32),
+    };
+    const commonExec = {
+      provider: 'nvidia',
+      baseUrl: 'https://integrate.api.nvidia.com/v1',
+      requestedModel: 'nvidia/nemotron-3-ultra-550b-a55b',
+      returnedModel: 'nvidia/nemotron-3-ultra-550b-a55b',
+      finishReason: 'stop',
+    };
+
+    const driftedCommitTrials: Trial[] = [
+      trial('A', 'H-001', 0.2, false, { ...commonExec, ...contentHashes, oracleCommit: '1'.repeat(40) }),
+      trial('B', 'H-001', 0.9, true, { ...commonExec, ...contentHashes, oracleCommit: '2'.repeat(40) }),
+      trial('C', 'H-001', 0.8, true, { ...commonExec, ...contentHashes, oracleCommit: '3'.repeat(40) }),
+    ];
+
+    const validReport = buildReport(driftedCommitTrials, contentHashes);
+    expect(validReport.provenanced).toBe(true);
+    expect(validReport.warnings).toEqual([]);
+    expect(validReport.provenance.oracleCommitDriftIgnored).toBe(true);
+
+    // Mismatched content file hash or hint hash must still mark provenanced=false
+    const tamperedHashTrials: Trial[] = [
+      trial('A', 'H-001', 0.2, false, { ...commonExec, ...contentHashes, oracleCommit: '1'.repeat(40) }),
+      trial('B', 'H-001', 0.9, true, {
+        ...commonExec,
+        ...contentHashes,
+        oracleSha256: 'x'.repeat(64),
+        hintCSha256: 'y'.repeat(64),
+        oracleCommit: '1'.repeat(40),
+      }),
+    ];
+    const invalidReport = buildReport(tamperedHashTrials, contentHashes);
+    expect(invalidReport.provenanced).toBe(false);
+    expect(invalidReport.warnings.some((w: string) => w.includes('oracleSha256'))).toBe(true);
+    expect(invalidReport.warnings.some((w: string) => w.includes('hintCSha256'))).toBe(true);
+  });
+
+  it('computes B_vs_A outside confirmatory Holm families, computes raw all-fact Pass@1, prints Holm Cell p, and renders all four previously-empty Markdown sections', () => {
+    const conditions: Trial['condition'][] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
+    const execMeta = {
+      provider: 'nvidia',
+      baseUrl: 'https://integrate.api.nvidia.com/v1',
+      requestedModel: 'z-ai/glm-5.3-flash',
+      returnedModel: 'z-ai/glm-5.3-flash',
+      oracleSha256: 'o'.repeat(64),
+      tasksSha256: 't'.repeat(64),
+      factsSha256: 'f'.repeat(64),
+      memorySha256: 'm'.repeat(64),
+      finishReason: 'stop',
+    };
+
+    const syntheticTrials: Trial[] = [];
+    for (let i = 1; i <= 8; i++) {
+      const taskId = `H-${String(i).padStart(3, '0')}`;
+      const fCell = {
+        tenant: (i & 1) === 1,
+        append_only: (i & 2) === 2,
+        ingestion: (i & 4) === 4,
+      };
+      const isOdd = i % 2 === 1;
+      for (const cond of conditions) {
+        if (cond === 'A') {
+          syntheticTrials.push(
+            trial('A', taskId, 0.25, false, {
+              ...execMeta,
+              features: fCell,
+              boundFacts: ['F-01', 'F-03'],
+              failedFacts: ['F-03', 'F-16'],
+              retrievedFactIds: [],
+              passRaw: false,
+            })
+          );
+        } else if (cond === 'B' || cond === 'E_B') {
+          syntheticTrials.push(
+            trial(cond, taskId, 1.0, true, {
+              ...execMeta,
+              features: fCell,
+              boundFacts: ['F-01', 'F-03'],
+              failedFacts: [],
+              retrievedFactIds: [],
+              passRaw: true,
+              reusedFromCondition: cond === 'E_B' ? 'B' : undefined,
+            })
+          );
+        } else if (cond === 'C') {
+          syntheticTrials.push(
+            trial('C', taskId, 1.0, true, {
+              ...execMeta,
+              features: fCell,
+              boundFacts: ['F-01', 'F-03'],
+              // Bound passed, but unbound F-16 failed on odd tasks so rawAllFactPass < strictBoundPass
+              failedFacts: isOdd ? ['F-16'] : [],
+              retrievedFactIds: ['F-01', 'F-03'],
+              passRaw: !isOdd,
+            })
+          );
+        } else if (cond === 'C0') {
+          syntheticTrials.push(
+            trial('C0', taskId, 0.5, false, {
+              ...execMeta,
+              features: fCell,
+              boundFacts: ['F-01', 'F-03'],
+              failedFacts: ['F-03'],
+              retrievedFactIds: ['F-01'],
+              passRaw: false,
+            })
+          );
+        } else {
+          syntheticTrials.push(
+            trial('D', taskId, 0.25, false, {
+              ...execMeta,
+              features: fCell,
+              boundFacts: ['F-01', 'F-03'],
+              failedFacts: ['F-01', 'F-03'],
+              retrievedFactIds: [],
+              passRaw: false,
+            })
+          );
+        }
+      }
+    }
+
+    expect(isRawAllFactPass(syntheticTrials.find((t) => t.condition === 'C' && t.taskId === 'H-001')!)).toBe(false);
+    expect(isRawAllFactPass(syntheticTrials.find((t) => t.condition === 'C' && t.taskId === 'H-002')!)).toBe(true);
+
+    const lessons = {
+      memory: {
+        'F-01': { lesson: 'Distilled F-01', origin: 'distilled' },
+        'F-03': { lesson: 'Verbatim F-03 statement', origin: 'verbatim' },
+      },
+      facts: [
+        { id: 'F-01', statement: 'Original F-01 statement' },
+        { id: 'F-03', statement: 'Verbatim F-03 statement' },
+      ],
+    };
+    const report = buildReport(syntheticTrials, execMeta, lessons);
+
+    // Raw Pass@1 vs Strict Pass@1 on Condition C (8/8 bound pass, 4/8 raw all-fact pass)
+    expect(report.analysis.conditions.C.strictBoundPassAt1).toBeCloseTo(1.0, 6);
+    expect(report.analysis.conditions.C.rawAllFactPassAt1).toBeCloseTo(0.5, 6);
+    expect(report.cleanMigrationAnalysis.C.rawAllFactPassAt1).toBeCloseTo(0.5, 6);
+
+    // B_vs_A computed in main comparisons and per-cell comparisons, excluded from Holm families
+    expect(report.analysis.comparisons.B_vs_A.primary.meanDifference).toBeCloseTo(0.75, 6);
+    expect(report.perCellAnalysis.comparisons.B_vs_A.combinedMeanDifference).toBeCloseTo(0.75, 6);
+    expect(Object.keys(report.analysis.holmPrimaryPValues).sort()).toEqual(['C_vs_A', 'C_vs_B', 'C_vs_C0', 'C_vs_D']);
+    expect(Object.keys(report.analysis.holmCellPValues).sort()).toEqual(['C_vs_A', 'C_vs_B', 'C_vs_C0', 'C_vs_D']);
+    expect(report.validityGate.passed).toBe(true);
+
+    const md = markdownReport(report);
+    expect(md).toContain('Raw Pass@1 [Wilson 95%]');
+    expect(md).toContain('Cell Sign-Flip p | Holm Cell p');
+    expect(md).toContain('B_vs_A (validity gate; outside Holm)');
+
+    // Non-empty content in all 4 previously-empty Markdown sections
+    expect(md).toContain('Condition C mean bound fact overlap fraction: **1.0000**');
+    expect(md).toContain('| Distilled Subset (at least one distilled lesson) | 8 |');
+    expect(md).toContain('| Condition C | Retrieved | 16 |');
+    expect(md).toContain('| F-16 |');
+    expect(md).toContain('## Validity gate (Post-Hoc)');
+  });
+
+  it('flags validityGate failures for settings drift, unstripped reasoning tags, or non-positive B_vs_A CI', () => {
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'axiom-gate-test-'));
+    try {
+      const ledgerPath = path.join(tmpDir, 'run-ledger.json');
+      fs.writeFileSync(
+        ledgerPath,
+        JSON.stringify({
+          runs: {
+            'drift-run': {
+              status: 'completed',
+              settings: { reasoningChangedDuringRun: 'on->off', maxTokens: '8192' },
+            },
+          },
+        }),
+        'utf8'
+      );
+
+      const baseTrials: Trial[] = ['H-001', 'H-002', 'H-003', 'H-004'].flatMap((taskId) => [
+        trial('A', taskId, 0.2, false, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+        trial('B', taskId, 0.8, true, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+        trial('C', taskId, 0.7, true, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+      ]);
+      const baseAnalysis = analyzeTrials(baseTrials);
+
+      const driftGate = evaluateValidityGate(baseTrials, baseAnalysis, {}, { runId: 'drift-run', ledgerPath });
+      expect(driftGate.postHoc).toBe(true);
+      expect(driftGate.settingsConstant).toBe(false);
+      expect(driftGate.sanitizerVerified).toBe(true);
+      expect(driftGate.bVsAPositiveWithCiExcludingZero).toBe(true);
+      expect(driftGate.passed).toBe(false);
+
+      const leakedTrials: Trial[] = [
+        trial('A', 'H-001', 0.2, false, { generatedSql: '<thought>leak</thought>CREATE TABLE public.t (id uuid);' }),
+        trial('B', 'H-001', 0.8, true, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+      ];
+      const leakGate = evaluateValidityGate(leakedTrials, analyzeTrials(leakedTrials));
+      expect(leakGate.sanitizerVerified).toBe(false);
+      expect(leakGate.passed).toBe(false);
+
+      const nullBvsATrials: Trial[] = ['H-001', 'H-002', 'H-003', 'H-004'].flatMap((taskId, idx) => [
+        trial('A', taskId, 0.5, idx % 2 === 0, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+        trial('B', taskId, 0.5, idx % 2 === 0, { generatedSql: 'CREATE TABLE public.t (id uuid);' }),
+      ]);
+      const zeroGate = evaluateValidityGate(nullBvsATrials, analyzeTrials(nullBvsATrials));
+      expect(zeroGate.settingsConstant).toBe(true);
+      expect(zeroGate.sanitizerVerified).toBe(true);
+      expect(zeroGate.bVsAPositiveWithCiExcludingZero).toBe(false);
+      expect(zeroGate.passed).toBe(false);
+    } finally {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    }
   });
 });

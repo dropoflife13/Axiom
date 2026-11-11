@@ -91,11 +91,14 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
     if (!res.ok) return empty;
     const data = await res.json();
     const trials: CheckpointTrial[] = Array.isArray(data.trials) ? data.trials : Array.isArray(data) ? data : [];
-    const total = typeof data.totalTrials === 'number' && data.totalTrials > 0
+    let total = typeof data.totalTrials === 'number' && data.totalTrials > 0
       ? data.totalTrials
       : run.id.toLowerCase().includes('mini')
       ? 48
       : TRIALS_PER_RUN;
+    if (trials.length > total || (!run.id.toLowerCase().includes('mini') && (trials.length > 240 || run.id.toLowerCase().includes('expanded')))) {
+      total = Math.max(TRIALS_PER_RUN, Math.ceil(trials.length / 6) * 6);
+    }
     const mtime = data.lastModified ? new Date(data.lastModified).getTime() : 0;
     const live = Boolean(mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total);
     return {
@@ -117,23 +120,33 @@ export function useFleetStatus(runs: readonly RunOption[]): RunStatus[] {
   const [fleet, setFleet] = useState<RunStatus[]>([]);
 
   useEffect(() => {
-    let controller = new AbortController();
+    let active = true;
+    const controller = new AbortController();
+    let timer: number | null = null;
+    const isLocal =
+      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const intervalMs = isLocal ? 5000 : 60000;
+
     const load = async () => {
-      controller.abort();
-      controller = new AbortController();
       try {
         const results = await Promise.all(runs.map((r) => fetchRun(r, controller.signal)));
-        setFleet(results);
+        if (active) setFleet(results);
       } catch {
         /* aborted */
       }
     };
-    void load();
-    const isLocal =
-      window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const timer = window.setInterval(load, isLocal ? 5000 : 60000);
+
+    const pollLoop = async () => {
+      await load();
+      if (active) {
+        timer = window.setTimeout(() => void pollLoop(), intervalMs);
+      }
+    };
+
+    void pollLoop();
     return () => {
-      window.clearInterval(timer);
+      active = false;
+      if (timer !== null) window.clearTimeout(timer);
       controller.abort();
     };
   }, [runs]);

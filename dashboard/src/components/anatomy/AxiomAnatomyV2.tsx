@@ -17,7 +17,6 @@ import {
   type AssemblyId,
   type NodeSpec,
 } from './layout';
-import './anatomy-v2.css';
 
 /* ---------- Dev-Only Projection Probe (Requirement 10.b) ---------- */
 const PROBE_POINTS = [

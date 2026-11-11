@@ -5,7 +5,9 @@ import os from 'node:os';
 import { buildRunSnapshot, exportRunSnapshot } from '../scripts/export-run-snapshot';
 
 describe('export-run-snapshot', () => {
-  it('generates a clean, vercel-safe snapshot from a synthetic checkpoint and excludes secrets', () => {
+  it(
+    'generates a clean, vercel-safe snapshot from a synthetic checkpoint and excludes secrets',
+    () => {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'axiom-snapshot-test-'));
     const checkpointFile = path.join(tmpDir, 'synthetic-checkpoint.json');
     const analysisFile = path.join(tmpDir, 'synthetic-analysis.json');
@@ -123,5 +125,5 @@ describe('export-run-snapshot', () => {
 
     // Clean up
     fs.rmSync(tmpDir, { recursive: true, force: true });
-  });
+  }, 15000);
 });

@@ -184,7 +184,7 @@ export function AxiomLoadingScreen({
           display: flex;
           align-items: center;
           justify-content: center;
-          margin-bottom: 24px;
+          margin-bottom: 76px;
         }
 
         /* Perfectly Centered Rotating HUD Reticles */

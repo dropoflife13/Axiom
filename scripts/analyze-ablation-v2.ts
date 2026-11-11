@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { sanitizeSqlOutput } from '../src/executor.js';
 
 export type Condition = 'A' | 'B' | 'C' | 'C0' | 'D' | 'E_B';
 export type GenerationStatus = 'ok' | 'empty' | 'length' | 'other';
@@ -14,6 +15,13 @@ export interface Trial {
   };
   generationStatus?: GenerationStatus;
   generatedSql?: string;
+  rawResponse?: string;
+  rawSha256?: string;
+  sanitizedSql?: string;
+  sanitizedSha256?: string;
+  tagError?: string | null;
+  passRaw?: boolean;
+  passWithTier0?: boolean;
   boundFacts: string[];
   boundPassed: boolean;
   boundFactFraction: number;
@@ -26,7 +34,18 @@ export interface Trial {
   requestedModel?: string;
   returnedModel?: string;
   oracleCommit?: string;
+  oracleSha256?: string;
+  tasksSha256?: string;
   factsSha256?: string;
+  memorySha256?: string;
+  hintBSha256?: string;
+  hintCSha256?: string;
+  hintC0Sha256?: string;
+  hintDSha256?: string;
+  hintBuildersSha256?: string;
+  executorSha256?: string;
+  maxTokens?: number;
+  reasoningMode?: string;
   finishReason?: string;
   tableMissing?: boolean;
   migrationExitNonZero?: boolean;
@@ -52,22 +71,71 @@ export interface Provenance {
   requestedModel?: string;
   returnedModel?: string;
   oracleCommit?: string;
+  oracleSha256?: string;
+  tasksSha256?: string;
   factsSha256?: string;
+  memorySha256?: string;
+  hintBSha256?: string;
+  hintCSha256?: string;
+  hintC0Sha256?: string;
+  hintDSha256?: string;
+  hintBuildersSha256?: string;
+  executorSha256?: string;
+  topK?: number;
+  gitCommit?: string;
+  diffSha256?: string;
   finishReason?: string;
+  settingsConstant?: boolean;
+  sanitizerVerified?: boolean;
+}
+
+export interface ValidityGateResult {
+  postHoc: true;
+  label: string;
+  settingsConstant: boolean;
+  sanitizerVerified: boolean;
+  bVsAPositiveWithCiExcludingZero: boolean;
+  bVsA: {
+    n: number;
+    meanDifference: number;
+    ci95: [number, number];
+    signFlipPValue: number;
+  } | null;
+  passed: boolean;
+  reasons: string[];
+}
+
+export interface BuildReportOptions {
+  runId?: string;
+  settingsConstant?: boolean;
+  sanitizerVerified?: boolean;
+  ledgerPath?: string;
 }
 
 const CONDITIONS: Condition[] = ['A', 'B', 'C', 'C0', 'D', 'E_B'];
+const CONFIRMATORY_BASELINES = ['A', 'B', 'C0', 'D'] as const;
 const BOOTSTRAP_RESAMPLES = 10_000;
 const SIGN_FLIP_ITERATIONS = 100_000;
 const BOOTSTRAP_SEED = 20260101;
-const PROVENANCE_FIELDS = [
+const EXECUTION_PROVENANCE_FIELDS = [
   'provider',
   'baseUrl',
   'requestedModel',
   'returnedModel',
-  'oracleCommit',
-  'factsSha256',
   'finishReason',
+] as const;
+const FILE_HASH_FIELDS = [
+  'oracleSha256',
+  'tasksSha256',
+  'factsSha256',
+  'memorySha256',
+] as const;
+const HINT_HASH_FIELDS = [
+  'hintBSha256',
+  'hintDSha256',
+  'hintBuildersSha256',
+  'hintCSha256',
+  'hintC0Sha256',
 ] as const;
 
 export function wilson(successes: number, total: number): [number, number] {
@@ -303,6 +371,102 @@ export function lessonOrigins(
   return { distilled: distilled.sort(), verbatim: verbatim.sort() };
 }
 
+export function isRawAllFactPass(trial: Trial): boolean {
+  if (typeof trial.passRaw === 'boolean') return trial.passRaw;
+  return (
+    (trial.generationStatus ?? 'ok') === 'ok' &&
+    !Boolean(trial.tableMissing) &&
+    (trial.failedFacts?.length ?? 0) === 0
+  );
+}
+
+function summarizeConditionRows(rows: Trial[]) {
+  const n = rows.length;
+  const strictPassCount = rows.filter((r) => r.boundPassed).length;
+  const [low, high] = wilson(strictPassCount, n);
+  const rawAllFactPassCount = rows.filter(isRawAllFactPass).length;
+  const [rawLow, rawHigh] = wilson(rawAllFactPassCount, n);
+  const tableMissing = rows.filter((row) => Boolean(row.tableMissing)).length;
+  const migrationExitNonZero = rows.filter((row) => Boolean(row.migrationExitNonZero)).length;
+  const reusedFromCondition = rows.filter((row) => Boolean(row.reusedFromCondition)).length;
+  const reusedFromConditionB = rows.filter((row) => row.reusedFromCondition === 'B').length;
+  const generationStatusCounts: Record<GenerationStatus, number> = {
+    ok: rows.filter((row) => (row.generationStatus ?? 'ok') === 'ok').length,
+    empty: rows.filter((row) => row.generationStatus === 'empty').length,
+    length: rows.filter((row) => row.generationStatus === 'length').length,
+    other: rows.filter((row) => row.generationStatus === 'other').length,
+  };
+  return {
+    n,
+    meanBoundFactFraction: n
+      ? rows.reduce((sum, row) => sum + row.boundFactFraction, 0) / n
+      : 0,
+    strictBoundPassAt1: n ? strictPassCount / n : 0,
+    strictBoundPassAt1Wilson95: [low, high] as [number, number],
+    strictPassCount,
+    rawAllFactPassCount,
+    rawAllFactPassAt1: n ? rawAllFactPassCount / n : 0,
+    rawAllFactPassAt1Wilson95: [rawLow, rawHigh] as [number, number],
+    meanPromptTokens: n
+      ? rows.reduce((sum, row) => sum + row.promptTokens, 0) / n
+      : 0,
+    meanTotalTokens: n
+      ? rows.reduce((sum, row) => sum + row.totalTokens, 0) / n
+      : 0,
+    generationStatus: generationStatusCounts,
+    generationStatusCounts,
+    tableMissing,
+    migrationExitNonZero,
+    reusedFromCondition,
+    reusedFromConditionB,
+  };
+}
+
+function computePairedContrast(
+  baseRows: Trial[],
+  targetRows: Trial[],
+  options?: {
+    includePair?: (baseTrial: Trial, targetTrial: Trial, taskId: string) => boolean;
+    iterations?: number;
+    seed?: number;
+    bootstrapResamples?: number;
+  }
+) {
+  const base = new Map(baseRows.map((row) => [row.taskId, row]));
+  const target = new Map(targetRows.map((row) => [row.taskId, row]));
+  const pairedIds = [...base.keys()].filter((id) => target.has(id)).sort();
+  const includedIds: string[] = [];
+  const excludedTaskIds: string[] = [];
+  for (const id of pairedIds) {
+    const baseTrial = base.get(id) as Trial;
+    const targetTrial = target.get(id) as Trial;
+    if (!options?.includePair || options.includePair(baseTrial, targetTrial, id)) {
+      includedIds.push(id);
+    } else {
+      excludedTaskIds.push(id);
+    }
+  }
+  const differences = includedIds.map(
+    (id) => (target.get(id) as Trial).boundFactFraction - (base.get(id) as Trial).boundFactFraction
+  );
+  const primary = pairedBootstrap(
+    differences,
+    options?.iterations ?? SIGN_FLIP_ITERATIONS,
+    options?.seed ?? BOOTSTRAP_SEED,
+    options?.bootstrapResamples ?? BOOTSTRAP_RESAMPLES
+  );
+  const secondary = mcnemar(
+    includedIds.map((id) => (base.get(id) as Trial).boundPassed),
+    includedIds.map((id) => (target.get(id) as Trial).boundPassed)
+  );
+  return {
+    n: includedIds.length,
+    excludedTaskIds,
+    primary,
+    secondary,
+  };
+}
+
 export function sensitivityAnalysis(trials: Trial[]) {
   const byCondition = new Map<Condition, Trial[]>();
   for (const condition of CONDITIONS) {
@@ -322,42 +486,36 @@ export function sensitivityAnalysis(trials: Trial[]) {
     }
   > = {};
 
-  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
-    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
-    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
-    const allPairedIds = [...base.keys()].filter((id) => target.has(id)).sort();
-    const includedIds: string[] = [];
-    const excludedTaskIds: string[] = [];
-    for (const id of allPairedIds) {
-      const baseTrial = base.get(id) as Trial;
-      const targetTrial = target.get(id) as Trial;
-      if (isCleanTrial(baseTrial) && isCleanTrial(targetTrial)) {
-        includedIds.push(id);
-      } else {
-        excludedTaskIds.push(id);
-      }
-    }
-    const differences = includedIds.map(
-      (id) => (target.get(id) as Trial).boundFactFraction - (base.get(id) as Trial).boundFactFraction
+  for (const baseline of CONFIRMATORY_BASELINES) {
+    const res = computePairedContrast(
+      byCondition.get(baseline) ?? [],
+      byCondition.get('C') ?? [],
+      { includePair: (b, t) => isCleanTrial(b) && isCleanTrial(t) }
     );
-    const bootstrap = pairedBootstrap(differences);
-    const secondary = mcnemar(
-      includedIds.map((id) => (base.get(id) as Trial).boundPassed),
-      includedIds.map((id) => (target.get(id) as Trial).boundPassed)
-    );
-    const key = `C_vs_${baseline}`;
-    comparisons[key] = {
-      n: includedIds.length,
-      excludedCount: excludedTaskIds.length,
-      excludedTaskIds,
-      primary: bootstrap,
-      secondary,
+    comparisons[`C_vs_${baseline}`] = {
+      n: res.n,
+      excludedCount: res.excludedTaskIds.length,
+      excludedTaskIds: res.excludedTaskIds,
+      primary: res.primary,
+      secondary: res.secondary,
     };
   }
+  const bVsARes = computePairedContrast(
+    byCondition.get('A') ?? [],
+    byCondition.get('B') ?? [],
+    { includePair: (b, t) => isCleanTrial(b) && isCleanTrial(t) }
+  );
+  comparisons.B_vs_A = {
+    n: bVsARes.n,
+    excludedCount: bVsARes.excludedTaskIds.length,
+    excludedTaskIds: bVsARes.excludedTaskIds,
+    primary: bVsARes.primary,
+    secondary: bVsARes.secondary,
+  };
 
   return {
     exploratory: true as const,
-    note: "Exploratory sensitivity analysis outside the Holm-Bonferroni family: repeats C vs A, B, C0, D excluding any task where either compared condition has generationStatus !== 'ok' or migrationExitNonZero === true.",
+    note: "Exploratory sensitivity analysis outside the Holm-Bonferroni family: repeats C vs A, B, C0, D (plus post-hoc B_vs_A) excluding any task where either compared condition has generationStatus !== 'ok' or migrationExitNonZero === true.",
     comparisons,
   };
 }
@@ -431,6 +589,92 @@ export function exactCellSignFlip(cellMeans: readonly number[]): number {
   return Math.min(1, atLeastAsExtreme / totalConfigs);
 }
 
+interface CellContrastSummary {
+  n: number;
+  cellCount: number;
+  perCell: Record<string, { n: number; meanDifference: number }>;
+  combinedMeanDifference: number;
+  withinCellBootstrapCi95: [number, number];
+  exactCellSignFlipPValue: number;
+}
+
+function computeCellContrast(
+  baseRows: Trial[],
+  targetRows: Trial[],
+  resolvedCellByTask: ReadonlyMap<string, string>,
+  seed: number,
+  bootstrapResamples: number
+): CellContrastSummary {
+  const base = new Map(baseRows.map((row) => [row.taskId, row]));
+  const target = new Map(targetRows.map((row) => [row.taskId, row]));
+  const pairedIds = [...base.keys()].filter((id) => target.has(id)).sort();
+
+  const diffsByCell = new Map<string, number[]>();
+  for (const id of pairedIds) {
+    const cellKey = resolvedCellByTask.get(id) ?? 'unassigned';
+    const diff =
+      (target.get(id) as Trial).boundFactFraction -
+      (base.get(id) as Trial).boundFactFraction;
+    let arr = diffsByCell.get(cellKey);
+    if (!arr) {
+      arr = [];
+      diffsByCell.set(cellKey, arr);
+    }
+    arr.push(diff);
+  }
+
+  const sortedCells = [...diffsByCell.keys()].sort();
+  const perCell: Record<string, { n: number; meanDifference: number }> = {};
+  const cellMeans: number[] = [];
+
+  for (const cellKey of sortedCells) {
+    const diffs = diffsByCell.get(cellKey)!;
+    const mean = diffs.reduce((s, v) => s + v, 0) / diffs.length;
+    perCell[cellKey] = {
+      n: diffs.length,
+      meanDifference: mean,
+    };
+    cellMeans.push(mean);
+  }
+
+  const m = cellMeans.length;
+  const combinedMeanDifference =
+    m > 0 ? cellMeans.reduce((s, v) => s + v, 0) / m : 0;
+
+  let ci95: [number, number] = [0, 0];
+  if (m > 0 && bootstrapResamples > 0) {
+    const random = rng(seed);
+    const samples: number[] = [];
+    for (let r = 0; r < bootstrapResamples; r++) {
+      let cellMeanSum = 0;
+      for (const cellKey of sortedCells) {
+        const diffs = diffsByCell.get(cellKey)!;
+        const nc = diffs.length;
+        let sum = 0;
+        for (let i = 0; i < nc; i++) {
+          sum += diffs[Math.floor(random() * nc)];
+        }
+        cellMeanSum += sum / nc;
+      }
+      samples.push(cellMeanSum / m);
+    }
+    samples.sort((a, b) => a - b);
+    const quantile = (p: number) =>
+      samples[Math.min(samples.length - 1, Math.floor(p * samples.length))];
+    ci95 = [quantile(0.025), quantile(0.975)];
+  }
+
+  const exactP = exactCellSignFlip(cellMeans);
+  return {
+    n: pairedIds.length,
+    cellCount: m,
+    perCell,
+    combinedMeanDifference,
+    withinCellBootstrapCi95: ci95,
+    exactCellSignFlipPValue: exactP,
+  };
+}
+
 export function perCellAnalysis(
   trials: Trial[],
   taskFeaturesById?: ReadonlyMap<
@@ -458,104 +702,36 @@ export function perCellAnalysis(
     byCondition.set(condition, trials.filter((trial) => trial.condition === condition));
   }
 
-  const comparisons: Record<
-    string,
-    {
-      n: number;
-      cellCount: number;
-      perCell: Record<
-        string,
-        {
-          n: number;
-          meanDifference: number;
-        }
-      >;
-      combinedMeanDifference: number;
-      withinCellBootstrapCi95: [number, number];
-      exactCellSignFlipPValue: number;
-    }
-  > = {};
-
-  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
-    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
-    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
-    const pairedIds = [...base.keys()].filter((id) => target.has(id)).sort();
-
-    const diffsByCell = new Map<string, number[]>();
-    for (const id of pairedIds) {
-      const cellKey = resolvedCellByTask.get(id) ?? 'unassigned';
-      const diff =
-        (target.get(id) as Trial).boundFactFraction -
-        (base.get(id) as Trial).boundFactFraction;
-      let arr = diffsByCell.get(cellKey);
-      if (!arr) {
-        arr = [];
-        diffsByCell.set(cellKey, arr);
-      }
-      arr.push(diff);
-    }
-
-    const sortedCells = [...diffsByCell.keys()].sort();
-    const perCell: Record<string, { n: number; meanDifference: number }> = {};
-    const cellMeans: number[] = [];
-
-    for (const cellKey of sortedCells) {
-      const diffs = diffsByCell.get(cellKey)!;
-      const mean = diffs.reduce((s, v) => s + v, 0) / diffs.length;
-      perCell[cellKey] = {
-        n: diffs.length,
-        meanDifference: mean,
-      };
-      cellMeans.push(mean);
-    }
-
-    const m = cellMeans.length;
-    const combinedMeanDifference =
-      m > 0 ? cellMeans.reduce((s, v) => s + v, 0) / m : 0;
-
-    let ci95: [number, number] = [0, 0];
-    if (m > 0 && bootstrapResamples > 0) {
-      const random = rng(seed);
-      const samples: number[] = [];
-      for (let r = 0; r < bootstrapResamples; r++) {
-        let cellMeanSum = 0;
-        for (const cellKey of sortedCells) {
-          const diffs = diffsByCell.get(cellKey)!;
-          const nc = diffs.length;
-          let sum = 0;
-          for (let i = 0; i < nc; i++) {
-            sum += diffs[Math.floor(random() * nc)];
-          }
-          cellMeanSum += sum / nc;
-        }
-        samples.push(cellMeanSum / m);
-      }
-      samples.sort((a, b) => a - b);
-      const quantile = (p: number) =>
-        samples[Math.min(samples.length - 1, Math.floor(p * samples.length))];
-      ci95 = [quantile(0.025), quantile(0.975)];
-    }
-
-    const exactP = exactCellSignFlip(cellMeans);
-    comparisons[`C_vs_${baseline}`] = {
-      n: pairedIds.length,
-      cellCount: m,
-      perCell,
-      combinedMeanDifference,
-      withinCellBootstrapCi95: ci95,
-      exactCellSignFlipPValue: exactP,
-    };
-  }
-
+  const comparisons: Record<string, CellContrastSummary> = {};
   const cellSignFlipP: Record<string, number> = {};
-  for (const [k, v] of Object.entries(comparisons)) {
-    cellSignFlipP[k] = v.exactCellSignFlipPValue;
+
+  for (const baseline of CONFIRMATORY_BASELINES) {
+    const key = `C_vs_${baseline}`;
+    const summary = computeCellContrast(
+      byCondition.get(baseline) ?? [],
+      byCondition.get('C') ?? [],
+      resolvedCellByTask,
+      seed,
+      bootstrapResamples
+    );
+    comparisons[key] = summary;
+    cellSignFlipP[key] = summary.exactCellSignFlipPValue;
   }
+
+  // Validity-gate contrast B vs A stays outside the confirmatory Holm family.
+  comparisons.B_vs_A = computeCellContrast(
+    byCondition.get('A') ?? [],
+    byCondition.get('B') ?? [],
+    resolvedCellByTask,
+    seed,
+    bootstrapResamples
+  );
+
   const holmCellPValues = holmAdjust(cellSignFlipP);
 
   return {
     exploratory: true as const,
-    note: 'Exploratory per-cell analysis outside the Holm-Bonferroni family: paired mean difference per (tenant, append_only, ingestion) cell, equal-weight cell-stratified combined estimate with within-cell bootstrap 95% CI, and exact two-sided sign-flip test over cell means.',
+    note: 'Exploratory per-cell analysis outside the Holm-Bonferroni primary family: paired mean difference per (tenant, append_only, ingestion) cell, equal-weight cell-stratified combined estimate with within-cell bootstrap 95% CI, and exact two-sided sign-flip test over cell means (Holm-adjusted across C_vs_A, C_vs_B, C_vs_C0, C_vs_D; B_vs_A outside Holm).',
     comparisons,
     holmCellPValues,
   };
@@ -648,60 +824,17 @@ export function computeFeatureCellICC(
   };
 }
 
-export function cleanMigrationConditionAnalysis(trials: Trial[]): Record<
-  Condition,
-  {
-    n: number;
-    meanBoundFactFraction: number;
-    strictBoundPassAt1: number;
-    strictBoundPassAt1Wilson95: [number, number];
-    strictPassCount: number;
-    meanPromptTokens: number;
-    meanTotalTokens: number;
-    generationStatus: Record<GenerationStatus, number>;
-  }
-> {
-  const byCondition = new Map<Condition, Trial[]>();
-  for (const condition of CONDITIONS) {
-    byCondition.set(
-      condition,
-      trials.filter((trial) => trial.condition === condition && !trial.migrationExitNonZero)
-    );
-  }
-
+export function cleanMigrationConditionAnalysis(
+  trials: Trial[]
+): Record<Condition, ReturnType<typeof summarizeConditionRows>> {
   return Object.fromEntries(
     CONDITIONS.map((condition) => {
-      const rows = byCondition.get(condition) ?? [];
-      const strictPassCount = rows.filter((r) => r.boundPassed).length;
-      const [low, high] = wilson(strictPassCount, rows.length);
-      const generationStatusCounts: Record<GenerationStatus, number> = {
-        ok: rows.filter((r) => (r.generationStatus ?? 'ok') === 'ok').length,
-        empty: rows.filter((r) => r.generationStatus === 'empty').length,
-        length: rows.filter((r) => r.generationStatus === 'length').length,
-        other: rows.filter((r) => r.generationStatus === 'other').length,
-      };
-
-      return [
-        condition,
-        {
-          n: rows.length,
-          meanBoundFactFraction: rows.length
-            ? rows.reduce((sum, r) => sum + r.boundFactFraction, 0) / rows.length
-            : 0,
-          strictBoundPassAt1: rows.length ? strictPassCount / rows.length : 0,
-          strictBoundPassAt1Wilson95: [low, high],
-          strictPassCount,
-          meanPromptTokens: rows.length
-            ? rows.reduce((sum, r) => sum + r.promptTokens, 0) / rows.length
-            : 0,
-          meanTotalTokens: rows.length
-            ? rows.reduce((sum, r) => sum + r.totalTokens, 0) / rows.length
-            : 0,
-          generationStatus: generationStatusCounts,
-        },
-      ];
+      const rows = trials.filter(
+        (trial) => trial.condition === condition && !trial.migrationExitNonZero
+      );
+      return [condition, summarizeConditionRows(rows)];
     })
-  ) as any;
+  ) as Record<Condition, ReturnType<typeof summarizeConditionRows>>;
 }
 
 export function sensitivityAnalysisExcludingEarlyTasks(
@@ -720,33 +853,44 @@ export function sensitivityAnalysisExcludingEarlyTasks(
   const primaryP: Record<string, number> = {};
   const secondaryP: Record<string, number> = {};
 
-  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
-    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
-    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
-    const includedIds = [...base.keys()]
-      .filter((id) => target.has(id) && !excludedSet.has(id))
-      .sort();
-
-    const differences = includedIds.map(
-      (id) => (target.get(id) as Trial).boundFactFraction - (base.get(id) as Trial).boundFactFraction
-    );
-    const bootstrap = pairedBootstrap(differences, SIGN_FLIP_ITERATIONS, seed, bootstrapResamples);
-    const secondary = mcnemar(
-      includedIds.map((id) => (base.get(id) as Trial).boundPassed),
-      includedIds.map((id) => (target.get(id) as Trial).boundPassed)
-    );
-
+  for (const baseline of CONFIRMATORY_BASELINES) {
     const key = `C_vs_${baseline}`;
+    const res = computePairedContrast(
+      byCondition.get(baseline) ?? [],
+      byCondition.get('C') ?? [],
+      {
+        includePair: (_b, _t, id) => !excludedSet.has(id),
+        seed,
+        bootstrapResamples,
+      }
+    );
     comparisons[key] = {
-      n: includedIds.length,
+      n: res.n,
       excludedCount: excludedTaskIds.length,
       excludedTaskIds,
-      primary: bootstrap,
-      secondary,
+      primary: res.primary,
+      secondary: res.secondary,
     };
-    primaryP[key] = bootstrap.signFlipPValue;
-    secondaryP[key] = secondary.pValue;
+    primaryP[key] = res.primary.signFlipPValue;
+    secondaryP[key] = res.secondary.pValue;
   }
+
+  const bVsARes = computePairedContrast(
+    byCondition.get('A') ?? [],
+    byCondition.get('B') ?? [],
+    {
+      includePair: (_b, _t, id) => !excludedSet.has(id),
+      seed,
+      bootstrapResamples,
+    }
+  );
+  comparisons.B_vs_A = {
+    n: bVsARes.n,
+    excludedCount: excludedTaskIds.length,
+    excludedTaskIds,
+    primary: bVsARes.primary,
+    secondary: bVsARes.secondary,
+  };
 
   return {
     exploratory: true as const,
@@ -763,67 +907,34 @@ export function analyzeTrials(trials: Trial[]) {
     byCondition.set(condition, trials.filter((trial) => trial.condition === condition));
   }
   const conditions = Object.fromEntries(
-    CONDITIONS.map((condition) => {
-      const rows = byCondition.get(condition) ?? [];
-      const [low, high] = wilson(rows.filter((row) => row.boundPassed).length, rows.length);
-      const tableMissing = rows.filter((row) => Boolean(row.tableMissing)).length;
-      const migrationExitNonZero = rows.filter((row) => Boolean(row.migrationExitNonZero)).length;
-      const reusedFromCondition = rows.filter((row) => Boolean(row.reusedFromCondition)).length;
-      const reusedFromConditionB = rows.filter((row) => row.reusedFromCondition === 'B').length;
-      const generationStatusCounts: Record<GenerationStatus, number> = {
-        ok: rows.filter((row) => (row.generationStatus ?? 'ok') === 'ok').length,
-        empty: rows.filter((row) => row.generationStatus === 'empty').length,
-        length: rows.filter((row) => row.generationStatus === 'length').length,
-        other: rows.filter((row) => row.generationStatus === 'other').length,
-      };
-      return [
-        condition,
-        {
-          n: rows.length,
-          meanBoundFactFraction: rows.length
-            ? rows.reduce((sum, row) => sum + row.boundFactFraction, 0) / rows.length
-            : 0,
-          strictBoundPassAt1: rows.length
-            ? rows.filter((row) => row.boundPassed).length / rows.length
-            : 0,
-          strictBoundPassAt1Wilson95: [low, high],
-          meanPromptTokens: rows.length
-            ? rows.reduce((sum, row) => sum + row.promptTokens, 0) / rows.length
-            : 0,
-          meanTotalTokens: rows.length
-            ? rows.reduce((sum, row) => sum + row.totalTokens, 0) / rows.length
-            : 0,
-          generationStatus: generationStatusCounts,
-          generationStatusCounts,
-          tableMissing,
-          migrationExitNonZero,
-          reusedFromCondition,
-          reusedFromConditionB,
-        },
-      ];
-    })
+    CONDITIONS.map((condition) => [condition, summarizeConditionRows(byCondition.get(condition) ?? [])])
   );
 
   const comparisons: Record<string, any> = {};
   const primaryP: Record<string, number> = {};
   const secondaryP: Record<string, number> = {};
-  for (const baseline of ['A', 'B', 'C0', 'D'] as Condition[]) {
-    const base = new Map((byCondition.get(baseline) ?? []).map((row) => [row.taskId, row]));
-    const target = new Map((byCondition.get('C') ?? []).map((row) => [row.taskId, row]));
-    const ids = [...base.keys()].filter((id) => target.has(id)).sort();
-    const differences = ids.map(
-      (id) => (target.get(id) as Trial).boundFactFraction - (base.get(id) as Trial).boundFactFraction
-    );
-    const bootstrap = pairedBootstrap(differences);
-    const secondary = mcnemar(
-      ids.map((id) => (base.get(id) as Trial).boundPassed),
-      ids.map((id) => (target.get(id) as Trial).boundPassed)
-    );
+  for (const baseline of CONFIRMATORY_BASELINES) {
     const key = `C_vs_${baseline}`;
-    comparisons[key] = { n: ids.length, primary: bootstrap, secondary };
-    primaryP[key] = bootstrap.signFlipPValue;
-    secondaryP[key] = secondary.pValue;
+    const res = computePairedContrast(
+      byCondition.get(baseline) ?? [],
+      byCondition.get('C') ?? []
+    );
+    comparisons[key] = { n: res.n, primary: res.primary, secondary: res.secondary };
+    primaryP[key] = res.primary.signFlipPValue;
+    secondaryP[key] = res.secondary.pValue;
   }
+
+  // Validity-gate contrast B vs A stays outside the 4-contrast confirmatory Holm family.
+  const bVsA = computePairedContrast(
+    byCondition.get('A') ?? [],
+    byCondition.get('B') ?? []
+  );
+  comparisons.B_vs_A = {
+    n: bVsA.n,
+    primary: bVsA.primary,
+    secondary: bVsA.secondary,
+  };
+
   const sensitivity = sensitivityAnalysis(trials);
   const sensitivityExcludingEarlyTasks = sensitivityAnalysisExcludingEarlyTasks(trials);
   const perCell = perCellAnalysis(trials);
@@ -833,6 +944,7 @@ export function analyzeTrials(trials: Trial[]) {
   return {
     conditions,
     comparisons,
+    bVsA: comparisons.B_vs_A,
     holmPrimaryPValues: holmAdjust(primaryP),
     holmSecondaryPValues: holmAdjust(secondaryP),
     holmCellPValues: perCell.holmCellPValues,
@@ -1094,26 +1206,44 @@ export function parseArgs(argv: string[]) {
     }
     return fallback;
   };
+  const optionalValue = (flag: string): string | undefined => {
+    for (let i = 0; i < argv.length; i++) {
+      const arg = argv[i];
+      if (arg === flag && argv[i + 1] && !argv[i + 1].startsWith('--')) {
+        return argv[i + 1];
+      }
+      if (arg.startsWith(`${flag}=`)) {
+        return arg.slice(flag.length + 1);
+      }
+    }
+    return undefined;
+  };
   return {
     checkpoint: path.resolve(value('--checkpoint', '.axiom-state/ablation-v2-checkpoint.json')),
     out: path.resolve(value('--out', 'out/ablation-v2-analysis.json')),
+    runId: optionalValue('--run-id'),
   };
+}
+
+function formatRateWithWilson(rate: number | undefined, ci: [number, number] | undefined): string {
+  const val = Number.isFinite(rate) ? (rate as number).toFixed(4) : '0.0000';
+  if (!ci || ci.length !== 2) return val;
+  return `${val} [${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
 }
 
 function formatConditionsTable(conditions: Record<string, any>): string {
   const lines = [
-    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) | tableMissing | migrationExitNonZero | reusedFromCondition |',
-    '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
+    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Raw Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) | tableMissing | migrationExitNonZero | reusedFromCondition |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|',
   ];
   for (const condition of CONDITIONS) {
     const row = conditions[condition];
     if (!row) continue;
     const gs = row.generationStatus ?? { ok: row.n, empty: 0, length: 0, other: 0 };
-    const wilsonStr = row.strictBoundPassAt1Wilson95
-      ? ` [${row.strictBoundPassAt1Wilson95[0].toFixed(4)}, ${row.strictBoundPassAt1Wilson95[1].toFixed(4)}]`
-      : '';
+    const strictStr = formatRateWithWilson(row.strictBoundPassAt1, row.strictBoundPassAt1Wilson95);
+    const rawStr = formatRateWithWilson(row.rawAllFactPassAt1, row.rawAllFactPassAt1Wilson95);
     lines.push(
-      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${row.strictBoundPassAt1.toFixed(4)}${wilsonStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} | ${row.tableMissing} | ${row.migrationExitNonZero} | ${row.reusedFromCondition} |`
+      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${strictStr} | ${rawStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} | ${row.tableMissing} | ${row.migrationExitNonZero} | ${row.reusedFromCondition} |`
     );
   }
   return lines.join('\n');
@@ -1121,18 +1251,17 @@ function formatConditionsTable(conditions: Record<string, any>): string {
 
 function formatCleanMigrationTable(cleanAnalysis: Record<string, any>): string {
   const lines = [
-    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) |',
-    '|---|---:|---:|---:|---:|---:|---:|',
+    '| Condition | n | Mean bound fraction | Strict Pass@1 [Wilson 95%] | Raw Pass@1 [Wilson 95%] | Mean prompt tokens | Mean total tokens | gen(ok/empty/length/other) |',
+    '|---|---:|---:|---:|---:|---:|---:|---:|',
   ];
   for (const condition of CONDITIONS) {
     const row = cleanAnalysis[condition];
     if (!row) continue;
     const gs = row.generationStatus ?? { ok: row.n, empty: 0, length: 0, other: 0 };
-    const wilsonStr = row.strictBoundPassAt1Wilson95
-      ? ` [${row.strictBoundPassAt1Wilson95[0].toFixed(4)}, ${row.strictBoundPassAt1Wilson95[1].toFixed(4)}]`
-      : '';
+    const strictStr = formatRateWithWilson(row.strictBoundPassAt1, row.strictBoundPassAt1Wilson95);
+    const rawStr = formatRateWithWilson(row.rawAllFactPassAt1, row.rawAllFactPassAt1Wilson95);
     lines.push(
-      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${row.strictBoundPassAt1.toFixed(4)}${wilsonStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} |`
+      `| ${condition} | ${row.n} | ${row.meanBoundFactFraction.toFixed(4)} | ${strictStr} | ${rawStr} | ${row.meanPromptTokens.toFixed(1)} | ${row.meanTotalTokens.toFixed(1)} | ${gs.ok}/${gs.empty}/${gs.length}/${gs.other} |`
     );
   }
   return lines.join('\n');
@@ -1140,24 +1269,41 @@ function formatCleanMigrationTable(cleanAnalysis: Record<string, any>): string {
 
 function formatPairedComparisonsTable(analysis: any): string {
   const lines = [
-    '| Contrast | n | Mean Diff [95% CI] | Sign-Flip p (raw) | Holm Primary p | McNemar (b/c) | McNemar p (raw) | Holm Secondary p |',
-    '|:---|---:|:---:|---:|---:|:---:|---:|---:|',
+    '| Contrast | n | Mean Diff [95% CI] | Sign-Flip p (raw) | Holm Primary p | Cell Sign-Flip p | Holm Cell p | McNemar (b/c) | McNemar p (raw) | Holm Secondary p |',
+    '|:---|---:|:---:|---:|---:|---:|---:|:---:|---:|---:|',
   ];
-  for (const baseline of ['A', 'B', 'C0', 'D']) {
-    const key = `C_vs_${baseline}`;
-    const comp = analysis.comparisons[key];
+  const keys = [...CONFIRMATORY_BASELINES.map((b) => `C_vs_${b}`), 'B_vs_A'];
+  for (const key of keys) {
+    const comp = analysis.comparisons?.[key];
     if (!comp) continue;
+    const isConfirmatory = key !== 'B_vs_A';
+    const label = isConfirmatory ? key : `${key} (validity gate; outside Holm)`;
     const meanDiff = comp.primary.meanDifference;
     const meanDiffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
     const ciStr = `[${comp.primary.ci95[0].toFixed(4)}, ${comp.primary.ci95[1].toFixed(4)}]`;
     const signFlipP = comp.primary.signFlipPValue.toExponential(4);
-    const holmPrimP = (analysis.holmPrimaryPValues[key] ?? comp.primary.signFlipPValue).toExponential(4);
+    const holmPrimP = isConfirmatory
+      ? (analysis.holmPrimaryPValues?.[key] ?? comp.primary.signFlipPValue).toExponential(4)
+      : '—';
+    const cellComp = analysis.perCellAnalysis?.comparisons?.[key];
+    const cellSignFlipP =
+      cellComp?.exactCellSignFlipPValue !== undefined
+        ? cellComp.exactCellSignFlipPValue.toExponential(4)
+        : '—';
+    const holmCellRaw = isConfirmatory
+      ? analysis.holmCellPValues?.[key] ??
+        analysis.perCellAnalysis?.holmCellPValues?.[key] ??
+        cellComp?.exactCellSignFlipPValue
+      : undefined;
+    const holmCellP = holmCellRaw !== undefined ? holmCellRaw.toExponential(4) : '—';
     const mcnemarDiscordant = `${comp.secondary.b}/${comp.secondary.c}`;
     const mcnemarP = comp.secondary.pValue.toExponential(4);
-    const holmSecP = (analysis.holmSecondaryPValues[key] ?? comp.secondary.pValue).toExponential(4);
+    const holmSecP = isConfirmatory
+      ? (analysis.holmSecondaryPValues?.[key] ?? comp.secondary.pValue).toExponential(4)
+      : '—';
 
     lines.push(
-      `| ${key} | ${comp.n} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
+      `| ${label} | ${comp.n} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${cellSignFlipP} | ${holmCellP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
     );
   }
   return lines.join('\n');
@@ -1171,25 +1317,28 @@ function formatPerCellTables(perCell: any, holmCellPValues?: Record<string, numb
     '| Contrast | Cells | Combined Mean Diff [Within-Cell 95% CI] | Exact Cell Sign-Flip p | Holm Cell p |',
     '|:---|---:|:---:|---:|---:|',
   ];
-  for (const baseline of ['A', 'B', 'C0', 'D']) {
-    const key = `C_vs_${baseline}`;
+  const keys = [...CONFIRMATORY_BASELINES.map((b) => `C_vs_${b}`), 'B_vs_A'];
+  for (const key of keys) {
     const comp = perCell.comparisons[key];
     if (!comp) continue;
+    const isConfirmatory = key !== 'B_vs_A';
+    const label = isConfirmatory ? key : `${key} (outside Holm)`;
     const combMean = comp.combinedMeanDifference ?? 0;
     const combMeanStr = `${combMean >= 0 ? '+' : ''}${combMean.toFixed(4)}`;
     const ci = comp.withinCellBootstrapCi95 ?? [0, 0];
     const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
     const exactP = comp.exactCellSignFlipPValue !== undefined ? comp.exactCellSignFlipPValue.toExponential(4) : '—';
-    const rawHolm = holmCellPValues?.[key] ?? perCell.holmCellPValues?.[key] ?? comp.exactCellSignFlipPValue;
+    const rawHolm = isConfirmatory
+      ? holmCellPValues?.[key] ?? perCell.holmCellPValues?.[key] ?? comp.exactCellSignFlipPValue
+      : undefined;
     const holmP = rawHolm !== undefined ? rawHolm.toExponential(4) : '—';
-    lines.push(`| ${key} | ${comp.cellCount ?? 0} | ${combMeanStr} ${ciStr} | ${exactP} | ${holmP} |`);
+    lines.push(`| ${label} | ${comp.cellCount ?? 0} | ${combMeanStr} ${ciStr} | ${exactP} | ${holmP} |`);
   }
 
   lines.push('', '### Per-Cell Mean Differences Breakdown', '');
   lines.push('| Contrast | Cell | n | Mean Difference |');
   lines.push('|:---|:---|---:|---:|');
-  for (const baseline of ['A', 'B', 'C0', 'D']) {
-    const key = `C_vs_${baseline}`;
+  for (const key of keys) {
     const comp = perCell.comparisons[key];
     if (!comp?.perCell) continue;
     for (const [cellKey, cellData] of Object.entries(comp.perCell as Record<string, any>)) {
@@ -1227,22 +1376,28 @@ function formatSensitivityExcludingEarlyTable(sensEarly: any): string {
     '| Contrast | n | Mean Diff [95% CI] | Sign-Flip p (raw) | Holm Primary p | McNemar (b/c) | McNemar p (raw) | Holm Secondary p |',
     '|:---|---:|:---:|---:|---:|:---:|---:|---:|',
   ];
-  for (const baseline of ['A', 'B', 'C0', 'D']) {
-    const key = `C_vs_${baseline}`;
+  const keys = [...CONFIRMATORY_BASELINES.map((b) => `C_vs_${b}`), 'B_vs_A'];
+  for (const key of keys) {
     const comp = sensEarly?.comparisons?.[key];
     if (!comp?.primary) continue;
+    const isConfirmatory = key !== 'B_vs_A';
+    const label = isConfirmatory ? key : `${key} (outside Holm)`;
     const meanDiff = comp.primary.meanDifference ?? 0;
     const meanDiffStr = `${meanDiff >= 0 ? '+' : ''}${meanDiff.toFixed(4)}`;
     const ci = comp.primary.ci95 ?? [0, 0];
     const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
     const signFlipP = comp.primary.signFlipPValue !== undefined ? comp.primary.signFlipPValue.toExponential(4) : '—';
-    const holmPrimP = (sensEarly.holmPrimaryPValues?.[key] ?? comp.primary.signFlipPValue)?.toExponential?.(4) ?? '—';
+    const holmPrimP = isConfirmatory
+      ? (sensEarly.holmPrimaryPValues?.[key] ?? comp.primary.signFlipPValue)?.toExponential?.(4) ?? '—'
+      : '—';
     const mcnemarDiscordant = `${comp.secondary?.b ?? 0}/${comp.secondary?.c ?? 0}`;
     const mcnemarP = comp.secondary?.pValue !== undefined ? comp.secondary.pValue.toExponential(4) : '—';
-    const holmSecP = (sensEarly.holmSecondaryPValues?.[key] ?? comp.secondary?.pValue)?.toExponential?.(4) ?? '—';
+    const holmSecP = isConfirmatory
+      ? (sensEarly.holmSecondaryPValues?.[key] ?? comp.secondary?.pValue)?.toExponential?.(4) ?? '—'
+      : '—';
 
     lines.push(
-      `| ${key} | ${comp.n ?? 0} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
+      `| ${label} | ${comp.n ?? 0} | ${meanDiffStr} ${ciStr} | ${signFlipP} | ${holmPrimP} | ${mcnemarDiscordant} | ${mcnemarP} | ${holmSecP} |`
     );
   }
   return lines.join('\n');
@@ -1254,8 +1409,8 @@ function formatSensitivityTable(sens: any): string {
     '| Contrast | Included n | Excluded Count | Mean Diff [95% CI] | Sign-Flip p | McNemar (b/c) | McNemar p |',
     '|:---|---:|---:|:---:|---:|:---:|---:|',
   ];
-  for (const baseline of ['A', 'B', 'C0', 'D']) {
-    const key = `C_vs_${baseline}`;
+  const keys = [...CONFIRMATORY_BASELINES.map((b) => `C_vs_${b}`), 'B_vs_A'];
+  for (const key of keys) {
     const comp = sens?.comparisons?.[key];
     if (!comp?.primary) continue;
     const meanDiff = comp.primary.meanDifference ?? 0;
@@ -1273,6 +1428,22 @@ function formatSensitivityTable(sens: any): string {
   return lines.join('\n');
 }
 
+function readPairCount(bucket: any): number {
+  return bucket?.pairCount ?? bucket?.n ?? bucket?.factPairs ?? 0;
+}
+
+function readCondPassRate(bucket: any): number | undefined {
+  return bucket?.condPassRate ?? bucket?.conditionPassRate;
+}
+
+function readAPassRate(bucket: any): number | undefined {
+  return bucket?.aPassRate ?? bucket?.conditionAPassRate;
+}
+
+function readPassDiff(bucket: any): number | undefined {
+  return bucket?.passRateDifference ?? bucket?.difference;
+}
+
 function formatPerFactRetrievalTables(retrieval: any): string {
   if (!retrieval) return '_No per-fact retrieval data available._';
   const lines: string[] = [];
@@ -1288,21 +1459,21 @@ function formatPerFactRetrievalTables(retrieval: any): string {
     const nonRet = condData.nonRetrieved;
 
     if (ret) {
-      const retDiff = ret.difference ?? 0;
+      const retDiff = readPassDiff(ret) ?? 0;
       const retDiffStr = `${retDiff >= 0 ? '+' : ''}${retDiff.toFixed(4)}`;
-      const retCondPass = (ret.conditionPassRate ?? 0).toFixed(4);
-      const retAPass = (ret.conditionAPassRate ?? 0).toFixed(4);
+      const retCondPass = (readCondPassRate(ret) ?? 0).toFixed(4);
+      const retAPass = (readAPassRate(ret) ?? 0).toFixed(4);
       lines.push(
-        `| Condition ${cond} | Retrieved | ${ret.factPairs ?? 0} | ${retCondPass} | ${retAPass} | ${retDiffStr} |`
+        `| Condition ${cond} | Retrieved | ${readPairCount(ret)} | ${retCondPass} | ${retAPass} | ${retDiffStr} |`
       );
     }
     if (nonRet) {
-      const nonRetDiff = nonRet.difference ?? 0;
+      const nonRetDiff = readPassDiff(nonRet) ?? 0;
       const nonRetDiffStr = `${nonRetDiff >= 0 ? '+' : ''}${nonRetDiff.toFixed(4)}`;
-      const nonRetCondPass = (nonRet.conditionPassRate ?? 0).toFixed(4);
-      const nonRetAPass = (nonRet.conditionAPassRate ?? 0).toFixed(4);
+      const nonRetCondPass = (readCondPassRate(nonRet) ?? 0).toFixed(4);
+      const nonRetAPass = (readAPassRate(nonRet) ?? 0).toFixed(4);
       lines.push(
-        `| Condition ${cond} | Non-Retrieved (Negative Control) | ${nonRet.factPairs ?? 0} | ${nonRetCondPass} | ${nonRetAPass} | ${nonRetDiffStr} |`
+        `| Condition ${cond} | Non-Retrieved (Negative Control) | ${readPairCount(nonRet)} | ${nonRetCondPass} | ${nonRetAPass} | ${nonRetDiffStr} |`
       );
     }
   }
@@ -1319,18 +1490,26 @@ function formatPerFactRetrievalTables(retrieval: any): string {
       const fData = condData.byFact[fId];
       const r = fData?.retrieved;
       const nr = fData?.nonRetrieved;
-      const isRet = (r?.factPairs ?? 0) > 0;
+      const rCount = readPairCount(r);
+      const nrCount = readPairCount(nr);
+      const isRet = rCount > 0;
 
-      const rCondPass = (r?.factPairs ?? 0) > 0 && r?.conditionPassRate !== undefined ? r.conditionPassRate.toFixed(4) : '—';
-      const rAPass = (r?.factPairs ?? 0) > 0 && r?.conditionAPassRate !== undefined ? r.conditionAPassRate.toFixed(4) : '—';
-      const rDiff = (r?.factPairs ?? 0) > 0 && r?.difference !== undefined ? `${r.difference >= 0 ? '+' : ''}${r.difference.toFixed(4)}` : '—';
+      const rCond = readCondPassRate(r);
+      const rA = readAPassRate(r);
+      const rDiffVal = readPassDiff(r);
+      const rCondPass = isRet && rCond !== undefined ? rCond.toFixed(4) : '—';
+      const rAPass = isRet && rA !== undefined ? rA.toFixed(4) : '—';
+      const rDiff = isRet && rDiffVal !== undefined ? `${rDiffVal >= 0 ? '+' : ''}${rDiffVal.toFixed(4)}` : '—';
 
-      const nrCondPass = (nr?.factPairs ?? 0) > 0 && nr?.conditionPassRate !== undefined ? nr.conditionPassRate.toFixed(4) : '—';
-      const nrAPass = (nr?.factPairs ?? 0) > 0 && nr?.conditionAPassRate !== undefined ? nr.conditionAPassRate.toFixed(4) : '—';
-      const nrDiff = (nr?.factPairs ?? 0) > 0 && nr?.difference !== undefined ? `${nr.difference >= 0 ? '+' : ''}${nr.difference.toFixed(4)}` : '—';
+      const nrCond = readCondPassRate(nr);
+      const nrA = readAPassRate(nr);
+      const nrDiffVal = readPassDiff(nr);
+      const nrCondPass = nrCount > 0 && nrCond !== undefined ? nrCond.toFixed(4) : '—';
+      const nrAPass = nrCount > 0 && nrA !== undefined ? nrA.toFixed(4) : '—';
+      const nrDiff = nrCount > 0 && nrDiffVal !== undefined ? `${nrDiffVal >= 0 ? '+' : ''}${nrDiffVal.toFixed(4)}` : '—';
 
       lines.push(
-        `| ${fId} | ${isRet ? 'Yes' : 'No'} | ${r?.factPairs ?? 0} | ${rCondPass} | ${rAPass} | ${rDiff} | ${nr?.factPairs ?? 0} | ${nrCondPass} | ${nrAPass} | ${nrDiff} |`
+        `| ${fId} | ${isRet ? 'Yes' : 'No'} | ${rCount} | ${rCondPass} | ${rAPass} | ${rDiff} | ${nrCount} | ${nrCondPass} | ${nrAPass} | ${nrDiff} |`
       );
     }
   }
@@ -1339,47 +1518,118 @@ function formatPerFactRetrievalTables(retrieval: any): string {
 }
 
 function formatRetrievalOverlapTable(overlap: any): string {
-  const lines = [
-    '### Overlap Distribution',
-    '',
-    '| Overlap Fraction | Count | Percentage |',
-    '|:---|---:|---:|',
-  ];
-  if (overlap?.histogram) {
-    for (const [bin, count] of Object.entries(overlap.histogram as Record<string, number>)) {
-      const pct = overlap.totalTasks ? ((count / overlap.totalTasks) * 100).toFixed(1) + '%' : '0%';
-      lines.push(`| ${bin} | ${count} | ${pct} |`);
+  if (!overlap) return '_No retrieval overlap data available._';
+
+  // Legacy single-object shape support
+  if (overlap.histogram || overlap.meanOverlapFraction !== undefined) {
+    const lines = [
+      '### Overlap Distribution',
+      '',
+      '| Overlap Fraction | Count | Percentage |',
+      '|:---|---:|---:|',
+    ];
+    if (overlap.histogram) {
+      for (const [bin, count] of Object.entries(overlap.histogram as Record<string, number>)) {
+        const pct = overlap.totalTasks ? ((count / overlap.totalTasks) * 100).toFixed(1) + '%' : '0%';
+        lines.push(`| ${bin} | ${count} | ${pct} |`);
+      }
     }
+    lines.push('', `Mean bound fact overlap fraction: **${(overlap.meanOverlapFraction ?? 0).toFixed(4)}**`, '');
+    lines.push('### Full vs Partial Overlap Subsets', '');
+    lines.push('| Subset | Task Count | Mean Bound Fact Fraction |');
+    lines.push('|:---|---:|---:|');
+    if (overlap.fullOverlap) {
+      lines.push(`| Full Overlap (100%) | ${overlap.fullOverlap.n} | ${overlap.fullOverlap.meanBoundFactFraction.toFixed(4)} |`);
+    }
+    if (overlap.partialOverlap) {
+      lines.push(`| Partial Overlap (<100%) | ${overlap.partialOverlap.n} | ${overlap.partialOverlap.meanBoundFactFraction.toFixed(4)} |`);
+    }
+    return lines.join('\n');
   }
-  lines.push('', `Mean bound fact overlap fraction: **${(overlap?.meanOverlapFraction ?? 0).toFixed(4)}**`, '');
+
+  const lines: string[] = [];
+  for (const cond of ['C', 'C0'] as const) {
+    const condData = overlap[cond];
+    if (!condData) continue;
+    const dist = Array.isArray(condData.distribution) ? (condData.distribution as number[]) : [];
+    const total = condData.n ?? dist.length;
+    const counts = new Map<string, number>();
+    for (const val of dist) {
+      const bin = Number(val).toFixed(4);
+      counts.set(bin, (counts.get(bin) ?? 0) + 1);
+    }
+    lines.push(`### Condition ${cond} Overlap Distribution`, '');
+    lines.push('| Overlap Fraction | Count | Percentage |');
+    lines.push('|:---|---:|---:|');
+    const sortedBins = [...counts.entries()].sort((a, b) => Number(a[0]) - Number(b[0]));
+    if (sortedBins.length === 0) {
+      lines.push('| — | 0 | 0.0% |');
+    } else {
+      for (const [bin, count] of sortedBins) {
+        const pct = total > 0 ? ((count / total) * 100).toFixed(1) + '%' : '0.0%';
+        lines.push(`| ${bin} | ${count} | ${pct} |`);
+      }
+    }
+    lines.push(
+      '',
+      `Condition ${cond} mean bound fact overlap fraction: **${(condData.meanFraction ?? 0).toFixed(4)}**`,
+      ''
+    );
+  }
+
   lines.push('### Full vs Partial Overlap Subsets', '');
-  lines.push('| Subset | Task Count | Mean Bound Fact Fraction |');
-  lines.push('|:---|---:|---:|');
-  if (overlap?.fullOverlap) {
-    lines.push(`| Full Overlap (100%) | ${overlap.fullOverlap.n} | ${overlap.fullOverlap.meanBoundFactFraction.toFixed(4)} |`);
-  }
-  if (overlap?.partialOverlap) {
-    lines.push(`| Partial Overlap (<100%) | ${overlap.partialOverlap.n} | ${overlap.partialOverlap.meanBoundFactFraction.toFixed(4)} |`);
+  lines.push('| Condition | Subset | Task Count | Mean Bound Fact Fraction |');
+  lines.push('|:---|:---|---:|---:|');
+  for (const cond of ['C', 'C0'] as const) {
+    const condData = overlap[cond];
+    if (!condData) continue;
+    if (condData.fullOverlap) {
+      lines.push(
+        `| ${cond} | Full Overlap (100%) | ${condData.fullOverlap.n} | ${condData.fullOverlap.meanBoundFactFraction.toFixed(4)} |`
+      );
+    }
+    if (condData.partialOverlap) {
+      lines.push(
+        `| ${cond} | Partial Overlap (<100%) | ${condData.partialOverlap.n} | ${condData.partialOverlap.meanBoundFactFraction.toFixed(4)} |`
+      );
+    }
   }
   return lines.join('\n');
 }
 
 function formatLessonOriginTable(orig: any): string {
-  const lines = [
-    '| Subset | Task Count | C vs C0 Mean Diff [95% CI] | Sign-Flip p |',
-    '|:---|---:|:---:|---:|',
-  ];
-  if (orig?.distilledSubset) {
-    const d = orig.distilledSubset;
-    const diffStr = `${d.meanDifference >= 0 ? '+' : ''}${d.meanDifference.toFixed(4)}`;
-    const ciStr = `[${d.ci95[0].toFixed(4)}, ${d.ci95[1].toFixed(4)}]`;
-    lines.push(`| Distilled Subset (at least one distilled lesson) | ${d.n} | ${diffStr} ${ciStr} | ${d.signFlipPValue.toExponential(4)} |`);
+  const lines: string[] = [];
+  if (orig?.lessonCounts) {
+    lines.push(
+      `Lesson inventory counts: **distilled = ${orig.lessonCounts.distilled ?? 0}**, **verbatim = ${orig.lessonCounts.verbatim ?? 0}**.`,
+      ''
+    );
   }
-  if (orig?.allVerbatimSubset) {
-    const v = orig.allVerbatimSubset;
-    const diffStr = `${v.meanDifference >= 0 ? '+' : ''}${v.meanDifference.toFixed(4)}`;
-    const ciStr = `[${v.ci95[0].toFixed(4)}, ${v.ci95[1].toFixed(4)}]`;
-    lines.push(`| All-Verbatim Subset (internal negative control) | ${v.n} | ${diffStr} ${ciStr} | ${v.signFlipPValue.toExponential(4)} |`);
+  lines.push('| Subset | Task Count | C vs C0 Mean Diff [95% CI] | Sign-Flip p |');
+  lines.push('|:---|---:|:---:|---:|');
+
+  const distilledN = orig?.tasksWithDistilledLesson?.n ?? orig?.distilledSubset?.n;
+  const distilledPrimary = orig?.tasksWithDistilledLesson?.primary ?? orig?.distilledSubset;
+  if (distilledPrimary) {
+    const nVal = distilledN ?? distilledPrimary.n ?? 0;
+    const mean = distilledPrimary.meanDifference ?? 0;
+    const diffStr = `${mean >= 0 ? '+' : ''}${mean.toFixed(4)}`;
+    const ci = distilledPrimary.ci95 ?? [0, 0];
+    const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
+    const pVal = distilledPrimary.signFlipPValue !== undefined ? distilledPrimary.signFlipPValue.toExponential(4) : '—';
+    lines.push(`| Distilled Subset (at least one distilled lesson) | ${nVal} | ${diffStr} ${ciStr} | ${pVal} |`);
+  }
+
+  const verbatimN = orig?.tasksWithAllVerbatimLessons?.n ?? orig?.allVerbatimSubset?.n;
+  const verbatimPrimary = orig?.tasksWithAllVerbatimLessons?.primary ?? orig?.allVerbatimSubset;
+  if (verbatimPrimary) {
+    const nVal = verbatimN ?? verbatimPrimary.n ?? 0;
+    const mean = verbatimPrimary.meanDifference ?? 0;
+    const diffStr = `${mean >= 0 ? '+' : ''}${mean.toFixed(4)}`;
+    const ci = verbatimPrimary.ci95 ?? [0, 0];
+    const ciStr = `[${ci[0].toFixed(4)}, ${ci[1].toFixed(4)}]`;
+    const pVal = verbatimPrimary.signFlipPValue !== undefined ? verbatimPrimary.signFlipPValue.toExponential(4) : '—';
+    lines.push(`| All-Verbatim Subset (internal negative control) | ${nVal} | ${diffStr} ${ciStr} | ${pVal} |`);
   }
   return lines.join('\n');
 }
@@ -1389,13 +1639,50 @@ function formatFailuresByFactTable(failures: Record<string, Record<string, numbe
     '| Fact ID | Failures in A | Failures in B | Failures in C | Failures in C0 | Failures in D | Failures in E_B |',
     '|:---|---:|---:|---:|---:|---:|---:|',
   ];
-  const sortedFacts = Object.keys(failures).sort();
-  for (const fId of sortedFacts) {
-    const f = failures[fId] ?? {};
-    lines.push(
-      `| ${fId} | ${f.A ?? 0} | ${f.B ?? 0} | ${f.C ?? 0} | ${f.C0 ?? 0} | ${f.D ?? 0} | ${f.E_B ?? 0} |`
-    );
+  if (!failures || Object.keys(failures).length === 0) return lines.join('\n');
+
+  const topKeys = Object.keys(failures);
+  const isConditionKeyed = topKeys.every((k) => CONDITIONS.includes(k as Condition));
+
+  if (isConditionKeyed) {
+    const factIds = new Set<string>();
+    for (const cond of CONDITIONS) {
+      const map = failures[cond] ?? {};
+      for (const fId of Object.keys(map)) factIds.add(fId);
+    }
+    const sortedFacts = [...factIds].sort();
+    for (const fId of sortedFacts) {
+      lines.push(
+        `| ${fId} | ${failures.A?.[fId] ?? 0} | ${failures.B?.[fId] ?? 0} | ${failures.C?.[fId] ?? 0} | ${failures.C0?.[fId] ?? 0} | ${failures.D?.[fId] ?? 0} | ${failures.E_B?.[fId] ?? 0} |`
+      );
+    }
+  } else {
+    const sortedFacts = topKeys.sort();
+    for (const fId of sortedFacts) {
+      const f = failures[fId] ?? {};
+      lines.push(
+        `| ${fId} | ${f.A ?? 0} | ${f.B ?? 0} | ${f.C ?? 0} | ${f.C0 ?? 0} | ${f.D ?? 0} | ${f.E_B ?? 0} |`
+      );
+    }
   }
+  return lines.join('\n');
+}
+
+function formatValidityGateSection(gate: ValidityGateResult | undefined): string {
+  if (!gate) return '_Validity gate not computed._';
+  const bvsA = gate.bVsA
+    ? `${gate.bVsA.meanDifference >= 0 ? '+' : ''}${gate.bVsA.meanDifference.toFixed(4)} [${gate.bVsA.ci95[0].toFixed(4)}, ${gate.bVsA.ci95[1].toFixed(4)}] (n=${gate.bVsA.n}, p=${gate.bVsA.signFlipPValue.toExponential(4)})`
+    : '—';
+  const lines = [
+    `> Classification: **${gate.label}** (post-hoc check: ${gate.passed ? 'PASS' : 'FAIL'})`,
+    '',
+    '| Criterion | Status | Detail |',
+    '|:---|:---:|:---|',
+    `| settingsConstant | ${gate.settingsConstant ? 'PASS' : 'FAIL'} | Request/reasoning/model/content settings constant across run |`,
+    `| sanitizerVerified | ${gate.sanitizerVerified ? 'PASS' : 'FAIL'} | No unstripped reasoning tags or sanitizer failures in stored SQL |`,
+    `| B_vs_A > 0 (95% CI > 0) | ${gate.bVsAPositiveWithCiExcludingZero ? 'PASS' : 'FAIL'} | ${bvsA} |`,
+    `| Overall (${gate.label}) | **${gate.passed ? 'PASS' : 'FAIL'}** | ${gate.reasons.length ? gate.reasons.join('; ') : 'All post-hoc validity criteria satisfied'} |`,
+  ];
   return lines.join('\n');
 }
 
@@ -1410,6 +1697,14 @@ export function markdownReport(report: any): string {
     for (const w of report.warnings) {
       lines.push(`- ${w}`);
     }
+  }
+  if (report.validityGate) {
+    lines.push(
+      '',
+      '## Validity gate (Post-Hoc)',
+      '',
+      formatValidityGateSection(report.validityGate)
+    );
   }
   lines.push(
     '',
@@ -1470,39 +1765,220 @@ export function markdownReport(report: any): string {
   return lines.join('\n') + '\n';
 }
 
+function collectDistinctFieldValues(
+  trials: Trial[],
+  provenance: Provenance,
+  key: keyof Trial & keyof Provenance
+): { distinct: string[]; missingCount: number } {
+  const values: string[] = [];
+  let missingCount = 0;
+  if (trials.length === 0) {
+    const topVal = provenance[key];
+    if (typeof topVal === 'string' && topVal.trim().length > 0) {
+      values.push(topVal.trim());
+    } else if (typeof topVal === 'number' && Number.isFinite(topVal)) {
+      values.push(String(topVal));
+    } else {
+      missingCount = 1;
+    }
+  } else {
+    for (const trial of trials) {
+      const rawVal = trial[key] ?? provenance[key];
+      if (typeof rawVal === 'string' && rawVal.trim().length > 0) {
+        values.push(rawVal.trim());
+      } else if (typeof rawVal === 'number' && Number.isFinite(rawVal)) {
+        values.push(String(rawVal));
+      } else {
+        missingCount++;
+      }
+    }
+  }
+  return {
+    distinct: Array.from(new Set(values)).sort(),
+    missingCount,
+  };
+}
+
+function loadLedgerEntry(runId?: string, ledgerPath?: string): any | undefined {
+  if (!runId) return undefined;
+  const targetPath = ledgerPath ? path.resolve(ledgerPath) : path.resolve('out/run-ledger.json');
+  if (!fs.existsSync(targetPath)) return undefined;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(targetPath, 'utf8')) as { runs?: Record<string, any> };
+    return parsed?.runs?.[runId];
+  } catch {
+    return undefined;
+  }
+}
+
+export function evaluateValidityGate(
+  trials: Trial[],
+  analysis: ReturnType<typeof analyzeTrials>,
+  provenance: Provenance = {},
+  options: BuildReportOptions = {},
+  distinctProvenanceValues: Record<string, string[]> = {}
+): ValidityGateResult {
+  const reasons: string[] = [];
+  const ledgerEntry = loadLedgerEntry(options.runId, options.ledgerPath);
+
+  // 1. settingsConstant
+  let settingsConstant = true;
+  if (typeof options.settingsConstant === 'boolean' && !options.settingsConstant) {
+    settingsConstant = false;
+    reasons.push('options.settingsConstant=false');
+  } else if (typeof provenance.settingsConstant === 'boolean' && !provenance.settingsConstant) {
+    settingsConstant = false;
+    reasons.push('provenance.settingsConstant=false');
+  }
+  if (ledgerEntry?.settings) {
+    const rchg = ledgerEntry.settings.reasoningChangedDuringRun;
+    if (typeof rchg === 'string' && rchg !== 'none') {
+      settingsConstant = false;
+      reasons.push(`reasoningChangedDuringRun=${rchg}`);
+    }
+    const maxTokStr = String(ledgerEntry.settings.maxTokens ?? '');
+    if (/(->|changed|mixed|varied|multiple)/i.test(maxTokStr)) {
+      settingsConstant = false;
+      reasons.push(`maxTokens changed mid-run (${maxTokStr})`);
+    }
+  }
+  const settingKeys = [
+    'provider',
+    'baseUrl',
+    'requestedModel',
+    'returnedModel',
+    'oracleSha256',
+    'tasksSha256',
+    'factsSha256',
+    'memorySha256',
+    ...HINT_HASH_FIELDS,
+  ] as const;
+  for (const key of settingKeys) {
+    const vals =
+      distinctProvenanceValues[key] ??
+      collectDistinctFieldValues(trials, provenance, key).distinct;
+    if (vals.length > 1) {
+      settingsConstant = false;
+      reasons.push(`${key} had ${vals.length} distinct values`);
+    }
+  }
+  for (const trial of trials) {
+    const req = trial.requestedModel ?? provenance.requestedModel;
+    const ret = trial.returnedModel ?? provenance.returnedModel;
+    if (req && ret && req !== ret) {
+      settingsConstant = false;
+      reasons.push(`requestedModel !== returnedModel (${req} !== ${ret})`);
+      break;
+    }
+  }
+  const trialMaxTokens = new Set(
+    trials.map((t) => t.maxTokens).filter((v): v is number => typeof v === 'number' && Number.isFinite(v))
+  );
+  if (trialMaxTokens.size > 1) {
+    settingsConstant = false;
+    reasons.push(`trial maxTokens varied (${[...trialMaxTokens].sort().join(', ')})`);
+  }
+  const trialReasoningModes = new Set(
+    trials.map((t) => t.reasoningMode).filter((v): v is string => typeof v === 'string' && v.trim().length > 0)
+  );
+  if (trialReasoningModes.size > 1) {
+    settingsConstant = false;
+    reasons.push(`trial reasoningMode varied (${[...trialReasoningModes].sort().join(', ')})`);
+  }
+
+  // 2. sanitizerVerified
+  let sanitizerVerified = true;
+  if (typeof options.sanitizerVerified === 'boolean' && !options.sanitizerVerified) {
+    sanitizerVerified = false;
+    reasons.push('options.sanitizerVerified=false');
+  } else if (typeof provenance.sanitizerVerified === 'boolean' && !provenance.sanitizerVerified) {
+    sanitizerVerified = false;
+    reasons.push('provenance.sanitizerVerified=false');
+  }
+  if (
+    typeof ledgerEntry?.status === 'string' &&
+    /(invalid_sanitization|reasoning-tag|tag-leak)/i.test(ledgerEntry.status)
+  ) {
+    sanitizerVerified = false;
+    reasons.push(`ledger status=${ledgerEntry.status}`);
+  }
+  let leakedTagTrials = 0;
+  let tagErrorTrials = 0;
+  for (const trial of trials) {
+    if ((trial.generationStatus ?? 'ok') !== 'ok') continue;
+    if (typeof trial.tagError === 'string' && trial.tagError.trim().length > 0) {
+      tagErrorTrials++;
+    }
+    if (typeof trial.generatedSql === 'string' && trial.generatedSql.length > 0) {
+      const check = sanitizeSqlOutput(trial.generatedSql);
+      if (check.foundReasoningTags) {
+        leakedTagTrials++;
+      }
+    }
+  }
+  if (leakedTagTrials > 0 || tagErrorTrials > 0) {
+    sanitizerVerified = false;
+    reasons.push(
+      `sanitizer check failed (leakedTagTrials=${leakedTagTrials}, tagErrorTrials=${tagErrorTrials})`
+    );
+  }
+
+  // 3. B_vs_A > 0 with 95% CI excluding zero
+  const bVsAComp = analysis.comparisons?.B_vs_A?.primary ?? null;
+  const bVsA = bVsAComp
+    ? {
+        n: analysis.comparisons.B_vs_A.n as number,
+        meanDifference: bVsAComp.meanDifference as number,
+        ci95: bVsAComp.ci95 as [number, number],
+        signFlipPValue: bVsAComp.signFlipPValue as number,
+      }
+    : null;
+  const bVsAPositiveWithCiExcludingZero = Boolean(
+    bVsA &&
+      bVsA.n > 0 &&
+      bVsA.meanDifference > 0 &&
+      bVsA.ci95[0] > 0 &&
+      bVsA.ci95[1] > 0
+  );
+  if (!bVsAPositiveWithCiExcludingZero) {
+    reasons.push(
+      bVsA && bVsA.n > 0
+        ? `B_vs_A=${bVsA.meanDifference.toFixed(4)} [${bVsA.ci95[0].toFixed(4)}, ${bVsA.ci95[1].toFixed(4)}] does not exclude 0 positively`
+        : 'B_vs_A has n=0'
+    );
+  }
+
+  return {
+    postHoc: true,
+    label: 'post-hoc validity gate',
+    settingsConstant,
+    sanitizerVerified,
+    bVsAPositiveWithCiExcludingZero,
+    bVsA,
+    passed: settingsConstant && sanitizerVerified && bVsAPositiveWithCiExcludingZero,
+    reasons,
+  };
+}
+
 export function buildReport(
   trials: Trial[],
   provenance: Provenance = {},
-  lessons?: { memory: unknown; facts: unknown }
+  lessons?: { memory: unknown; facts: unknown },
+  options: BuildReportOptions = {}
 ) {
   const warnings: string[] = [];
+  const notes: string[] = [];
   let provenanced = true;
   const resolvedProvenance: Record<string, unknown> = { ...provenance };
   const distinctProvenanceValues: Record<string, string[]> = {};
 
-  for (const key of PROVENANCE_FIELDS) {
-    const values: string[] = [];
-    let missingCount = 0;
-    if (trials.length === 0) {
-      const topVal = provenance[key];
-      if (typeof topVal === 'string' && topVal.trim().length > 0) {
-        values.push(topVal.trim());
-      } else {
-        missingCount = 1;
-      }
-    } else {
-      for (const trial of trials) {
-        const rawVal = trial[key] ?? provenance[key];
-        if (typeof rawVal === 'string' && rawVal.trim().length > 0) {
-          values.push(rawVal.trim());
-        } else {
-          missingCount++;
-        }
-      }
-    }
-    const distinct = Array.from(new Set(values)).sort();
-    distinctProvenanceValues[key] = distinct;
+  const hasContentHashFields =
+    trials.some((t) => Boolean(t.oracleSha256 || t.tasksSha256 || t.memorySha256)) ||
+    Boolean(provenance.oracleSha256 || provenance.tasksSha256 || provenance.memorySha256);
 
+  const checkRequiredKey = (key: keyof Trial & keyof Provenance) => {
+    const { distinct, missingCount } = collectDistinctFieldValues(trials, provenance, key);
+    distinctProvenanceValues[key] = distinct;
     if (distinct.length === 0 || missingCount > 0) {
       provenanced = false;
       warnings.push(
@@ -1517,6 +1993,60 @@ export function buildReport(
       );
     } else {
       resolvedProvenance[key] = distinct[0];
+    }
+  };
+
+  for (const key of EXECUTION_PROVENANCE_FIELDS) {
+    checkRequiredKey(key);
+  }
+
+  // Record oracleCommit distinct values; ignore oracleCommit drift when all 4 content hashes match.
+  const oracleCommitCheck = collectDistinctFieldValues(trials, provenance, 'oracleCommit');
+  distinctProvenanceValues.oracleCommit = oracleCommitCheck.distinct;
+
+  if (hasContentHashFields) {
+    for (const key of FILE_HASH_FIELDS) {
+      checkRequiredKey(key);
+    }
+    if (oracleCommitCheck.distinct.length === 1 && oracleCommitCheck.missingCount === 0) {
+      resolvedProvenance.oracleCommit = oracleCommitCheck.distinct[0];
+    } else if (oracleCommitCheck.distinct.length > 1) {
+      resolvedProvenance.oracleCommitDriftIgnored = true;
+      notes.push(
+        `Ignored oracleCommit drift (${oracleCommitCheck.distinct.length} commits) because content hashes (oracleSha256, tasksSha256, factsSha256, memorySha256) are uniform.`
+      );
+    }
+  } else {
+    // Legacy synthetic inputs providing factsSha256 + oracleCommit without the 3 additional file hashes
+    checkRequiredKey('factsSha256');
+    checkRequiredKey('oracleCommit');
+  }
+
+  for (const hintKey of HINT_HASH_FIELDS) {
+    const { distinct, missingCount } = collectDistinctFieldValues(trials, provenance, hintKey);
+    if (distinct.length > 0) {
+      distinctProvenanceValues[hintKey] = distinct;
+      if (missingCount > 0) {
+        provenanced = false;
+        warnings.push(
+          `Provenance field "${hintKey}" is missing on ${missingCount}/${trials.length} trial(s) (distinct values: ${distinct.join(', ')}).`
+        );
+      } else if (distinct.length > 1) {
+        provenanced = false;
+        warnings.push(
+          `Provenance field "${hintKey}" has multiple distinct values (${distinct.length}): ${distinct.join(', ')}.`
+        );
+      } else {
+        resolvedProvenance[hintKey] = distinct[0];
+      }
+    }
+  }
+
+  const execShaCheck = collectDistinctFieldValues(trials, provenance, 'executorSha256');
+  if (execShaCheck.distinct.length > 0) {
+    distinctProvenanceValues.executorSha256 = execShaCheck.distinct;
+    if (execShaCheck.distinct.length === 1 && execShaCheck.missingCount === 0) {
+      resolvedProvenance.executorSha256 = execShaCheck.distinct[0];
     }
   }
 
@@ -1544,13 +2074,23 @@ export function buildReport(
   }
 
   const analysis = analyzeTrials(trials);
+  const validityGate = evaluateValidityGate(
+    trials,
+    analysis,
+    resolvedProvenance as Provenance,
+    options,
+    distinctProvenanceValues
+  );
+
   const report: any = {
     provenanced,
     provenance: {
       ...resolvedProvenance,
       distinctValues: distinctProvenanceValues,
     },
+    notes,
     warnings,
+    validityGate,
     generationIndependenceNote: analysis.generationIndependenceNote,
     analysis,
     cellICC: analysis.cellICC,
@@ -1580,13 +2120,32 @@ export function buildReport(
   return report;
 }
 
+function inferRunIdFromCheckpointPath(checkpointPath: string): string | undefined {
+  const parts = path.resolve(checkpointPath).split(path.sep);
+  const runsIdx = parts.lastIndexOf('runs');
+  if (runsIdx >= 0 && runsIdx + 1 < parts.length - 1) {
+    return parts[runsIdx + 1];
+  }
+  const base = path.basename(path.dirname(checkpointPath));
+  if (base.startsWith('run-')) {
+    return base.slice(4);
+  }
+  return undefined;
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]).endsWith('analyze-ablation-v2.ts')) {
   const args = parseArgs(process.argv.slice(2));
   const checkpointPayload = JSON.parse(fs.readFileSync(args.checkpoint, 'utf8')) as
     | Trial[]
-    | { trials: Trial[]; provenance?: Provenance };
+    | { trials: Trial[]; provenance?: Provenance; metadata?: Provenance; runMetadata?: Provenance };
   const checkpoint = Array.isArray(checkpointPayload) ? checkpointPayload : checkpointPayload.trials;
-  const provenance = Array.isArray(checkpointPayload) ? {} : checkpointPayload.provenance ?? {};
+  const provenance: Provenance = Array.isArray(checkpointPayload)
+    ? {}
+    : {
+        ...(checkpointPayload.metadata ?? {}),
+        ...(checkpointPayload.runMetadata ?? {}),
+        ...(checkpointPayload.provenance ?? {}),
+      };
   const memoryPath = path.resolve('.axiom-state/memory.json');
   const factsPath = path.resolve('fixtures/task-v2/facts.json');
   const lessons =
@@ -1596,7 +2155,8 @@ if (process.argv[1] && path.resolve(process.argv[1]).endsWith('analyze-ablation-
           facts: JSON.parse(fs.readFileSync(factsPath, 'utf8')) as unknown,
         }
       : undefined;
-  const report = buildReport(checkpoint, provenance, lessons);
+  const runId = args.runId ?? inferRunIdFromCheckpointPath(args.checkpoint);
+  const report = buildReport(checkpoint, provenance, lessons, { runId });
   fs.mkdirSync(path.dirname(args.out), { recursive: true });
   fs.writeFileSync(args.out, JSON.stringify(report, null, 2) + '\n', 'utf8');
   fs.writeFileSync(args.out.replace(/\.json$/i, '.md'), markdownReport(report), 'utf8');

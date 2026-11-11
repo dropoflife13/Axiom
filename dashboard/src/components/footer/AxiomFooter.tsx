@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { AxiomLogo } from '../AxiomLogo';
-import './footer.css';
 
 export function AxiomFooter() {
   const scrollTo = (id: string) => {

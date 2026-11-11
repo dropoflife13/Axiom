@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 import { assertBudgetAvailable, BUDGET_GUARD } from './guardrails.js';
 dotenv.config();
@@ -16,9 +17,17 @@ export const ALLOWED_EXECUTOR_MODELS = [
   'google/gemma-4-31b-it',
   'nvidia/nemotron-3-ultra-550b-a55b',
   'qwen/qwen3.8-27b',
-  'meta-llama/llama-3.3-70b-instruct',
+  'xingchen-agi/xing4.0-29b-a4b:free',
   'z-ai/glm-5.3-flash',
   'liquid/lfm-3-1.7b',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemma-4-31b-it',
+  'gemma-4-26b-it',
+  'gemma-4-26b-a4b-it',
+  'nvidia/nemotron-3.5-lightning:free',
+  'openai/gpt-oss-120b',
 ] as const;
 export const REQUIRED_MODELS = ALLOWED_EXECUTOR_MODELS;
 export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
@@ -26,7 +35,38 @@ export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
 export const PROVIDER = 'openrouter';
 
 export function resolveEndpoint(model: string) {
-  const isGroq = model === 'qwen/qwen3.8-27b' || model.startsWith('qwen/');
+  const isKilo =
+    model === 'nvidia/nemotron-3.5-lightning:free' ||
+    model.startsWith('kilo-') ||
+    model === process.env.KILO_NEMOTRON_MODEL ||
+    model === process.env.KILO_CODE_MODEL ||
+    model === process.env.KILO_AUTO_MODEL;
+  if (isKilo) {
+    const apiKey = process.env.KILO_API_KEY || '';
+    const baseUrl = process.env.KILO_BASE_URL || 'https://api.kilo.ai/api/gateway';
+    const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+    return { provider: 'kilo', apiKey, baseUrl, chatUrl };
+  }
+  const isGemini =
+    model === 'gemini-3.6-flash' ||
+    model.startsWith('gemini-') ||
+    model.startsWith('gemma-');
+  if (isGemini) {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_key_here') {
+      throw new Error('GEMINI_API_KEY is not set or is still the placeholder. Please set a valid key in .env');
+    }
+    const baseUrl = process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta/openai/';
+    const chatUrl = `${baseUrl.replace(/\/+$/, '')}/chat/completions`;
+    return { provider: 'gemini', apiKey, baseUrl, chatUrl };
+  }
+  const isGroq =
+    model === 'openai/gpt-oss-120b' ||
+    model.startsWith('openai/gpt-oss') ||
+    model === 'qwen/qwen3.8-27b' ||
+    model.startsWith('qwen/') ||
+    model.startsWith('llama') ||
+    model.startsWith('meta-llama/');
   if (isGroq) {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === 'your_key_here') {
@@ -59,7 +99,12 @@ export function resolveEndpoint(model: string) {
 }
 
 export function resolveExecutorModel(explicitModel?: string): string {
-  const resolved = (explicitModel ?? process.env.NVIDIA_EXECUTOR_MODEL ?? '').trim();
+  const resolved = (
+    explicitModel ??
+    process.env.NVIDIA_EXECUTOR_MODEL ??
+    process.env.GEMINI_EXECUTOR_MODEL ??
+    ''
+  ).trim();
   if (!resolved) {
     throw new Error(
       `[ABORT_NON_RETRYABLE] Executor model is an explicit required setting with no silent default. Set NVIDIA_EXECUTOR_MODEL in the environment or pass options.model. Allowed models: ${ALLOWED_EXECUTOR_MODELS.join(', ')}.`
@@ -85,8 +130,17 @@ export function assertModelMatch(requestedModel: string, returnedModel: string):
       `[ABORT_NON_RETRYABLE] Requested model "${requestedModel}" does not match configured model "${configured}".`
     );
   }
+  const normReturned = returnedModel.replace(/^models\//, '');
+  const baseRequested = requestedModel.replace(/:free$/, '');
+  const baseReturned = normReturned.replace(/:free$/, '');
+  const isGemmaAlias =
+    requestedModel === 'gemma-4-26b-it' &&
+    (returnedModel === 'gemma-4-26b-a4b-it' || normReturned === 'gemma-4-26b-a4b-it');
   if (
     returnedModel !== requestedModel &&
+    normReturned !== requestedModel &&
+    baseReturned !== baseRequested &&
+    !isGemmaAlias &&
     returnedModel !== `${requestedModel}:free` &&
     !returnedModel.startsWith(`${requestedModel}:`)
   ) {
@@ -94,6 +148,12 @@ export function assertModelMatch(requestedModel: string, returnedModel: string):
       `[ABORT_NON_RETRYABLE] Returned model "${returnedModel}" does not match requested model "${requestedModel}".`
     );
   }
+}
+
+const EXECUTOR_SELF_PATH = fileURLToPath(import.meta.url);
+
+export function getExecutorSha256(filePath: string = EXECUTOR_SELF_PATH): string {
+  return crypto.createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }
 
 export function getProviderProvenance(
@@ -109,10 +169,81 @@ export function getProviderProvenance(
     returnedModel,
     oracleCommit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
     factsSha256: crypto.createHash('sha256').update(fs.readFileSync(factsPath)).digest('hex'),
+    executorSha256: getExecutorSha256(),
+  };
+}
+
+export interface ModelProfile {
+  model: string;
+  reasoningMode: 'off' | 'minimal' | 'low' | 'provider-default';
+  reasoningLabel: string;
+  maxTokens: number;
+  timeoutMs: number;
+  cacheKeySuffix?: string;
+  extraRequestBody: Record<string, unknown>;
+}
+
+export function getModelProfile(model: string): ModelProfile {
+  const effectiveModel = normalizeModelName(model);
+  if (
+    effectiveModel === 'gemma-4-26b-a4b-it' ||
+    effectiveModel === 'gemma-4-31b-it'
+  ) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'minimal',
+      reasoningLabel: 'thinking_level=minimal (extra_body.google.thinking_config)',
+      maxTokens: 8192,
+      timeoutMs: 180_000,
+      cacheKeySuffix: '|profile=thinking_level:minimal',
+      extraRequestBody: {
+        extra_body: {
+          google: {
+            thinking_config: {
+              thinking_level: 'minimal',
+            },
+          },
+        },
+      },
+    };
+  }
+  if (effectiveModel.includes('lightning')) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'off',
+      reasoningLabel: 'reasoning_effort=none, enable_thinking=false',
+      maxTokens: 16384,
+      timeoutMs: 180_000,
+      extraRequestBody: {
+        reasoning_effort: 'none',
+        chat_template_kwargs: { enable_thinking: false },
+      },
+    };
+  }
+  if (effectiveModel.includes('glm')) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'low',
+      reasoningLabel: 'reasoning_effort=low',
+      maxTokens: 8192,
+      timeoutMs: 180_000,
+      extraRequestBody: {
+        reasoning_effort: 'low',
+      },
+    };
+  }
+  return {
+    model: effectiveModel,
+    reasoningMode: 'provider-default',
+    reasoningLabel: 'provider-default',
+    maxTokens: 8192,
+    timeoutMs: 180_000,
+    extraRequestBody: {},
   };
 }
 
 export function normalizeModelName(m: string): string {
+  if (m === 'gemma-4-26b-it') return 'gemma-4-26b-a4b-it';
   if (m === 'gemini-3.8') return 'gemini-3.8-flash';
   if (m === 'gemini-3.5') return 'gemini-3.5-flash';
   return m;
@@ -142,10 +273,264 @@ export function computeExecutorCacheKey(
   temperature: number | string
 ): string {
   const endpoint = resolveEndpoint(model);
+  const profile = getModelProfile(model);
+  const suffix = profile.cacheKeySuffix ?? '';
   return crypto
     .createHash('sha256')
-    .update(`${endpoint.baseUrl}${model}${system}${user}${temperature}`)
+    .update(`${endpoint.baseUrl}${model}${system}${user}${temperature}${suffix}`)
     .digest('hex');
+}
+
+export type ReasoningTagError =
+  | 'unclosed_tag'
+  | 'unmatched_closing_tag'
+  | 'mismatched_closing_tag'
+  | 'leftover_tag';
+
+export interface SanitizeTextResult {
+  sanitizedText: string;
+  tagError: ReasoningTagError | null;
+  strippedBlocks: number;
+  foundReasoningTags: boolean;
+}
+
+export interface SanitizeSqlResult {
+  sanitizedSql: string;
+  tagError: ReasoningTagError | null;
+  strippedBlocks: number;
+  foundReasoningTags: boolean;
+}
+
+function sha256String(text: string): string {
+  return crypto.createHash('sha256').update(text).digest('hex');
+}
+
+function tryConsumeSqlLiteralOrComment(text: string, i: number): number {
+  const len = text.length;
+  const ch = text[i];
+
+  // SQL line comment: -- ... \n
+  if (ch === '-' && text[i + 1] === '-') {
+    const nl = text.indexOf('\n', i + 2);
+    return nl === -1 ? len : nl + 1;
+  }
+
+  // SQL block comment: /* ... */ (with PostgreSQL nested block comment support)
+  if (ch === '/' && text[i + 1] === '*') {
+    let depth = 1;
+    let j = i + 2;
+    while (j < len && depth > 0) {
+      if (text[j] === '/' && text[j + 1] === '*') {
+        depth++;
+        j += 2;
+      } else if (text[j] === '*' && text[j + 1] === '/') {
+        depth--;
+        j += 2;
+      } else {
+        j++;
+      }
+    }
+    return depth === 0 ? j : -1;
+  }
+
+  // SQL single-quoted string literal '...' or E'...'
+  if (ch === '\'') {
+    const isEscape =
+      i > 0 &&
+      (text[i - 1] === 'e' || text[i - 1] === 'E') &&
+      (i === 1 || !/[A-Za-z0-9_$]/.test(text[i - 2]));
+    let j = i + 1;
+    while (j < len) {
+      if (isEscape && text[j] === '\\') {
+        j += 2;
+        continue;
+      }
+      if (text[j] === '\'') {
+        if (text[j + 1] === '\'') {
+          j += 2;
+          continue;
+        }
+        return j + 1;
+      }
+      j++;
+    }
+    return -1;
+  }
+
+  // SQL double-quoted identifier "..." on single line
+  if (ch === '"') {
+    let j = i + 1;
+    while (j < len) {
+      if (text[j] === '\n' || text[j] === '\r') {
+        return -1;
+      }
+      if (text[j] === '"') {
+        if (text[j + 1] === '"') {
+          j += 2;
+          continue;
+        }
+        return j + 1;
+      }
+      j++;
+    }
+    return -1;
+  }
+
+  // PostgreSQL dollar-quoted string $tag$...$tag$
+  if (ch === '$') {
+    const m = text.slice(i).match(/^\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$/);
+    if (m) {
+      const delim = m[0];
+      const closeIdx = text.indexOf(delim, i + delim.length);
+      return closeIdx === -1 ? -1 : closeIdx + delim.length;
+    }
+  }
+
+  return -1;
+}
+
+/**
+ * Strips well-formed closed <think>...</think> and <thought>...</thought> reasoning
+ * blocks (including nested blocks). When sqlAware=true (default), SQL comments and
+ * literals at top level are preserved untouched. Unclosed, unmatched, or leftover tags
+ * are preserved (never stripped to a silent empty string) and flagged via `tagError`.
+ */
+export function sanitizeReasoningTags(
+  rawContent: string,
+  options?: { sqlAware?: boolean }
+): SanitizeTextResult {
+  const sqlAware = options?.sqlAware ?? true;
+  const stack: Array<{ tag: 'think' | 'thought'; startOffset: number }> = [];
+  let out = '';
+  let tagError: ReasoningTagError | null = null;
+  let strippedBlocks = 0;
+  let foundReasoningTags = false;
+  let i = 0;
+
+  while (i < rawContent.length) {
+    if (stack.length === 0) {
+      if (sqlAware) {
+        const consumedEnd = tryConsumeSqlLiteralOrComment(rawContent, i);
+        if (consumedEnd > i) {
+          out += rawContent.slice(i, consumedEnd);
+          i = consumedEnd;
+          continue;
+        }
+      }
+
+      if (rawContent[i] === '<') {
+        const slice = rawContent.slice(i);
+        const openMatch = slice.match(/^<(think|thought)(?:\s+[^>]*)?>/i);
+        if (openMatch) {
+          foundReasoningTags = true;
+          stack.push({
+            tag: openMatch[1].toLowerCase() as 'think' | 'thought',
+            startOffset: i,
+          });
+          i += openMatch[0].length;
+          continue;
+        }
+
+        const closeMatch = slice.match(/^<\/(think|thought)(?:\s+[^>]*)?>/i);
+        if (closeMatch) {
+          foundReasoningTags = true;
+          tagError = tagError ?? 'unmatched_closing_tag';
+          out += closeMatch[0];
+          i += closeMatch[0].length;
+          continue;
+        }
+
+        const partialMatch = slice.match(/^<\/?(?:think|thought)(?=[\s/>]|$)/i);
+        if (partialMatch) {
+          foundReasoningTags = true;
+          tagError = tagError ?? 'leftover_tag';
+          out += partialMatch[0];
+          i += partialMatch[0].length;
+          continue;
+        }
+      }
+
+      out += rawContent[i];
+      i++;
+    } else {
+      if (rawContent[i] === '<') {
+        const slice = rawContent.slice(i);
+        const openMatch = slice.match(/^<(think|thought)(?:\s+[^>]*)?>/i);
+        if (openMatch) {
+          stack.push({
+            tag: openMatch[1].toLowerCase() as 'think' | 'thought',
+            startOffset: i,
+          });
+          i += openMatch[0].length;
+          continue;
+        }
+
+        const closeMatch = slice.match(/^<\/(think|thought)(?:\s+[^>]*)?>/i);
+        if (closeMatch) {
+          const closeTag = closeMatch[1].toLowerCase() as 'think' | 'thought';
+          const top = stack[stack.length - 1];
+          if (top.tag === closeTag) {
+            stack.pop();
+            i += closeMatch[0].length;
+            if (stack.length === 0) {
+              strippedBlocks++;
+            }
+            continue;
+          } else {
+            tagError = tagError ?? 'mismatched_closing_tag';
+            const outermost = stack[0].startOffset;
+            stack.length = 0;
+            out += rawContent.slice(outermost, i + closeMatch[0].length);
+            i += closeMatch[0].length;
+            continue;
+          }
+        }
+      }
+      i++;
+    }
+  }
+
+  if (stack.length > 0) {
+    tagError = tagError ?? 'unclosed_tag';
+    out += rawContent.slice(stack[0].startOffset);
+  }
+
+  return {
+    sanitizedText: out,
+    tagError,
+    strippedBlocks,
+    foundReasoningTags,
+  };
+}
+
+export function sanitizeSqlOutput(rawContent: string): SanitizeSqlResult {
+  const pass1 = sanitizeReasoningTags(rawContent, { sqlAware: true });
+  if (pass1.tagError !== null) {
+    return {
+      sanitizedSql: pass1.sanitizedText.trim(),
+      tagError: pass1.tagError,
+      strippedBlocks: pass1.strippedBlocks,
+      foundReasoningTags: pass1.foundReasoningTags,
+    };
+  }
+
+  const candidate = stripSqlFences(pass1.sanitizedText);
+  const pass2 = sanitizeReasoningTags(candidate, { sqlAware: true });
+  if (pass2.tagError !== null || pass2.strippedBlocks > 0) {
+    return {
+      sanitizedSql: pass2.sanitizedText.trim(),
+      tagError: pass2.tagError ?? 'leftover_tag',
+      strippedBlocks: pass1.strippedBlocks + pass2.strippedBlocks,
+      foundReasoningTags: pass1.foundReasoningTags || pass2.foundReasoningTags,
+    };
+  }
+
+  return {
+    sanitizedSql: candidate,
+    tagError: null,
+    strippedBlocks: pass1.strippedBlocks,
+    foundReasoningTags: pass1.foundReasoningTags,
+  };
 }
 
 function finalMessageContent(choice: any, context: string): string {
@@ -153,12 +538,14 @@ function finalMessageContent(choice: any, context: string): string {
   if (finishReason === 'length') {
     throw new Error(`[ABORT_NON_RETRYABLE] ${context} response stopped at token limit (finish_reason=length).`);
   }
-  // Ignore separate reasoning fields (e.g. choice.message.reasoning_content) and strip any <think> blocks
   const rawContent = typeof choice?.message?.content === 'string' ? choice.message.content : '';
-  const content = rawContent
-    .replace(/<think>[\s\S]*?<\/think>/gi, '')
-    .replace(/<think>[\s\S]*$/gi, '')
-    .trim();
+  const sanitized = sanitizeReasoningTags(rawContent, { sqlAware: false });
+  if (sanitized.tagError) {
+    throw new Error(
+      `[ABORT_NON_RETRYABLE] ${context} response contained malformed/unclosed reasoning tag (${sanitized.tagError}).`
+    );
+  }
+  const content = sanitized.sanitizedText.trim();
   if (!content) {
     throw new Error(`[ABORT_NON_RETRYABLE] ${context} response contained no final content.`);
   }
@@ -232,6 +619,7 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
   }
 
   const effectiveModel = normalizeModelName(model);
+  const profile = getModelProfile(model);
   const fullPrompt = `${systemPrompt}\n${task}`;
   const abortSignal = assertBudgetAvailable('EXECUTOR', fullPrompt.length);
 
@@ -244,7 +632,9 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${endpoint.apiKey}`,
+          ...(endpoint.apiKey && endpoint.apiKey !== 'your_key_here'
+            ? { Authorization: `Bearer ${endpoint.apiKey}` }
+            : {}),
         },
         body: JSON.stringify({
           model: effectiveModel,
@@ -253,8 +643,8 @@ ${lesson ? `\nCRITICAL LESSON FROM PREVIOUS FAILURE:\n${lesson}` : ''}`;
             { role: 'user', content: task },
           ],
           temperature,
-          max_tokens: 8192,
-          ...(effectiveModel.includes('glm') ? { reasoning_effort: 'low' } : {}),
+          max_tokens: profile.maxTokens,
+          ...profile.extraRequestBody,
         }),
         signal: abortSignal,
       });
@@ -323,6 +713,10 @@ export type GenerationStatus = 'ok' | 'empty' | 'length' | 'other';
 export interface SqlExecutorResult {
   sql: string;
   rawResponse: string;
+  rawSha256?: string;
+  sanitizedSql?: string;
+  sanitizedSha256?: string;
+  tagError?: ReasoningTagError | null;
   fromCache?: boolean;
   cacheKey?: string;
   requestedModel: string;
@@ -339,7 +733,8 @@ export interface SqlExecutorResult {
 export function classifyGenerationStatus(
   finishReason?: string,
   sql?: string,
-  explicitStatus?: GenerationStatus
+  explicitStatus?: GenerationStatus,
+  tagError?: ReasoningTagError | null
 ): GenerationStatus {
   if (
     explicitStatus === 'ok' ||
@@ -352,6 +747,9 @@ export function classifyGenerationStatus(
   const reason = (finishReason ?? '').trim().toLowerCase();
   if (reason === 'length' || reason === 'max_tokens') {
     return 'length';
+  }
+  if (tagError) {
+    return 'other';
   }
   if (reason === 'empty') {
     return 'empty';
@@ -452,24 +850,36 @@ export async function executeSqlWithPolicy(
   try {
     const res = await executorFn(taskPrompt, table, features, lesson, options);
     assertModelMatch(res.requestedModel, res.returnedModel);
+    const candidateSanitized = res.sanitizedSql ?? res.sql;
     const generationStatus = classifyGenerationStatus(
       res.finishReason,
-      res.sql,
-      res.generationStatus
+      candidateSanitized,
+      res.generationStatus,
+      res.tagError
     );
     const sql = generationStatus === 'ok' ? res.sql : '';
+    const rawResponse = res.rawResponse ?? '';
     return {
       ...res,
       sql,
+      rawResponse,
+      rawSha256: res.rawSha256 ?? sha256String(rawResponse),
+      sanitizedSql: candidateSanitized,
+      sanitizedSha256: res.sanitizedSha256 ?? sha256String(candidateSanitized),
       generationStatus,
     };
   } catch (err) {
     const coerced = coerceDeterministicGenerationFailure(err, requestedModel);
     if (coerced) {
       assertModelMatch(coerced.requestedModel, coerced.returnedModel);
+      const rawResponse = coerced.rawResponse ?? '';
       return {
         ...coerced,
         sql: '',
+        rawResponse,
+        rawSha256: coerced.rawSha256 ?? sha256String(rawResponse),
+        sanitizedSql: coerced.sanitizedSql ?? '',
+        sanitizedSha256: coerced.sanitizedSha256 ?? sha256String(coerced.sanitizedSql ?? ''),
         generationStatus: coerced.generationStatus ?? 'other',
       };
     }
@@ -487,6 +897,8 @@ export function stripSqlFences(raw: string): string {
   cleaned = cleaned.replace(/\r?\n?```\s*$/i, '');
   return cleaned.trim();
 }
+
+export const SQL_GENERATION_MAX_RETRIES = 3;
 
 export async function generateSqlMigration(
   taskPrompt: string,
@@ -527,6 +939,7 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       ) {
         assertModelMatch(cached.requestedModel, cached.returnedModel);
         let usage: SqlExecutorResult['usage'] | undefined;
+        let cachedRawContent: string | undefined;
         try {
           const parsedRaw = JSON.parse(cached.rawResponse);
           if (parsedRaw?.usage) {
@@ -536,17 +949,33 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
               totalTokens: parsedRaw.usage.total_tokens ?? 0,
             };
           }
+          if (typeof parsedRaw?.choices?.[0]?.message?.content === 'string') {
+            cachedRawContent = parsedRaw.choices[0].message.content;
+          }
         } catch {
           // ignore
         }
+        const sanitizedFromCache = sanitizeSqlOutput(
+          cachedRawContent !== undefined ? cachedRawContent : cached.sql
+        );
+        const explicitCachedStatus =
+          cached.generationStatus === 'length' || cached.generationStatus === 'other'
+            ? cached.generationStatus
+            : undefined;
         const cachedStatus = classifyGenerationStatus(
           cached.finishReason,
-          cached.sql,
-          cached.generationStatus
+          sanitizedFromCache.sanitizedSql,
+          explicitCachedStatus,
+          sanitizedFromCache.tagError
         );
+        const finalSql = cachedStatus === 'ok' ? sanitizedFromCache.sanitizedSql : '';
         return {
-          sql: cachedStatus === 'ok' ? cached.sql : '',
+          sql: finalSql,
           rawResponse: cached.rawResponse,
+          rawSha256: cached.rawSha256 ?? sha256String(cached.rawResponse),
+          sanitizedSql: sanitizedFromCache.sanitizedSql,
+          sanitizedSha256: sha256String(sanitizedFromCache.sanitizedSql),
+          tagError: sanitizedFromCache.tagError,
           fromCache: true,
           cacheKey,
           requestedModel: cached.requestedModel,
@@ -565,20 +994,26 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
   }
 
   const effectiveModel = normalizeModelName(model);
+  const profile = getModelProfile(model);
   const fullPrompt = `${systemPrompt}\n${userPrompt}`;
   assertBudgetAvailable('EXECUTOR', fullPrompt.length);
 
-  const MAX_RETRIES = 50;
+  // Cap retries at 3 so repeated 180s timeouts or 5xx errors fail after 3 attempts.
+  const MAX_RETRIES = SQL_GENERATION_MAX_RETRIES;
+  const MAX_RATE_LIMIT_RETRIES = 50;
   let attempt = 0;
+  let rateLimitAttempts = 0;
 
   while (attempt < MAX_RETRIES) {
     try {
-      const reqSignal = AbortSignal.timeout(BUDGET_GUARD.callTimeoutMs);
+      const reqSignal = AbortSignal.timeout(Math.max(BUDGET_GUARD.callTimeoutMs, profile.timeoutMs));
       const response = await fetch(endpoint.chatUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${endpoint.apiKey}`,
+          ...(endpoint.apiKey && endpoint.apiKey !== 'your_key_here'
+            ? { Authorization: `Bearer ${endpoint.apiKey}` }
+            : {}),
         },
         body: JSON.stringify({
           model: effectiveModel,
@@ -587,25 +1022,28 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
             { role: 'user', content: userPrompt },
           ],
           temperature,
-          max_tokens: 8192,
-          ...(effectiveModel.includes('glm') ? { reasoning_effort: 'low' } : {}),
+          max_tokens: profile.maxTokens,
+          ...profile.extraRequestBody,
         }),
         signal: reqSignal,
       });
 
       if (response.status === 429 || response.status === 503) {
+        rateLimitAttempts++;
+        if (rateLimitAttempts >= MAX_RATE_LIMIT_RETRIES) {
+          throw new Error(`[ABORT_NON_RETRYABLE] Exceeded ${MAX_RATE_LIMIT_RETRIES} rate limit backoff attempts.`);
+        }
         const retryAfterHeader = response.headers.get('retry-after');
-        let delaySec = 10 + attempt * 5;
+        let delaySec = 10 + rateLimitAttempts * 5;
         if (retryAfterHeader) {
           const parsed = parseFloat(retryAfterHeader);
           if (!isNaN(parsed) && parsed > 0) delaySec = Math.max(delaySec, parsed);
         }
         const waitSec = Math.min(Math.ceil(delaySec) + Math.random() * 2, 60);
         console.warn(
-          `[Executor] ${response.status === 429 ? 'Rate limited (429)' : 'High demand (503)'} on attempt ${attempt + 1}/${MAX_RETRIES}. Backing off for ${waitSec.toFixed(1)}s...`
+          `[Executor] ${response.status === 429 ? 'Rate limited (429)' : 'High demand (503)'} on attempt ${rateLimitAttempts}/${MAX_RATE_LIMIT_RETRIES}. Backing off for ${waitSec.toFixed(1)}s...`
         );
         await new Promise((r) => setTimeout(r, waitSec * 1000));
-        attempt++;
         continue;
       }
 
@@ -621,15 +1059,18 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       const choice = data.choices?.[0];
       const finishReason: string = choice?.finish_reason ?? 'unknown';
       const rawContent = typeof choice?.message?.content === 'string' ? choice.message.content : '';
-      const strippedContent = rawContent
-        .replace(/<think>[\s\S]*?<\/think>/gi, '')
-        .replace(/<think>[\s\S]*$/gi, '')
-        .trim();
-      const candidateSql = stripSqlFences(strippedContent);
-      const generationStatus = classifyGenerationStatus(finishReason, candidateSql);
-      const sql = generationStatus === 'ok' ? candidateSql : '';
+      const sanitized = sanitizeSqlOutput(rawContent);
+      const generationStatus = classifyGenerationStatus(
+        finishReason,
+        sanitized.sanitizedSql,
+        undefined,
+        sanitized.tagError
+      );
+      const sql = generationStatus === 'ok' ? sanitized.sanitizedSql : '';
       const rawResponse = JSON.stringify(data);
-      const returnedModel = data.model || '';
+      const rawSha256 = sha256String(rawResponse);
+      const sanitizedSha256 = sha256String(sanitized.sanitizedSql);
+      const returnedModel = data.model || effectiveModel;
       assertModelMatch(model, returnedModel);
       const provenance = getProviderProvenance(model, returnedModel);
       const usage = data.usage
@@ -651,7 +1092,11 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
             model,
             temperature,
             sql,
+            sanitizedSql: sanitized.sanitizedSql,
+            sanitizedSha256,
             rawResponse,
+            rawSha256,
+            tagError: sanitized.tagError,
             finishReason,
             generationStatus,
             ...provenance,
@@ -675,6 +1120,10 @@ Create the requested table \`public.${table}\` along with appropriate columns, c
       return {
         sql,
         rawResponse,
+        rawSha256,
+        sanitizedSql: sanitized.sanitizedSql,
+        sanitizedSha256,
+        tagError: sanitized.tagError,
         fromCache: false,
         cacheKey,
         usage,
