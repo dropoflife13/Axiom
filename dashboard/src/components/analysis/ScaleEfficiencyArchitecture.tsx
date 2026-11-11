@@ -165,7 +165,7 @@ function OrbitCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onSyncRef = useRef(onSync);
   onSyncRef.current = onSync;
-  const t0Ref = useRef(performance.now());
+  const t0Ref = useRef<number | null>(null);
 
   useEffect(() => {
     const cv = canvasRef.current;
@@ -255,10 +255,12 @@ function OrbitCanvas({
         cx.globalAlpha = 1;
         cx.lineWidth = 1;
 
-        const t = reduced ? 9 : (now - t0Ref.current) / 1000;
+        if (t0Ref.current === null) t0Ref.current = now;
+        const t = reduced ? 9 : Math.max(0, (now - t0Ref.current) / 1000);
         const st = interaction.current;
         const isAuto = st.hov < 0 && st.sel < 0;
-        const act = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 1 : Math.floor(t / 3) % FL.length;
+        const rawAct = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 1 : Math.floor(t / 3) % FL.length;
+        const act = ((rawAct % FL.length) + FL.length) % FL.length;
 
         if (act !== lastIdx || isAuto !== lastAuto) {
           lastIdx = act;
@@ -438,7 +440,7 @@ function DialsCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onSyncRef = useRef(onSync);
   onSyncRef.current = onSync;
-  const t0Ref = useRef(performance.now());
+  const t0Ref = useRef<number | null>(null);
 
   useEffect(() => {
     const cv = canvasRef.current;
@@ -492,10 +494,12 @@ function DialsCanvas({
         cx.globalCompositeOperation = 'lighter';
         cx.lineWidth = 1;
 
-        const t = reduced ? 9 : (now - t0Ref.current) / 1000;
+        if (t0Ref.current === null) t0Ref.current = now;
+        const t = reduced ? 9 : Math.max(0, (now - t0Ref.current) / 1000);
         const st = interaction.current;
         const isAuto = st.hov < 0 && st.sel < 0;
-        const act = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 3 : Math.floor(t / 3) % COND.length;
+        const rawAct = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 3 : Math.floor(t / 3) % COND.length;
+        const act = ((rawAct % COND.length) + COND.length) % COND.length;
 
         if (act !== lastIdx || isAuto !== lastAuto) {
           lastIdx = act;
@@ -557,7 +561,7 @@ function DialsCanvas({
         T(cx, 'OF THE GAP RECOVERED BY C0', x1, cy + 28, DM, 10, 'center');
         T(cx, '(X − A) ÷ (B − A) · C recovers ' + Math.round(f(71.9) * 100) + '%', x1, cy + 46, DM, 9, 'center');
 
-        const A = COND[act];
+        const A = COND[act] ?? COND[0];
         cx.globalAlpha = 1;
         T(cx, A.id + ' · ' + A.n, x1, cy + 72, A.col, 11, 'center', 700);
 
@@ -644,7 +648,7 @@ function ConstellationCanvas({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const onSyncRef = useRef(onSync);
   onSyncRef.current = onSync;
-  const t0Ref = useRef(performance.now());
+  const t0Ref = useRef<number | null>(null);
 
   useEffect(() => {
     const cv = canvasRef.current;
@@ -774,10 +778,12 @@ function ConstellationCanvas({
         cx.globalCompositeOperation = 'lighter';
         cx.lineWidth = 1;
 
-        const t = reduced ? 9 : (now - t0Ref.current) / 1000;
+        if (t0Ref.current === null) t0Ref.current = now;
+        const t = reduced ? 9 : Math.max(0, (now - t0Ref.current) / 1000);
         const st = interaction.current;
         const isAuto = st.hov < 0 && st.sel < 0;
-        const hv = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 3 : Math.floor(t / 3) % FAULT.length;
+        const rawHv = st.hov >= 0 ? st.hov : st.sel >= 0 ? st.sel : reduced ? 3 : Math.floor(t / 3) % FAULT.length;
+        const hv = ((rawHv % FAULT.length) + FAULT.length) % FAULT.length;
 
         if (hv !== lastIdx || isAuto !== lastAuto) {
           lastIdx = hv;

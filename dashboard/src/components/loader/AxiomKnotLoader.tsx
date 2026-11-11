@@ -53,7 +53,7 @@ export function AxiomKnotLoader({
 
     const updateFrame = () => {
       const now = performance.now();
-      const ms = reducedMotion ? 5000 : (now - t0Ref.current) % T;
+      const ms = reducedMotion ? 5000 : Math.max(0, now - t0Ref.current) % T;
 
       // 0-500 empty | 500-2300 rope feeds in from the tip | 2300-3000 nodes | 2800-4300 links
       // 4300-5400 verified (green) | 5300-5900 links and nodes retract | 5800-7000 rope feeds out along the same path | empty tail

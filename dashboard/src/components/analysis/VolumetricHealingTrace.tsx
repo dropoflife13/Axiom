@@ -85,7 +85,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
   activeModelNameRef.current = activeModelName;
   const onSelectFactRef = useRef(onSelectFact);
   onSelectFactRef.current = onSelectFact;
-  const t0Ref = useRef(performance.now());
+  const t0Ref = useRef<number | null>(null);
 
   useEffect(() => {
     const cv = canvasRef.current;
@@ -568,7 +568,8 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function frame(n: number) {
-      const elapsed = (n - t0Ref.current) / 1000;
+      if (t0Ref.current === null) t0Ref.current = n;
+      const elapsed = Math.max(0, (n - t0Ref.current) / 1000);
       draw(reduced ? 13 : elapsed);
       animId = requestAnimationFrame(frame);
     }
@@ -583,7 +584,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
   }, []); // Run effect ONCE on mount so 60FPS loop never tears down or resets on re-renders
 
   const handleReplay = () => {
-    t0Ref.current = performance.now();
+    t0Ref.current = null;
   };
 
   return (

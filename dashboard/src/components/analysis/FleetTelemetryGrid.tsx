@@ -62,7 +62,7 @@ export const FleetTelemetryGrid = memo(function FleetTelemetryGrid({
   activeRunIdRef.current = activeRunId;
   const onSelectRunRef = useRef(onSelectRun);
   onSelectRunRef.current = onSelectRun;
-  const t0Ref = useRef(performance.now());
+  const t0Ref = useRef<number | null>(null);
 
   useEffect(() => {
     const cv = canvasRef.current;
@@ -351,7 +351,8 @@ export const FleetTelemetryGrid = memo(function FleetTelemetryGrid({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function frame(n: number) {
-      draw(reduced ? 6 : (n - t0Ref.current) / 1000);
+      if (t0Ref.current === null) t0Ref.current = n;
+      draw(reduced ? 6 : Math.max(0, (n - t0Ref.current) / 1000));
       animId = requestAnimationFrame(frame);
     }
 
