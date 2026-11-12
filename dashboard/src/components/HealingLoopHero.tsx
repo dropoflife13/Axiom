@@ -165,31 +165,30 @@ export default function HealingLoopHero({
                     <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={totalTrials} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
                       <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${Math.min(100, (live.done / Math.max(1, totalTrials)) * 100)}%` }} />
                     </div>
-                    {/* Expected vs actual tokens per model */}
+                    {/* Expected vs actual tokens for active model */}
                     <div className="hl-tokens">
-                      <div className="hl-tokens-label">EXPECTED VS ACTUAL TOKENS BY MODEL</div>
+                      <div className="hl-tokens-label">EXPECTED VS ACTUAL TOKENS</div>
                       {fleet && fleet.length > 0 ? (
-                        <div className="hl-tokens-list">
-                          {fleet.map((fs) => {
-                            const expected = Math.round(fs.done * globalAvgRate);
-                            const actual = fs.totalTokens;
-                            const pct = expected > 0 ? Math.round(((actual - expected) / expected) * 100) : 0;
-                            return (
-                              <div key={fs.run.id} className="hl-token-row">
-                                <span className="hl-token-model" style={{ color: fs.run.accent }}>
-                                  {fs.run.label}
+                        (() => {
+                          const activeFs = fleet.find((fs) => fs.run.id === activeRunId) ?? fleet[0];
+                          const expected = Math.round(activeFs.done * globalAvgRate);
+                          const actual = activeFs.totalTokens;
+                          const pct = expected > 0 ? Math.round(((actual - expected) / expected) * 100) : 0;
+                          return (
+                            <div className="hl-token-row">
+                              <span className="hl-token-model" style={{ color: activeFs.run.accent }}>
+                                {activeFs.run.label}
+                              </span>
+                              <div className="hl-token-nums">
+                                <span className="hl-token-actual">{actual.toLocaleString()}</span>
+                                <span className="hl-token-expected">expected {expected.toLocaleString()}</span>
+                                <span className={`hl-token-delta ${pct >= 0 ? 'hl-token-up' : 'hl-token-down'}`}>
+                                  {pct >= 0 ? '+' : ''}{pct}%
                                 </span>
-                                <div className="hl-token-nums">
-                                  <span className="hl-token-actual">{actual.toLocaleString()}</span>
-                                  <span className="hl-token-expected">expected {expected.toLocaleString()}</span>
-                                  <span className={`hl-token-delta ${pct >= 0 ? 'hl-token-up' : 'hl-token-down'}`}>
-                                    {pct >= 0 ? '+' : ''}{pct}%
-                                  </span>
-                                </div>
                               </div>
-                            );
-                          })}
-                        </div>
+                            </div>
+                          );
+                        })()
                       ) : (
                         <div className="hl-tokens-empty">No model telemetry yet.</div>
                       )}
