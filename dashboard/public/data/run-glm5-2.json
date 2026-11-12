@@ -21,6 +21,13 @@
         0.017926716880109515,
         0.09384085233703535
       ],
+      "strictPassCount": 5,
+      "rawAllFactPassCount": 0,
+      "rawAllFactPassAt1": 0,
+      "rawAllFactPassAt1Wilson95": [
+        0,
+        0.031019166418703486
+      ],
       "meanPromptTokens": 230.35,
       "meanTotalTokens": 976.6,
       "generationStatus": {
@@ -47,6 +54,13 @@
       "strictBoundPassAt1Wilson95": [
         0.6041700227619933,
         0.767272630110837
+      ],
+      "strictPassCount": 83,
+      "rawAllFactPassCount": 41,
+      "rawAllFactPassAt1": 0.3416666666666667,
+      "rawAllFactPassAt1Wilson95": [
+        0.26290438368564517,
+        0.4302516856802777
       ],
       "meanPromptTokens": 1013.35,
       "meanTotalTokens": 1799.2666666666667,
@@ -75,6 +89,13 @@
         0.30124527754856906,
         0.47265919461579525
       ],
+      "strictPassCount": 46,
+      "rawAllFactPassCount": 15,
+      "rawAllFactPassAt1": 0.125,
+      "rawAllFactPassAt1Wilson95": [
+        0.07723497273395374,
+        0.1960294020800739
+      ],
       "meanPromptTokens": 465.475,
       "meanTotalTokens": 1184.8833333333334,
       "generationStatus": {
@@ -101,6 +122,13 @@
       "strictBoundPassAt1Wilson95": [
         0.3958364430105443,
         0.5718641958700792
+      ],
+      "strictPassCount": 58,
+      "rawAllFactPassCount": 19,
+      "rawAllFactPassAt1": 0.15833333333333333,
+      "rawAllFactPassAt1Wilson95": [
+        0.10376977359410051,
+        0.23409332345868022
       ],
       "meanPromptTokens": 496.35,
       "meanTotalTokens": 1187.0416666666667,
@@ -129,6 +157,13 @@
         0.008538174769902228,
         0.0709300333278661
       ],
+      "strictPassCount": 3,
+      "rawAllFactPassCount": 0,
+      "rawAllFactPassAt1": 0,
+      "rawAllFactPassAt1Wilson95": [
+        0,
+        0.031019166418703486
+      ],
       "meanPromptTokens": 806.35,
       "meanTotalTokens": 1526.7166666666667,
       "generationStatus": {
@@ -155,6 +190,13 @@
       "strictBoundPassAt1Wilson95": [
         0.6041700227619933,
         0.767272630110837
+      ],
+      "strictPassCount": 83,
+      "rawAllFactPassCount": 41,
+      "rawAllFactPassAt1": 0.3416666666666667,
+      "rawAllFactPassAt1Wilson95": [
+        0.26290438368564517,
+        0.4302516856802777
       ],
       "meanPromptTokens": 1013.35,
       "meanTotalTokens": 1799.2666666666667,
@@ -12058,6 +12100,6 @@
   "passedTrials": 278,
   "failedTrials": 442,
   "passRate": "38.6%",
-  "generatedAt": "2026-11-09T18:54:09.951Z",
+  "generatedAt": "2026-11-12T12:20:12.725Z",
   "lastModified": "2026-11-09T18:41:59.912Z"
 }

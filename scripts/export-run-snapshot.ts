@@ -101,7 +101,11 @@ export function buildRunSnapshot(options: ExportSnapshotOptions): RunSnapshot {
   const checkpointParsed = JSON.parse(rawCheckpoint);
   const rawTrials: any[] = Array.isArray(checkpointParsed)
     ? checkpointParsed
-    : checkpointParsed.trials ?? [];
+    : Array.isArray(checkpointParsed.trials)
+    ? checkpointParsed.trials
+    : checkpointParsed.trials && typeof checkpointParsed.trials === 'object'
+    ? Object.values(checkpointParsed.trials)
+    : [];
   const checkpointMetadata = !Array.isArray(checkpointParsed)
     ? checkpointParsed.metadata ?? {}
     : {};
@@ -289,7 +293,7 @@ export function exportRunSnapshot(options: ExportSnapshotOptions): { snapshot: R
 
 function parseCliArgs(argv: string[]): ExportSnapshotOptions {
   let runPath = '.axiom-state/ablation-v2-checkpoint.json';
-  let analysisPath = '.axiom-state/ablation-v2-results.json';
+  let analysisPath: string | undefined = undefined;
   let id = 'ablation-v2';
   let outPath: string | undefined;
 
@@ -303,6 +307,16 @@ function parseCliArgs(argv: string[]): ExportSnapshotOptions {
       id = argv[++i];
     } else if (arg === '--out' && argv[i + 1]) {
       outPath = argv[++i];
+    }
+  }
+
+  if (!analysisPath) {
+    const candAnalysis = path.resolve(`.axiom-state/runs/${id}/analysis.json`);
+    const candResults = path.resolve(`.axiom-state/runs/${id}/results.json`);
+    if (fs.existsSync(candAnalysis)) {
+      analysisPath = candAnalysis;
+    } else if (fs.existsSync(candResults)) {
+      analysisPath = candResults;
     }
   }
 

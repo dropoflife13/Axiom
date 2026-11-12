@@ -79,6 +79,11 @@ export default function HealingLoopHero({
 
   const totalTrials = live.total ?? desk.totalTrials ?? (transitionKey.toLowerCase().includes('mini') ? 48 : 720);
 
+  const fleetDone = fleet?.reduce((s, fs) => s + fs.done, 0) ?? 0;
+  const fleetTokens = fleet?.reduce((s, fs) => s + fs.totalTokens, 0) ?? 0;
+  const globalAvgRate =
+    fleetDone > 0 ? fleetTokens / fleetDone : desk.done > 0 ? desk.totalTokens / desk.done : 0;
+
   useEffect(() => {
     setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }, []);
@@ -145,22 +150,55 @@ export default function HealingLoopHero({
                   <h1>Architecture<br />under pressure.</h1>
                   <p className="hl-s">Generate, verify, fail, advise, retry. Axiom tests generated migrations against the rules they claim to satisfy.</p>
                   <div className="hl-run">
-                    <div className="hl-big">
-                      {snapshot?.awaiting ? (
-                        <><b>0</b><span> / {totalTrials}</span></>
-                      ) : (
-                        <><b>{live.done}</b><span> / {totalTrials}</span></>
+                    {/* Trials: current / total side by side with Copy Logs beside */}
+                    <div className="hl-trial-copy">
+                      <div className="hl-big">
+                        <b>{snapshot?.awaiting ? 0 : live.done}</b><span className="hl-sep"> / </span><b className="hl-total">{totalTrials}</b>
+                      </div>
+                      {onCopyLogs && (
+                        <button onClick={onCopyLogs} className="hl-copy-next">COPY LOGS</button>
                       )}
                     </div>
+                    <span className="hl-dim">
+                      {snapshot?.awaiting ? 'awaiting' : 'completed'}<span className="hl-sep"> / </span>target trials
+                    </span>
                     <div className="dk-progress" role="progressbar" aria-label="Trials completed" aria-valuemin={0} aria-valuemax={totalTrials} aria-valuenow={snapshot?.awaiting ? 0 : live.done}>
                       <i style={snapshot?.awaiting ? { width: '100%', animation: 'dk-progress-awaiting 1.8s ease-in-out infinite' } : { width: `${Math.min(100, (live.done / Math.max(1, totalTrials)) * 100)}%` }} />
+                    </div>
+                    {/* Expected vs actual tokens per model */}
+                    <div className="hl-tokens">
+                      <div className="hl-tokens-label">EXPECTED VS ACTUAL TOKENS BY MODEL</div>
+                      {fleet && fleet.length > 0 ? (
+                        <div className="hl-tokens-list">
+                          {fleet.map((fs) => {
+                            const expected = Math.round(fs.done * globalAvgRate);
+                            const actual = fs.totalTokens;
+                            const pct = expected > 0 ? Math.round(((actual - expected) / expected) * 100) : 0;
+                            return (
+                              <div key={fs.run.id} className="hl-token-row">
+                                <span className="hl-token-model" style={{ color: fs.run.accent }}>
+                                  {fs.run.label}
+                                </span>
+                                <div className="hl-token-nums">
+                                  <span className="hl-token-actual">{actual.toLocaleString()}</span>
+                                  <span className="hl-token-expected">expected {expected.toLocaleString()}</span>
+                                  <span className={`hl-token-delta ${pct >= 0 ? 'hl-token-up' : 'hl-token-down'}`}>
+                                    {pct >= 0 ? '+' : ''}{pct}%
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div className="hl-tokens-empty">No model telemetry yet.</div>
+                      )}
                     </div>
                     <p className="hl-dim">
                       {snapshot?.awaiting
                         ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${getDisplayName(transitionKey)}`
                         : `${desk.totalTokens.toLocaleString()} tokens · ${Math.max(0, totalTrials - live.done)} trials remain`}
                     </p>
-                    {onCopyLogs && <button onClick={onCopyLogs}>COPY LOGS</button>}
                   </div>
                 </div>
 
@@ -433,6 +471,27 @@ const css = `
 .hl-s{font-size:11.5px;line-height:1.45;color:var(--dim);max-width:340px;margin:0 0 12px}.hl-dim{color:var(--dim);margin:4px 0 8px}
 .hl-run{margin-top:10px}
 .hl-big b{font-size:clamp(30px,3.2vw,46px);font-weight:600;letter-spacing:-.03em;color:#f5eff7;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace);text-shadow:none}.hl-big span{color:var(--dim);font-size:14px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,monospace)}
+.hl-trial-pair{display:flex;flex-wrap:wrap;gap:18px 30px;align-items:flex-end}
+.hl-stat{display:flex;flex-direction:column;gap:2px}
+.hl-stat .hl-dim{font-size:11px}
+.hl-stat-total .hl-big b{color:#c084fc}
+.hl-sep{color:#7e3af2;font-weight:700}
+.hl-total{color:#c084fc}
+.hl-trial-copy{display:flex;align-items:center;gap:14px}
+.hl-copy-next{pointer-events:auto;background:rgba(5,6,10,.7);color:#a78bfa;border:1px solid rgba(167,139,250,.35);padding:4px 12px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);font-size:10px;letter-spacing:.12em;cursor:pointer;min-height:24px}
+.hl-copy-next:hover{border-color:#a78bfa;color:#f5eff7;outline:2px solid #a78bfa;outline-offset:2px}
+.hl-tokens{margin-top:10px;border-top:1px solid var(--line);padding-top:8px}
+.hl-tokens-label{font-size:9px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.hl-tokens-list{display:flex;flex-direction:column;gap:5px}
+.hl-token-row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hl-token-model{font-size:10.5px;font-weight:600;letter-spacing:.08em;white-space:nowrap}
+.hl-token-nums{display:flex;gap:10px;align-items:center;font-variant-numeric:tabular-nums;flex-shrink:0}
+.hl-token-actual{font-size:11px;color:#f5eff7;font-weight:600}
+.hl-token-expected{font-size:10px;color:var(--dim)}
+.hl-token-delta{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:3px;background:rgba(16,185,129,.12);color:#34d399}
+.hl-token-delta.hl-token-up{background:rgba(16,185,129,.12);color:#34d399}
+.hl-token-delta.hl-token-down{background:rgba(244,63,94,.12);color:#f43f5e}
+.hl-tokens-empty{font-size:10.5px;color:var(--dim)}
 .hl button{pointer-events:auto;background:rgba(5,6,10,.7);color:inherit;border:1px solid var(--line);padding:6px 14px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace);font-size:11px;letter-spacing:.12em;cursor:pointer;min-height:30px}.hl button:hover,.hl button:focus-visible{border-color:#a78bfa;outline:2px solid #a78bfa;outline-offset:2px}
 .hl footer{border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative;z-index:2}.hl-stages{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}.hl-stages span{padding:2px 7px;border:1px solid var(--line);color:var(--dim);font-size:10.5px;font-family:var(--font-mono,ui-monospace,SFMono-Regular,Menlo,Consolas,monospace)}
 .dk-progress{height:6px;background:rgba(160,170,255,.12);margin-top:6px;overflow:hidden}.dk-progress i{display:block;height:100%;background:linear-gradient(90deg,#a855f7,#22d3ee);box-shadow:0 0 10px #a855f7;transition:width .6s}

@@ -1,0 +1,8584 @@
+{
+  "id": "gptoss-120b-expanded",
+  "runId": "gptoss-120b-expanded",
+  "model": "openai/gpt-oss-120b",
+  "baseUrl": "https://api.groq.com/openai/v1",
+  "gitCommit": "2b07a559d07243c7c8cf5f0c23b625cc7b45d11c",
+  "commit": "2b07a55",
+  "dirty": true,
+  "sha256": {
+    "oracleTs": "fc0d2168680d4f91daaa6cf0cead5eb90fec19f5e3a89ea737a271f276d7da28",
+    "tasksJson": "3fbf2ca4dabc123ebb6ffd8e292cfd522b52ed9e7e1214432c2109378b7b5370",
+    "factsJson": "c5a959088318715ac3367908c69c7c21bbd0ec64c8679849fcbd2ddf65688c72",
+    "memoryJson": "e52059a7aa9957ea143b210284282ad2522ab2914370187fb9a95b5beb3a5a39"
+  },
+  "conditions": {
+    "A": {
+      "n": 86,
+      "meanBoundFactFraction": 0.10096976744186047,
+      "strictBoundPassAt1": 0,
+      "strictBoundPassAt1Wilson95": [
+        0,
+        0.042758197285742226
+      ],
+      "strictPassCount": 0,
+      "rawAllFactPassCount": 0,
+      "rawAllFactPassAt1": 0,
+      "rawAllFactPassAt1Wilson95": [
+        0,
+        0.042758197285742226
+      ],
+      "meanPromptTokens": 294.0581395348837,
+      "meanTotalTokens": 1713.1279069767443,
+      "generationStatus": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 66,
+      "migrationExitNonZero": 69,
+      "reusedFromCondition": 0,
+      "reusedFromConditionB": 0
+    },
+    "B": {
+      "n": 86,
+      "meanBoundFactFraction": 0.6312023255813953,
+      "strictBoundPassAt1": 0.5,
+      "strictBoundPassAt1Wilson95": [
+        0.3966097232742094,
+        0.6033902767257906
+      ],
+      "strictPassCount": 43,
+      "rawAllFactPassCount": 21,
+      "rawAllFactPassAt1": 0.2441860465116279,
+      "rawAllFactPassAt1Wilson95": [
+        0.16561965059864148,
+        0.34462872940801736
+      ],
+      "meanPromptTokens": 1071.0581395348838,
+      "meanTotalTokens": 3109.732558139535,
+      "generationStatus": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 27,
+      "migrationExitNonZero": 32,
+      "reusedFromCondition": 0,
+      "reusedFromConditionB": 0
+    },
+    "C": {
+      "n": 86,
+      "meanBoundFactFraction": 0.29496046511627916,
+      "strictBoundPassAt1": 0.10465116279069768,
+      "strictBoundPassAt1Wilson95": [
+        0.056040897145363075,
+        0.18707023559220054
+      ],
+      "strictPassCount": 9,
+      "rawAllFactPassCount": 0,
+      "rawAllFactPassAt1": 0,
+      "rawAllFactPassAt1Wilson95": [
+        0,
+        0.042758197285742226
+      ],
+      "meanPromptTokens": 531.1627906976744,
+      "meanTotalTokens": 2159.3255813953488,
+      "generationStatus": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 46,
+      "migrationExitNonZero": 51,
+      "reusedFromCondition": 0,
+      "reusedFromConditionB": 0
+    },
+    "C0": {
+      "n": 86,
+      "meanBoundFactFraction": 0.45116511627906974,
+      "strictBoundPassAt1": 0.26744186046511625,
+      "strictBoundPassAt1Wilson95": [
+        0.18532084622257786,
+        0.36945040832893017
+      ],
+      "strictPassCount": 23,
+      "rawAllFactPassCount": 3,
+      "rawAllFactPassAt1": 0.03488372093023256,
+      "rawAllFactPassAt1Wilson95": [
+        0.01193379807740838,
+        0.09760871102560764
+      ],
+      "meanPromptTokens": 564.4767441860465,
+      "meanTotalTokens": 2147.639534883721,
+      "generationStatus": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 86,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 39,
+      "migrationExitNonZero": 49,
+      "reusedFromCondition": 0,
+      "reusedFromConditionB": 0
+    },
+    "D": {
+      "n": 85,
+      "meanBoundFactFraction": 0.21862588235294114,
+      "strictBoundPassAt1": 0.011764705882352941,
+      "strictBoundPassAt1Wilson95": [
+        0.002079787134664092,
+        0.06367170882493911
+      ],
+      "strictPassCount": 1,
+      "rawAllFactPassCount": 0,
+      "rawAllFactPassAt1": 0,
+      "rawAllFactPassAt1Wilson95": [
+        0,
+        0.04323948381405149
+      ],
+      "meanPromptTokens": 871.0823529411765,
+      "meanTotalTokens": 2306.435294117647,
+      "generationStatus": {
+        "ok": 85,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 85,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 43,
+      "migrationExitNonZero": 43,
+      "reusedFromCondition": 0,
+      "reusedFromConditionB": 0
+    },
+    "E_B": {
+      "n": 85,
+      "meanBoundFactFraction": 0.6386282352941176,
+      "strictBoundPassAt1": 0.5058823529411764,
+      "strictBoundPassAt1Wilson95": [
+        0.4016643580854897,
+        0.609591647987286
+      ],
+      "strictPassCount": 43,
+      "rawAllFactPassCount": 21,
+      "rawAllFactPassAt1": 0.24705882352941178,
+      "rawAllFactPassAt1Wilson95": [
+        0.1676462116157798,
+        0.34834552725485807
+      ],
+      "meanPromptTokens": 1071.0823529411764,
+      "meanTotalTokens": 3115.7294117647057,
+      "generationStatus": {
+        "ok": 85,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "generationStatusCounts": {
+        "ok": 85,
+        "empty": 0,
+        "length": 0,
+        "other": 0
+      },
+      "tableMissing": 26,
+      "migrationExitNonZero": 31,
+      "reusedFromCondition": 85,
+      "reusedFromConditionB": 85
+    }
+  },
+  "pairedComparisons": {
+    "C_vs_A": {
+      "n": 86,
+      "primary": {
+        "n": 86,
+        "meanDifference": 0.1939906976744186,
+        "ci95": [
+          0.1029058139534884,
+          0.28584883720930243
+        ],
+        "signFlipPValue": 0.00007999920000799993
+      },
+      "secondary": {
+        "n": 86,
+        "b": 0,
+        "c": 9,
+        "pValue": 0.00390625
+      },
+      "holmPrimaryPValue": 0.00023999760002399976,
+      "holmSecondaryPValue": 0.01171875,
+      "cellLevelResults": {
+        "n": 86,
+        "cellCount": 6,
+        "perCell": {
+          "tenant=false,append_only=true,ingestion=false": {
+            "n": 11,
+            "meanDifference": 0.12878181818181816
+          },
+          "tenant=false,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": 0.17999333333333334
+          },
+          "tenant=true,append_only=false,ingestion=false": {
+            "n": 15,
+            "meanDifference": 0.3944466666666667
+          },
+          "tenant=true,append_only=false,ingestion=true": {
+            "n": 15,
+            "meanDifference": 0.09221999999999998
+          },
+          "tenant=true,append_only=true,ingestion=false": {
+            "n": 15,
+            "meanDifference": 0.23445333333333335
+          },
+          "tenant=true,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": 0.11665999999999999
+          }
+        },
+        "combinedMeanDifference": 0.19109252525252526,
+        "withinCellBootstrapCi95": [
+          0.10651030303030302,
+          0.28043262626262627
+        ],
+        "exactCellSignFlipPValue": 0.03125
+      }
+    },
+    "C_vs_B": {
+      "n": 86,
+      "primary": {
+        "n": 86,
+        "meanDifference": -0.3362418604651161,
+        "ci95": [
+          -0.4465139534883721,
+          -0.22286860465116273
+        ],
+        "signFlipPValue": 0.00000999990000099999
+      },
+      "secondary": {
+        "n": 86,
+        "b": 37,
+        "c": 3,
+        "pValue": 1.946500560734419e-8
+      },
+      "holmPrimaryPValue": 0.00003999960000399996,
+      "holmSecondaryPValue": 7.786002242937676e-8,
+      "cellLevelResults": {
+        "n": 86,
+        "cellCount": 6,
+        "perCell": {
+          "tenant=false,append_only=true,ingestion=false": {
+            "n": 11,
+            "meanDifference": -0.24697272727272726
+          },
+          "tenant=false,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.40889333333333333
+          },
+          "tenant=true,append_only=false,ingestion=false": {
+            "n": 15,
+            "meanDifference": -0.06666666666666667
+          },
+          "tenant=true,append_only=false,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.39222666666666667
+          },
+          "tenant=true,append_only=true,ingestion=false": {
+            "n": 15,
+            "meanDifference": -0.40999333333333343
+          },
+          "tenant=true,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.46889333333333333
+          }
+        },
+        "combinedMeanDifference": -0.3322743434343434,
+        "withinCellBootstrapCi95": [
+          -0.4382679797979798,
+          -0.22333555555555554
+        ],
+        "exactCellSignFlipPValue": 0.03125
+      }
+    },
+    "C_vs_C0": {
+      "n": 86,
+      "primary": {
+        "n": 86,
+        "meanDifference": -0.15620465116279073,
+        "ci95": [
+          -0.27209883720930234,
+          -0.04127906976744186
+        ],
+        "signFlipPValue": 0.01030989690103099
+      },
+      "secondary": {
+        "n": 86,
+        "b": 19,
+        "c": 5,
+        "pValue": 0.006610751152038583
+      },
+      "holmPrimaryPValue": 0.02061979380206198,
+      "holmSecondaryPValue": 0.013221502304077166,
+      "cellLevelResults": {
+        "n": 86,
+        "cellCount": 6,
+        "perCell": {
+          "tenant=false,append_only=true,ingestion=false": {
+            "n": 11,
+            "meanDifference": -0.17424545454545456
+          },
+          "tenant=false,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.13778666666666664
+          },
+          "tenant=true,append_only=false,ingestion=false": {
+            "n": 15,
+            "meanDifference": 0.06000000000000001
+          },
+          "tenant=true,append_only=false,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.13777999999999999
+          },
+          "tenant=true,append_only=true,ingestion=false": {
+            "n": 15,
+            "meanDifference": -0.31444
+          },
+          "tenant=true,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.23778666666666667
+          }
+        },
+        "combinedMeanDifference": -0.15700646464646464,
+        "withinCellBootstrapCi95": [
+          -0.27426333333333336,
+          -0.03931606060606062
+        ],
+        "exactCellSignFlipPValue": 0.0625
+      }
+    },
+    "C_vs_D": {
+      "n": 85,
+      "primary": {
+        "n": 85,
+        "meanDifference": 0.07980470588235296,
+        "ci95": [
+          -0.007451764705882352,
+          0.1670611764705882
+        ],
+        "signFlipPValue": 0.07934920650793492
+      },
+      "secondary": {
+        "n": 85,
+        "b": 1,
+        "c": 9,
+        "pValue": 0.021484375000000003
+      },
+      "holmPrimaryPValue": 0.07934920650793492,
+      "holmSecondaryPValue": 0.021484375000000003,
+      "cellLevelResults": {
+        "n": 85,
+        "cellCount": 6,
+        "perCell": {
+          "tenant=false,append_only=true,ingestion=false": {
+            "n": 10,
+            "meanDifference": 0.08332999999999999
+          },
+          "tenant=false,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.04444666666666667
+          },
+          "tenant=true,append_only=false,ingestion=false": {
+            "n": 15,
+            "meanDifference": 0.36000000000000004
+          },
+          "tenant=true,append_only=false,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.06110666666666666
+          },
+          "tenant=true,append_only=true,ingestion=false": {
+            "n": 15,
+            "meanDifference": 0.14889999999999998
+          },
+          "tenant=true,append_only=true,ingestion=true": {
+            "n": 15,
+            "meanDifference": -0.0066733333333333315
+          }
+        },
+        "combinedMeanDifference": 0.08000055555555556,
+        "withinCellBootstrapCi95": [
+          -0.0027744444444444427,
+          0.15925888888888892
+        ],
+        "exactCellSignFlipPValue": 0.3125
+      }
+    }
+  },
+  "perFactPassRates": {
+    "A": {
+      "F-03": 0.814,
+      "F-16": 0.7907,
+      "F-18": 0.8837,
+      "F-19": 0.8953,
+      "F-20": 0.8953,
+      "F-25": 0.8023,
+      "F-26": 0.8023,
+      "F-36": 0.8953,
+      "F-37": 0.8953,
+      "F-13": 0.2326,
+      "F-17": 0.9186,
+      "F-39": 0.9535,
+      "F-22": 0.9767,
+      "F-27": 0.9884,
+      "F-05": 0.9535,
+      "F-06": 0.9767,
+      "F-08": 0.9884,
+      "F-10": 0.8721,
+      "F-21": 0.9884,
+      "F-30": 0.9884
+    },
+    "B": {
+      "F-19": 0.9767,
+      "F-20": 0.9651,
+      "F-26": 0.7209,
+      "F-37": 0.9884,
+      "F-13": 0.686,
+      "F-36": 0.907,
+      "F-18": 0.8953,
+      "F-32": 0.8605,
+      "F-22": 0.9767,
+      "F-17": 0.9767,
+      "F-39": 0.9884,
+      "F-24": 0.9884,
+      "F-21": 0.9767
+    },
+    "C": {
+      "F-13": 0.4651,
+      "F-15": 0.6977,
+      "F-19": 0.8605,
+      "F-20": 0.6977,
+      "F-22": 0.8372,
+      "F-26": 0.6744,
+      "F-32": 0.7907,
+      "F-36": 0.6977,
+      "F-37": 0.8256,
+      "F-01": 0.8721,
+      "F-05": 0.7791,
+      "F-25": 0.8372,
+      "F-17": 0.9767,
+      "F-23": 0.9767,
+      "F-18": 0.9419,
+      "F-24": 0.9535,
+      "F-06": 0.9651,
+      "F-21": 0.9884,
+      "F-08": 0.9651,
+      "F-09": 0.9767
+    },
+    "C0": {
+      "F-13": 0.5465,
+      "F-01": 0.8488,
+      "F-05": 0.7442,
+      "F-20": 0.7326,
+      "F-22": 0.7558,
+      "F-23": 0.9651,
+      "F-26": 0.6744,
+      "F-32": 0.7442,
+      "F-19": 0.8721,
+      "F-37": 0.9767,
+      "F-27": 0.9767,
+      "F-17": 0.9651,
+      "F-39": 0.9302,
+      "F-06": 0.9651,
+      "F-21": 0.9419,
+      "F-24": 0.9767
+    },
+    "D": {
+      "F-13": 0.4941,
+      "F-03": 0.7412,
+      "F-16": 0.6,
+      "F-18": 0.6824,
+      "F-19": 0.6941,
+      "F-20": 0.7059,
+      "F-25": 0.6471,
+      "F-26": 0.6353,
+      "F-32": 0.9529,
+      "F-36": 0.6941,
+      "F-01": 0.9765,
+      "F-37": 0.7529,
+      "F-09": 0.9765,
+      "F-05": 0.8,
+      "F-17": 0.8824,
+      "F-39": 0.8941,
+      "F-27": 0.9647,
+      "F-22": 0.9294,
+      "F-15": 0.9765,
+      "F-10": 0.8118,
+      "F-24": 0.9529,
+      "F-08": 0.9765,
+      "F-06": 0.9529,
+      "F-21": 0.9647
+    },
+    "E_B": {
+      "F-19": 0.9765,
+      "F-20": 0.9647,
+      "F-26": 0.7176,
+      "F-37": 0.9882,
+      "F-13": 0.6941,
+      "F-36": 0.9059,
+      "F-18": 0.8941,
+      "F-32": 0.8588,
+      "F-22": 0.9765,
+      "F-17": 0.9765,
+      "F-39": 0.9882,
+      "F-24": 0.9882,
+      "F-21": 0.9765
+    }
+  },
+  "failuresByFact": {
+    "A": {
+      "F-03": 16,
+      "F-16": 18,
+      "F-18": 10,
+      "F-19": 9,
+      "F-20": 9,
+      "F-25": 17,
+      "F-26": 17,
+      "F-36": 9,
+      "F-37": 9,
+      "F-13": 66,
+      "F-17": 7,
+      "F-39": 4,
+      "F-22": 2,
+      "F-27": 1,
+      "F-05": 4,
+      "F-06": 2,
+      "F-08": 1,
+      "F-10": 11,
+      "F-21": 1,
+      "F-30": 1
+    },
+    "B": {
+      "F-19": 2,
+      "F-20": 3,
+      "F-26": 24,
+      "F-37": 1,
+      "F-13": 27,
+      "F-36": 8,
+      "F-18": 9,
+      "F-32": 12,
+      "F-22": 2,
+      "F-17": 2,
+      "F-39": 1,
+      "F-24": 1,
+      "F-21": 2
+    },
+    "C": {
+      "F-13": 46,
+      "F-15": 26,
+      "F-19": 12,
+      "F-20": 26,
+      "F-22": 14,
+      "F-26": 28,
+      "F-32": 18,
+      "F-36": 26,
+      "F-37": 15,
+      "F-01": 11,
+      "F-05": 19,
+      "F-25": 14,
+      "F-17": 2,
+      "F-23": 2,
+      "F-18": 5,
+      "F-24": 4,
+      "F-06": 3,
+      "F-21": 1,
+      "F-08": 3,
+      "F-09": 2
+    },
+    "C0": {
+      "F-13": 39,
+      "F-01": 13,
+      "F-05": 22,
+      "F-20": 23,
+      "F-22": 21,
+      "F-23": 3,
+      "F-26": 28,
+      "F-32": 22,
+      "F-19": 11,
+      "F-37": 2,
+      "F-27": 2,
+      "F-17": 3,
+      "F-39": 6,
+      "F-06": 3,
+      "F-21": 5,
+      "F-24": 2
+    },
+    "D": {
+      "F-13": 43,
+      "F-03": 22,
+      "F-16": 34,
+      "F-18": 27,
+      "F-19": 26,
+      "F-20": 25,
+      "F-25": 30,
+      "F-26": 31,
+      "F-32": 4,
+      "F-36": 26,
+      "F-01": 2,
+      "F-37": 21,
+      "F-09": 2,
+      "F-05": 17,
+      "F-17": 10,
+      "F-39": 9,
+      "F-27": 3,
+      "F-22": 6,
+      "F-15": 2,
+      "F-10": 16,
+      "F-24": 4,
+      "F-08": 2,
+      "F-06": 4,
+      "F-21": 3
+    },
+    "E_B": {
+      "F-19": 2,
+      "F-20": 3,
+      "F-26": 24,
+      "F-37": 1,
+      "F-13": 26,
+      "F-36": 8,
+      "F-18": 9,
+      "F-32": 12,
+      "F-22": 2,
+      "F-17": 2,
+      "F-39": 1,
+      "F-24": 1,
+      "F-21": 2
+    }
+  },
+  "trials": [
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "A",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1690,
+      "totalTokens": 1690,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-19",
+        "F-20",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 3419,
+      "totalTokens": 3419,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2273,
+      "totalTokens": 2273,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2062,
+      "totalTokens": 2062,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2520,
+      "totalTokens": 2520,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-001",
+      "taskId": "H-001",
+      "condition": "E_B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-19",
+        "F-20",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 3419,
+      "totalTokens": 3419,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1769,
+      "totalTokens": 1769,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3008,
+      "totalTokens": 3008,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "C",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2406,
+      "totalTokens": 2406,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2615,
+      "totalTokens": 2615,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "D",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 1903,
+      "totalTokens": 1903,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-002",
+      "taskId": "H-002",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3008,
+      "totalTokens": 3008,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1919,
+      "totalTokens": 1919,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 3331,
+      "totalTokens": 3331,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "C",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2262,
+      "totalTokens": 2262,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "C0",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-20",
+        "F-22",
+        "F-23",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 1918,
+      "totalTokens": 1918,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2610,
+      "totalTokens": 2610,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-003",
+      "taskId": "H-003",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 3331,
+      "totalTokens": 3331,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1412,
+      "totalTokens": 1412,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3445,
+      "totalTokens": 3445,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1863,
+      "totalTokens": 1863,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "C0",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32",
+        "F-37"
+      ],
+      "tokens": 2175,
+      "totalTokens": 2175,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2393,
+      "totalTokens": 2393,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-004",
+      "taskId": "H-004",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3445,
+      "totalTokens": 3445,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1795,
+      "totalTokens": 1795,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "B",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2959,
+      "totalTokens": 2959,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2042,
+      "totalTokens": 2042,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2140,
+      "totalTokens": 2140,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2626,
+      "totalTokens": 2626,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-005",
+      "taskId": "H-005",
+      "condition": "E_B",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2959,
+      "totalTokens": 2959,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1562,
+      "totalTokens": 1562,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3855,
+      "totalTokens": 3855,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2082,
+      "totalTokens": 2082,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2318,
+      "totalTokens": 2318,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-01",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2028,
+      "totalTokens": 2028,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-006",
+      "taskId": "H-006",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3855,
+      "totalTokens": 3855,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1885,
+      "totalTokens": 1885,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2889,
+      "totalTokens": 2889,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1744,
+      "totalTokens": 1744,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "C0",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-20",
+        "F-22",
+        "F-32"
+      ],
+      "tokens": 2040,
+      "totalTokens": 2040,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2529,
+      "totalTokens": 2529,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-007",
+      "taskId": "H-007",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2889,
+      "totalTokens": 2889,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1330,
+      "totalTokens": 1330,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3268,
+      "totalTokens": 3268,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1960,
+      "totalTokens": 1960,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-22",
+        "F-23",
+        "F-26",
+        "F-27",
+        "F-32"
+      ],
+      "tokens": 2362,
+      "totalTokens": 2362,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2411,
+      "totalTokens": 2411,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-008",
+      "taskId": "H-008",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3268,
+      "totalTokens": 3268,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1567,
+      "totalTokens": 1567,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3457,
+      "totalTokens": 3457,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2181,
+      "totalTokens": 2181,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "C0",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-05",
+        "F-17",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2408,
+      "totalTokens": 2408,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2725,
+      "totalTokens": 2725,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-009",
+      "taskId": "H-009",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3457,
+      "totalTokens": 3457,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1487,
+      "totalTokens": 1487,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 2923,
+      "totalTokens": 2923,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "C",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-17",
+        "F-20",
+        "F-22",
+        "F-23",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1950,
+      "totalTokens": 1950,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2576,
+      "totalTokens": 2576,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2991,
+      "totalTokens": 2991,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-010",
+      "taskId": "H-010",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 2923,
+      "totalTokens": 2923,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1906,
+      "totalTokens": 1906,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3970,
+      "totalTokens": 3970,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2024,
+      "totalTokens": 2024,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2102,
+      "totalTokens": 2102,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "D",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1942,
+      "totalTokens": 1942,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-011",
+      "taskId": "H-011",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3970,
+      "totalTokens": 3970,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "A",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1568,
+      "totalTokens": 1568,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 3494,
+      "totalTokens": 3494,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2375,
+      "totalTokens": 2375,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-20",
+        "F-22",
+        "F-32"
+      ],
+      "tokens": 2100,
+      "totalTokens": 2100,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "D",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-03",
+        "F-09",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2484,
+      "totalTokens": 2484,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-012",
+      "taskId": "H-012",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 3494,
+      "totalTokens": 3494,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1728,
+      "totalTokens": 1728,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3748,
+      "totalTokens": 3748,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2140,
+      "totalTokens": 2140,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2009,
+      "totalTokens": 2009,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "D",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-36"
+      ],
+      "tokens": 2143,
+      "totalTokens": 2143,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-013",
+      "taskId": "H-013",
+      "condition": "E_B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3748,
+      "totalTokens": 3748,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1860,
+      "totalTokens": 1860,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3185,
+      "totalTokens": 3185,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "C",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-18",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2079,
+      "totalTokens": 2079,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2222,
+      "totalTokens": 2222,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2202,
+      "totalTokens": 2202,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-014",
+      "taskId": "H-014",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3185,
+      "totalTokens": 3185,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2094,
+      "totalTokens": 2094,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3515,
+      "totalTokens": 3515,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2150,
+      "totalTokens": 2150,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "C0",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-32",
+        "F-37"
+      ],
+      "tokens": 1838,
+      "totalTokens": 1838,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1841,
+      "totalTokens": 1841,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-015",
+      "taskId": "H-015",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3515,
+      "totalTokens": 3515,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1611,
+      "totalTokens": 1611,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2768,
+      "totalTokens": 2768,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1961,
+      "totalTokens": 1961,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-01",
+        "F-19",
+        "F-22",
+        "F-23",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 2266,
+      "totalTokens": 2266,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2435,
+      "totalTokens": 2435,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-016",
+      "taskId": "H-016",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2768,
+      "totalTokens": 2768,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1704,
+      "totalTokens": 1704,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-17"
+      ],
+      "tokens": 3144,
+      "totalTokens": 3144,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2625,
+      "totalTokens": 2625,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 2238,
+      "totalTokens": 2238,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "D",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2222,
+      "totalTokens": 2222,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-017",
+      "taskId": "H-017",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-17"
+      ],
+      "tokens": 3144,
+      "totalTokens": 3144,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "A",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2454,
+      "totalTokens": 2454,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3830,
+      "totalTokens": 3830,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "C",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2308,
+      "totalTokens": 2308,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 2161,
+      "totalTokens": 2161,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "D",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2836,
+      "totalTokens": 2836,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-018",
+      "taskId": "H-018",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3830,
+      "totalTokens": 3830,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 1670,
+      "totalTokens": 1670,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "B",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-19",
+        "F-20",
+        "F-39"
+      ],
+      "tokens": 3400,
+      "totalTokens": 3400,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "C",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2354,
+      "totalTokens": 2354,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2574,
+      "totalTokens": 2574,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2572,
+      "totalTokens": 2572,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-019",
+      "taskId": "H-019",
+      "condition": "E_B",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-19",
+        "F-20",
+        "F-39"
+      ],
+      "tokens": 3400,
+      "totalTokens": 3400,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1590,
+      "totalTokens": 1590,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2488,
+      "totalTokens": 2488,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1902,
+      "totalTokens": 1902,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2242,
+      "totalTokens": 2242,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2282,
+      "totalTokens": 2282,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-020",
+      "taskId": "H-020",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2488,
+      "totalTokens": 2488,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1552,
+      "totalTokens": 1552,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3129,
+      "totalTokens": 3129,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "C",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-01",
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 1847,
+      "totalTokens": 1847,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "C0",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 2229,
+      "totalTokens": 2229,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "D",
+      "boundFraction": 0.2,
+      "boundFactFraction": 0.2,
+      "failedFacts": [
+        "F-05",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2061,
+      "totalTokens": 2061,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-021",
+      "taskId": "H-021",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3129,
+      "totalTokens": 3129,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1996,
+      "totalTokens": 1996,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2550,
+      "totalTokens": 2550,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "C",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2175,
+      "totalTokens": 2175,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-27"
+      ],
+      "tokens": 2232,
+      "totalTokens": 2232,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2540,
+      "totalTokens": 2540,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-022",
+      "taskId": "H-022",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2550,
+      "totalTokens": 2550,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2101,
+      "totalTokens": 2101,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2986,
+      "totalTokens": 2986,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2281,
+      "totalTokens": 2281,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22"
+      ],
+      "tokens": 2732,
+      "totalTokens": 2732,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "D",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2713,
+      "totalTokens": 2713,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-023",
+      "taskId": "H-023",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2986,
+      "totalTokens": 2986,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1324,
+      "totalTokens": 1324,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2704,
+      "totalTokens": 2704,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2262,
+      "totalTokens": 2262,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2445,
+      "totalTokens": 2445,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2028,
+      "totalTokens": 2028,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-024",
+      "taskId": "H-024",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2704,
+      "totalTokens": 2704,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "A",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2048,
+      "totalTokens": 2048,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2722,
+      "totalTokens": 2722,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1887,
+      "totalTokens": 1887,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1788,
+      "totalTokens": 1788,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2795,
+      "totalTokens": 2795,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-025",
+      "taskId": "H-025",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2722,
+      "totalTokens": 2722,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1661,
+      "totalTokens": 1661,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2937,
+      "totalTokens": 2937,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "C",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-23",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 1642,
+      "totalTokens": 1642,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-19",
+        "F-22",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 2589,
+      "totalTokens": 2589,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2771,
+      "totalTokens": 2771,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-026",
+      "taskId": "H-026",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2937,
+      "totalTokens": 2937,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1457,
+      "totalTokens": 1457,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3637,
+      "totalTokens": 3637,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "C",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-17",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2129,
+      "totalTokens": 2129,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-39"
+      ],
+      "tokens": 1952,
+      "totalTokens": 1952,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "D",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-15",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-25",
+        "F-26",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2185,
+      "totalTokens": 2185,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-027",
+      "taskId": "H-027",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3637,
+      "totalTokens": 3637,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "A",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-16",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2168,
+      "totalTokens": 2168,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3288,
+      "totalTokens": 3288,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2687,
+      "totalTokens": 2687,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-20",
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2113,
+      "totalTokens": 2113,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1958,
+      "totalTokens": 1958,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-028",
+      "taskId": "H-028",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3288,
+      "totalTokens": 3288,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1668,
+      "totalTokens": 1668,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2647,
+      "totalTokens": 2647,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "C",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-15",
+        "F-20",
+        "F-22",
+        "F-26",
+        "F-36"
+      ],
+      "tokens": 2400,
+      "totalTokens": 2400,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2496,
+      "totalTokens": 2496,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-25",
+        "F-26",
+        "F-27",
+        "F-36",
+        "F-39"
+      ],
+      "tokens": 2423,
+      "totalTokens": 2423,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-029",
+      "taskId": "H-029",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-22",
+        "F-26"
+      ],
+      "tokens": 2647,
+      "totalTokens": 2647,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1660,
+      "totalTokens": 1660,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3120,
+      "totalTokens": 3120,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2061,
+      "totalTokens": 2061,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1862,
+      "totalTokens": 1862,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1823,
+      "totalTokens": 1823,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-030",
+      "taskId": "H-030",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3120,
+      "totalTokens": 3120,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1692,
+      "totalTokens": 1692,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3410,
+      "totalTokens": 3410,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2393,
+      "totalTokens": 2393,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2000,
+      "totalTokens": 2000,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "D",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-24",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-37"
+      ],
+      "tokens": 2173,
+      "totalTokens": 2173,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-031",
+      "taskId": "H-031",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3410,
+      "totalTokens": 3410,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1616,
+      "totalTokens": 1616,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "B",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-24",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3650,
+      "totalTokens": 3650,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "C",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-24",
+        "F-25",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2022,
+      "totalTokens": 2022,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "C0",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-05",
+        "F-06",
+        "F-21",
+        "F-24",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2276,
+      "totalTokens": 2276,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "D",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-08",
+        "F-10",
+        "F-16",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2149,
+      "totalTokens": 2149,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-032",
+      "taskId": "H-032",
+      "condition": "E_B",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-24",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3650,
+      "totalTokens": 3650,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1225,
+      "totalTokens": 1225,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "B",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3666,
+      "totalTokens": 3666,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-06",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 1681,
+      "totalTokens": 1681,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2531,
+      "totalTokens": 2531,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "D",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2700,
+      "totalTokens": 2700,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-033",
+      "taskId": "H-033",
+      "condition": "E_B",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3666,
+      "totalTokens": 3666,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1781,
+      "totalTokens": 1781,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3256,
+      "totalTokens": 3256,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2445,
+      "totalTokens": 2445,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-05",
+        "F-06",
+        "F-21",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 1863,
+      "totalTokens": 1863,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-24",
+        "F-25",
+        "F-26",
+        "F-32",
+        "F-37"
+      ],
+      "tokens": 1858,
+      "totalTokens": 1858,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-034",
+      "taskId": "H-034",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3256,
+      "totalTokens": 3256,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "A",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-08",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 1521,
+      "totalTokens": 1521,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 2943,
+      "totalTokens": 2943,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-06",
+        "F-26"
+      ],
+      "tokens": 2148,
+      "totalTokens": 2148,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2245,
+      "totalTokens": 2245,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2004,
+      "totalTokens": 2004,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-035",
+      "taskId": "H-035",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 2943,
+      "totalTokens": 2943,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "A",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 1780,
+      "totalTokens": 1780,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3184,
+      "totalTokens": 3184,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2254,
+      "totalTokens": 2254,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2368,
+      "totalTokens": 2368,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2042,
+      "totalTokens": 2042,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-036",
+      "taskId": "H-036",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3184,
+      "totalTokens": 3184,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2119,
+      "totalTokens": 2119,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3278,
+      "totalTokens": 3278,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2059,
+      "totalTokens": 2059,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-21"
+      ],
+      "tokens": 2146,
+      "totalTokens": 2146,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2148,
+      "totalTokens": 2148,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-037",
+      "taskId": "H-037",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3278,
+      "totalTokens": 3278,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "A",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-10",
+        "F-16",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 1896,
+      "totalTokens": 1896,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3052,
+      "totalTokens": 3052,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1978,
+      "totalTokens": 1978,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2403,
+      "totalTokens": 2403,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2427,
+      "totalTokens": 2427,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-038",
+      "taskId": "H-038",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3052,
+      "totalTokens": 3052,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-16",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 1661,
+      "totalTokens": 1661,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3745,
+      "totalTokens": 3745,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "C",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-06",
+        "F-24",
+        "F-25",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 1964,
+      "totalTokens": 1964,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-21",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2223,
+      "totalTokens": 2223,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-16",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2301,
+      "totalTokens": 2301,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-039",
+      "taskId": "H-039",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3745,
+      "totalTokens": 3745,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1563,
+      "totalTokens": 1563,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3084,
+      "totalTokens": 3084,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2462,
+      "totalTokens": 2462,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "C0",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-01",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 1882,
+      "totalTokens": 1882,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1954,
+      "totalTokens": 1954,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-040",
+      "taskId": "H-040",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3084,
+      "totalTokens": 3084,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1526,
+      "totalTokens": 1526,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2977,
+      "totalTokens": 2977,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2834,
+      "totalTokens": 2834,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2551,
+      "totalTokens": 2551,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1985,
+      "totalTokens": 1985,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-041",
+      "taskId": "H-041",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2977,
+      "totalTokens": 2977,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2355,
+      "totalTokens": 2355,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3399,
+      "totalTokens": 3399,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 2418,
+      "totalTokens": 2418,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-05",
+        "F-06",
+        "F-21",
+        "F-26"
+      ],
+      "tokens": 1546,
+      "totalTokens": 1546,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2858,
+      "totalTokens": 2858,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-042",
+      "taskId": "H-042",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 3399,
+      "totalTokens": 3399,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1799,
+      "totalTokens": 1799,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2981,
+      "totalTokens": 2981,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2411,
+      "totalTokens": 2411,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2327,
+      "totalTokens": 2327,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "D",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2654,
+      "totalTokens": 2654,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-043",
+      "taskId": "H-043",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2981,
+      "totalTokens": 2981,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1230,
+      "totalTokens": 1230,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3933,
+      "totalTokens": 3933,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1793,
+      "totalTokens": 1793,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1735,
+      "totalTokens": 1735,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1978,
+      "totalTokens": 1978,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-044",
+      "taskId": "H-044",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26",
+        "F-32"
+      ],
+      "tokens": 3933,
+      "totalTokens": 3933,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "A",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 1711,
+      "totalTokens": 1711,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3725,
+      "totalTokens": 3725,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1856,
+      "totalTokens": 1856,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1764,
+      "totalTokens": 1764,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "D",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-05",
+        "F-06",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-21",
+        "F-25",
+        "F-26",
+        "F-37"
+      ],
+      "tokens": 2056,
+      "totalTokens": 2056,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-045",
+      "taskId": "H-045",
+      "condition": "E_B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-32"
+      ],
+      "tokens": 3725,
+      "totalTokens": 3725,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2281,
+      "totalTokens": 2281,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 2495,
+      "totalTokens": 2495,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2477,
+      "totalTokens": 2477,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-26"
+      ],
+      "tokens": 1740,
+      "totalTokens": 1740,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "D",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-10",
+        "F-16",
+        "F-22",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1994,
+      "totalTokens": 1994,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-046",
+      "taskId": "H-046",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 2495,
+      "totalTokens": 2495,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "A",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1721,
+      "totalTokens": 1721,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "B",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-18",
+        "F-21",
+        "F-26"
+      ],
+      "tokens": 3435,
+      "totalTokens": 3435,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1925,
+      "totalTokens": 1925,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1868,
+      "totalTokens": 1868,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2200,
+      "totalTokens": 2200,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-047",
+      "taskId": "H-047",
+      "condition": "E_B",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-18",
+        "F-21",
+        "F-26"
+      ],
+      "tokens": 3435,
+      "totalTokens": 3435,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "A",
+      "boundFraction": 0.2,
+      "boundFactFraction": 0.2,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1522,
+      "totalTokens": 1522,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3123,
+      "totalTokens": 3123,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "C",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2570,
+      "totalTokens": 2570,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2212,
+      "totalTokens": 2212,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2687,
+      "totalTokens": 2687,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-048",
+      "taskId": "H-048",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3123,
+      "totalTokens": 3123,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2261,
+      "totalTokens": 2261,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2514,
+      "totalTokens": 2514,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2381,
+      "totalTokens": 2381,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-17",
+        "F-26"
+      ],
+      "tokens": 1981,
+      "totalTokens": 1981,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2027,
+      "totalTokens": 2027,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-049",
+      "taskId": "H-049",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2514,
+      "totalTokens": 2514,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2221,
+      "totalTokens": 2221,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3445,
+      "totalTokens": 3445,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2407,
+      "totalTokens": 2407,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2453,
+      "totalTokens": 2453,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "D",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-22",
+        "F-24",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2270,
+      "totalTokens": 2270,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-050",
+      "taskId": "H-050",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3445,
+      "totalTokens": 3445,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "A",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-22",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2166,
+      "totalTokens": 2166,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3360,
+      "totalTokens": 3360,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "C",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-18",
+        "F-24",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1723,
+      "totalTokens": 1723,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1741,
+      "totalTokens": 1741,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2594,
+      "totalTokens": 2594,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-051",
+      "taskId": "H-051",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3360,
+      "totalTokens": 3360,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "A",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-25",
+        "F-26",
+        "F-30"
+      ],
+      "tokens": 1521,
+      "totalTokens": 1521,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3077,
+      "totalTokens": 3077,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "C",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-01",
+        "F-24",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1870,
+      "totalTokens": 1870,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-24"
+      ],
+      "tokens": 2717,
+      "totalTokens": 2717,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "D",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-18",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2739,
+      "totalTokens": 2739,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-052",
+      "taskId": "H-052",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3077,
+      "totalTokens": 3077,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1681,
+      "totalTokens": 1681,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3858,
+      "totalTokens": 3858,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1850,
+      "totalTokens": 1850,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2115,
+      "totalTokens": 2115,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3239,
+      "totalTokens": 3239,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-053",
+      "taskId": "H-053",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3858,
+      "totalTokens": 3858,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2095,
+      "totalTokens": 2095,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-17",
+        "F-21",
+        "F-26"
+      ],
+      "tokens": 2945,
+      "totalTokens": 2945,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-08",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1925,
+      "totalTokens": 1925,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1807,
+      "totalTokens": 1807,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-08",
+        "F-10",
+        "F-16",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2047,
+      "totalTokens": 2047,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-054",
+      "taskId": "H-054",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-17",
+        "F-21",
+        "F-26"
+      ],
+      "tokens": 2945,
+      "totalTokens": 2945,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2365,
+      "totalTokens": 2365,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2706,
+      "totalTokens": 2706,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2562,
+      "totalTokens": 2562,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2102,
+      "totalTokens": 2102,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2213,
+      "totalTokens": 2213,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-055",
+      "taskId": "H-055",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2706,
+      "totalTokens": 2706,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1269,
+      "totalTokens": 1269,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18"
+      ],
+      "tokens": 3375,
+      "totalTokens": 3375,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1474,
+      "totalTokens": 1474,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2179,
+      "totalTokens": 2179,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2157,
+      "totalTokens": 2157,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-056",
+      "taskId": "H-056",
+      "condition": "E_B",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-18"
+      ],
+      "tokens": 3375,
+      "totalTokens": 3375,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "A",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2032,
+      "totalTokens": 2032,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3026,
+      "totalTokens": 3026,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-18",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1808,
+      "totalTokens": 1808,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 2783,
+      "totalTokens": 2783,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2307,
+      "totalTokens": 2307,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-057",
+      "taskId": "H-057",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3026,
+      "totalTokens": 3026,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1369,
+      "totalTokens": 1369,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 3449,
+      "totalTokens": 3449,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2412,
+      "totalTokens": 2412,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-17"
+      ],
+      "tokens": 2378,
+      "totalTokens": 2378,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-22",
+        "F-24",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 2416,
+      "totalTokens": 2416,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-058",
+      "taskId": "H-058",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 3449,
+      "totalTokens": 3449,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2059,
+      "totalTokens": 2059,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3323,
+      "totalTokens": 3323,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-26"
+      ],
+      "tokens": 1798,
+      "totalTokens": 1798,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-01",
+        "F-26"
+      ],
+      "tokens": 1714,
+      "totalTokens": 1714,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2453,
+      "totalTokens": 2453,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-059",
+      "taskId": "H-059",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3323,
+      "totalTokens": 3323,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "A",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-03",
+        "F-10",
+        "F-16",
+        "F-17",
+        "F-25",
+        "F-26"
+      ],
+      "tokens": 1922,
+      "totalTokens": 1922,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 2522,
+      "totalTokens": 2522,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1699,
+      "totalTokens": 1699,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1888,
+      "totalTokens": 1888,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2235,
+      "totalTokens": 2235,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-060",
+      "taskId": "H-060",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-18",
+        "F-26"
+      ],
+      "tokens": 2522,
+      "totalTokens": 2522,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "A",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1955,
+      "totalTokens": 1955,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 3127,
+      "totalTokens": 3127,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2662,
+      "totalTokens": 2662,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 1961,
+      "totalTokens": 1961,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1968,
+      "totalTokens": 1968,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-061",
+      "taskId": "H-061",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 3127,
+      "totalTokens": 3127,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1546,
+      "totalTokens": 1546,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2431,
+      "totalTokens": 2431,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-18",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2384,
+      "totalTokens": 2384,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1882,
+      "totalTokens": 1882,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2429,
+      "totalTokens": 2429,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-062",
+      "taskId": "H-062",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2431,
+      "totalTokens": 2431,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1634,
+      "totalTokens": 1634,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3009,
+      "totalTokens": 3009,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1955,
+      "totalTokens": 1955,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2540,
+      "totalTokens": 2540,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2264,
+      "totalTokens": 2264,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-063",
+      "taskId": "H-063",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3009,
+      "totalTokens": 3009,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1473,
+      "totalTokens": 1473,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3304,
+      "totalTokens": 3304,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1706,
+      "totalTokens": 1706,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 2279,
+      "totalTokens": 2279,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2022,
+      "totalTokens": 2022,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-064",
+      "taskId": "H-064",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3304,
+      "totalTokens": 3304,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1260,
+      "totalTokens": 1260,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3159,
+      "totalTokens": 3159,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "C",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2044,
+      "totalTokens": 2044,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1869,
+      "totalTokens": 1869,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2259,
+      "totalTokens": 2259,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-065",
+      "taskId": "H-065",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3159,
+      "totalTokens": 3159,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1179,
+      "totalTokens": 1179,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3007,
+      "totalTokens": 3007,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "C",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-05",
+        "F-09",
+        "F-15",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2199,
+      "totalTokens": 2199,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2325,
+      "totalTokens": 2325,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "D",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1933,
+      "totalTokens": 1933,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-066",
+      "taskId": "H-066",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3007,
+      "totalTokens": 3007,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1623,
+      "totalTokens": 1623,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3712,
+      "totalTokens": 3712,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "C",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2384,
+      "totalTokens": 2384,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "C0",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 1885,
+      "totalTokens": 1885,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-05",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2218,
+      "totalTokens": 2218,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-067",
+      "taskId": "H-067",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 3712,
+      "totalTokens": 3712,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1480,
+      "totalTokens": 1480,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3671,
+      "totalTokens": 3671,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "C",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-09",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1928,
+      "totalTokens": 1928,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "C0",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 1786,
+      "totalTokens": 1786,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "D",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-01",
+        "F-05",
+        "F-19",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2093,
+      "totalTokens": 2093,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-068",
+      "taskId": "H-068",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3671,
+      "totalTokens": 3671,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1805,
+      "totalTokens": 1805,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-20"
+      ],
+      "tokens": 3300,
+      "totalTokens": 3300,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "C",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1759,
+      "totalTokens": 1759,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2357,
+      "totalTokens": 2357,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2045,
+      "totalTokens": 2045,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-069",
+      "taskId": "H-069",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-20"
+      ],
+      "tokens": 3300,
+      "totalTokens": 3300,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1464,
+      "totalTokens": 1464,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3214,
+      "totalTokens": 3214,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "C",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2472,
+      "totalTokens": 2472,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1910,
+      "totalTokens": 1910,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2601,
+      "totalTokens": 2601,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-070",
+      "taskId": "H-070",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3214,
+      "totalTokens": 3214,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1604,
+      "totalTokens": 1604,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2794,
+      "totalTokens": 2794,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2266,
+      "totalTokens": 2266,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "C0",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 2529,
+      "totalTokens": 2529,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2692,
+      "totalTokens": 2692,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-071",
+      "taskId": "H-071",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2794,
+      "totalTokens": 2794,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "A",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 1873,
+      "totalTokens": 1873,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2966,
+      "totalTokens": 2966,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2589,
+      "totalTokens": 2589,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 2075,
+      "totalTokens": 2075,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2168,
+      "totalTokens": 2168,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-072",
+      "taskId": "H-072",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2966,
+      "totalTokens": 2966,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1885,
+      "totalTokens": 1885,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2947,
+      "totalTokens": 2947,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-05",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-32",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2083,
+      "totalTokens": 2083,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "C0",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 1761,
+      "totalTokens": 1761,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "D",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-05",
+        "F-09",
+        "F-19",
+        "F-20",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2482,
+      "totalTokens": 2482,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-073",
+      "taskId": "H-073",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2947,
+      "totalTokens": 2947,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1952,
+      "totalTokens": 1952,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3805,
+      "totalTokens": 3805,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2177,
+      "totalTokens": 2177,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "C0",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-20",
+        "F-32"
+      ],
+      "tokens": 2299,
+      "totalTokens": 2299,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2616,
+      "totalTokens": 2616,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-074",
+      "taskId": "H-074",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 3805,
+      "totalTokens": 3805,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1597,
+      "totalTokens": 1597,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2638,
+      "totalTokens": 2638,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1770,
+      "totalTokens": 1770,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2373,
+      "totalTokens": 2373,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "D",
+      "boundFraction": 0.5,
+      "boundFactFraction": 0.5,
+      "failedFacts": [
+        "F-05",
+        "F-19",
+        "F-20",
+        "F-27",
+        "F-36",
+        "F-37"
+      ],
+      "tokens": 2164,
+      "totalTokens": 2164,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-075",
+      "taskId": "H-075",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2638,
+      "totalTokens": 2638,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1360,
+      "totalTokens": 1360,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2716,
+      "totalTokens": 2716,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2233,
+      "totalTokens": 2233,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2305,
+      "totalTokens": 2305,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1838,
+      "totalTokens": 1838,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-076",
+      "taskId": "H-076",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2716,
+      "totalTokens": 2716,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1772,
+      "totalTokens": 1772,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2351,
+      "totalTokens": 2351,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2741,
+      "totalTokens": 2741,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2476,
+      "totalTokens": 2476,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "D",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2997,
+      "totalTokens": 2997,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-077",
+      "taskId": "H-077",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2351,
+      "totalTokens": 2351,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1304,
+      "totalTokens": 1304,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2565,
+      "totalTokens": 2565,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2037,
+      "totalTokens": 2037,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 1734,
+      "totalTokens": 1734,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2025,
+      "totalTokens": 2025,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-078",
+      "taskId": "H-078",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2565,
+      "totalTokens": 2565,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1449,
+      "totalTokens": 1449,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2811,
+      "totalTokens": 2811,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "C",
+      "boundFraction": 0.75,
+      "boundFactFraction": 0.75,
+      "failedFacts": [
+        "F-15",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2220,
+      "totalTokens": 2220,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1749,
+      "totalTokens": 1749,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "D",
+      "boundFraction": 0.25,
+      "boundFactFraction": 0.25,
+      "failedFacts": [
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-22",
+        "F-36"
+      ],
+      "tokens": 1740,
+      "totalTokens": 1740,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-079",
+      "taskId": "H-079",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2811,
+      "totalTokens": 2811,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1362,
+      "totalTokens": 1362,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2406,
+      "totalTokens": 2406,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "C",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-08",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2737,
+      "totalTokens": 2737,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1835,
+      "totalTokens": 1835,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2010,
+      "totalTokens": 2010,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-080",
+      "taskId": "H-080",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2406,
+      "totalTokens": 2406,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1748,
+      "totalTokens": 1748,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2598,
+      "totalTokens": 2598,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1724,
+      "totalTokens": 1724,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2114,
+      "totalTokens": 2114,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2349,
+      "totalTokens": 2349,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-081",
+      "taskId": "H-081",
+      "condition": "E_B",
+      "boundFraction": 0.8,
+      "boundFactFraction": 0.8,
+      "failedFacts": [
+        "F-36"
+      ],
+      "tokens": 2598,
+      "totalTokens": 2598,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1361,
+      "totalTokens": 1361,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2342,
+      "totalTokens": 2342,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "C",
+      "boundFraction": 0.3333,
+      "boundFactFraction": 0.3333,
+      "failedFacts": [
+        "F-08",
+        "F-15",
+        "F-19",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2270,
+      "totalTokens": 2270,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1950,
+      "totalTokens": 1950,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2507,
+      "totalTokens": 2507,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-082",
+      "taskId": "H-082",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2342,
+      "totalTokens": 2342,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1339,
+      "totalTokens": 1339,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2272,
+      "totalTokens": 2272,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "C",
+      "boundFraction": 0.6,
+      "boundFactFraction": 0.6,
+      "failedFacts": [
+        "F-15",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2535,
+      "totalTokens": 2535,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2078,
+      "totalTokens": 2078,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "D",
+      "boundFraction": 0.4,
+      "boundFactFraction": 0.4,
+      "failedFacts": [
+        "F-05",
+        "F-16",
+        "F-17",
+        "F-18",
+        "F-19",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 2474,
+      "totalTokens": 2474,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-083",
+      "taskId": "H-083",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2272,
+      "totalTokens": 2272,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1612,
+      "totalTokens": 1612,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2308,
+      "totalTokens": 2308,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2659,
+      "totalTokens": 2659,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2262,
+      "totalTokens": 2262,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2038,
+      "totalTokens": 2038,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-084",
+      "taskId": "H-084",
+      "condition": "E_B",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [],
+      "tokens": 2308,
+      "totalTokens": 2308,
+      "status": "pass",
+      "boundPassed": true
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "A",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1770,
+      "totalTokens": 1770,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2632,
+      "totalTokens": 2632,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2540,
+      "totalTokens": 2540,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "C0",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2026,
+      "totalTokens": 2026,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "D",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2258,
+      "totalTokens": 2258,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-085",
+      "taskId": "H-085",
+      "condition": "E_B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2632,
+      "totalTokens": 2632,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-086",
+      "taskId": "H-086",
+      "condition": "A",
+      "boundFraction": 0.6667,
+      "boundFactFraction": 0.6667,
+      "failedFacts": [
+        "F-16",
+        "F-17",
+        "F-19",
+        "F-20",
+        "F-36"
+      ],
+      "tokens": 1726,
+      "totalTokens": 1726,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-086",
+      "taskId": "H-086",
+      "condition": "B",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 2600,
+      "totalTokens": 2600,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-086",
+      "taskId": "H-086",
+      "condition": "C",
+      "boundFraction": 0,
+      "boundFactFraction": 0,
+      "failedFacts": [
+        "F-13"
+      ],
+      "tokens": 1977,
+      "totalTokens": 1977,
+      "status": "fail",
+      "boundPassed": false
+    },
+    {
+      "task": "H-086",
+      "taskId": "H-086",
+      "condition": "C0",
+      "boundFraction": 1,
+      "boundFactFraction": 1,
+      "failedFacts": [
+        "F-20"
+      ],
+      "tokens": 1995,
+      "totalTokens": 1995,
+      "status": "pass",
+      "boundPassed": true
+    }
+  ],
+  "totalTrials": 514,
+  "passedTrials": 119,
+  "failedTrials": 395,
+  "passRate": "23.2%",
+  "generatedAt": "2026-11-12T12:19:39.058Z",
+  "lastModified": "2026-11-12T12:15:46.249Z"
+}

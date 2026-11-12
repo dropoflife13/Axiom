@@ -9,20 +9,20 @@ export type AnalysisCondition = (typeof CONDITION_ORDER)[number];
 /** Established Axiom palette for the 6 ablation conditions. */
 export const CONDITION_COLORS: Record<AnalysisCondition, string> = {
   A: '#71717a',   // Gray (Zero-Shot Baseline)
-  B: '#a855f7',   // Purple (Golden Oracle Ceiling)
-  C: '#f97316',   // Orange (Reflexion Memory K=10)
-  C0: '#22d3ee',  // Cyan (Verbatim Canonical Facts)
+  B: '#a855f7',   // Purple (Static Reference - 34 Rules)
+  C: '#f97316',   // Orange (Distilled Rules K=10)
+  C0: '#22d3ee',  // Cyan (Failure-Prioritized Rules K=10)
   D: '#ef4444',   // Red (Placebo Distractor)
-  E_B: '#22c55e', // Green (Exhaustive Oracle Ceiling)
+  E_B: '#22c55e', // Green (Static Control - Exhaustive)
 };
 
 export const CONDITION_LABELS: Record<AnalysisCondition, string> = {
   A: 'Zero-Shot Baseline',
-  B: 'Static Oracle Hints',
-  C: 'Distilled Lessons (K=10)',
-  C0: 'Verbatim Rules (K=10)',
+  B: 'Static Reference (34 Rules)',
+  C: 'Distilled Rules (K=10)',
+  C0: 'Failure-Prioritized Rules (K=10)',
   D: 'Placebo Distractor',
-  E_B: 'Exhaustive Retry',
+  E_B: 'Static Control (Exhaustive)',
 };
 
 export interface ConditionStats {
@@ -306,7 +306,7 @@ export function normalizeAnalysisRun(
 
   const contrasts = [
     ['C_vs_A', 'A', 'C vs A (Baseline)'],
-    ['C_vs_B', 'B', 'C vs B (Oracle Ceiling)'],
+    ['C_vs_B', 'B', 'C vs B (Static Reference)'],
     ['C_vs_C0', 'C0', 'C vs C0 (Verbatim)'],
     ['C_vs_D', 'D', 'C vs D (Placebo)'],
   ] as const;
@@ -444,7 +444,7 @@ export function buildHypothesisSummary(
       tone: 'zinc',
       headline: `Awaiting paired C & C0 trials (${run.completedTrials}/${run.totalTrials} complete).`,
       context:
-        'Both Condition C (distilled reflexion lessons) and Condition C0 (verbatim oracle clauses) must record completed tasks before H3 effect size can be evaluated.',
+        'Both Condition C (distilled rule lessons) and Condition C0 (verbatim oracle clauses) must record completed tasks before H3 effect size can be evaluated.',
       bullets: [
         `Completed trials so far: ${run.completedTrials} / ${run.totalTrials}.`,
       ],
@@ -525,7 +525,7 @@ export function buildHypothesisSummary(
   }
 
   const bullets: string[] = [
-    `Baseline lift vs A (${aPct}): C0 gained ${liftC0vsA >= 0 ? '+' : ''}${liftC0vsA.toFixed(1)} pts · C gained ${liftCvsA >= 0 ? '+' : ''}${liftCvsA.toFixed(1)} pts · Oracle Ceiling B = ${bPct}.`,
+    `Baseline lift vs A (${aPct}): C0 gained ${liftC0vsA >= 0 ? '+' : ''}${liftC0vsA.toFixed(1)} pts · C gained ${liftCvsA >= 0 ? '+' : ''}${liftCvsA.toFixed(1)} pts · Static Reference B = ${bPct}.`,
     `Strict Pass@1: C0 passed ${(c0.strictBoundPassAt1 * 100).toFixed(1)}% (${c0.strictPassCount}/${c0.n}) vs C ${(c.strictBoundPassAt1 * 100).toFixed(1)}% (${c.strictPassCount}/${c.n}) at ${tokC0.toLocaleString()} vs ${tokC.toLocaleString()} tok/task (${tokDelta >= 0 ? `+${tokDelta}` : tokDelta} tok C0−C).`,
   ];
 

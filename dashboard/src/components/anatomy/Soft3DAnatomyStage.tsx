@@ -118,7 +118,7 @@ export const NODES_3D: Node3DConfig[] = [
     id: '12',
     name: 'ADVISOR',
     badge: '< 24 WORDS · GATED',
-    desc: 'Reflexion distillation unit',
+    desc: 'Lesson distillation unit',
     basePos: [-2.6, -1.8, 1.8],
     size: [1.3, 0.9, 0.9],
     radius: 0.18,

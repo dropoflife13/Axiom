@@ -10,7 +10,6 @@ import { AxiomAutonomousKernel } from '@/components/cortex/AxiomAutonomousKernel
 import { AxiomFAQSection } from '@/components/faq/AxiomFAQSection';
 import { AxiomFooter } from '@/components/footer/AxiomFooter';
 import { AxiomLoadingScreen } from '@/components/AxiomLoadingScreen';
-import { WhitePaperModal } from '@/components/WhitePaperModal';
 import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial } from '@/lib/desk';
 import { DEFAULT_RUN_ID, DEFAULT_RUN_OPTIONS, inferRunOption, modelForRun, getDisplayName, type RunOption } from '@/lib/runs';
 import { useFleetStatus } from '@/lib/useFleetStatus';
@@ -85,7 +84,6 @@ export default function Page() {
 
   const [viewMode, setViewMode] = useState<'engine' | 'research'>('engine');
   const [activeResearchSection, setActiveResearchSection] = useState<string>('theories');
-  const [whitePaperOpen, setWhitePaperOpen] = useState(false);
   const [intelOpen, setIntelOpen] = useState(true);
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
   const runCacheRef = useRef<Map<string, SettledRunState>>(new Map());
@@ -650,51 +648,42 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Right: Engine / Research View Switcher Tabs & White Paper */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg bg-zinc-900/90 border border-zinc-800/90 shadow-inner">
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('engine');
-                  if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
-                }}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider transition-all uppercase cursor-pointer ${
-                  viewMode === 'engine'
-                    ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(34,211,238,0.25)] font-bold'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'engine' ? 'bg-cyan-400 animate-pulse' : 'bg-zinc-600'}`} />
-                <span>LIVE ENGINE</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('research');
-                  if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
-                }}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider transition-all uppercase cursor-pointer ${
-                  viewMode === 'research'
-                    ? 'bg-amber-500/20 text-amber-300 border border-amber-500/60 shadow-[0_0_12px_rgba(251,191,36,0.25)] font-bold'
-                    : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'research' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
-                <span>RESEARCH FINDINGS</span>
-              </button>
+            {/* Right: Engine / Research View Switcher Tabs */}
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg bg-zinc-900/90 border border-zinc-800/90 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('engine');
+                    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider transition-all uppercase cursor-pointer ${
+                    viewMode === 'engine'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/50 shadow-[0_0_12px_rgba(34,211,238,0.25)] font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'engine' ? 'bg-cyan-400 animate-pulse' : 'bg-zinc-600'}`} />
+                  <span>LIVE ENGINE</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setViewMode('research');
+                    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider transition-all uppercase cursor-pointer ${
+                    viewMode === 'research'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/60 shadow-[0_0_12px_rgba(251,191,36,0.25)] font-bold'
+                      : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'research' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
+                  <span>RESEARCH FINDINGS</span>
+                </button>
+              </div>
             </div>
-
-            {/* White Paper Button */}
-            <button
-              type="button"
-              onClick={() => setWhitePaperOpen(true)}
-              className="px-3 py-1 rounded-sm bg-white text-black font-mono text-[11px] font-bold hover:bg-zinc-200 transition-all cursor-pointer shadow-[0_0_12px_rgba(255,255,255,0.25)] uppercase tracking-wider shrink-0 hidden sm:inline-block"
-            >
-              White paper
-            </button>
-          </div>
-        </header>
+          </header>
 
         {/* Dynamic Center Canvas: Switches between Live Engine (with Anatomy & FAQ) and Dedicated Research Windows */}
         <div className="flex-1 min-w-0 relative w-full flex flex-col transition-all duration-300">
@@ -762,11 +751,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Technical White Paper Modal */}
-        <WhitePaperModal
-          isOpen={whitePaperOpen}
-          onClose={() => setWhitePaperOpen(false)}
-        />
       </div>
     </div>
   );

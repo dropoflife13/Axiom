@@ -60,7 +60,7 @@ export function AxiomFooter() {
               </li>
               <li>
                 <span className="axm-footer-link">
-                  Reflexion Router &amp; Ring Buffer
+                  Failure Memory &amp; Ring Buffer
                 </span>
               </li>
             </ul>

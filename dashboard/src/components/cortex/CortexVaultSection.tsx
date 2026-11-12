@@ -68,26 +68,26 @@ export const CONDITIONS_DATA: ConditionDetail[] = [
   },
   {
     code: 'C',
-    name: 'Condition C · Reflexion Memory (K=10)',
-    shortName: 'Reflexion Memory',
-    role: 'Autonomous natural language lessons from trial failures',
+    name: 'Condition C · Distilled Rule Hints (K=10)',
+    shortName: 'Distilled Rules',
+    role: 'Advisor-distilled natural language rules from failure logs',
     description:
-      'When candidate migrations violate contracts in PostgreSQL 16, the Advisor distills concise invariant lessons into a cryptographic FIFO ring buffer. Top K=10 lessons are retrieved by feature match.',
+      'When candidate migrations violate contracts in PostgreSQL 16, concise invariant lessons are retrieved based on task feature relevance. Tests abstracted advice vs verbatim text.',
     pct: 60.2,
     tokens: '1,296 tok',
     tokenNum: 1296,
     deltaBaseline: '+29.3% ★',
     status: 'reflexion',
-    badge: 'AUTONOMOUS REFLEXION',
+    badge: 'DISTILLED RETRIEVAL',
     keyFinding:
-      'Statistically significant compliance jump (McNemar p = 1.00e-5), demonstrating durable self-healing across held-out tasks.',
+      'Statistically significant compliance jump (McNemar p = 1.00e-5), demonstrating durable guidance across held-out tasks.',
     accent: '#10b981',
   },
   {
     code: 'C0',
-    name: 'Condition C0 · Verbatim Canonical Facts',
-    shortName: 'Verbatim Facts',
-    role: 'Exact contract clauses directly from the Oracle',
+    name: 'Condition C0 · Failure-Prioritized Rule Retrieval (K=10)',
+    shortName: 'Verbatim Rules',
+    role: 'Exact registry rule text retrieved by failure priority',
     description:
       'Injects exact behavioral contract clauses verbatim into the prompt without Advisor paraphrasing, testing conciseness vs natural language distillation.',
     pct: 69.6,
@@ -97,41 +97,41 @@ export const CONDITIONS_DATA: ConditionDetail[] = [
     status: 'reflexion',
     badge: 'HIGH EFFICIENCY',
     keyFinding:
-      'Cuts token consumption by 51.3% while exceeding distilled lessons by +9.4% in primary compliance.',
+      'Cuts token consumption by 51.3% while exceeding distilled lessons by +9.4% to +17.4% in primary compliance.',
     accent: '#00f0ff',
   },
   {
     code: 'B',
-    name: 'Condition B · Static Invariant Hints',
-    shortName: 'Golden Oracle',
-    role: 'Theoretical oracle ceiling (all 34 contracts pre-loaded)',
+    name: 'Condition B · Static Reference Hints (34 Rules)',
+    shortName: 'Static Reference',
+    role: 'Static in-context reference baseline (all 34 active rules)',
     description:
-      'Pre-populates all 34 known enterprise PostgreSQL rules statically into every prompt. Represents the theoretical upper-bound ceiling.',
+      'Pre-populates all 34 known enterprise PostgreSQL rules statically into every prompt. Serves as static in-context reference baseline. Not an upper bound ceiling; susceptible to prompt bloat and syntax crashes on sensitive models.',
     pct: 85.7,
     tokens: '1,852 tok',
     tokenNum: 1852,
     deltaBaseline: '+54.8%',
     status: 'oracle',
-    badge: 'ORACLE CEILING',
+    badge: 'STATIC REFERENCE',
     keyFinding:
-      'High compliance (85.7%) but causes extreme prompt bloat (+102% token overhead), making it cost-prohibitive in production.',
+      'High compliance on frontier models (85.7%-93.9%) but causes prompt bloat (+102% token overhead) and DDL syntax crashes on sensitive models.',
     accent: '#f59e0b',
   },
   {
     code: 'E_B',
-    name: 'Condition E_B · Adversarial Invariant Stress',
-    shortName: 'Adversarial Stress',
-    role: 'Deterministic auto-fixer control under schema stress',
+    name: 'Condition E_B · Static Reference Control',
+    shortName: 'Static Control',
+    role: 'Static reference with exhaustive test oracle evaluation',
     description:
-      'Combines static invariant guidance with deterministic static AST auto-fixers and adversarial schema mutations to validate the absolute system ceiling.',
+      'Pre-populates all 34 known enterprise PostgreSQL rules with exhaustive fact evaluation to benchmark baseline reference stability.',
     pct: 88.2,
     tokens: '1,858 tok',
     tokenNum: 1858,
     deltaBaseline: '+57.3%',
     status: 'stress',
-    badge: 'MAX CEILING (88.2%)',
+    badge: 'STATIC CONTROL',
     keyFinding:
-      'Highest benchmark pass rate. Proves that pairing architectural invariants with deterministic fixers seals 88.2% of edge cases.',
+      'Exhaustive fact evaluation benchmarks full rulebook coverage across all test tasks under identical oracle testing.',
     accent: '#38bdf8',
     isLeader: true,
   },
@@ -148,76 +148,87 @@ const MEMORY_VAULT_FILES: TagItem[] = [
 ];
 
 const INITIAL_CONTRACTS: TagItem[] = [
-  { id: 'tenant-rls', code: 'F-10', name: 'TENANT-RLS', role: 'F-10 / F-39: Cross-tenant row-level security boundaries verified with stubbed JWT claims.', spec: 'Security' },
-  { id: 'zero-downtime', code: 'F-01', name: 'ZERO-DOWNTIME-DDL', role: 'F-01..F-04: Non-blocking column additions, concurrent index creation, and safe backfills.', spec: 'DDL Safety' },
-  { id: 'role-separation', code: 'F-08', name: 'ROLE-SEPARATION', role: 'F-08 / F-09: Administrative deployer migration role strictly isolated from application user.', spec: 'Access' },
-  { id: 'sec-definer', code: 'F-12', name: 'SECURITY-DEFINER', role: 'F-12: Explicit schema search_path enforcement on SECURITY DEFINER functions to prevent hijacking.', spec: 'Security' },
-  { id: 'acid-tx', code: 'F-15', name: 'ACID-TRANSACTIONS', role: 'F-15: Strict atomic DDL rollbacks and transactional savepoints on schema migration failure.', spec: 'Integrity' },
-  { id: 'index-locks', code: 'F-18', name: 'INDEX-LOCKS', role: 'F-18: Prevention of table-exclusive locks during peak hours via CREATE INDEX CONCURRENTLY.', spec: 'Performance' },
-  { id: 'immutable-audit', code: 'F-22', name: 'IMMUTABLE-AUDIT', role: 'F-22: Append-only ledger triggers banning raw UPDATE and DELETE on audit trail tables.', spec: 'Governance' },
-  { id: 'foreign-keys', code: 'F-25', name: 'FOREIGN-KEYS', role: 'F-25: Mandatory indexed foreign keys and NOT VALID constraint additions with follow-up validation.', spec: 'Integrity' },
-  { id: 'schema-isolation', code: 'F-30', name: 'SCHEMA-ISOLATION', role: 'F-30: Strict multi-tenant schema partitioning and cross-database search path sanitization.', spec: 'Access' },
+  { id: 'f-25', code: 'F-25', name: 'ENABLE-FORCE-RLS', role: 'F-25: Multi-tenant tables must have ENABLE ROW LEVEL SECURITY and FORCE ROW LEVEL SECURITY.', spec: 'Security' },
+  { id: 'f-26', code: 'F-26', name: 'APP-METADATA-RLS', role: 'F-26: Tenant RLS policies must scope rows by app_metadata.tenant_id for application.', spec: 'Security' },
+  { id: 'f-01', code: 'F-01', name: 'UUID-PRIMARY-KEY', role: 'F-01: Primary key column id must be uuid NOT NULL with default gen_random_uuid().', spec: 'Integrity' },
+  { id: 'f-02', code: 'F-02', name: 'TENANT-ID-COLUMN', role: 'F-02: Multi-tenant tables must include tenant_id uuid NOT NULL.', spec: 'Tenancy' },
+  { id: 'f-03', code: 'F-03', name: 'RESTRICT-FK', role: 'F-03: Every foreign key constraint must use ON DELETE RESTRICT.', spec: 'Integrity' },
+  { id: 'f-05', code: 'F-05', name: 'CREATED-AT-TS', role: 'F-05: Every table must include created_at timestamptz NOT NULL DEFAULT now().', spec: 'Audit' },
+  { id: 'f-06', code: 'F-06', name: 'UPDATED-AT-TS', role: 'F-06: Mutable tables include updated_at timestamptz; append-only tables omit updated_at.', spec: 'Audit' },
+  { id: 'f-10', code: 'F-10', name: 'DELETED-AT-TS', role: 'F-10: Mutable tables include nullable deleted_at timestamptz; append-only omit deleted_at.', spec: 'Lifecycle' },
+  { id: 'f-18', code: 'F-18', name: 'NAMED-INDEXES', role: 'F-18: Explicit non-constraint indexes must be named idx_<table>_<column>.', spec: 'Naming' },
 ];
 
 const EXTRA_CONTRACTS: TagItem[] = [
-  { id: 'enum-evolution', code: 'F-05', name: 'ENUM-EVOLUTION', role: 'F-05: Non-blocking ALTER TYPE ADD VALUE statement safety in multi-step migrations.', spec: 'DDL Safety' },
-  { id: 'check-constraints', code: 'F-06', name: 'CHECK-CONSTRAINTS', role: 'F-06: Adding CHECK constraints as NOT VALID followed by background VALIDATE CONSTRAINT.', spec: 'DDL Safety' },
-  { id: 'default-values', code: 'F-07', name: 'DEFAULT-VALUES', role: 'F-07: PostgreSQL 11+ metadata-only default value assignment without table rewrite.', spec: 'Performance' },
-  { id: 'drop-columns', code: 'F-11', name: 'DROP-COLUMNS', role: 'F-11: Two-phase column deprecation pattern banning sudden column removals.', spec: 'Integrity' },
-  { id: 'partition-routing', code: 'F-14', name: 'PARTITION-ROUTING', role: 'F-14: Range and list partitioning boundaries for historical metrics tables.', spec: 'Scalability' },
-  { id: 'trigger-ordering', code: 'F-16', name: 'TRIGGER-ORDERING', role: 'F-16: Alphabetical trigger execution ordering and idempotency safeguards.', spec: 'Integrity' },
-  { id: 'view-stability', code: 'F-19', name: 'VIEW-STABILITY', role: 'F-19: Materialized view refresh safety without blocking concurrent read transactions.', spec: 'Performance' },
-  { id: 'type-casting', code: 'F-21', name: 'TYPE-CASTING', role: 'F-21: Zero-downtime column type alterations using shadow columns and dual-writing.', spec: 'Integrity' },
-  { id: 'grant-revocation', code: 'F-24', name: 'GRANT-REVOCATION', role: 'F-24: Principle of least privilege enforcement on public schema default privileges.', spec: 'Access' },
-  { id: 'sequence-gaps', code: 'F-27', name: 'SEQUENCE-GAPS', role: 'F-27: Bigint identity column migrations preventing 32-bit integer overflow.', spec: 'Integrity' },
+  { id: 'f-12', code: 'F-12', name: 'STATUS-CHECK', role: 'F-12: Status/state columns must be text NOT NULL validated by CHECK (col IN (...)).', spec: 'Integrity' },
+  { id: 'f-15', code: 'F-15', name: 'FK-COL-NAMING', role: 'F-15: FK columns must be named <ref_table>_id (or supersedes_id on append-only).', spec: 'Naming' },
+  { id: 'f-16', code: 'F-16', name: 'FK-CONSTRAINT-NAMING', role: 'F-16: Foreign key constraints must be named fk_<table>_<column>.', spec: 'Naming' },
+  { id: 'f-17', code: 'F-17', name: 'CHK-NAMING', role: 'F-17: Check constraints must be named chk_<table>_<column>.', spec: 'Naming' },
+  { id: 'f-19', code: 'F-19', name: 'REVOKE-APPEND-ONLY', role: 'F-19: Append-only tables revoke UPDATE, DELETE, TRUNCATE from PUBLIC, application.', spec: 'Security' },
+  { id: 'f-20', code: 'F-20', name: 'REJECT-DML-TRIGGER', role: 'F-20: Append-only BEFORE UPDATE/DELETE trigger raises error on modification.', spec: 'Security' },
+  { id: 'f-22', code: 'F-22', name: 'INDEXED-FK-COLS', role: 'F-22: Every foreign key column must be covered as leading column of an index.', spec: 'Performance' },
+  { id: 'f-23', code: 'F-23', name: 'INDEXED-TENANT-ID', role: 'F-23: Multi-tenant tables must index tenant_id as leading column of an index.', spec: 'Performance' },
+  { id: 'f-24', code: 'F-24', name: 'PARTIAL-UNIQUE-IDX', role: 'F-24: Unique business keys on soft-deletable tables use partial index WHERE deleted_at IS NULL.', spec: 'Performance' },
+  { id: 'f-36', code: 'F-36', name: 'SUPERSEDES-FK', role: 'F-36: Append-only tables include nullable self-referential supersedes_id FK.', spec: 'Integrity' },
 ];
 
 const OPERATIONAL_CIRCUIT: TagItem[] = [
   { id: 'st-01', code: '01', name: 'GENERATE', badge: 'TEMP = 0', role: 'Zero-temperature candidate migration compiler with strictly deterministic decoding parameters.' },
-  { id: 'st-02', code: '02', name: 'VERIFY', badge: 'PG-16 ORACLE', role: 'Zero LLM in verification loop. PostgreSQL 16 containerized Oracle probing behavioral facts.' },
-  { id: 'st-03', code: '03', name: 'FAIL', badge: 'FACT IDs ONLY', role: 'Discrete invariant violation reporting with canonical error IDs, never leaking ground-truth SQL.' },
-  { id: 'st-04', code: '04', name: 'ADVISE', badge: 'TOP K = 10', role: 'Reflexion retrieval engine extracting targeted invariant memory from historical trial bank.' },
-  { id: 'st-05', code: '05', name: 'RETRY', badge: 'REFLEXION', role: 'Feedback injection conditioning candidate retry with distilled contractual lessons.' },
+  { id: 'st-02', code: '02', name: 'VERIFY', badge: 'PG-16 ORACLE', role: 'Zero LLM in verification loop. PostgreSQL 16 containerized Oracle probing 34 behavioral facts.' },
+  { id: 'st-03', code: '03', name: 'FAIL', badge: 'FACT IDs ONLY', role: 'Discrete invariant violation reporting with canonical fact IDs, never leaking ground-truth SQL.' },
+  { id: 'st-04', code: '04', name: 'ADVISE', badge: 'TOP K = 10', role: 'Failure-prioritized retrieval engine extracting targeted invariant rules from trial memory.' },
+  { id: 'st-05', code: '05', name: 'RETRY', badge: 'CIRCUIT', role: 'Track 1 self-healing loop conditioning candidate retry on retrieved rule text (ablation evaluates single-turn).' },
   { id: 'st-06', code: '06', name: 'PASS', badge: 'HOLM P < 1e-4', role: 'Strict Holm-Bonferroni primary and secondary statistical significance validation (p < 0.0001).' },
   { id: 'st-arb', code: 'ARB', name: 'ARBITER', badge: 'SUPREME GATE', role: 'Deterministic ground-truth supreme court adjudicating cross-domain invariant conflicts.' },
 ];
 
 const DEFAULT_FACT_FREQUENCIES: { fact: string; name: string; count: number; domain: string }[] = [
-  { fact: 'F-10', name: 'TENANT-RLS POLICY', count: 142, domain: 'Security' },
-  { fact: 'F-05', name: 'ENUM-EVOLUTION LOCK', count: 118, domain: 'DDL Safety' },
-  { fact: 'F-18', name: 'CONCURRENT INDEXING', count: 104, domain: 'Performance' },
-  { fact: 'F-06', name: 'NOT VALID CHECK', count: 96, domain: 'DDL Safety' },
-  { fact: 'F-01', name: 'ZERO-DOWNTIME ADD', count: 89, domain: 'DDL Safety' },
-  { fact: 'F-12', name: 'SEARCH_PATH DEFINER', count: 76, domain: 'Security' },
-  { fact: 'F-22', name: 'APPEND-ONLY AUDIT', count: 64, domain: 'Governance' },
-  { fact: 'F-08', name: 'DEPLOYER ROLE SPLIT', count: 52, domain: 'Access' },
+  { fact: 'F-22', name: 'INDEXED FOREIGN KEYS', count: 224, domain: 'Performance' },
+  { fact: 'F-26', name: 'APP_METADATA TENANT RLS', count: 208, domain: 'Security' },
+  { fact: 'F-18', name: 'EXPLICIT INDEX NAMING', count: 199, domain: 'Naming' },
+  { fact: 'F-16', name: 'FK CONSTRAINT NAMING', count: 193, domain: 'Naming' },
+  { fact: 'F-20', name: 'APPEND-ONLY REJECT TRIGGER', count: 189, domain: 'Security' },
+  { fact: 'F-36', name: 'SUPERSEDES_ID SELF-FK', count: 186, domain: 'Integrity' },
+  { fact: 'F-05', name: 'CREATED_AT TIMESTAMPTZ', count: 161, domain: 'Audit' },
+  { fact: 'F-37', name: 'INGESTION RECEIVED_AT TRIGGER', count: 124, domain: 'Integrity' },
 ];
 
 const FACT_NAME_MAP: Record<string, { name: string; domain: string }> = {
-  'F-01': { name: 'ZERO-DOWNTIME ADD', domain: 'DDL Safety' },
-  'F-02': { name: 'SAFE COLUMN BACKFILL', domain: 'DDL Safety' },
-  'F-03': { name: 'LOCK TIMEOUT GUARD', domain: 'Performance' },
-  'F-04': { name: 'STATEMENT TIMEOUT', domain: 'Performance' },
-  'F-05': { name: 'ENUM-EVOLUTION LOCK', domain: 'DDL Safety' },
-  'F-06': { name: 'NOT VALID CHECK', domain: 'DDL Safety' },
-  'F-07': { name: 'METADATA DEFAULT', domain: 'Performance' },
-  'F-08': { name: 'DEPLOYER ROLE SPLIT', domain: 'Access' },
-  'F-09': { name: 'APP LEAST PRIVILEGE', domain: 'Access' },
-  'F-10': { name: 'TENANT-RLS POLICY', domain: 'Security' },
-  'F-11': { name: 'TWO-PHASE DROP', domain: 'Integrity' },
-  'F-12': { name: 'SEARCH_PATH DEFINER', domain: 'Security' },
-  'F-14': { name: 'PARTITION BOUNDARY', domain: 'Scalability' },
-  'F-15': { name: 'ATOMIC SAVEPOINT', domain: 'Integrity' },
-  'F-16': { name: 'TRIGGER ORDERING', domain: 'Integrity' },
-  'F-17': { name: 'FOREIGN KEY INDEX', domain: 'Performance' },
-  'F-18': { name: 'CONCURRENT INDEXING', domain: 'Performance' },
-  'F-19': { name: 'MATVIEW CONCURRENT', domain: 'Performance' },
-  'F-21': { name: 'SHADOW TYPE CAST', domain: 'Integrity' },
-  'F-22': { name: 'APPEND-ONLY AUDIT', domain: 'Governance' },
-  'F-24': { name: 'PUBLIC REVOKE ALL', domain: 'Access' },
-  'F-25': { name: 'NOT VALID FK', domain: 'Integrity' },
-  'F-27': { name: 'BIGINT IDENTITY', domain: 'Integrity' },
-  'F-30': { name: 'SCHEMA ISOLATION', domain: 'Access' },
+  'F-01': { name: 'UUID PRIMARY KEY', domain: 'Integrity' },
+  'F-02': { name: 'TENANT ID COLUMN', domain: 'Tenancy' },
+  'F-03': { name: 'RESTRICT FK ACTION', domain: 'Integrity' },
+  'F-04': { name: 'NUMERIC DECIMAL', domain: 'Data Types' },
+  'F-05': { name: 'CREATED_AT TIMESTAMPTZ', domain: 'Audit' },
+  'F-06': { name: 'UPDATED_AT TIMESTAMPTZ', domain: 'Audit' },
+  'F-07': { name: 'TIMESTAMPTZ ENFORCED', domain: 'Data Types' },
+  'F-08': { name: 'UNBOUNDED TEXT', domain: 'Data Types' },
+  'F-09': { name: 'JSONB NOT NULL', domain: 'Data Types' },
+  'F-10': { name: 'SOFT DELETE DELETED_AT', domain: 'Lifecycle' },
+  'F-11': { name: 'INET IP ADDRESS', domain: 'Data Types' },
+  'F-12': { name: 'STATUS CHECK CONSTRAINT', domain: 'Integrity' },
+  'F-13': { name: 'PLURAL SNAKE_CASE', domain: 'Naming' },
+  'F-14': { name: 'PRIMARY KEY NAMING', domain: 'Naming' },
+  'F-15': { name: 'FK COLUMN NAMING', domain: 'Naming' },
+  'F-16': { name: 'FK CONSTRAINT NAMING', domain: 'Naming' },
+  'F-17': { name: 'CHECK CONSTRAINT NAMING', domain: 'Naming' },
+  'F-18': { name: 'INDEX NAMING', domain: 'Naming' },
+  'F-19': { name: 'REVOKE APPEND-ONLY DML', domain: 'Security' },
+  'F-20': { name: 'APPEND-ONLY REJECT TRIGGER', domain: 'Security' },
+  'F-21': { name: 'ADVANCE UPDATED_AT TRIGGER', domain: 'Integrity' },
+  'F-22': { name: 'INDEXED FOREIGN KEYS', domain: 'Performance' },
+  'F-23': { name: 'INDEXED TENANT_ID', domain: 'Performance' },
+  'F-24': { name: 'PARTIAL UNIQUE KEY INDEX', domain: 'Performance' },
+  'F-25': { name: 'ENABLE & FORCE RLS', domain: 'Security' },
+  'F-26': { name: 'APP_METADATA TENANT RLS', domain: 'Security' },
+  'F-27': { name: 'APPEND-ONLY RLS POLICIES', domain: 'Security' },
+  'F-30': { name: 'NO TAUTOLOGICAL RLS', domain: 'Security' },
+  'F-31': { name: 'SEC DEFINER SEARCH_PATH', domain: 'Security' },
+  'F-32': { name: 'IDEMPOTENCY UNIQUE KEY', domain: 'Integrity' },
+  'F-34': { name: 'NON-NEGATIVE COUNTER CHECK', domain: 'Integrity' },
+  'F-36': { name: 'SUPERSEDES_ID SELF-FK', domain: 'Integrity' },
+  'F-37': { name: 'INGESTION RECEIVED_AT TRIGGER', domain: 'Integrity' },
+  'F-38': { name: 'OBSERVATION COMPOSITE INDEX', domain: 'Performance' },
+  'F-39': { name: 'VIEW SECURITY_INVOKER', domain: 'Security' },
 };
 
 interface CortexVaultSectionProps {
@@ -426,7 +437,7 @@ export function CortexVaultSection({
               </div>
               <div className="cortex-kpi-value">51.3%</div>
               <div className="cortex-kpi-label">TOKEN COST REDUCTION</div>
-              <p className="cortex-kpi-sub">554 avg tokens in Reflexion C0 vs 1,138 baseline / 1,852 Oracle</p>
+              <p className="cortex-kpi-sub">554 avg tokens in Verbatim C0 vs 1,138 baseline / 1,852 static hints</p>
             </div>
 
             <div className="cortex-kpi-card">
@@ -517,14 +528,14 @@ export function CortexVaultSection({
                 <circle cx="448" cy="160" r="3" fill="#ffffff" />
 
                 {/* X-Axis Labels */}
-                <text x="96" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Golden Hints (B)</text>
+                <text x="96" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Static Hints (B)</text>
                 <text x="96" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">+102% token bloat</text>
 
                 <text x="272" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Zero-Shot (A)</text>
                 <text x="272" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">Unassisted base</text>
 
-                <text x="448" y="198" textAnchor="middle" fill="#00f0ff" fontSize="11" fontFamily="monospace" fontWeight="700">Reflexion C0</text>
-                <text x="448" y="212" textAnchor="middle" fill="#10b981" fontSize="9.5" fontFamily="monospace">69.6% pass · -51.3% cost</text>
+                <text x="448" y="198" textAnchor="middle" fill="#00f0ff" fontSize="11" fontFamily="monospace" fontWeight="700">Verbatim C0</text>
+                <text x="448" y="212" textAnchor="middle" fill="#10b981" fontSize="9.5" fontFamily="monospace">86.3% pass · -51.3% cost</text>
               </svg>
             </div>
 

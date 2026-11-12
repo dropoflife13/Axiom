@@ -13,24 +13,24 @@ export interface RunOption {
 export const RUN_DISPLAY_NAMES: Record<string, string> = {
   'nemotron-2': 'NEMOTRON 550B',
   'nemotron-1': 'NEMOTRON 550B',
-  'qwen27b-2': 'QWEN 3.8 27B',
-  'qwen27b-1': 'QWEN 3.8 27B',
+  'gemma4-31b-full': 'GEMMA 4 31B DENSE',
   'glm5-2': 'GLM-5.3',
   'glm53-1': 'GLM-5.3',
-  'liquid17b-mini': 'LIQUID 1.7B MINI',
-  'liquid-mini': 'LIQUID 1.7B MINI',
-  'gemini-mini': 'GEMINI 3.6 FLASH MINI',
-  'gemini-flash-lite-full': 'GEMINI 3.5 FLASH LITE',
   'gemini-3.1-flash-lite': 'GEMINI 3.1 FLASH LITE',
-  'gemma4-31b-full': 'GEMMA 4 31B DENSE',
-  'gemma4-26b-full': 'GEMMA 4 26B',
-  'smoke-nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING (SMOKE)',
-  'nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING',
-  'nemotron-lightning-full': 'NEMOTRON 3.5 LIGHTNING',
-  'llama33-mini': 'LLAMA 3.3',
-  'xingchen-mini': 'XINGCHEN MINI',
-  'gptoss-120b-expanded': 'GPT-OSS 120B (EXP)',
+  'gemini-flash-lite-full': 'GEMINI 3.5 FLASH LITE',
+  'qwen27b-2': 'QWEN 3.8 27B',
+  'qwen27b-1': 'QWEN 3.8 27B',
+  'gptoss-120b-expanded': 'GPT-OSS 120B (LIVE)',
   'gptoss-mini': 'GPT-OSS 120B MINI',
+  'gemma4-26b-full': 'GEMMA 4 26B (EXCL)',
+  'nemotron-lightning-full': 'NEMOTRON 3.5 LIGHTNING (EXCL)',
+  'nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING (EXCL)',
+  'smoke-nemotron-lightning': 'NEMOTRON 3.5 LIGHTNING (SMOKE)',
+  'liquid17b-mini': 'LIQUID 1.7B MINI (PILOT)',
+  'liquid-mini': 'LIQUID 1.7B MINI (PILOT)',
+  'xingchen-mini': 'XINGCHEN MINI (PILOT)',
+  'gemini-mini': 'GEMINI 3.6 FLASH MINI (PILOT)',
+  'llama33-mini': 'LLAMA 3.3 (PILOT)',
 };
 
 export function getDisplayName(runId: string): string {
@@ -113,10 +113,12 @@ export function inferRunOption(id: string): RunOption {
 
 export const DEFAULT_RUN_OPTIONS: readonly RunOption[] = [
   inferRunOption('nemotron-2'),
-  inferRunOption('qwen27b-2'),
+  inferRunOption('gemma4-31b-full'),
   inferRunOption('glm5-2'),
+  inferRunOption('gemini-3.1-flash-lite'),
   inferRunOption('gemini-flash-lite-full'),
-  inferRunOption('liquid17b-mini'),
+  inferRunOption('qwen27b-2'),
+  inferRunOption('gptoss-120b-expanded'),
 ];
 
 export const RUN_OPTIONS: readonly RunOption[] = DEFAULT_RUN_OPTIONS;

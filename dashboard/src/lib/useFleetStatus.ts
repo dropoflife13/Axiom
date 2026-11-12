@@ -27,6 +27,8 @@ export interface RunStatus {
   /** Fact id -> number of trials in which it failed, descending. */
   factFailures: [string, number][];
   lastModified: string | null;
+  /** Exact sum of totalTokens across completed trials for this run. */
+  totalTokens: number;
 }
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
@@ -51,9 +53,11 @@ export function summarizeTrials(trials: CheckpointTrial[]) {
 
   const series: number[] = [];
   let sum = 0;
+  let totalTokens = 0;
   trials.forEach((t, i) => {
     sum += t.boundFactFraction ?? 0;
     series.push(sum / (i + 1));
+    totalTokens += t.totalTokens ?? 0;
   });
   const step = Math.max(1, Math.ceil(series.length / 60));
   const convergenceSeries = series.filter((_, i) => i % step === 0 || i === series.length - 1);
@@ -63,6 +67,7 @@ export function summarizeTrials(trials: CheckpointTrial[]) {
     factFailures,
     convergence: trials.length ? sum / trials.length : null,
     convergenceSeries,
+    totalTokens,
   };
 }
 
@@ -80,6 +85,7 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
     conditions: summarizeTrials([]).conditions,
     factFailures: [],
     lastModified: null,
+    totalTokens: 0,
   };
   try {
     let res: Response | null = null;
@@ -100,7 +106,8 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
       total = Math.max(TRIALS_PER_RUN, Math.ceil(trials.length / 6) * 6);
     }
     const mtime = data.lastModified ? new Date(data.lastModified).getTime() : 0;
-    const live = Boolean(mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total);
+    const isGptOssLive = run.id.includes('gptoss') && trials.length < total && trials.length > 0;
+    const live = Boolean(isGptOssLive || (mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total));
     return {
       ...empty,
       ...summarizeTrials(trials),

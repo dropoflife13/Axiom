@@ -67,15 +67,15 @@ interface FleetModelItem {
 
 const FL: FleetModelItem[] = [
   { n: 'NEMOTRON 550B', c: 73.6, s: 550, col: '#84cc16', d: 720, t: 720, runId: 'nemotron-2' },
+  { n: 'QWEN 3.8 27B', c: 72.3, s: 27, col: '#fb923c', d: 720, t: 720, runId: 'qwen27b-2' },
   { n: 'GEMMA 4 31B', c: 68.3, s: 31, col: '#c084fc', d: 720, t: 720, runId: 'gemma4-31b-full' },
   { n: 'GLM-5.3', c: 66.4, s: null, col: '#2dd4bf', d: 720, t: 720, runId: 'glm5-2' },
-  { n: 'QWEN 3.8 27B', c: 65.9, s: 27, col: '#fb923c', d: 436, t: 720, runId: 'qwen27b-2' },
   { n: 'GEMINI 3.1 FL', c: 65.7, s: null, col: '#10b981', d: 720, t: 720, runId: 'gemini-3.1-flash-lite' },
   { n: 'GEMINI 3.5 FL', c: 63.0, s: null, col: '#22c55e', d: 720, t: 720, runId: 'gemini-flash-lite-full' },
-  { n: 'GEMMA 4 26B', c: 61.5, s: 26, col: '#a78bfa', d: 720, t: 720, runId: 'gemma4-26b-full' },
+  { n: 'GPT-OSS 120B (LIVE)', c: 38.9, s: 120, col: '#38bdf8', d: 514, t: 720, runId: 'gptoss-120b-expanded' },
+  { n: 'GEMMA 4 26B (EXCL)', c: 61.5, s: 26, col: '#a78bfa', d: 720, t: 720, runId: 'gemma4-26b-full' },
+  { n: 'NEMOTRON 3.5 LTG (EXCL)', c: 45.8, s: null, col: '#fbbf24', d: 720, t: 720, runId: 'nemotron-lightning-full' },
   { n: 'GEMINI 3.6 MINI', c: 55.3, s: null, col: '#3b82f6', d: 18, t: 18, runId: 'gemini-mini' },
-  { n: 'NEMOTRON 3.5 LTG', c: 45.8, s: null, col: '#fbbf24', d: 720, t: 720, runId: 'nemotron-lightning-full' },
-  { n: 'GPT-OSS 120B', c: 40.7, s: 120, col: '#38bdf8', d: 295, t: 720, runId: 'gptoss-120b-expanded' },
   { n: 'XINGCHEN MINI', c: 23.0, s: null, col: '#f472b6', d: 48, t: 48, runId: 'xingchen-mini' },
   { n: 'LIQUID 1.7B', c: 7.0, s: 1.7, col: '#e2e8f0', d: 48, t: 48, runId: 'liquid17b-mini' },
 ];
@@ -628,7 +628,7 @@ function DialsCanvas({
       <canvas
         ref={canvasRef}
         className="absolute inset-0 w-full h-full touch-manipulation"
-        aria-label="A half-circle dial showing how much of the gap between zero-shot and the golden ceiling each condition recovers, and concentric rings showing prompt tokens per condition."
+        aria-label="A half-circle dial showing how much of the gap between zero-shot and the static reference each condition recovers, and concentric rings showing prompt tokens per condition."
       />
     </div>
   );
@@ -1296,10 +1296,10 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                   <dd className="m-0 text-[#aab0c8]">The model gets the task and nothing else.</dd>
                   <dt className="text-[#e8eaf2] font-bold">Token</dt>
                   <dd className="m-0 text-[#aab0c8]">A chunk of text, roughly three quarters of a word. Models read and are billed by tokens.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Golden ceiling</dt>
-                  <dd className="m-0 text-[#aab0c8]">The score when the model is given a hand-written cheat sheet. It is the best case.</dd>
+                  <dt className="text-[#e8eaf2] font-bold">Static reference</dt>
+                  <dd className="m-0 text-[#aab0c8]">The score when the model is given all 34 rules statically in prompt (Condition B).</dd>
                   <dt className="text-[#e8eaf2] font-bold">Gap recovered</dt>
-                  <dd className="m-0 text-[#aab0c8]">(score − no help) ÷ (ceiling − no help).</dd>
+                  <dd className="m-0 text-[#aab0c8]">(score − no help) ÷ (reference − no help).</dd>
                 </dl>
               </div>
             </aside>

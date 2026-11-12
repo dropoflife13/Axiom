@@ -83,7 +83,7 @@ export const NODES: AssemblyNode[] = [
     badge: 'NEMOTRON-3 · T=0',
     color: C_GEN,
     file: 'src/executor.ts',
-    desc: 'The generative core. Calls the model through an OpenAI-compatible client at temperature 0 with token ceilings and produces candidate migration SQL.',
+    desc: 'The generative core. Calls the model through an OpenAI-compatible client at temperature 0 with token budgets and produces candidate migration SQL.',
     pos: [-3.6, 0, -1.3],
     size: [1.8, 1.8, 1.8],
   },

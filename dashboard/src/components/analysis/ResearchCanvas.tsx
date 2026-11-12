@@ -97,81 +97,14 @@ function getG(W: number, H: number) {
     base: H * 0.8,
     hh: H * 0.46,
     cxx: W / 2,
-    cyy: H * 0.56,
+    cyy: H * 0.52,
     r0: m * 0.12,
     g: m * 0.05,
   };
 }
 
 /* =========================================================================
-   1. CORE THEORIES DATA
-   ========================================================================= */
-interface Theory {
-  id: string;
-  title: string;
-  badge: string;
-  formula: string;
-  premise: string;
-  discovery: string;
-  proof: string;
-  tone: 'cyan' | 'purple' | 'orange' | 'emerald';
-}
-
-const THEORIES: Theory[] = [
-  {
-    id: 'T1',
-    title: 'Theory 1: Invariant 0 & Authority Separation',
-    badge: 'AUTHORITY SEPARATION',
-    formula: 'Invariant 0: LLM Generation ⊥ Deterministic Verification',
-    premise: 'LLM self-evaluation ("LLM-as-a-judge") in mission-critical database engineering suffers from correlated blind spots—models hallucinate compliance on subtle DDL flaws.',
-    discovery: 'Generative models are untrusted candidate producers. Authority resides exclusively in external deterministic engines: the AST Verifier (100% mutation kill rate) and PostgreSQL 16 Docker Oracle.',
-    proof: 'Evaluated across 720 trials with zero LLM in the evaluation loop. AST Verifier enforces strict relational invariants that models falsely assume they satisfied.',
-    tone: 'cyan',
-  },
-  {
-    id: 'T2',
-    title: 'Theory 2: The "Distillation Penalty" (Verbatim vs. Distilled)',
-    badge: 'CORE DISCOVERY · H3',
-    formula: 'Δ(C0 − C) > 0 | p = 1.00 × 10⁻⁵ (McNemar p = 9.26 × 10⁻⁶)',
-    premise: 'Reflexion architectures typically use secondary LLM "Advisors" to synthesize raw error traces into concise, high-level natural language lessons.',
-    discovery: 'For rigid relational software contracts, natural language distillation introduces severe lossiness (omitting exact constraint naming formulas, string literals, and type specifications).',
-    proof: 'On Nemotron-550B Run 2: Verbatim C0 beats Distilled C by +14.39% (86.31% vs 71.92%, p = 1.00e-5; strict Pass@1 jumps from 29.17% to 55.00%). On Nemotron-3.5-Lightning: C0 beats C by +21.90% (61.67% vs 39.76%, p = 1.00e-5).',
-    tone: 'orange',
-  },
-  {
-    id: 'T3',
-    title: 'Theory 3: The Context Meltdown / Instruction Capacity Cliff',
-    badge: 'CAPACITY CLIFF',
-    formula: 'Condition B Crash Rate: 550B (0.8%) vs Lightning (95.8%)',
-    premise: 'Classical assumption: "More context is always better—inject the entire organizational rulebook (all 34 facts) into every prompt."',
-    discovery: 'Model scale dictates whether full invariant injection succeeds or triggers catastrophic syntax collapse. Frontier 550B digests 34 facts (93.88% compliance, 1 crash/120). Distilled Lightning crashes on 115/120 migrations (95.8% crashes), dropping to 42.71%.',
-    proof: 'Selective retrieval (Condition C0) rescues smaller models, beating full golden rules (Condition B) by +18.96% (61.67% vs 42.71%) while slashing crashes from 115 down to 65.',
-    tone: 'purple',
-  },
-  {
-    id: 'T4',
-    title: 'Theory 4: The Pareto Token-Compliance Frontier',
-    badge: '51.3% TOKEN REDUCTION',
-    formula: 'Condition B (1,139 tok) → Condition C0 (555 tok) · 95.3% Retention',
-    premise: 'Enterprise deployments must balance inference cost, context window limits, and strict schema compliance.',
-    discovery: 'Condition B consumes 1,139.2 prompt tokens. Condition C0 consumes only 554.8 tokens (a 51.3% token reduction).',
-    proof: 'Selective retrieval of top K=10 feature-compatible rules recovers 92.0% to 95.3% of full golden prompt compliance while halving API latencies and token spend.',
-    tone: 'emerald',
-  },
-  {
-    id: 'T5',
-    title: 'Theory 5: Domain Difficulty Clustering & Multi-Tenancy Effect',
-    badge: 'ICC(1) = 0.6964',
-    formula: 'Multi-Tenant Compliance Leap: +54.0% to +57.7%',
-    premise: 'Relational schemas exhibit varying structural complexity across multi-tenancy, append-only logs, and ingestion pipelines.',
-    discovery: 'Intraclass Correlation of ICC(1) = 0.2603 on bound facts and ICC(1) = 0.6964 on all-fact pass rates across 8 factorial feature cells.',
-    proof: 'Multi-tenant tables (tenant=true, append_only=false, ingestion=false) exhibit the largest delta between unguided generation and memory (+57.7% compliance leap). Unassisted LLMs systematically omit RLS and composite keys.',
-    tone: 'cyan',
-  },
-];
-
-/* =========================================================================
-   2. CONFIRMATORY CONTRASTS DATA
+   1. CONFIRMATORY CONTRASTS DATA
    ========================================================================= */
 interface ContrastItem {
   id: string;
@@ -186,13 +119,14 @@ interface ContrastItem {
 }
 
 const CONTRASTS: ContrastItem[] = [
-  { id: 'C1', model: 'Nemotron-550B', contrast: 'C vs A (Distilled vs Baseline)', diff: 0.2452, ciLower: 0.182, ciUpper: 0.308, pSignFlip: 0.00001, pHolm: 0.00003, significant: true },
-  { id: 'C2', model: 'Nemotron-550B', contrast: 'C vs D (Distilled vs Distractor)', diff: 0.2392, ciLower: 0.176, ciUpper: 0.302, pSignFlip: 0.00001, pHolm: 0.00003, significant: true },
-  { id: 'C3', model: 'Nemotron-550B', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1439, ciLower: 0.091, ciUpper: 0.197, pSignFlip: 0.00001, pHolm: 0.00003, significant: true },
-  { id: 'C4', model: 'Nemotron-550B', contrast: 'C0 vs B (Verbatim vs Static Hints)', diff: -0.0757, ciLower: -0.115, ciUpper: -0.036, pSignFlip: 0.00012, pHolm: 0.00024, significant: true },
-  { id: 'C5', model: 'Nemotron-Lightning', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.2190, ciLower: 0.155, ciUpper: 0.283, pSignFlip: 0.00001, pHolm: 0.00002, significant: true },
-  { id: 'C6', model: 'Nemotron-Lightning', contrast: 'C0 vs B (Verbatim vs Static Hints)', diff: 0.1896, ciLower: 0.118, ciUpper: 0.261, pSignFlip: 0.00001, pHolm: 0.00002, significant: true },
-  { id: 'C7', model: 'GLM-4-9B', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1184, ciLower: 0.062, ciUpper: 0.175, pSignFlip: 0.00004, pHolm: 0.00008, significant: true },
+  { id: 'C1', model: 'Nemotron-550B', contrast: 'C vs A (Distilled vs Baseline)', diff: 0.2447, ciLower: 0.1889, ciUpper: 0.2996, pSignFlip: 0.00001, pHolm: 0.00004, significant: true },
+  { id: 'C2', model: 'Nemotron-550B', contrast: 'C vs D (Distilled vs Distractor)', diff: 0.2381, ciLower: 0.1808, ciUpper: 0.2940, pSignFlip: 0.00001, pHolm: 0.00004, significant: true },
+  { id: 'C3', model: 'Nemotron-550B', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1439, ciLower: 0.1012, ciUpper: 0.1878, pSignFlip: 0.00001, pHolm: 0.00004, significant: true },
+  { id: 'C4', model: 'Nemotron-550B', contrast: 'C0 vs B (Verbatim vs Static Hints)', diff: -0.0757, ciLower: -0.1154, ciUpper: -0.0360, pSignFlip: 0.00012, pHolm: 0.00024, significant: true },
+  { id: 'C5', model: 'Gemini-3.1-Flash-Lite', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1736, ciLower: 0.1331, ciUpper: 0.2168, pSignFlip: 0.00001, pHolm: 0.00004, significant: true },
+  { id: 'C6', model: 'Gemini-3.1-Flash-Lite', contrast: 'C0 vs B (Verbatim vs Static Hints)', diff: 0.0793, ciLower: 0.0084, ciUpper: 0.1502, pSignFlip: 0.01260, pHolm: 0.01260, significant: true },
+  { id: 'C7', model: 'Qwen-3.8-27B', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1653, ciLower: 0.1256, ciUpper: 0.2046, pSignFlip: 0.00001, pHolm: 0.00004, significant: true },
+  { id: 'C8', model: 'Gemma-4-31B', contrast: 'C0 vs C (Verbatim vs Distilled · H3)', diff: 0.1397, ciLower: 0.0775, ciUpper: 0.2021, pSignFlip: 0.00004, pHolm: 0.00004, significant: true },
 ];
 
 /* =========================================================================
@@ -368,7 +302,7 @@ export const RESEARCH_WINDOWS = [
   { id: 'convergence', label: 'CONVERGENCE', num: '03', title: 'Deterministic Convergence Curves' },
   { id: 'taxonomy', label: 'TAXONOMY', num: '04', title: 'Empirical Failure Taxonomy & Proof' },
   { id: 'facts', label: 'FACT VAULT', num: '05', title: 'The 39 Relational Contract Fact Vault' },
-  { id: 'trace', label: 'HEALING TRACE', num: '06', title: 'Volumetric Healing Trace (Reflexion Graph)' },
+  { id: 'trace', label: 'HEALING TRACE', num: '06', title: 'Volumetric Healing Trace (Failure Retrieval Graph)' },
   { id: 'architecture', label: 'ARCHITECTURE', num: '07', title: 'Scale, Efficiency & Oracle Telemetry' },
   { id: 'questions', label: 'QUESTIONS', num: 'FAQ', title: 'Axiom Knowledge Base & Empirical Proofs' },
 ] as const;
@@ -391,11 +325,6 @@ export const ResearchCanvas = memo(function ResearchCanvas({
   const chartFormRef = useRef<ChartForm>('wheel');
   chartFormRef.current = chartForm;
 
-  // Floating Screen states for 5 Core Theories (Section 01)
-  const [theoriesMinimized, setTheoriesMinimized] = useState(false);
-  const [theoriesHidden, setTheoriesHidden] = useState(false);
-  const [expandedTheory, setExpandedTheory] = useState<string>('T2');
-
   // Fact Vault States (Section 05)
   const [selectedFactId, setSelectedFactId] = useState<string>('F-25');
   const [factCategoryFilter, setFactCategoryFilter] = useState<string>('ALL');
@@ -414,6 +343,8 @@ export const ResearchCanvas = memo(function ResearchCanvas({
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const flashRef = useRef<HTMLDivElement>(null);
   const [hoveredCondition, setHoveredCondition] = useState<number | null>(null);
+  const hoveredConditionRef = useRef<number | null>(null);
+  hoveredConditionRef.current = hoveredCondition;
 
   // Canvas Starfield Background
   const starsRef = useRef<Array<{ x: number; y: number; r: number; a: number; speed: number }>>([]);
@@ -582,7 +513,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
     } else if (chartForm === 'galaxy') {
       a = `Latent condition manifold separates verbatim rules (C0) from distilled advice (C) with zero cluster overlap.`;
     } else {
-      a = `No memory scores ${A}%; the full-prompt ceiling reaches ${B}%.`;
+      a = `No memory scores ${A}%; the full-prompt static reference reaches ${B}%.`;
     }
 
     return { q, a, note: activeRun.note };
@@ -602,6 +533,13 @@ export const ResearchCanvas = memo(function ResearchCanvas({
     tt: 1.3,
     rafId: 0,
   });
+
+  const isWindowMode = Boolean(activeSection && activeSection !== 'all');
+  const currentWindowIndex = RESEARCH_WINDOWS.findIndex((w) => w.id === activeSection);
+  const currentWindow = currentWindowIndex >= 0 ? RESEARCH_WINDOWS[currentWindowIndex] : RESEARCH_WINDOWS[0];
+  const prevWindow = RESEARCH_WINDOWS[(currentWindowIndex - 1 + RESEARCH_WINDOWS.length) % RESEARCH_WINDOWS.length];
+  const nextWindow = RESEARCH_WINDOWS[(currentWindowIndex + 1) % RESEARCH_WINDOWS.length];
+  const isTheoriesVisible = !isWindowMode || currentWindow.id === 'theories';
 
   const particlesRef = useRef<Particle[]>([]);
   if (particlesRef.current.length === 0) {
@@ -758,6 +696,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
   );
 
   useEffect(() => {
+    if (!isTheoriesVisible) return;
     let active = true;
 
     function render(now: number) {
@@ -775,7 +714,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
       }
 
       // Step physics with continuous quadratic Bezier + seamless idle micro-drift
-      const curTm = t0 > 0 ? Math.min(1, (now - t0) / 1000 / tt) : 1;
+      const curTm = t0 > 0 ? Math.max(0, Math.min(1, (now - t0) / 1000 / tt)) : 1;
       anim.tm = curTm;
 
       const tSec = now * 0.0012;
@@ -958,23 +897,25 @@ export const ResearchCanvas = memo(function ResearchCanvas({
         cx.shadowBlur = 0;
       }
 
+      const hov = hoveredConditionRef.current;
       let c0 = -1;
       particlesRef.current.forEach((p) => {
         if (p.a < 0.02) return;
+        const pa = hov === null ? p.a : p.c === hov ? Math.min(1, p.a * 1.15) : p.a * 0.16;
         if (p.c !== c0) {
           cx.fillStyle = COL[p.c];
           c0 = p.c;
         }
         const s = p.r * 1.15;
         if (ab > 0.05) {
-          cx.globalAlpha = p.a * 0.25;
+          cx.globalAlpha = pa * 0.25;
           cx.fillStyle = '#f43f5e';
           cx.fillRect(p.x - ab, p.y, s, s);
           cx.fillStyle = '#22d3ee';
           cx.fillRect(p.x + ab, p.y, s, s);
           cx.fillStyle = COL[p.c];
         }
-        cx.globalAlpha = p.a;
+        cx.globalAlpha = pa;
         cx.fillRect(p.x, p.y, s, s);
       });
 
@@ -989,7 +930,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
       active = false;
       cancelAnimationFrame(animRef.current.rafId);
     };
-  }, []);
+  }, [isTheoriesVisible]);
 
   const hasEnteredRef = useRef(false);
   const triggerTransitionRef = useRef(triggerTransition);
@@ -998,6 +939,9 @@ export const ResearchCanvas = memo(function ResearchCanvas({
   applyLayoutRef.current = applyLayout;
 
   useEffect(() => {
+    if (!isTheoriesVisible) return;
+    hasEnteredRef.current = false;
+
     function handleResize() {
       const container = chartContainerRef.current;
       const canvas = canvasRef.current;
@@ -1008,6 +952,17 @@ export const ResearchCanvas = memo(function ResearchCanvas({
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(rect.width);
       const h = Math.round(rect.height);
+
+      if (
+        hasEnteredRef.current &&
+        animRef.current.w === w &&
+        animRef.current.h === h &&
+        animRef.current.dpr === dpr &&
+        canvas.width === w * dpr &&
+        canvas.height === h * dpr
+      ) {
+        return;
+      }
 
       animRef.current.w = w;
       animRef.current.h = h;
@@ -1037,10 +992,14 @@ export const ResearchCanvas = memo(function ResearchCanvas({
     }
 
     handleResize();
+    const rafHandle = requestAnimationFrame(handleResize);
     const observer = new ResizeObserver(() => handleResize());
     if (chartContainerRef.current) observer.observe(chartContainerRef.current);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      cancelAnimationFrame(rafHandle);
+      observer.disconnect();
+    };
+  }, [isTheoriesVisible]);
 
   // Only trigger shatter-and-converge transition when model runId changes
   const prevRunIdRef = useRef(runId);
@@ -1058,11 +1017,47 @@ export const ResearchCanvas = memo(function ResearchCanvas({
     triggerTransition(newForm);
   };
 
-  const isWindowMode = Boolean(activeSection && activeSection !== 'all');
-  const currentWindowIndex = RESEARCH_WINDOWS.findIndex((w) => w.id === activeSection);
-  const currentWindow = currentWindowIndex >= 0 ? RESEARCH_WINDOWS[currentWindowIndex] : RESEARCH_WINDOWS[0];
-  const prevWindow = RESEARCH_WINDOWS[(currentWindowIndex - 1 + RESEARCH_WINDOWS.length) % RESEARCH_WINDOWS.length];
-  const nextWindow = RESEARCH_WINDOWS[(currentWindowIndex + 1) % RESEARCH_WINDOWS.length];
+  const c0VsCLift =
+    activeRun.m[3] != null && activeRun.m[2] != null
+      ? `${activeRun.m[3] - activeRun.m[2] >= 0 ? '+' : ''}${(activeRun.m[3] - activeRun.m[2]).toFixed(1)}%`
+      : '+14.4%';
+
+  const hypothesisBanner = (
+    <div className="border border-[rgba(160,170,255,0.16)] bg-[#05060a] font-mono text-[#e8eaf2]">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 border-b border-[rgba(160,170,255,0.16)] text-[10px] tracking-[0.14em] text-[#7c819a]">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] shrink-0" />
+          <span className="text-[#22d3ee] font-bold uppercase">{hypothesis.badge}</span>
+          <span className="text-[#7c819a] uppercase">
+            · CONFIRMATORY FINDING · p = {formatPValue(analysis.pairedComparisons.C_vs_C0.holmPrimaryPValue ?? analysis.pairedComparisons.C_vs_C0.signFlipPValue)}
+          </span>
+        </div>
+        <span className="uppercase hidden sm:inline">AXIOM v2 · {activeRun.name}</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_210px]">
+        <div className="p-4 sm:p-5 space-y-2 min-w-0">
+          <h3 className="text-base sm:text-lg font-bold text-[#e8eaf2] tracking-tight border-l-2 border-[#22d3ee] pl-3">
+            {hypothesis.headline}
+          </h3>
+          <p className="text-[11.5px] leading-[1.65] text-[#7c819a] pl-3.5 max-w-3xl">
+            {hypothesis.context}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-1 border-t md:border-t-0 md:border-l border-[rgba(160,170,255,0.16)] divide-x md:divide-x-0 md:divide-y divide-[rgba(160,170,255,0.16)]">
+          <div className="px-4 py-3 flex flex-col justify-center">
+            <span className="text-[9.5px] tracking-[0.16em] text-[#7c819a] uppercase">C0 vs C LIFT</span>
+            <b className="text-lg sm:text-xl font-bold text-[#22d3ee] tabular-nums mt-0.5">{c0VsCLift}</b>
+          </div>
+          <div className="px-4 py-3 flex flex-col justify-center">
+            <span className="text-[9.5px] tracking-[0.16em] text-[#7c819a] uppercase">TOKEN REDUCTION</span>
+            <b className="text-lg sm:text-xl font-bold text-[#34d399] tabular-nums mt-0.5">51.3%</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className={`w-full flex-1 flex flex-col bg-[#050505] text-zinc-100 font-sans relative px-4 sm:px-8 py-4 ${isWindowMode ? 'space-y-6' : 'space-y-16'} selection:bg-cyan-500/30 selection:text-cyan-200`}>
@@ -1110,39 +1105,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
           </div>
 
           {/* If on Theories window, show Hypothesis Context Summary Card */}
-          {currentWindow.id === 'theories' && (
-            <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.07] via-white/[0.03] to-cyan-950/20 backdrop-blur-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_1px_0_0_rgba(255,255,255,0.2)_inset] relative overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5 max-w-3xl">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-bold uppercase tracking-wider">
-                      {hypothesis.badge}
-                    </span>
-                    <span className="font-mono text-[9.5px] text-zinc-400 uppercase tracking-widest">
-                      CONFIRMATORY FINDING · p = {formatPValue(analysis.pairedComparisons.C_vs_C0.holmPrimaryPValue ?? analysis.pairedComparisons.C_vs_C0.signFlipPValue)}
-                    </span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide">
-                    {hypothesis.headline}
-                  </h3>
-                  <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed font-sans">
-                    {hypothesis.context}
-                  </p>
-                </div>
-
-                <div className="flex md:flex-col gap-2 shrink-0 font-mono text-[10px]">
-                  <div className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-center">
-                    <span className="text-zinc-400 block text-[9px] uppercase">C0 vs C LIFT</span>
-                    <b className="text-cyan-400 text-base font-bold">+14.4%</b>
-                  </div>
-                  <div className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-center">
-                    <span className="text-zinc-400 block text-[9px] uppercase">TOKEN REDUCTION</span>
-                    <b className="text-emerald-400 text-base font-bold">51.3%</b>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {currentWindow.id === 'theories' && hypothesisBanner}
         </section>
       ) : (
         <section className="w-full max-w-7xl mx-auto space-y-6 pt-2">
@@ -1248,244 +1211,148 @@ export const ResearchCanvas = memo(function ResearchCanvas({
             </div>
           </div>
 
-          {/* Hypothesis Context Summary (Transferred from Former Sidebar) */}
-          <div className="rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.07] via-white/[0.03] to-cyan-950/20 backdrop-blur-2xl p-5 shadow-[0_20px_50px_rgba(0,0,0,0.8),0_1px_0_0_rgba(255,255,255,0.2)_inset] relative overflow-hidden">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="space-y-1.5 max-w-3xl">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 font-bold uppercase tracking-wider">
-                    {hypothesis.badge}
-                  </span>
-                  <span className="font-mono text-[9.5px] text-zinc-400 uppercase tracking-widest">
-                    CONFIRMATORY FINDING · p = {formatPValue(analysis.pairedComparisons.C_vs_C0.holmPrimaryPValue ?? analysis.pairedComparisons.C_vs_C0.signFlipPValue)}
-                  </span>
-                </div>
-                <h3 className="text-lg sm:text-xl font-bold text-white tracking-wide">
-                  {hypothesis.headline}
-                </h3>
-                <p className="text-zinc-300 text-xs sm:text-sm leading-relaxed font-sans">
-                  {hypothesis.context}
-                </p>
-              </div>
-
-              <div className="flex md:flex-col gap-2 shrink-0 font-mono text-[10px]">
-                <div className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-center">
-                  <span className="text-zinc-400 block text-[9px] uppercase">C0 vs C LIFT</span>
-                  <b className="text-cyan-400 text-base font-bold">+14.4%</b>
-                </div>
-                <div className="px-3 py-2 rounded-xl bg-black/60 border border-white/10 text-center">
-                  <span className="text-zinc-400 block text-[9px] uppercase">TOKEN REDUCTION</span>
-                  <b className="text-emerald-400 text-base font-bold">51.3%</b>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Hypothesis Context Summary */}
+          {hypothesisBanner}
         </section>
       )}
 
       {/* =========================================================================
-          SECTION 01: CORE FINDINGS & HOLOGRAPHIC PARTICLE TOPOLOGY
+          SECTION 01: HOLOGRAPHIC PARTICLE TOPOLOGY & CORE THEORIES
           ========================================================================= */}
-      {(!isWindowMode || currentWindow.id === 'theories') && (
-      <motion.section
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-60px' }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-7xl mx-auto space-y-4"
-      >
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 border-b border-white/10 pb-3">
-          <div>
-            <span className="font-mono text-[10px] tracking-[0.25em] text-cyan-400 uppercase font-semibold block">
-              SECTION 01 // TOPOLOGY & EMPIRICS
-            </span>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight mt-1 uppercase">
-              Core Findings & Holographic Particle Topology
-            </h2>
-          </div>
-          <p className="text-zinc-400 font-mono text-xs">
-            120 tasks across 6 ablation variants projected into 3D dynamic space.
-          </p>
-        </div>
-
-        {/* Narrative Q&A Banner from Axiom · Findings */}
-        <div className="space-y-1.5 pb-2">
-          <p className="font-mono text-xs text-zinc-400 max-w-2xl">{formInfo.q}</p>
-          <h3 className="font-semibold text-lg sm:text-2xl text-white max-w-3xl drop-shadow-[0_0_24px_rgba(168,85,247,0.35)] leading-snug">
-            {formInfo.a}
-          </h3>
-          <p className="font-mono text-[11px] text-zinc-400 max-w-3xl">{formInfo.note}</p>
-        </div>
-
-        {/* Visualizer Grid: Left Column (5 Core Invariants) + Right Column (Particle Canvas) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Left Column: 5 Core Empirical Invariants Panel (Docked to Left) */}
-          <div className="lg:col-span-5 h-[660px] rounded-2xl border border-white/10 bg-[#03050a]/90 backdrop-blur-2xl p-4 shadow-2xl flex flex-col justify-between overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_#22d3ee]" />
-                <span className="font-mono text-xs font-bold text-white uppercase tracking-wider">
-                  01 // 5 CORE EMPIRICAL INVARIANTS
-                </span>
-              </div>
-              <span className="font-mono text-[8.5px] px-2 py-0.5 rounded-full bg-cyan-950/70 border border-cyan-500/40 text-cyan-300 font-semibold uppercase">
-                AST VERIFIER AXIOMS
+      {isTheoriesVisible && (
+      <section className="w-full max-w-7xl mx-auto space-y-6 font-mono text-[#e8eaf2]">
+        {/* Unified Motion-Graphic Topology Frame */}
+        <div>
+          {/* Top Control Bar */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 border border-[rgba(160,170,255,0.16)] bg-[#05060a] text-[10px] tracking-[0.14em] text-[#7c819a]">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#22d3ee] shrink-0" />
+              <span className="uppercase truncate">
+                TOPOLOGY · 120 TASKS × 6 VARIANTS · INTERACTIVE PARTICLE FIELD
               </span>
             </div>
 
-            {/* Scrollable Theories Stack */}
-            <div className="flex-1 overflow-y-auto space-y-2.5 my-3 pr-1 scrollbar-thin">
-              {THEORIES.map((theory) => {
-                const isExpanded = expandedTheory === theory.id;
-                return (
-                  <div
-                    key={theory.id}
-                    onClick={() => setExpandedTheory(isExpanded ? '' : theory.id)}
-                    className={`rounded-2xl border transition-all cursor-pointer p-3.5 backdrop-blur-md relative overflow-hidden ${
-                      isExpanded
-                        ? 'bg-white/[0.12] border-cyan-400/60 shadow-[0_8px_24px_rgba(0,0,0,0.6),0_0_20px_rgba(34,211,238,0.18),0_1px_0_0_rgba(255,255,255,0.3)_inset]'
-                        : 'bg-white/[0.04] border-white/10 hover:bg-white/[0.08] hover:border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.3),0_1px_0_0_rgba(255,255,255,0.12)_inset]'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono text-[11px] font-bold text-white tracking-wide">
-                        {theory.title}
-                      </span>
-                      <span className="font-mono text-[8px] px-1.5 py-0.5 rounded-full border border-cyan-500/40 bg-cyan-950/50 text-cyan-300 uppercase shrink-0 font-semibold">
-                        {theory.badge}
-                      </span>
-                    </div>
-                    <div className="mt-1 font-mono text-[9px] text-cyan-300 font-semibold truncate">
-                      {theory.formula}
-                    </div>
-                    {isExpanded && (
-                      <div className="mt-2.5 pt-2 border-t border-white/10 space-y-2 text-[10px] font-sans">
-                        <p className="text-zinc-200 leading-relaxed">{theory.premise}</p>
-                        <p className="text-zinc-100 leading-relaxed">{theory.discovery}</p>
-                        <div className="bg-black/60 p-2 rounded-xl border border-white/15 font-mono text-[9px] text-zinc-300">
-                          <span className="text-cyan-400 font-bold">PROOF: </span>
-                          {theory.proof}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Invariant 0 Verification Badge */}
-            <div className="pt-2 border-t border-white/10 shrink-0">
-              <div className="p-2.5 rounded-xl bg-black/60 border border-white/10 space-y-1">
-                <div className="flex items-center justify-between text-[8.5px] font-mono text-zinc-400">
-                  <span>INVARIANT 0 AST VERIFIER</span>
-                  <span className="text-cyan-400 font-bold">100% MUTATION KILL RATE</span>
-                </div>
-                <div className="flex items-center justify-between text-[8.5px] font-mono text-zinc-400">
-                  <span>DOCKER PG 16 ORACLE</span>
-                  <span className="text-emerald-400 font-bold">PASS (ZERO LLM)</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Hero Particle Canvas Container (Unobstructed) */}
-          <div
-            ref={chartContainerRef}
-            className="lg:col-span-7 h-[660px] rounded-2xl relative border border-white/10 bg-[#03050a]/90 backdrop-blur-2xl shadow-[0_24px_60px_rgba(0,0,0,0.9),0_1px_0_0_rgba(255,255,255,0.2)_inset] overflow-hidden select-none flex flex-col justify-between"
-          >
-            {/* Full-bleed Canvas */}
-            <canvas ref={canvasRef} className="absolute inset-0 w-full h-full cursor-crosshair z-0" />
-
-            {/* Transition White Flash Overlay */}
-            <div
-              ref={flashRef}
-              className="absolute inset-0 bg-white opacity-0 pointer-events-none mix-blend-overlay transition-opacity duration-100 z-10"
-            />
-
-            {/* Top-Right Floating Chart Switcher */}
-            <div className="absolute top-4 right-4 z-20 flex items-center bg-black/75 backdrop-blur-2xl p-1 rounded-xl border border-white/15 shadow-[0_12px_32px_rgba(0,0,0,0.7),0_1px_0_0_rgba(255,255,255,0.2)_inset]">
+            <div className="flex flex-wrap items-center gap-1 shrink-0">
               {FORMS.map(([id, label]) => (
                 <button
                   key={id}
                   type="button"
                   onClick={() => handleSelectChartForm(id as ChartForm)}
-                  className={`px-3 py-1.5 rounded-lg text-[9.5px] font-mono tracking-wider uppercase transition-all cursor-pointer ${
+                  className={`px-2.5 py-1 rounded-[3px] border text-[10px] tracking-[0.12em] uppercase transition-colors cursor-pointer ${
                     chartForm === id
-                      ? 'bg-cyan-500/25 text-cyan-300 border border-cyan-400/80 shadow-[0_0_12px_rgba(34,211,238,0.35)] font-bold'
-                      : 'text-zinc-400 hover:text-white hover:bg-white/5 border border-transparent'
+                      ? 'border-[#22d3ee] bg-[#22d3ee]/15 text-[#22d3ee] font-bold'
+                      : 'border-[rgba(160,170,255,0.16)] text-[#7c819a] hover:text-[#e8eaf2] hover:border-white/40'
                   }`}
                 >
                   {label}
                 </button>
               ))}
             </div>
+          </div>
 
-            {/* Right-Hand Vertical Bullet-Style Condition Legend (Leaves bottom canvas completely clear) */}
-            <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-1 p-2.5 rounded-xl bg-black/85 backdrop-blur-2xl border border-white/10 shadow-[0_12px_32px_rgba(0,0,0,0.8),0_1px_0_0_rgba(255,255,255,0.1)_inset] font-mono text-[9.5px] pointer-events-auto select-none">
-              <div className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold pb-1 mb-0.5 border-b border-white/10 flex items-center justify-between gap-3">
-                <span>CONDITIONS</span>
-                <span className="text-cyan-400 font-bold">N=120</span>
+          {/* Radial Stage with Blueprint Grid + Narrative Strip + Full-Width Particle Canvas */}
+          <div
+            className="border border-[rgba(160,170,255,0.16)] border-t-0 relative overflow-hidden select-none"
+            style={{ background: 'radial-gradient(ellipse at 50% 52%, #120a24 0%, #05060a 72%)' }}
+          >
+            {/* Subtle 48px Blueprint Grid Overlay */}
+            <div
+              className="absolute inset-0 pointer-events-none opacity-45"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(160,170,255,0.14) 1px, transparent 1px), linear-gradient(90deg, rgba(160,170,255,0.14) 1px, transparent 1px)',
+                backgroundSize: '48px 48px',
+                WebkitMaskImage: 'radial-gradient(ellipse at 50% 50%, #000 20%, transparent 78%)',
+                maskImage: 'radial-gradient(ellipse at 50% 50%, #000 20%, transparent 78%)',
+              }}
+            />
+
+            {/* Narrative Finding Strip Above Canvas */}
+            <div className="relative z-10 px-5 pt-4 pb-3 border-b border-[rgba(160,170,255,0.12)] flex flex-col lg:flex-row lg:items-end justify-between gap-2">
+              <div className="space-y-1 max-w-3xl">
+                <p className="text-[11px] text-[#7c819a]">{formInfo.q}</p>
+                <h3 className="text-base sm:text-xl font-bold text-[#e8eaf2] tracking-tight leading-snug">
+                  {formInfo.a}
+                </h3>
+                <p className="text-[11px] text-[#7c819a]">{formInfo.note}</p>
               </div>
-              {CN.map((c, i) => {
-                const m = activeRun.m[i];
-                const isHov = hoveredCondition === i;
-                return (
-                  <div
-                    key={c}
-                    onMouseEnter={() => setHoveredCondition(i)}
-                    onMouseLeave={() => setHoveredCondition(null)}
-                    className={`flex items-center justify-between gap-3 px-2 py-0.5 rounded cursor-pointer transition-all ${
-                      isHov ? 'bg-white/15' : 'hover:bg-white/5'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span
-                        className="w-2 h-2 rounded-full flex-shrink-0"
-                        style={{
-                          backgroundColor: COL[i],
-                          boxShadow: isHov ? `0 0 8px ${COL[i]}` : 'none',
-                        }}
-                      />
-                      <span className="font-bold text-white">{c}:</span>
-                      <span className="text-zinc-400 truncate max-w-[80px]">
-                        {c === 'A'
-                          ? 'Baseline'
-                          : c === 'B'
-                          ? 'Static Hints'
-                          : c === 'C'
-                          ? 'Distilled'
-                          : c === 'C0'
-                          ? 'Verbatim'
-                          : c === 'D'
-                          ? 'Distractor'
-                          : 'Retried'}
+              <span className="text-[10px] tracking-[0.16em] text-[#7c819a] uppercase shrink-0">
+                4,800 PARTICLES · {activeRun.name}
+              </span>
+            </div>
+
+            {/* Full-Width Hero Particle Canvas */}
+            <div
+              ref={chartContainerRef}
+              className="w-full h-[580px] sm:h-[660px] relative overflow-hidden"
+            >
+              <canvas ref={canvasRef} className="absolute inset-0 w-full h-full cursor-crosshair z-0" />
+
+              {/* Transition Flash Overlay */}
+              <div
+                ref={flashRef}
+                className="absolute inset-0 bg-white opacity-0 pointer-events-none mix-blend-overlay transition-opacity duration-100 z-10"
+              />
+
+              {/* Crisp Hairline Conditions Readout (Bottom-Right) */}
+              <div className="absolute right-4 bottom-4 z-20 flex flex-col gap-1 p-2.5 border border-[rgba(160,170,255,0.16)] bg-[#05060a]/85 backdrop-blur-md text-[9.5px] pointer-events-auto select-none">
+                <div className="text-[8.5px] uppercase tracking-[0.16em] text-[#7c819a] font-bold pb-1 mb-0.5 border-b border-[rgba(160,170,255,0.14)] flex items-center justify-between gap-4">
+                  <span>CONDITIONS</span>
+                  <span className="text-[#22d3ee]">N=120</span>
+                </div>
+                {CN.map((c, i) => {
+                  const m = activeRun.m[i];
+                  const isHov = hoveredCondition === i;
+                  return (
+                    <div
+                      key={c}
+                      onMouseEnter={() => setHoveredCondition(i)}
+                      onMouseLeave={() => setHoveredCondition(null)}
+                      className={`flex items-center justify-between gap-3 px-2 py-0.5 rounded-[2px] cursor-pointer transition-colors ${
+                        isHov ? 'bg-white/10' : 'hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span
+                          className="w-2 h-2 rounded-full flex-shrink-0"
+                          style={{
+                            backgroundColor: COL[i],
+                            boxShadow: isHov ? `0 0 8px ${COL[i]}` : 'none',
+                          }}
+                        />
+                        <span className="font-bold text-[#e8eaf2]">{c}:</span>
+                        <span className="text-[#7c819a] truncate max-w-[84px]">
+                          {c === 'A'
+                            ? 'Baseline'
+                            : c === 'B'
+                            ? 'Static Hints'
+                            : c === 'C'
+                            ? 'Distilled'
+                            : c === 'C0'
+                            ? 'Verbatim'
+                            : c === 'D'
+                            ? 'Distractor'
+                            : 'Retried'}
+                        </span>
+                      </div>
+                      <span className="text-[#22d3ee] font-bold tabular-nums ml-1 flex-shrink-0">
+                        {m != null ? `${m.toFixed(1)}%` : '—'}
                       </span>
                     </div>
-                    <span className="text-cyan-300 font-bold tabular-nums ml-1 flex-shrink-0">
-                      {m != null ? `${m.toFixed(1)}%` : '—'}
-                    </span>
-                  </div>
-                );
-              })}
-              {/* Dynamic C0 vs C Verbatim Lift Indicator */}
-              <div className="flex items-center justify-between text-[8px] font-mono text-cyan-400 font-bold border-t border-white/10 pt-1.5 mt-1">
-                <span className="text-zinc-400 uppercase tracking-wider">C0 vs C LIFT:</span>
-                <span className="text-cyan-300 font-extrabold tabular-nums">
-                  {activeRun.m[3] != null && activeRun.m[2] != null
-                    ? `${activeRun.m[3] - activeRun.m[2] >= 0 ? '+' : ''}${(activeRun.m[3] - activeRun.m[2]).toFixed(1)}%`
-                    : '+14.4%'}
-                </span>
+                  );
+                })}
+                <div className="flex items-center justify-between text-[8.5px] font-bold border-t border-[rgba(160,170,255,0.14)] pt-1.5 mt-1 gap-3">
+                  <span className="text-[#7c819a] uppercase tracking-[0.14em]">C0 vs C LIFT</span>
+                  <span className="text-[#22d3ee] tabular-nums">{c0VsCLift}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Interactive Animated 5-Theories Visualizer */}
-        <AxiomTheoriesFlow
-          selectedTheoryId={expandedTheory || undefined}
-          onSelectTheory={(tid) => setExpandedTheory(tid)}
-        />
-      </motion.section>
+        <AxiomTheoriesFlow />
+      </section>
       )}
 
       {/* =========================================================================

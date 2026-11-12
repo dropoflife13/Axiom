@@ -96,20 +96,20 @@ export function WhitePaperModal({ isOpen, onClose }: WhitePaperModalProps) {
                 <div className="p-4 rounded-xl border border-white/10 bg-black/40 space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-bold text-amber-300">H3: THE DISTILLATION PENALTY</span>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30">p = 1.00e-5</span>
+                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-amber-950/60 text-amber-300 border border-amber-500/30">p &lt; 0.0001</span>
                   </div>
                   <p className="text-zinc-300">
-                    Raw compiler error traces systematically outperform natural language summaries by <strong className="text-white">+14.39%</strong> on frontier models and <strong className="text-white">+21.90%</strong> on distilled models. Distillation drops exact constraint formulas.
+                    Raw compiler error traces systematically outperform natural language summaries by <strong className="text-white">+14.39%</strong> on Nemotron 550B and <strong className="text-white">+17.36%</strong> on Gemini 3.1 Flash Lite (p &lt; 0.0001, confirmed in 4 of 6 models). Distillation drops exact constraint formulas.
                   </p>
                 </div>
 
                 <div className="p-4 rounded-xl border border-white/10 bg-black/40 space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-mono font-bold text-fuchsia-300">INSTRUCTION CAPACITY CLIFF</span>
-                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/30">95.8% CRASH RATE</span>
+                    <span className="font-mono font-bold text-fuchsia-300">PROMPT BLOAT &amp; SYNTAX SENSITIVITY</span>
+                    <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-fuchsia-950/60 text-fuchsia-300 border border-fuchsia-500/30">21.7% DDL CRASHES</span>
                   </div>
                   <p className="text-zinc-300">
-                    Injecting all 34 organizational rules causes smaller distilled models to suffer catastrophic syntax collapse. Selective retrieval of top-10 rules rescues performance by <strong className="text-white">+18.96%</strong> while halving tokens.
+                    Injecting all 34 organizational rules into prompts induces DDL syntax crashes on prompt-sensitive models (26 crashes on Gemini 3.1 Flash Lite; 83 crashes under Placebo on GLM-5.3). Selective retrieval of top-10 rules avoids bloat and rescues performance (C0 beats B by <strong className="text-white">+7.93%</strong> on Gemini 3.1 Flash Lite).
                   </p>
                 </div>
 
@@ -129,7 +129,7 @@ export function WhitePaperModal({ isOpen, onClose }: WhitePaperModalProps) {
                     <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-300 border border-emerald-500/30">51.3% SAVINGS</span>
                   </div>
                   <p className="text-zinc-300">
-                    Prompt tokens drop from 1,139.2 (Condition B) down to 554.8 (Condition C0) while preserving 95.3% of maximum rule compliance across all evaluation tasks.
+                    Prompt tokens drop from 1,139.2 (Condition B) down to 554.8 (Condition C0) while preserving over 84% of the compliance gain from zero-shot to full static hints.
                   </p>
                 </div>
               </div>

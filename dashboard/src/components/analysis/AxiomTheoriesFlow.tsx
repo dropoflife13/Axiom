@@ -187,7 +187,7 @@ function s2(t: number): string {
 
   const G = [
     { c: 780, n: 'NEMOTRON 550B', v: [71.92, 86.31], e: sm(kk(t, 4, 5.4)), d: '+14.39', dt: 4.9 },
-    { c: 1030, n: 'NEMOTRON-3.5 LIGHTNING', v: [39.76, 61.67], e: sm(kk(t, 6, 7.4)), d: '+21.90', dt: 6.5 },
+    { c: 1030, n: 'GEMINI 3.1 FLASH LITE', v: [66.08, 83.39], e: sm(kk(t, 6, 7.4)), d: '+17.31', dt: 6.5 },
   ];
   G.forEach((g) => {
     (
@@ -220,8 +220,8 @@ function s3(t: number): string {
   const N = 10;
   const cap = [10.6, 4];
   const X = [110, 640];
-  const nm = ['NEMOTRON 550B', 'NEMOTRON-3.5 LIGHTNING'];
-  const cr = [0.8, 95.8];
+  const nm = ['NEMOTRON 550B', 'GEMINI 3.1 FLASH LITE'];
+  const cr = [0.8, 21.7];
   const rA = [sm(kk(t, 2.3, 3)), sm(kk(t, 4.3, 5))];
   const cA = [kk(t, 2, 2.6), kk(t, 4, 4.6)];
 
@@ -457,13 +457,13 @@ const TH: TheoryStageSpec[] = [
     cap: 'Δ(C0 − C) > 0 · p = 1.00e-5',
     claim: 'Δ(C0 − C) > 0  |  p = 1.00e-5 (McNemar p = 9.26e-6)',
     proof:
-      'Nemotron-550B, run 2: verbatim C0 beats distilled C by +14.39% (86.31% vs 71.92%, p = 1.00e-5); strict pass@1 jumps from 29.17% to 55.00%. Nemotron-3.5-Lightning: C0 beats C by +21.90% (61.67% vs 39.76%, p = 1.00e-5).',
+      'Nemotron-550B: verbatim C0 beats distilled C by +14.39% (86.31% vs 71.92%, p = 1.00e-5); Gemini 3.1 Flash Lite: C0 beats C by +17.36% (83.39% vs 66.08%, p = 1.00e-5). Significant across 4 of 6 models.',
     why: 'Reflexion setups usually put an Advisor model between the error and the next prompt. For rigid database contracts the exact trigger event, scope and error behavior are the lesson, and a summary drops them.',
     beats: [
       ['VERBATIM', 'C0 injects the Oracle’s failed fact word for word: the exact trigger event, scope and error behavior the contract demands.'],
       ['DISTILL', 'Condition C sends the same failure through an Advisor that rewrites it in under 24 words. The event, the scope and the exception are gone from the summary.'],
       ['550B', 'On Nemotron 550B the verbatim facts converge on 86.31% of tasks against 71.92% for distilled lessons, a gap of +14.39 points. Strict pass@1 rises from 29.17% to 55.00%.'],
-      ['LIGHTNING', 'The penalty is larger on a small model: 61.67% against 39.76%, a gap of +21.90 points. Both gaps hold at p = 1.00e-5.'],
+      ['GEMINI-3.1', 'On Gemini 3.1 Flash Lite, verbatim facts reach 83.39% against 66.08% for distilled lessons (+17.31 pts, p = 1.00e-5). Qwen 27B similarly gains +16.53 pts.'],
     ],
   },
   {
@@ -473,16 +473,16 @@ const TH: TheoryStageSpec[] = [
     fn: s3,
     full: 'The Context Meltdown · Instruction Capacity Cliff',
     t1: 'More instructions is not more help.',
-    t2: 'Small models fall off a cliff.',
-    cap: 'CONDITION B CRASH RATE · 0.8% VS 95.8%',
-    claim: 'Condition B crash rate: 550B (0.8%) vs Lightning (95.8%)',
-    proof: 'Condition B crash rate: Nemotron 550B 0.8%, Nemotron-3.5-Lightning 95.8%. Same prompt, 1,852 tokens, same 720-trial design.',
-    why: 'Adding hints only helps while the model can still follow them. Past its instruction capacity the extra rules do harm, which is why compact verbatim facts matter more for small models.',
+    t2: 'Prompt bloat triggers syntax crashes.',
+    cap: 'CONDITION B CRASH RATE · 0.8% VS 21.7%',
+    claim: 'Condition B crash rate: 550B (0.8%) vs Gemini 3.1 Flash Lite (21.7%)',
+    proof: 'Condition B crash rate: Nemotron 550B 0.8%, Gemini 3.1 Flash Lite 21.7% (26 DDL crashes). Same prompt, 1,852 tokens, same 720-trial design.',
+    why: 'Adding hints only helps while the model can still follow them. Past its instruction capacity the extra rules do harm, which is why compact verbatim facts matter more for prompt-sensitive models.',
     beats: [
-      ['STACK', 'Condition B hands the model every golden hint at once: 1,852 tokens of instructions, the same prompt for every model.'],
+      ['STACK', 'Condition B hands the model every static rule at once: 1,852 tokens of instructions, the same prompt for every model.'],
       ['550B', 'Nemotron 550B has room for all of it. Its crash rate under Condition B is 0.8%.'],
-      ['LIGHTNING', 'Nemotron-3.5-Lightning can only hold so many instructions at once. Past that line they are not followed and the run breaks.'],
-      ['CLIFF', 'Its crash rate under the identical prompt is 95.8%. Capacity behaves like a cliff, not a slope: nearly everything works on one side and almost nothing on the other.'],
+      ['GEMINI-3.1', 'Gemini 3.1 Flash Lite suffers 26 DDL syntax crashes under Condition B, dropping its score to 75.5% while C0 reaches 83.4%.'],
+      ['CLIFF', 'Its crash rate under the identical prompt is 21.7%. Capacity behaves like a cliff: past a threshold, prompt overload actively impairs DDL generation.'],
     ],
   },
   {
@@ -496,12 +496,12 @@ const TH: TheoryStageSpec[] = [
     cap: 'C0 · 554 TOK · 86.3% · −51.3% TOKENS',
     claim: 'Frontier: fewer prompt tokens and higher compliance, together',
     proof: 'Prompt tokens: A 1,138 · B 1,852 · C0 554 (−51.3% against zero-shot). Compliance: A 47.4% · C0 86.3% · B 93.9%. Recovery = (86.3 − 47.4) / (93.9 − 47.4) = 84% of the gap.',
-    why: 'A good prompt is judged on two axes at once. C0 beats zero-shot on both, and gets within 7.6 points of the golden ceiling for 70% fewer tokens than golden hints.',
+    why: 'A good prompt is judged on two axes at once. C0 beats zero-shot on both, and gets within 7.6 points of the static reference for 70% fewer tokens than static hints.',
     beats: [
       ['ZERO-SHOT', 'Zero-shot (A) spends 1,138 prompt tokens and reaches 47.4% compliance. This is the baseline.'],
-      ['GOLDEN', 'Golden hints (B) reach the ceiling at 93.9% but cost 1,852 tokens.'],
+      ['STATIC', 'Static hints (B) reach 93.9% but cost 1,852 tokens.'],
       ['VERBATIM', 'Verbatim facts (C0) reach 86.3% with 554 tokens: −51.3% against zero-shot. Zero-shot now sits in the dominated zone, worse on both axes.'],
-      ['FRONTIER', 'C0 recovers 84% of the distance from zero-shot to the golden ceiling. The frontier runs from C0 to B, and the last 7.6 points cost 1,298 more tokens.'],
+      ['FRONTIER', 'C0 recovers 84% of the distance from zero-shot to the static reference. The frontier runs from C0 to B, and the last 7.6 points cost 1,298 more tokens.'],
     ],
   },
   {

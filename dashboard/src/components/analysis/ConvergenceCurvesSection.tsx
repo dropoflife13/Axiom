@@ -22,27 +22,27 @@ interface ConditionCurve {
 const CONDITIONS_LIST: ConditionCurve[] = [
   {
     code: 'E_B',
-    name: 'EXHAUSTIVE RETRY',
-    role: 'Retry with Oracle Feedback',
-    plainEnglish: 'Automatic multi-round retry loop until every single AST test passes (highest compliance, higher token cost).',
+    name: 'STATIC CONTROL (EXHAUSTIVE)',
+    role: 'Exhaustive Test Evaluation',
+    plainEnglish: 'All 34 static rules with exhaustive fact evaluation under identical test harness.',
     color: '#34d399',
     score: 94.2,
     tokens: 1420,
   },
   {
     code: 'B',
-    name: 'STATIC ORACLE HINTS',
+    name: 'STATIC REFERENCE (34 RULES)',
     role: 'All 34 Rules Injected',
-    plainEnglish: 'Dumping all 34 organizational rules into the prompt. Works on giant 550B models, but crashes lightweight models 95.8% of the time.',
+    plainEnglish: 'Dumping all 34 organizational rules into the prompt. Serves as reference baseline, but triggers syntax crashes on prompt-sensitive models (e.g., 21.7% DDL crashes on Gemini 3.1 Flash Lite).',
     color: '#a78bfa',
     score: 93.9,
     tokens: 1139,
   },
   {
     code: 'C0',
-    name: 'VERBATIM LESSONS',
-    role: 'Selective Retrieval (K=10)',
-    plainEnglish: 'Axiom’s surgical approach: injects only the exact, raw compiler errors needed for this specific schema. Cuts cost by 51.3% while reaching 86.3% accuracy.',
+    name: 'VERBATIM RULES (K=10)',
+    role: 'Failure-Prioritized Retrieval',
+    plainEnglish: 'Axiom’s surgical approach: injects top-10 exact rules prioritized by historical failures. Cuts token cost by 51.3% while reaching 86.3% compliance.',
     color: '#22d3ee',
     score: 86.3,
     tokens: 555,
@@ -50,9 +50,9 @@ const CONDITIONS_LIST: ConditionCurve[] = [
   },
   {
     code: 'C',
-    name: 'DISTILLED LESSONS',
-    role: 'LLM Natural Language',
-    plainEnglish: 'Having an AI summarize compiler errors into friendly tips. Loses critical syntax details, scoring 14.4% worse than verbatim error traces.',
+    name: 'DISTILLED RULES (K=10)',
+    role: 'Advisor Natural Language',
+    plainEnglish: 'Distilling error rules into natural language tips loses exact naming and syntax details, trailing verbatim text by up to 17.4%.',
     color: '#fb923c',
     score: 71.9,
     tokens: 780,
@@ -200,11 +200,11 @@ export const ConvergenceCurvesSection = memo(function ConvergenceCurvesSection({
         <div className="rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-2xl p-4 space-y-1.5 shadow-xl">
           <div className="flex items-center justify-between font-mono text-[9.5px]">
             <span className="text-amber-400 font-bold uppercase tracking-wider">THE TRAP · PROMPT OVERLOAD</span>
-            <span className="text-zinc-500">COND B: MELTDOWN</span>
+            <span className="text-zinc-500">COND B: SYNTAX RISK</span>
           </div>
-          <h4 className="text-sm font-bold text-white">Shoving Every Rule into the Prompt Crashes Small Models</h4>
+          <h4 className="text-sm font-bold text-white">Shoving Every Rule into Prompt Triggers Syntax Failures</h4>
           <p className="text-zinc-300 text-xs leading-relaxed font-sans">
-            Dumping all 34 rules into the prompt causes massive token spend ($$$) and triggers catastrophic syntax failure (95.8% crashes on lightweight models like Nemotron Lightning).
+            Dumping all 34 rules into the prompt causes massive token spend ($$$) and triggers DDL syntax failures on sensitive models (e.g. 21.7% crashes on Gemini 3.1 Flash Lite, reversing B below C0).
           </p>
         </div>
 
@@ -225,7 +225,7 @@ export const ConvergenceCurvesSection = memo(function ConvergenceCurvesSection({
         {/* Top Indicators inside Chart */}
         <div className="flex items-center justify-between text-zinc-400 font-mono text-[10px] mb-2 px-2 uppercase">
           <span>ANSWERED BEST (%)</span>
-          <span className="text-zinc-500">PROVEN OPTIMUM CEILING</span>
+          <span className="text-zinc-500">STATIC IN-CONTEXT REFERENCE</span>
         </div>
 
         {/* SVG Curve Canvas */}

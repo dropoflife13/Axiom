@@ -14,13 +14,12 @@ export interface FleetTelemetryGridProps {
 // Model data: Name, best compliance %, parameter size in billions (null when none), accent color, internal runId
 const M: [string, number, number | null, string, string][] = [
   ['NEMOTRON 550B', 86.31, 550, '#22d3ee', 'nemotron-2'],
-  ['GEMINI 3.5 FLASH LITE', 81.40, null, '#34d399', 'gemini-flash-lite-full'],
-  ['LLAMA 3.3 70B', 79.20, 70, '#3b82f6', 'llama33-mini'],
-  ['GLM-5.3 FLASH', 78.50, null, '#2dd4bf', 'glm5-2'],
-  ['GEMMA 4 31B DENSE', 76.80, 31, '#c084fc', 'gemma4-31b-full'],
-  ['QWEN 3.8 27B', 74.17, 27, '#fb923c', 'qwen27b-2'],
-  ['NEMOTRON 3.5 LIGHTNING', 61.67, null, '#fbbf24', 'nemotron-lightning-full'],
-  ['LIQUID 1.7B MINI', 52.10, 1.7, '#38bdf8', 'liquid17b-mini'],
+  ['GEMINI 3.1 FLASH LITE', 83.39, null, '#10b981', 'gemini-3.1-flash-lite'],
+  ['QWEN 3.8 27B', 79.46, 27, '#fb923c', 'qwen27b-2'],
+  ['GEMMA 4 31B DENSE', 77.72, 31, '#c084fc', 'gemma4-31b-full'],
+  ['GLM-5.3 FLASH', 74.52, null, '#2dd4bf', 'glm5-2'],
+  ['GEMINI 3.5 FLASH LITE', 70.83, null, '#34d399', 'gemini-flash-lite-full'],
+  ['GPT-OSS 120B (LIVE)', 45.12, 120, '#38bdf8', 'gptoss-120b-expanded'],
 ];
 
 const LEAD = M[0][1];

@@ -20,7 +20,7 @@ const NODES: [string, string, string, [number, number]][] = [
   ['RETRIEVE', 'top K=10 facts', CY, [2.3, 3.4]],
   ['LLM · T=0', 'candidate SQL', VI, [3.3, 4.2]],
   ['VERIFIER', 'no LLM in scoring', FA, [4.1, 5.1]],
-  ['MEMORY VAULT', 'reflexion', PA, [5.0, 6.3]],
+  ['MEMORY VAULT', 'failure memory', PA, [5.0, 6.3]],
 ];
 
 const CELLS: [number, number, number][] = [

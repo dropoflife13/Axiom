@@ -364,7 +364,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
 
       cx.globalAlpha = fade;
 
-      // Accuracy gauge: zero-shot 47.4% → best 86.31%, ceiling 93.88%
+      // Accuracy gauge: zero-shot 47.4% → best 86.31%, static reference 93.88%
       const gx = Math.max(34, W * 0.07);
       const gy = area.y;
       const gh = area.h;
@@ -381,7 +381,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
           [47.4, 'A · ZERO-SHOT', DM],
           [71.9, 'C · DISTILLED', DM],
           [86.31, 'C0 · BEST', CY],
-          [93.88, 'B · BOUND', AM],
+          [93.88, 'B · STATIC REF', AM],
         ] as [number, string, string][]
       ).forEach(([v, l, c]) => {
         cx.globalAlpha = fade;
@@ -468,7 +468,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
 
       // Top HUD readouts
       cx.globalAlpha = fade;
-      T('● LENS · PATH // REFLEXION TRACE TOPOLOGY', 24, 30, EM, 11, 'left', 700);
+      T('● LENS · PATH // FAILURE RETRIEVAL TOPOLOGY', 24, 30, EM, 11, 'left', 700);
       T(
         'VOLUMETRIC HEALING TRACE',
         24,
@@ -609,7 +609,7 @@ export const VolumetricHealingTrace = memo(function VolumetricHealingTrace({
             handleReplay();
           }}
           className="absolute top-4 right-4 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-black/75 hover:bg-black/90 border border-emerald-500/30 hover:border-emerald-400 text-emerald-300 font-mono text-[10px] font-bold tracking-wider uppercase transition-all backdrop-blur-md cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.6)]"
-          title="Click to replay the 6-stage Reflexion healing traversal"
+          title="Click to replay the 6-stage rule retrieval traversal"
         >
           <span>↺ REPLAY TRACE</span>
         </button>

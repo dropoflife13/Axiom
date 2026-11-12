@@ -340,7 +340,7 @@ const ND: [string, string, string, string][] = [
   ['02 VERIFY', 'PG-16 ORACLE', 'zero LLM in scoring', PA],
   ['03 FAIL', 'FACT IDs ONLY', 'no ground-truth SQL', FA],
   ['04 ADVISE', 'TOP K = 10', 'base K = 6', AM],
-  ['05 RETRY', 'REFLEXION', 'C distilled · C0 verbatim', VI],
+  ['05 RETRY', 'INJECT', 'C distilled · C0 verbatim', VI],
   ['06 PASS', 'HOLM p < 1e-4', 'sign-flip resampling', CY],
 ];
 
