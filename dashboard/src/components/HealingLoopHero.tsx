@@ -196,7 +196,7 @@ export default function HealingLoopHero({
                     <p className="hl-dim">
                       {snapshot?.awaiting
                         ? `AWAITING SNAPSHOT · Pipeline execution in progress for ${getDisplayName(transitionKey)}`
-                        : `${desk.totalTokens.toLocaleString()} tokens · ${Math.max(0, totalTrials - live.done)} trials remain`}
+                        : `${Math.max(0, totalTrials - live.done)} trials remain`}
                     </p>
                   </div>
                 </div>
