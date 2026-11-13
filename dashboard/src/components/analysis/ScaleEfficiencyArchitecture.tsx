@@ -187,9 +187,8 @@ function OrbitCanvas({
 
     function size() {
       if (!cv || !container) return;
-      const r = container.getBoundingClientRect();
-      const w = Math.round(r.width);
-      const h = Math.round(r.height);
+      const w = container.clientWidth || Math.round(container.getBoundingClientRect().width);
+      const h = container.clientHeight || Math.round(container.getBoundingClientRect().height);
       const dp = Math.min(window.devicePixelRatio || 1, 2);
       if (w <= 0 || h <= 0) return;
       if (w !== W || h !== H || dp !== DP) {
@@ -250,6 +249,9 @@ function OrbitCanvas({
     cv.addEventListener('click', onClick);
 
     function render(now: number) {
+      if ((W === 0 || H === 0) && container) {
+        size();
+      }
       if (visible && W > 0 && H > 0 && cx) {
         cx.setTransform(DP, 0, 0, DP, 0, 0);
         cx.clearRect(0, 0, W, H);
@@ -271,9 +273,9 @@ function OrbitCanvas({
         }
 
         const ox = W / 2;
-        const oy = H * 0.58;
-        const R = Math.min(W * 0.40, H * 0.31);
-        const rad = (g: number) => 30 + (g / 70) * (R - 36);
+        const oy = H * 0.65;
+        const R = Math.min(W * 0.36, H * 0.25);
+        const rad = (g: number) => 28 + (Math.max(0, g) / 70) * (R - 34);
         const ps = (m: FleetModelItem) => (m.s ? 5 + (Math.log10(m.s) / Math.log10(550)) * 9 : 6);
 
         [10, 30, 50].forEach((g, j) => {
@@ -406,8 +408,8 @@ function OrbitCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
-      style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
+      className="relative min-h-[740px] sm:min-h-[820px] lg:min-h-[880px] xl:min-h-[920px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      style={{ background: 'radial-gradient(ellipse at 50% 65%, #140b28 0%, #05060a 72%)' }}
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-55"
@@ -464,9 +466,8 @@ function DialsCanvas({
 
     function size() {
       if (!cv || !container) return;
-      const r = container.getBoundingClientRect();
-      const w = Math.round(r.width);
-      const h = Math.round(r.height);
+      const w = container.clientWidth || Math.round(container.getBoundingClientRect().width);
+      const h = container.clientHeight || Math.round(container.getBoundingClientRect().height);
       const dp = Math.min(window.devicePixelRatio || 1, 2);
       if (w <= 0 || h <= 0) return;
       if (w !== W || h !== H || dp !== DP) {
@@ -493,6 +494,9 @@ function DialsCanvas({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function render(now: number) {
+      if ((W === 0 || H === 0) && container) {
+        size();
+      }
       if (visible && W > 0 && H > 0 && cx) {
         cx.setTransform(DP, 0, 0, DP, 0, 0);
         cx.clearRect(0, 0, W, H);
@@ -513,9 +517,9 @@ function DialsCanvas({
         }
 
         const wide = W > 680;
-        const cy = H * 0.65;
-        const r1 = Math.min(wide ? W * 0.15 : W * 0.30, H * 0.22);
-        const x1 = wide ? W * 0.27 : W / 2;
+        const cy = H * 0.70;
+        const r1 = Math.min(wide ? W * 0.14 : W * 0.28, H * 0.19);
+        const x1 = wide ? W * 0.28 : W / 2;
         const f = (v: number) => (v - GA) / (GB - GA);
         const ang = (v: number) => Math.PI + Math.PI * f(v);
 
@@ -571,7 +575,7 @@ function DialsCanvas({
         T(cx, A.id + ' · ' + A.n, x1, cy + 72, A.col, 11, 'center', 700);
 
         if (wide) {
-          const x2 = W * 0.75;
+          const x2 = W * 0.74;
           const rs: [number, string, number, string][] = [
             [r1, 'B · ANSWER KEY', 1852, VI],
             [r1 - 30, 'A · ZERO-SHOT', 1138, '#94a3b8'],
@@ -617,8 +621,8 @@ function DialsCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
-      style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
+      className="relative min-h-[740px] sm:min-h-[820px] lg:min-h-[880px] xl:min-h-[920px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      style={{ background: 'radial-gradient(ellipse at 50% 65%, #140b28 0%, #05060a 72%)' }}
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-55"
@@ -683,7 +687,7 @@ function ConstellationCanvas({
       const k = `${w}x${h}`;
       if (CON.key === k || w <= 0 || h <= 0) return;
       const cx0 = w / 2;
-      const cy0 = h * 0.62;
+      const cy0 = h * 0.66;
       const U = Math.min(h * 0.055, w * 0.045) / Math.sqrt(224);
       const N = FAULT.map((f, i) => ({
         r: Math.sqrt(f.n2) * U * 1.5,
@@ -714,7 +718,7 @@ function ConstellationCanvas({
             a.y = cy0 + (dy / d) * m;
           }
           a.x = clamp(a.x, a.r + 14, w - a.r - 14);
-          a.y = clamp(a.y, a.r + 200, h - a.r - 40);
+          a.y = clamp(a.y, a.r + 260, h - a.r - 40);
         });
       }
       CON = { key: k, N, cx: cx0, cy: cy0 };
@@ -722,9 +726,8 @@ function ConstellationCanvas({
 
     function size() {
       if (!cv || !container) return;
-      const r = container.getBoundingClientRect();
-      const w = Math.round(r.width);
-      const h = Math.round(r.height);
+      const w = container.clientWidth || Math.round(container.getBoundingClientRect().width);
+      const h = container.clientHeight || Math.round(container.getBoundingClientRect().height);
       const dp = Math.min(window.devicePixelRatio || 1, 2);
       if (w <= 0 || h <= 0) return;
       if (w !== W || h !== H || dp !== DP) {
@@ -780,6 +783,9 @@ function ConstellationCanvas({
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function render(now: number) {
+      if ((W === 0 || H === 0) && container) {
+        size();
+      }
       if (visible && W > 0 && H > 0 && cx) {
         cx.setTransform(DP, 0, 0, DP, 0, 0);
         cx.clearRect(0, 0, W, H);
@@ -870,8 +876,8 @@ function ConstellationCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
-      style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
+      className="relative min-h-[740px] sm:min-h-[820px] lg:min-h-[880px] xl:min-h-[920px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      style={{ background: 'radial-gradient(ellipse at 50% 65%, #140b28 0%, #05060a 72%)' }}
     >
       <div
         className="absolute inset-0 pointer-events-none opacity-55"
@@ -1198,7 +1204,7 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             >
               {/* Selected setup inside to the left (no card frame) */}
               <div
-                className="absolute top-5 left-6 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                className="absolute top-5 left-6 z-10 max-w-[280px] sm:max-w-[340px] pointer-events-none select-none"
                 aria-live="polite"
               >
                 <div className="flex items-center gap-2">
@@ -1210,18 +1216,18 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                 <div className="mt-1 font-mono text-2xl sm:text-3xl font-extrabold tabular-nums text-[#e8eaf2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
                   {m1.v}%<span className="text-xs font-normal text-[#aab0c8] ml-1.5 font-sans">rules satisfied</span>
                 </div>
-                <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] line-clamp-2">
                   {m1.p}
                 </p>
-                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[#aab0c8] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                   {m1.id !== 'A' && (
-                    <span>
-                      Recovers <b className="text-[#22d3ee] font-bold">{gap1}%</b> of gap
+                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-cyan-950/60 border border-cyan-500/40 text-cyan-300 font-mono">
+                      Recovers <b className="ml-1 text-cyan-200">{gap1}%</b> of gap
                     </span>
                   )}
                   {m1.tok && (
-                    <span>
-                      Prompt: <b className="text-[#e8eaf2] font-bold">{m1.tok.toLocaleString('en-US')}</b> tok
+                    <span className="inline-flex items-center px-2 py-0.5 rounded bg-purple-950/60 border border-purple-500/40 text-purple-300 font-mono">
+                      Prompt: <b className="ml-1 text-purple-200">{m1.tok.toLocaleString('en-US')}</b> tok
                     </span>
                   )}
                 </div>
