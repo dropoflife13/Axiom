@@ -426,12 +426,27 @@ export function runDaemonOnce(options?: DaemonOptions): {
 
     const cpBuf = fs.readFileSync(cpPath);
     const cpSha = sha256Buffer(cpBuf);
-    const cp = JSON.parse(cpBuf.toString('utf8')) as {
+    let cp: {
       metadata?: Partial<RunMetadataV3>;
       runMetadata?: Partial<RunMetadataV3>;
       provenance?: Partial<RunMetadataV3>;
       trials?: TrialV3[];
     };
+    try {
+      cp = JSON.parse(cpBuf.toString('utf8')) as typeof cp;
+    } catch {
+      // Concurrent writeFileSync in progress; preserve prior snapshot for this run on this tick.
+      const prevPath = path.join(outDir, 'live-telemetry.json');
+      if (fs.existsSync(prevPath)) {
+        try {
+          const prev = JSON.parse(fs.readFileSync(prevPath, 'utf8')) as LiveTelemetrySnapshot;
+          if (prev.runs?.[runId]) runsTelemetry[runId] = prev.runs[runId];
+        } catch {
+          // ignore
+        }
+      }
+      continue;
+    }
     const trials = cp.trials ?? [];
     const metadata: Partial<RunMetadataV3> = {
       ...(cp.metadata ?? {}),
