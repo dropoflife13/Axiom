@@ -6,8 +6,10 @@ dist/
 coverage/
 .axiom-cache/
 .axiom-state/
+.axiom-state/quarantine/
 *.log
 out/
+out/v3/
 memory.json
 quarantine.json
 probe-output.txt
