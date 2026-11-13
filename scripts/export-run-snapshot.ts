@@ -241,6 +241,17 @@ export function buildRunSnapshot(options: ExportSnapshotOptions): RunSnapshot {
 
   const passedCount = trialSummaries.filter((t) => t.boundPassed).length;
   const totalCount = trialSummaries.length;
+  const isMini = id.toLowerCase().includes('mini');
+  const isExpanded = id.toLowerCase().includes('expanded');
+  const taskSet = new Set(trialSummaries.map((t) => t.taskId));
+  const isSyntheticOrPilot = taskSet.size > 0 && taskSet.size <= 8 && !isExpanded;
+  const targetTotal =
+    isMini || isSyntheticOrPilot
+      ? typeof checkpointMetadata?.totalTrials === 'number' && checkpointMetadata.totalTrials > 0
+        ? checkpointMetadata.totalTrials
+        : taskSet.size > 0 ? taskSet.size * 6 : 48
+      : 720;
+  const totalTrials = Math.max(targetTotal, totalCount);
   const passRate = totalCount > 0 ? `${((passedCount / totalCount) * 100).toFixed(1)}%` : '0.0%';
 
   const now = new Date().toISOString();
@@ -267,7 +278,7 @@ export function buildRunSnapshot(options: ExportSnapshotOptions): RunSnapshot {
     perFactPassRates,
     failuresByFact,
     trials: trialSummaries,
-    totalTrials: totalCount,
+    totalTrials,
     passedTrials: passedCount,
     failedTrials: totalCount - passedCount,
     passRate,
