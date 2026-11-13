@@ -157,9 +157,11 @@ const PTA = (
 function OrbitCanvas({
   interaction,
   onSync,
+  children,
 }: {
   interaction: React.MutableRefObject<InteractionState>;
   onSync: (idx: number, isAuto: boolean) => void;
+  children?: React.ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -269,9 +271,9 @@ function OrbitCanvas({
         }
 
         const ox = W / 2;
-        const oy = H * 0.5;
-        const R = Math.min(W * 0.47, H * 0.47);
-        const rad = (g: number) => 40 + (g / 70) * (R - 52);
+        const oy = H * 0.54;
+        const R = Math.min(W * 0.44, H * 0.36);
+        const rad = (g: number) => 36 + (g / 70) * (R - 44);
         const ps = (m: FleetModelItem) => (m.s ? 5 + (Math.log10(m.s) / Math.log10(550)) * 9 : 6);
 
         [10, 30, 50].forEach((g, j) => {
@@ -404,7 +406,7 @@ function OrbitCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[480px] sm:min-h-[540px] border border-[rgba(160,170,255,0.14)] rounded-[14px] overflow-hidden select-none"
+      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -422,6 +424,7 @@ function OrbitCanvas({
         className="absolute inset-0 w-full h-full touch-manipulation"
         aria-label="Orbit map of twelve AI models around the leader, Nemotron 550B. Distance from the centre shows how many points a model scores behind the leader."
       />
+      {children}
     </div>
   );
 }
@@ -432,9 +435,11 @@ function OrbitCanvas({
 function DialsCanvas({
   interaction,
   onSync,
+  children,
 }: {
   interaction: React.MutableRefObject<InteractionState>;
   onSync: (idx: number, isAuto: boolean) => void;
+  children?: React.ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -507,10 +512,10 @@ function DialsCanvas({
           onSyncRef.current(act, isAuto);
         }
 
-        const wide = W > 700;
-        const cy = H * 0.56;
-        const r1 = Math.min(wide ? W * 0.18 : W * 0.38, H * 0.36);
-        const x1 = wide ? W * 0.3 : W / 2;
+        const wide = W > 680;
+        const cy = H * 0.60;
+        const r1 = Math.min(wide ? W * 0.17 : W * 0.36, H * 0.28);
+        const x1 = wide ? W * 0.28 : W / 2;
         const f = (v: number) => (v - GA) / (GB - GA);
         const ang = (v: number) => Math.PI + Math.PI * f(v);
 
@@ -566,7 +571,7 @@ function DialsCanvas({
         T(cx, A.id + ' · ' + A.n, x1, cy + 72, A.col, 11, 'center', 700);
 
         if (wide) {
-          const x2 = W * 0.77;
+          const x2 = W * 0.74;
           const rs: [number, string, number, string][] = [
             [r1, 'B · ANSWER KEY', 1852, VI],
             [r1 - 30, 'A · ZERO-SHOT', 1138, '#94a3b8'],
@@ -612,7 +617,7 @@ function DialsCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[480px] sm:min-h-[540px] border border-[rgba(160,170,255,0.14)] rounded-[14px] overflow-hidden select-none"
+      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -630,6 +635,7 @@ function DialsCanvas({
         className="absolute inset-0 w-full h-full touch-manipulation"
         aria-label="A half-circle dial showing how much of the gap between zero-shot and the static reference each condition recovers, and concentric rings showing prompt tokens per condition."
       />
+      {children}
     </div>
   );
 }
@@ -640,9 +646,11 @@ function DialsCanvas({
 function ConstellationCanvas({
   interaction,
   onSync,
+  children,
 }: {
   interaction: React.MutableRefObject<InteractionState>;
   onSync: (idx: number, isAuto: boolean) => void;
+  children?: React.ReactNode;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -675,12 +683,12 @@ function ConstellationCanvas({
       const k = `${w}x${h}`;
       if (CON.key === k || w <= 0 || h <= 0) return;
       const cx0 = w / 2;
-      const cy0 = h * 0.5;
-      const U = Math.min(h * 0.075, w * 0.055) / Math.sqrt(224);
+      const cy0 = h * 0.58;
+      const U = Math.min(h * 0.065, w * 0.05) / Math.sqrt(224);
       const N = FAULT.map((f, i) => ({
-        r: Math.sqrt(f.n2) * U * 1.6,
-        x: cx0 + Math.cos(i * 0.785) * Math.min(w, h) * 0.3,
-        y: cy0 + Math.sin(i * 0.785) * Math.min(w, h) * 0.3,
+        r: Math.sqrt(f.n2) * U * 1.5,
+        x: cx0 + Math.cos(i * 0.785) * Math.min(w, h) * 0.28,
+        y: cy0 + Math.sin(i * 0.785) * Math.min(w, h) * 0.28,
       }));
       for (let it = 0; it < 400; it++) {
         N.forEach((a, i) => {
@@ -705,8 +713,8 @@ function ConstellationCanvas({
             a.x = cx0 + (dx / d) * m;
             a.y = cy0 + (dy / d) * m;
           }
-          a.x = clamp(a.x, a.r + 10, w - a.r - 10);
-          a.y = clamp(a.y, a.r + 22, h - a.r - 52);
+          a.x = clamp(a.x, a.r + 14, w - a.r - 14);
+          a.y = clamp(a.y, a.r + 145, h - a.r - 40);
         });
       }
       CON = { key: k, N, cx: cx0, cy: cy0 };
@@ -862,7 +870,7 @@ function ConstellationCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[480px] sm:min-h-[540px] border border-[rgba(160,170,255,0.14)] rounded-[14px] overflow-hidden select-none"
+      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -880,6 +888,7 @@ function ConstellationCanvas({
         className="absolute inset-0 w-full h-full touch-manipulation"
         aria-label="Constellation of eight database rules, each drawn as a cloud sized by how many faults it caused, around the Oracle."
       />
+      {children}
     </div>
   );
 }
@@ -932,7 +941,7 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
   const m2 = FAULT[read2.idx] ?? FAULT[0];
 
   return (
-    <section className="w-full max-w-[1280px] mx-auto px-1 sm:px-2 py-4 font-mono text-[#e8eaf2] space-y-6">
+    <section className="w-full max-w-[1440px] mx-auto px-2 sm:px-4 py-4 font-mono text-[#e8eaf2] space-y-8">
       {/* Top Header & Section Switcher */}
       <header className="flex flex-wrap justify-between items-end gap-5 pb-6 border-b border-[rgba(160,170,255,0.14)]">
         <div>
@@ -1057,68 +1066,73 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Every model sat the same test. The closer a model sits to the centre, the closer it gets to the best model&apos;s score.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 mt-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
             <OrbitCanvas
               interaction={st0Ref}
               onSync={(idx, auto) => setRead0({ idx, auto, sel: st0Ref.current.sel })}
-            />
+            >
+              {/* Selected model inside to the left (no card frame) */}
+              <div
+                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]" style={{ background: m0.col, color: m0.col }} />
+                  <span className="font-mono text-sm font-extrabold tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" style={{ color: m0.col }}>
+                    {m0.n}
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-2xl sm:text-3xl font-extrabold tabular-nums text-[#e8eaf2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                  {m0.c}%<span className="text-xs font-normal text-[#aab0c8] ml-1.5 font-sans">rules satisfied</span>
+                </div>
+                <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  {m0Desc}
+                </p>
+              </div>
+
+              {/* How to Read It bullets inside to the right (no card frame) */}
+              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+                <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  HOW TO READ IT
+                </div>
+                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[11px] text-[#c8cce0]">
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full bg-[#84cc16] shadow-[0_0_8px_#84cc16]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Distance from centre:</b> gap to leader. Dotted rings mark 10, 30, 50 pts behind.
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full bg-[#c084fc] shadow-[0_0_8px_#c084fc]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Planet size:</b> parameter count in billions. Bigger planet, bigger model.
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full border-[1.5px] border-dashed border-[#fb923c]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Partial ring:</b> run in progress (fills as trials complete).
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1.5 w-3 h-0.5 bg-[#7c819a]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Angle:</b> drift animation only; radial distance carries data.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </OrbitCanvas>
 
             <aside className="flex flex-col gap-3.5 min-w-0 text-xs">
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WHAT YOU ARE LOOKING AT</h3>
                 <p className="m-0 text-[#c8cce0] leading-[1.65]">
                   A scoreboard drawn as a solar system. The sun is the best model, Nemotron 550B. Each planet is another AI model, placed by how far its score falls short of the sun&apos;s.
                 </p>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">HOW TO READ IT</h3>
-                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[#c8cce0]">
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full bg-[#84cc16]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Distance from the centre</b> is the gap to the leader. Closer means a better score. The dotted rings mark 10, 30 and 50 points behind.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full bg-[#c084fc]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Planet size</b> is the model&apos;s parameter count in billions, when it is known. Bigger planet, bigger model.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full border-[1.5px] border-dashed border-[#fb923c]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">A partial ring</b> around a planet means its run is still going. The ring fills as trials finish.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-2 w-4 h-1 bg-[#7c819a]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Angle means nothing.</b> Planets only drift for show.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div
-                className="border border-[rgba(160,170,255,0.14)] bg-white/[0.03] p-4"
-                style={{ borderLeft: `2px solid ${m0.col}` }}
-                aria-live="polite"
-              >
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">
-                  NOW HIGHLIGHTED{read0.auto ? ' · AUTO' : ''}
-                </h3>
-                <p className="m-0 font-bold text-[13px] tracking-[0.04em]" style={{ color: m0.col }}>
-                  {m0.n}
-                </p>
-                <p className="my-1 font-bold text-[28px] leading-[1.1] tabular-nums text-[#e8eaf2]">
-                  {m0.c}%<small className="text-xs font-normal text-[#7c819a]"> of rules satisfied</small>
-                </p>
-                <p className="m-0 text-[#c8cce0] leading-[1.6]">{m0Desc}</p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">ALL MODELS · BEST FIRST · CLICK ONE</h3>
                 <div className="flex flex-col gap-0.5">
                   {FL.map((m, j) => {
@@ -1155,23 +1169,11 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                 </div>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4" style={{ borderLeft: `2px solid ${VI}` }}>
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl" style={{ borderLeft: `2px solid ${VI}` }}>
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">THE TAKEAWAY</h3>
                 <p className="m-0 text-[#e8eaf2] text-[13px] leading-[1.6]">
                   Same tests, same rules, twelve models. The leader satisfies 73.6% of the rules that apply to a task. The smallest model reaches 7.0%. Axiom measures that gap instead of guessing at it.
                 </p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WORDS USED HERE</h3>
-                <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px]">
-                  <dt className="text-[#e8eaf2] font-bold">Convergence</dt>
-                  <dd className="m-0 text-[#aab0c8]">On average, the share of the applicable rules that the model&apos;s final SQL satisfies.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Trial</dt>
-                  <dd className="m-0 text-[#aab0c8]">One attempt by one model at one task under one setup. A full run is 720 trials (120 tasks × 6 setups).</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Parameters</dt>
-                  <dd className="m-0 text-[#aab0c8]">A rough size measure for an AI model. Billions are common.</dd>
-                </dl>
               </div>
             </aside>
           </div>
@@ -1189,62 +1191,67 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Left: how much of the distance between &ldquo;no help&rdquo; and &ldquo;the answer key&rdquo; each way of helping the model wins back. Right: how much text each approach puts in the prompt.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 mt-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
             <DialsCanvas
               interaction={st1Ref}
               onSync={(idx, auto) => setRead1({ idx, auto, sel: st1Ref.current.sel })}
-            />
+            >
+              {/* Selected setup inside to the left (no card frame) */}
+              <div
+                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]" style={{ background: m1.col, color: m1.col }} />
+                  <span className="font-mono text-sm font-extrabold tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" style={{ color: m1.col }}>
+                    {m1.id} · {m1.n}
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-2xl sm:text-3xl font-extrabold tabular-nums text-[#e8eaf2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                  {m1.v}%<span className="text-xs font-normal text-[#aab0c8] ml-1.5 font-sans">rules satisfied</span>
+                </div>
+                <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  {m1Desc}
+                </p>
+              </div>
+
+              {/* How to Read It bullets inside to the right (no card frame) */}
+              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+                <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  HOW TO READ IT
+                </div>
+                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[11px] text-[#c8cce0]">
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-2 w-3.5 h-1 bg-[#22d3ee] shadow-[0_0_8px_#22d3ee]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Half-circle dial:</b> left is no help (47.4%), right is answer key (93.9%).
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full bg-[#22d3ee] shadow-[0_0_8px_#22d3ee]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Percentage:</b> recovery along the path. 100% matches answer key.
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full border-[1.5px] border-dashed border-[#a855f7]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Rings on right:</b> prompt length in tokens. Shorter is faster and cheaper.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </DialsCanvas>
 
             <aside className="flex flex-col gap-3.5 min-w-0 text-xs">
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WHAT YOU ARE LOOKING AT</h3>
                 <p className="m-0 text-[#c8cce0] leading-[1.65]">
                   The same model, Nemotron 550B, tested five ways. What changes between them is the help it gets. The half-circle shows the score each setup earns. The rings show how long the prompt is.
                 </p>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">HOW TO READ IT</h3>
-                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[#c8cce0]">
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-2 w-4 h-1 bg-[#22d3ee]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Half-circle dial:</b> the left end is the score with no help (47.4%). The right end is the best possible score with an answer key (93.9%). A tick shows where each setup lands.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full bg-[#22d3ee]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">The big percentage</b> is how far along that path the setup gets. 100% would match the answer key.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full border-[1.5px] border-dashed border-[#a855f7]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Rings on the right:</b> a longer ring is a longer prompt. A tidy prompt is cheaper and faster to read.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div
-                className="border border-[rgba(160,170,255,0.14)] bg-white/[0.03] p-4"
-                style={{ borderLeft: `2px solid ${m1.col}` }}
-                aria-live="polite"
-              >
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">
-                  NOW HIGHLIGHTED{read1.auto ? ' · AUTO' : ''}
-                </h3>
-                <p className="m-0 font-bold text-[13px] tracking-[0.04em]" style={{ color: m1.col }}>
-                  {m1.id} · {m1.n}
-                </p>
-                <p className="my-1 font-bold text-[28px] leading-[1.1] tabular-nums text-[#e8eaf2]">
-                  {m1.v}%<small className="text-xs font-normal text-[#7c819a]"> of rules satisfied</small>
-                </p>
-                <p className="m-0 text-[#c8cce0] leading-[1.6]">{m1Desc}</p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">THE FIVE SETUPS · CLICK ONE</h3>
                 <div className="flex flex-col gap-0.5">
                   {COND.map((c, j) => {
@@ -1282,25 +1289,11 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                 </div>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4" style={{ borderLeft: `2px solid ${VI}` }}>
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl" style={{ borderLeft: `2px solid ${VI}` }}>
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">THE TAKEAWAY</h3>
                 <p className="m-0 text-[#e8eaf2] text-[13px] leading-[1.6]">
                   Handing the model the exact failed rule (C0) wins back 84% of the distance to the answer key and uses 51.3% fewer prompt tokens than starting with no help.
                 </p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WORDS USED HERE</h3>
-                <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px]">
-                  <dt className="text-[#e8eaf2] font-bold">Zero-shot</dt>
-                  <dd className="m-0 text-[#aab0c8]">The model gets the task and nothing else.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Token</dt>
-                  <dd className="m-0 text-[#aab0c8]">A chunk of text, roughly three quarters of a word. Models read and are billed by tokens.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Static reference</dt>
-                  <dd className="m-0 text-[#aab0c8]">The score when the model is given all 34 rules statically in prompt (Condition B).</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Gap recovered</dt>
-                  <dd className="m-0 text-[#aab0c8]">(score − no help) ÷ (reference − no help).</dd>
-                </dl>
               </div>
             </aside>
           </div>
@@ -1318,68 +1311,70 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Each cloud is one database rule. The bigger the cloud, the more often models broke it. The tests are run by a real PostgreSQL 16 database, the Oracle.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-5 mt-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
             <ConstellationCanvas
               interaction={st2Ref}
               onSync={(idx, auto) => setRead2({ idx, auto, sel: st2Ref.current.sel })}
-            />
+            >
+              {/* Selected rule inside to the left (no card frame) */}
+              <div
+                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                aria-live="polite"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full shadow-[0_0_10px_currentColor]" style={{ background: m2.col, color: m2.col }} />
+                  <span className="font-mono text-sm font-extrabold tracking-wide uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]" style={{ color: m2.col }}>
+                    {m2.id} · {m2.d}
+                  </span>
+                </div>
+                <div className="mt-1 font-mono text-2xl sm:text-3xl font-extrabold tabular-nums text-[#e8eaf2] drop-shadow-[0_2px_6px_rgba(0,0,0,0.95)]">
+                  {m2.n2}
+                  <span className="text-xs font-normal text-[#aab0c8] ml-1.5 font-sans">
+                    faults ({((m2.n2 / TOT) * 100).toFixed(1)}% of {TOT.toLocaleString('en-US')})
+                  </span>
+                </div>
+                <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+                  <b className="text-[#e8eaf2]">{m2.n}</b>. {m2.p}
+                </p>
+              </div>
+
+              {/* How to Read It bullets inside to the right (no card frame) */}
+              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+                <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  HOW TO READ IT
+                </div>
+                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[11px] text-[#c8cce0]">
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full bg-[#22d3ee] shadow-[0_0_8px_#22d3ee]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Cloud size &amp; number:</b> total times models broke that rule (faults).
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-1 w-2.5 h-2.5 rounded-full bg-[#f43f5e] shadow-[0_0_8px_#f43f5e]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Cloud colour:</b> rule category (naming, tenant isolation, immutability, timestamps).
+                    </span>
+                  </li>
+                  <li className="grid grid-cols-[16px_1fr] gap-2 items-start leading-[1.45] drop-shadow-[0_1px_3px_rgba(0,0,0,0.95)]">
+                    <span className="block mt-2 w-3.5 h-0.5 bg-[#7c819a]" />
+                    <span>
+                      <b className="text-[#e8eaf2]">Dashed lines &amp; pulses:</b> real PostgreSQL 16 Oracle sending verdicts.
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </ConstellationCanvas>
 
             <aside className="flex flex-col gap-3.5 min-w-0 text-xs">
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WHAT YOU ARE LOOKING AT</h3>
                 <p className="m-0 text-[#c8cce0] leading-[1.65]">
                   The eight rules models broke most often, drawn as clouds around the Oracle in the middle. The Oracle is the real database that tests every change. Each label F-xx is the rule&apos;s ID.
                 </p>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">HOW TO READ IT</h3>
-                <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[#c8cce0]">
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full bg-[#22d3ee]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Cloud size and the number under it</b> is how many times a model broke that rule (a fault).
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-1 w-3 h-3 rounded-full bg-[#f43f5e]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">Cloud colour</b> is the kind of rule: naming, tenant data, history that cannot change, timestamps, or incoming data.
-                    </span>
-                  </li>
-                  <li className="grid grid-cols-[22px_1fr] gap-2.5 items-start leading-[1.55]">
-                    <span className="block mt-2 w-4 h-1 bg-[#7c819a]" />
-                    <span>
-                      <b className="text-[#e8eaf2]">The dashed lines and moving dots</b> are the Oracle sending each verdict. Position means nothing.
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div
-                className="border border-[rgba(160,170,255,0.14)] bg-white/[0.03] p-4"
-                style={{ borderLeft: `2px solid ${m2.col}` }}
-                aria-live="polite"
-              >
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">
-                  NOW HIGHLIGHTED{read2.auto ? ' · AUTO' : ''}
-                </h3>
-                <p className="m-0 font-bold text-[13px] tracking-[0.04em]" style={{ color: m2.col }}>
-                  {m2.id} · {m2.d}
-                </p>
-                <p className="my-1 font-bold text-[28px] leading-[1.1] tabular-nums text-[#e8eaf2]">
-                  {m2.n2}
-                  <small className="text-xs font-normal text-[#7c819a]">
-                    {' '}
-                    faults · {((m2.n2 / TOT) * 100).toFixed(1)}% of {TOT.toLocaleString('en-US')}
-                  </small>
-                </p>
-                <p className="m-0 text-[#c8cce0] leading-[1.6]">
-                  <b className="text-[#e8eaf2]">{m2.n}</b>. {m2.p}
-                </p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl">
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">THE EIGHT RULES · MOST BROKEN FIRST · CLICK ONE</h3>
                 <div className="flex flex-col gap-0.5">
                   {FAULT.map((f, j) => {
@@ -1417,25 +1412,11 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                 </div>
               </div>
 
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4" style={{ borderLeft: `2px solid ${VI}` }}>
+              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4 rounded-xl" style={{ borderLeft: `2px solid ${VI}` }}>
                 <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">THE TAKEAWAY</h3>
                 <p className="m-0 text-[#e8eaf2] text-[13px] leading-[1.6]">
                   Failures are not random. Naming mistakes alone are 41.5% of the 1,484 faults shown, and adding the tenant-data rule brings it to 55.5%. That is where a model needs the most help.
                 </p>
-              </div>
-
-              <div className="border border-[rgba(160,170,255,0.14)] bg-[rgba(10,7,20,0.6)] p-4">
-                <h3 className="m-0 mb-2 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">WORDS USED HERE</h3>
-                <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[11px]">
-                  <dt className="text-[#e8eaf2] font-bold">Fact</dt>
-                  <dd className="m-0 text-[#aab0c8]">One database rule the checker tests, such as &ldquo;index names must follow the convention&rdquo;.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Fault</dt>
-                  <dd className="m-0 text-[#aab0c8]">One time a model&apos;s SQL broke a rule.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Oracle</dt>
-                  <dd className="m-0 text-[#aab0c8]">A real PostgreSQL 16 database used as the referee. No AI judges the result.</dd>
-                  <dt className="text-[#e8eaf2] font-bold">Tenant / RLS</dt>
-                  <dd className="m-0 text-[#aab0c8]">Row-level security keeps each customer&apos;s rows invisible to other customers.</dd>
-                </dl>
               </div>
 
               <p className="m-0 text-[10px] font-bold tracking-[0.18em] text-[#7c819a]">

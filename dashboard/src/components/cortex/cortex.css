@@ -1750,3 +1750,310 @@
     animation: none !important;
   }
 }
+
+/* =========================================================================
+   CORTEX VAULT SECTION — TABBED ARCHITECTURE VIEW
+   Compact, space-efficient layout with tabbed content panels
+   ========================================================================= */
+
+.cortex-header-block {
+  margin-bottom: 32px;
+}
+
+.cortex-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 4px;
+  background: rgba(11, 15, 26, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+}
+
+.cortex-tab {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cortex-tab:hover {
+  background: rgba(30, 41, 59, 0.6);
+  color: #e2e8f0;
+}
+
+.cortex-tab.is-active {
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.12) 0%, rgba(16, 185, 129, 0.12) 100%);
+  border: 1px solid rgba(0, 240, 255, 0.35);
+  color: #00f0ff;
+  box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+}
+
+.cortex-tab-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.cortex-tab-label {
+  font-weight: 700;
+}
+
+/* STAGE LAYOUT — 3 COLUMNS */
+.cortex-stage {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 1040px) {
+  .cortex-stage {
+    display: grid;
+    grid-template-columns: 280px 80px 1fr;
+    align-items: start;
+    gap: 0;
+  }
+}
+
+/* LEFT COLUMN — KERNEL + CONDITION BAR */
+.cortex-node-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  padding: 10px 0;
+}
+
+@media (min-width: 1040px) {
+  .cortex-node-col {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+  }
+}
+
+/* CONDITION MINI BAR — HORIZONTAL COMPACT */
+.cortex-cond-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(11, 15, 26, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 10px;
+}
+
+.cortex-cond-mini {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  color: #94a3b8;
+  font-family: var(--font-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cortex-cond-mini:hover {
+  background: rgba(22, 32, 54, 0.9);
+  color: #e2e8f0;
+  border-color: var(--cond-accent, #00f0ff);
+}
+
+.cortex-cond-mini.is-active {
+  background: color-mix(in srgb, var(--cond-accent, #00f0ff) 14%, rgba(15, 23, 42, 0.95));
+  border-color: var(--cond-accent, #00f0ff);
+  color: #ffffff;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--cond-accent, #00f0ff) 30%, transparent);
+}
+
+.cortex-cond-mini-code {
+  font-weight: 800;
+  color: var(--cond-accent, #00f0ff);
+  background: color-mix(in srgb, var(--cond-accent, #00f0ff) 16%, transparent);
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+}
+
+.cortex-cond-mini.is-active .cortex-cond-mini-code {
+  background: var(--cond-accent, #00f0ff);
+  color: #05060a;
+}
+
+.cortex-cond-mini-pct {
+  font-weight: 800;
+  font-size: 11px;
+}
+
+.cortex-cond-mini-name {
+  font-size: 10px;
+  color: inherit;
+}
+
+/* RIGHT CONTENT COLUMN */
+.cortex-content-col {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* OVERVIEW PANEL */
+.cortex-overview-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* METRIC ROW — COMPACT 4-UP */
+.cortex-metric-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .cortex-metric-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1040px) {
+  .cortex-metric-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cortex-metric-card {
+  background: rgba(11, 15, 26, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.cortex-metric-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(0, 240, 255, 0.35);
+}
+
+.cortex-metric-tag {
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.cortex-metric-value {
+  font-family: var(--font-sans, sans-serif);
+  font-size: clamp(32px, 3.5vw, 44px);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: #ffffff;
+}
+
+.cortex-metric-label {
+  font-family: var(--font-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #cbd5e1;
+  text-transform: uppercase;
+}
+
+/* CONDITIONS PANEL */
+.cortex-conditions-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* CONTRACTS PANEL */
+.cortex-contracts-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* MEMORY PANEL */
+.cortex-memory-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* CIRCUIT PANEL */
+.cortex-circuit-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* OVERVIEW PANEL SPECIFIC */
+.cortex-overview-panel .cortex-scale-head {
+  margin-bottom: 8px;
+}
+
+.cortex-overview-panel .cortex-fleet-strip {
+  margin-bottom: 16px;
+}
+
+.cortex-overview-panel .cortex-metric-row {
+  margin-top: 8px;
+}
+
+/* TAB PANEL ANIMATIONS */
+@keyframes cortex-tab-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cortex-overview-panel,
+.cortex-conditions-panel,
+.cortex-contracts-panel,
+.cortex-memory-panel,
+.cortex-circuit-panel {
+  animation: cortex-tab-fade 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cortex-overview-panel,
+  .cortex-conditions-panel,
+  .cortex-contracts-panel,
+  .cortex-memory-panel,
+  .cortex-circuit-panel {
+    animation: none;
+  }
+}

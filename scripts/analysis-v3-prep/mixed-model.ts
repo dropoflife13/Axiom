@@ -14,6 +14,7 @@ export const VALID_COMPLETED_RUNS = [
   'glm5-2',
   'gemini-3.1-flash-lite',
   'gemini-flash-lite-full',
+  'qwen27b-2',
 ] as const;
 
 export const CONDITION_LEVELS = ['A', 'D', 'C', 'C0', 'B'] as const;

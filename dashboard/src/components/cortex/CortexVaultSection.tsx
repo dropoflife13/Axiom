@@ -211,7 +211,7 @@ const FACT_NAME_MAP: Record<string, { name: string; domain: string }> = {
   'F-15': { name: 'FK COLUMN NAMING', domain: 'Naming' },
   'F-16': { name: 'FK CONSTRAINT NAMING', domain: 'Naming' },
   'F-17': { name: 'CHECK CONSTRAINT NAMING', domain: 'Naming' },
-  'F-18': { name: 'INDEX NAMING', domain: 'Naming' },
+  'F-18': { name: 'EXPLICIT INDEX NAMING', domain: 'Naming' },
   'F-19': { name: 'REVOKE APPEND-ONLY DML', domain: 'Security' },
   'F-20': { name: 'APPEND-ONLY REJECT TRIGGER', domain: 'Security' },
   'F-21': { name: 'ADVANCE UPDATED_AT TRIGGER', domain: 'Integrity' },
@@ -247,12 +247,12 @@ export function CortexVaultSection({
   const [showAllContracts, setShowAllContracts] = useState(false);
   const [activeItem, setActiveItem] = useState<TagItem | null>(INITIAL_CONTRACTS[0]);
   const [selectedCondition, setSelectedCondition] = useState<string>('C0');
+  const [activeTab, setActiveTab] = useState<string>('overview');
 
   const displayedContracts = showAllContracts
     ? [...INITIAL_CONTRACTS, ...EXTRA_CONTRACTS]
     : INITIAL_CONTRACTS;
 
-  // Resolve active run telemetry from fleet
   const activeRunStatus = useMemo(
     () => fleet.find((f) => f.run.id === activeRunId) ?? fleet[0],
     [fleet, activeRunId]
@@ -267,10 +267,9 @@ export function CortexVaultSection({
     if (activeRunStatus?.convergence !== null && activeRunStatus?.convergence !== undefined) {
       return activeRunStatus.convergence;
     }
-    return 0.684; // Verified 720-trial mean boundFactFraction across conditions
+    return 0.684;
   }, [activeRunStatus]);
 
-  // Dynamic per-condition percentages & tokens merged with pre-registered metadata
   const liveConditions = useMemo(() => {
     return CONDITIONS_DATA.map((base) => {
       const st = activeRunStatus?.conditions.find((c) => c.condition === base.code);
@@ -291,7 +290,6 @@ export function CortexVaultSection({
   const activeCondition =
     liveConditions.find((c) => c.code === selectedCondition) ?? liveConditions[3];
 
-  // Empirical Fact Violation Frequencies (top 8 from active run or calibrated benchmark)
   const factFrequencies = useMemo(() => {
     if (activeRunStatus && activeRunStatus.factFailures.length >= 4) {
       return activeRunStatus.factFailures.slice(0, 8).map(([fact, count]) => ({
@@ -306,7 +304,6 @@ export function CortexVaultSection({
 
   const maxFactCount = Math.max(1, factFrequencies[0]?.count ?? 142);
 
-  // Lookup map so contract chips in Layer 02 can display their violation frequency
   const factCountLookup = useMemo(() => {
     const map = new Map<string, number>();
     for (const item of factFrequencies) {
@@ -314,6 +311,14 @@ export function CortexVaultSection({
     }
     return map;
   }, [factFrequencies]);
+
+  const tabs = [
+    { id: 'overview', label: 'OVERVIEW', icon: '◈' },
+    { id: 'conditions', label: 'CONDITIONS', icon: '⬡' },
+    { id: 'contracts', label: 'CONTRACTS', icon: '▣' },
+    { id: 'circuit', label: 'CIRCUIT', icon: '⟳' },
+    { id: 'memory', label: 'MEMORY', icon: '◆' },
+  ];
 
   return (
     <section className="cortex-section" id="cortex-vault" aria-labelledby="cortex-title">
@@ -325,459 +330,53 @@ export function CortexVaultSection({
 
       <div className="cortex-container">
         {/* =========================================================================
-            PART 1: SCALE, EFFICIENCY & PARALLEL 720-TRIAL FLEET TELEMETRY
+            HEADER + TABS
             ========================================================================= */}
-        <div className="cortex-scale-block">
-          <div className="cortex-scale-head">
-            <p className="cortex-scale-eyebrow">// SCALE &amp; EFFICIENCY · MULTI-MODEL EMPIRICAL PROVENANCE</p>
-            <h2 className="cortex-scale-title">Built to heal. Built to be cheap.</h2>
-            <p className="cortex-scale-subtitle">
-              Local-first deterministic routing keeps heavy models for heavy work while slashing token inflation across simultaneous 720-trial ablations.
-            </p>
+        <div className="cortex-header-block">
+          <div className="cortex-chip">
+            <span className="cortex-chip-dot" />
+            <span>TOPOLOGY // ARCHITECTURAL KNOWLEDGE VAULT</span>
           </div>
+          <h2 className="cortex-title">Axiom Autonomous Kernel & 3-Tier Invariant Vault</h2>
+          <p className="cortex-desc">
+            Axiom strictly decouples LLM generation from deterministic verification. The Autonomous Kernel
+            routes candidate SQL migrations through three distinct engineering tiers: an immutable SHA-256
+            ledger vault, 39 PostgreSQL 16 behavioral contracts, and a 6-stage operational circuit under the Arbiter.
+          </p>
 
-          {/* PARALLEL 720-TRIAL ABLATION FLEET BAR (Nemotron + Qwen 3.8 + GLM-5.3) */}
-          <div className="cortex-fleet-strip" role="region" aria-label="Simultaneous 720-Trial Ablation Fleet">
-            <div className="cortex-fleet-strip-head">
-              <div className="cortex-fleet-strip-title">
-                <span className="cortex-live-pulse-dot" />
-                <span>MULTI-MODEL 720-TRIAL ABLATION FLEET</span>
-              </div>
-              <span className="cortex-fleet-strip-meta">
-                SIMULTANEOUS BACKGROUND EXECUTION · QWEN 3.8 27B + GLM-5.3 (2 × 720 TRIALS)
-              </span>
-            </div>
-
-            <div className="cortex-fleet-grid">
-              {runOptions.map((runOpt) => {
-                const st = fleet.find((f) => f.run.id === runOpt.id);
-                const isSelected = activeRunId === runOpt.id;
-                const done = st ? st.done : 0;
-                const total = st ? st.total : 720;
-                const pct = Math.min(100, Math.round((done / total) * 100));
-                const conv =
-                  st?.convergence !== null && st?.convergence !== undefined
-                    ? `${(st.convergence * 100).toFixed(1)}%`
-                    : 'CALIBRATING';
-                const statusBadge =
-                  st?.state === 'live'
-                    ? `LIVE · ${done}/${total}`
-                    : done >= total
-                    ? `VERIFIED · ${done}/${total}`
-                    : done > 0
-                    ? `IN PROGRESS · ${done}/${total}`
-                    : `PARALLEL BG · ${done}/${total}`;
-
-                return (
-                  <button
-                    key={runOpt.id}
-                    type="button"
-                    onClick={() => onSelectRun?.(runOpt.id)}
-                    className={`cortex-fleet-card ${isSelected ? 'is-selected' : ''}`}
-                    style={{ '--fleet-accent': runOpt.accent } as React.CSSProperties}
-                  >
-                    <div className="cortex-fleet-card-top">
-                      <div className="cortex-fleet-model-id">
-                        <span className="cortex-fleet-dot" />
-                        <b>{runOpt.label}</b>
-                        {isSelected && <span className="cortex-fleet-active-tag">ACTIVE VIEW</span>}
-                      </div>
-                      <span className="cortex-fleet-badge">{statusBadge}</span>
-                    </div>
-
-                    <div className="cortex-fleet-model-slug">{runOpt.model}</div>
-
-                    <div className="cortex-fleet-progress-track" aria-hidden="true">
-                      <div
-                        className={`cortex-fleet-progress-fill ${done === 0 ? 'is-indeterminate' : ''}`}
-                        style={{ width: done === 0 ? '38%' : `${pct}%` }}
-                      />
-                    </div>
-
-                    <div className="cortex-fleet-card-foot">
-                      <span>
-                        TRIALS: <b>{done} / {total}</b>
-                      </span>
-                      <span>
-                        CONVERGENCE: <b>{conv}</b>
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 4 SPACIOUS KPI METRIC CARDS */}
-          <div className="cortex-kpi-grid">
-            <div className="cortex-kpi-card">
-              <div className="cortex-kpi-top">
-                <span className="cortex-kpi-tag">VERIFIER COVERAGE</span>
-                <span className="cortex-kpi-dot cortex-kpi-dot--emerald" />
-              </div>
-              <div className="cortex-kpi-value">39</div>
-              <div className="cortex-kpi-label">ENTERPRISE CONTRACTS</div>
-              <p className="cortex-kpi-sub">34 PostgreSQL 16 behavioral probes + 5 deterministic AST gates</p>
-            </div>
-
-            <div className="cortex-kpi-card cortex-kpi-card--cyan">
-              <div className="cortex-kpi-top">
-                <span className="cortex-kpi-tag">ABLATION MATRIX</span>
-                <span className="cortex-kpi-dot cortex-kpi-dot--cyan" />
-              </div>
-              <div className="cortex-kpi-value cortex-kpi-value--cyan">720</div>
-              <div className="cortex-kpi-label">TRIALS PER MODEL RUN</div>
-              <p className="cortex-kpi-sub">120 held-out tasks × 6 conditions · +2×720 parallel runs (Qwen + GLM-5.3)</p>
-            </div>
-
-            <div className="cortex-kpi-card">
-              <div className="cortex-kpi-top">
-                <span className="cortex-kpi-tag">PROMPT EFFICIENCY</span>
-                <span className="cortex-kpi-dot cortex-kpi-dot--amber" />
-              </div>
-              <div className="cortex-kpi-value">51.3%</div>
-              <div className="cortex-kpi-label">TOKEN COST REDUCTION</div>
-              <p className="cortex-kpi-sub">554 avg tokens in Verbatim C0 vs 1,138 baseline / 1,852 static hints</p>
-            </div>
-
-            <div className="cortex-kpi-card">
-              <div className="cortex-kpi-top">
-                <span className="cortex-kpi-tag">SYSTEM CONVERGENCE</span>
-                <span className="cortex-kpi-dot cortex-kpi-dot--emerald" />
-              </div>
-              <div className="cortex-kpi-value cortex-kpi-value--emerald">
-                {(activeConvergence * 100).toFixed(1)}%
-              </div>
-              <div className="cortex-kpi-label">MEAN BOUND-FACT COMPLIANCE</div>
-              <p className="cortex-kpi-sub">
-                Active model: <b style={{ color: '#e2e8f0' }}>{activeModelName.split('/').pop()}</b>
-              </p>
-            </div>
-          </div>
-
-          {/* DUAL FULL-SIZE TELEMETRY CHARTS */}
-          <div className="cortex-charts-grid">
-            {/* Chart 1: Token Cost & Convergence Trajectory */}
-            <div className="cortex-chart-panel">
-              <div className="cortex-chart-head">
-                <div>
-                  <span className="cortex-chart-eyebrow">TELEMETRY // PROMPT FOOTPRINT</span>
-                  <h3 className="cortex-chart-title">Token Cost Optimization Curve</h3>
-                </div>
-                <span className="cortex-chart-tag">554 TOK OPTIMUM · -51.3%</span>
-              </div>
-
-              <svg className="cortex-svg-chart" viewBox="0 0 520 220" preserveAspectRatio="none">
-                <defs>
-                  <linearGradient id="token-curve-grad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.26" />
-                    <stop offset="100%" stopColor="#00f0ff" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Horizontal Grid Lines & Y-Axis Scale Labels */}
-                <line x1="48" y1="42" x2="488" y2="42" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="40" y="45" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">1.8k</text>
-
-                <line x1="48" y1="104" x2="488" y2="104" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="40" y="107" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">1.0k</text>
-
-                <line x1="48" y1="164" x2="488" y2="164" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="40" y="167" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">500</text>
-
-                {/* Vertical Alignment Drop Lines */}
-                <line x1="96" y1="42" x2="96" y2="180" stroke="rgba(148, 163, 184, 0.22)" strokeDasharray="4 4" />
-                <line x1="272" y1="104" x2="272" y2="180" stroke="rgba(148, 163, 184, 0.22)" strokeDasharray="4 4" />
-                <line x1="448" y1="160" x2="448" y2="180" stroke="rgba(0, 240, 255, 0.45)" strokeDasharray="4 4" />
-
-                {/* Area Under Curve */}
-                <path
-                  d="M 96 42 C 165 56, 215 84, 272 104 C 330 124, 385 150, 448 160 L 448 180 L 96 180 Z"
-                  fill="url(#token-curve-grad)"
-                />
-
-                {/* Smooth Cubic Bezier Curve */}
-                <path
-                  d="M 96 42 C 165 56, 215 84, 272 104 C 330 124, 385 150, 448 160"
-                  fill="none"
-                  stroke="#e2e8f0"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
-
-                {/* Callout Badges Above Nodes */}
-                <g transform="translate(96, 24)">
-                  <rect x="-42" y="-13" width="84" height="19" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(148, 163, 184, 0.3)" />
-                  <text x="0" y="0" textAnchor="middle" fill="#cbd5e1" fontSize="10.5" fontFamily="monospace" fontWeight="600">1,852 tok</text>
-                </g>
-
-                <g transform="translate(272, 86)">
-                  <rect x="-38" y="-13" width="76" height="19" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(148, 163, 184, 0.3)" />
-                  <text x="0" y="0" textAnchor="middle" fill="#cbd5e1" fontSize="10.5" fontFamily="monospace" fontWeight="600">915 tok</text>
-                </g>
-
-                <g transform="translate(432, 138)">
-                  <rect x="-62" y="-14" width="124" height="20" rx="4" fill="rgba(0, 240, 255, 0.14)" stroke="#00f0ff" />
-                  <text x="0" y="0" textAnchor="middle" fill="#00f0ff" fontSize="10.5" fontFamily="monospace" fontWeight="700">554 tok (-51.3%)</text>
-                </g>
-
-                {/* Exact Data Nodes on Curve */}
-                <circle cx="96" cy="42" r="5.5" fill="#0f172a" stroke="#f8fafc" strokeWidth="2.5" />
-                <circle cx="272" cy="104" r="5.5" fill="#0f172a" stroke="#f8fafc" strokeWidth="2.5" />
-                <circle cx="448" cy="160" r="8" fill="#00f0ff" filter="drop-shadow(0 0 10px #00f0ff)" />
-                <circle cx="448" cy="160" r="3" fill="#ffffff" />
-
-                {/* X-Axis Labels */}
-                <text x="96" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Static Hints (B)</text>
-                <text x="96" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">+102% token bloat</text>
-
-                <text x="272" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Zero-Shot (A)</text>
-                <text x="272" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">Unassisted base</text>
-
-                <text x="448" y="198" textAnchor="middle" fill="#00f0ff" fontSize="11" fontFamily="monospace" fontWeight="700">Verbatim C0</text>
-                <text x="448" y="212" textAnchor="middle" fill="#10b981" fontSize="9.5" fontFamily="monospace">86.3% pass · -51.3% cost</text>
-              </svg>
-            </div>
-
-            {/* Chart 2: Compliance Across 6 Conditions */}
-            <div className="cortex-chart-panel">
-              <div className="cortex-chart-head">
-                <div>
-                  <span className="cortex-chart-eyebrow">ABLATION V2 // PRIMARY COMPLIANCE</span>
-                  <h3 className="cortex-chart-title">Compliance Across 6 Conditions</h3>
-                </div>
-                <span className="cortex-chart-tag">CLICK BAR TO INSPECT</span>
-              </div>
-
-              <svg className="cortex-svg-chart" viewBox="0 0 520 220" preserveAspectRatio="none">
-                {/* Grid Lines */}
-                <line x1="44" y1="36" x2="496" y2="36" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="36" y="39" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">90%</text>
-
-                <line x1="44" y1="92" x2="496" y2="92" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="36" y="95" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">60%</text>
-
-                <line x1="44" y1="148" x2="496" y2="148" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
-                <text x="36" y="151" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">30%</text>
-
-                <line x1="44" y1="176" x2="496" y2="176" stroke="rgba(148, 163, 184, 0.22)" strokeWidth="1" />
-
-                {liveConditions.map((item, idx) => {
-                  const barWidth = 44;
-                  const gap = 30;
-                  const x = 58 + idx * (barWidth + gap);
-                  const center = x + barWidth / 2;
-                  const maxH = 148;
-                  const height = Math.max(8, (item.pct / 100) * maxH);
-                  const y = 176 - height;
-                  const isSelected = selectedCondition === item.code;
-
-                  return (
-                    <g
-                      key={item.code}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => setSelectedCondition(item.code)}
-                      onMouseEnter={() => setSelectedCondition(item.code)}
-                    >
-                      <rect x={x - 6} y={16} width={barWidth + 12} height={198} fill="transparent" />
-
-                      <rect
-                        x={x}
-                        y={y}
-                        width={barWidth}
-                        height={height}
-                        rx="5"
-                        fill={isSelected ? item.accent : 'rgba(51, 65, 85, 0.75)'}
-                        stroke={isSelected ? '#ffffff' : item.accent}
-                        strokeWidth={isSelected ? 1.8 : 1}
-                        opacity={isSelected ? 1 : 0.85}
-                      />
-
-                      <text
-                        x={center}
-                        y={y - 8}
-                        textAnchor="middle"
-                        fill={isSelected ? '#ffffff' : '#cbd5e1'}
-                        fontSize="11"
-                        fontFamily="monospace"
-                        fontWeight={isSelected ? '700' : '600'}
-                      >
-                        {item.pct}%
-                      </text>
-
-                      <text
-                        x={center}
-                        y={196}
-                        textAnchor="middle"
-                        fill={isSelected ? item.accent : '#e2e8f0'}
-                        fontSize="11.5"
-                        fontFamily="monospace"
-                        fontWeight="700"
-                      >
-                        {item.code}
-                      </text>
-
-                      <text
-                        x={center}
-                        y={211}
-                        textAnchor="middle"
-                        fill="#64748b"
-                        fontSize="9"
-                        fontFamily="monospace"
-                      >
-                        {item.shortName.split(' ')[0]}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </div>
-
-          {/* EMPIRICAL FACT-FAILURE FREQUENCY SPECTRUM */}
-          <div className="cortex-freq-panel">
-            <div className="cortex-freq-head">
-              <div>
-                <span className="cortex-chart-eyebrow">ORACLE TELEMETRY // INVARIANT VIOLATION SPECTRUM</span>
-                <h3 className="cortex-chart-title">Empirical Fact-Failure Frequency Distribution</h3>
-              </div>
-              <span className="cortex-chart-tag">
-                MODEL: {activeModelName.split('/').pop()?.toUpperCase()} · POSTGRESQL 16 PROBES
-              </span>
-            </div>
-
-            <div className="cortex-freq-grid">
-              {factFrequencies.map((item) => {
-                const ratio = Math.max(12, Math.round((item.count / maxFactCount) * 100));
-                return (
-                  <div key={item.fact} className="cortex-freq-row">
-                    <div className="cortex-freq-row-meta">
-                      <span className="cortex-freq-code">{item.fact}</span>
-                      <span className="cortex-freq-name">{item.name}</span>
-                      <span className="cortex-freq-domain">{item.domain}</span>
-                      <b className="cortex-freq-count">{item.count} faults</b>
-                    </div>
-                    <div className="cortex-freq-bar-track">
-                      <div className="cortex-freq-bar-fill" style={{ width: `${ratio}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* CONDITION DECODER PANEL */}
-          <div className="cortex-decoder-block">
-            <div className="cortex-decoder-header">
-              <span className="cortex-decoder-eyebrow">// ABLATION MATRIX DECODER · PRE-REGISTERED DESIGN CHOICES</span>
-              <span className="cortex-decoder-hint">SELECT CONDITION TO INSPECT CAUSAL ROLE &amp; IMPACT</span>
-            </div>
-
-            <div className="cortex-cond-pills-row" role="tablist" aria-label="Ablation Condition Selector">
-              {liveConditions.map((c) => {
-                const isSelected = selectedCondition === c.code;
-                return (
-                  <button
-                    key={c.code}
-                    type="button"
-                    role="tab"
-                    aria-selected={isSelected}
-                    className={`cortex-cond-pill ${isSelected ? 'is-active' : ''}`}
-                    style={{ '--pill-accent': c.accent } as React.CSSProperties}
-                    onClick={() => setSelectedCondition(c.code)}
-                  >
-                    <span className="cortex-cond-pill-code">{c.code}</span>
-                    <span className="cortex-cond-pill-name">{c.shortName}</span>
-                    <span className="cortex-cond-pill-pct">{c.pct}%</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div
-              className="cortex-cond-detail-card"
-              style={{ '--cond-accent': activeCondition.accent } as React.CSSProperties}
-            >
-              <div className="cortex-cond-detail-header">
-                <div className="cortex-cond-detail-title-group">
-                  <span className="cortex-cond-code-badge">{activeCondition.code}</span>
-                  <div>
-                    <h4 className="cortex-cond-title">{activeCondition.name}</h4>
-                    <p className="cortex-cond-role">{activeCondition.role}</p>
-                  </div>
-                </div>
-                <div className="cortex-cond-metrics-group">
-                  <div className="cortex-cond-metric-item">
-                    <span className="cortex-cond-metric-val cortex-cond-metric-val--accent">
-                      {activeCondition.pct}%
-                    </span>
-                    <span className="cortex-cond-metric-lbl">PRIMARY COMPLIANCE</span>
-                  </div>
-                  <div className="cortex-cond-metric-item">
-                    <span className="cortex-cond-metric-val">{activeCondition.deltaBaseline}</span>
-                    <span className="cortex-cond-metric-lbl">DELTA VS BASELINE</span>
-                  </div>
-                  <div className="cortex-cond-metric-item">
-                    <span className="cortex-cond-metric-val">{activeCondition.tokens}</span>
-                    <span className="cortex-cond-metric-lbl">AVG TOKEN FOOTPRINT</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="cortex-cond-detail-body">
-                <div className="cortex-cond-desc-col">
-                  <div className="cortex-cond-section-title">WHAT THIS DESIGN CHOICE MEANS IN AXIOM</div>
-                  <p className="cortex-cond-desc-text">{activeCondition.description}</p>
-                </div>
-                <div className="cortex-cond-finding-col">
-                  <div className="cortex-cond-section-title">EMPIRICAL BENCHMARK VERDICT</div>
-                  <p className="cortex-cond-finding-text">{activeCondition.keyFinding}</p>
-                  <div className="cortex-cond-meta-badge">
-                    <span className="cortex-cond-meta-dot" />
-                    <span>720 PROVENANCE RUNS · POSTGRESQL 16 ORACLE · HOLM-BONFERRONI P &lt; 0.0001</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="cortex-tabs" role="tablist" aria-label="Architecture Tabs">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`cortex-tab ${activeTab === tab.id ? 'is-active' : ''}`}
+              >
+                <span className="cortex-tab-icon">{tab.icon}</span>
+                <span className="cortex-tab-label">{tab.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* =========================================================================
-            PART 2: AXIOM KERNEL & 3-TIER INVARIANT VAULT (Precision Tactical Palette)
-            ========================================================================= */}
-        <div className="cortex-kernel-block">
-          <div className="cortex-header">
-            <div className="cortex-chip">
-              <span className="cortex-chip-dot" />
-              <span>TOPOLOGY // ARCHITECTURAL KNOWLEDGE VAULT</span>
-            </div>
-            <p className="cortex-eyebrow">Deterministic Ground Truth Separation</p>
-            <h2 className="cortex-title">Axiom Autonomous Kernel &amp; 3-Tier Invariant Vault</h2>
-            <p className="cortex-desc">
-              Axiom strictly decouples LLM generation from deterministic verification. The Autonomous Kernel
-              routes candidate SQL migrations through three distinct engineering tiers: an immutable SHA-256
-              ledger vault, 39 PostgreSQL 16 behavioral contracts, and a 6-stage operational circuit under the Arbiter.
-            </p>
-          </div>
-
-          <div className="cortex-stage">
-            {/* Column 1: Axiom Kernel Sphere + Live Reactor Readout */}
-            <div className="cortex-node-col">
-              <div className="cortex-core-wrapper">
-                <div className="cortex-orbit-ring" aria-hidden="true" />
-                <div className="cortex-orbit-ring cortex-orbit-ring--wide" aria-hidden="true" />
-                <div
-                  className="cortex-core-sphere"
-                  role="button"
-                  tabIndex={0}
-                  aria-label="Axiom Autonomous Kernel Hub"
-                  onClick={() =>
-                    setActiveItem({
-                      id: 'kernel',
-                      name: 'AXIOM KERNEL',
-                      role: 'Deterministic ground-truth reactor. Evaluates all candidate migrations inside fresh PostgreSQL 16 Docker containers.',
-                    })
-                  }
+        <div className="cortex-stage">
+          {/* LEFT: KERNEL SPHERE + LIVE READOUT */}
+          <div className="cortex-node-col">
+            <div className="cortex-core-wrapper">
+              <div className="cortex-orbit-ring" aria-hidden="true" />
+              <div className="cortex-orbit-ring cortex-orbit-ring--wide" aria-hidden="true" />
+              <div
+                className="cortex-core-sphere"
+                role="button"
+                tabIndex={0}
+                aria-label="Axiom Autonomous Kernel Hub"
+                onClick={() =>
+                  setActiveItem({
+                    id: 'kernel',
+                    name: 'AXIOM KERNEL',
+                    role: 'Deterministic ground-truth reactor. Evaluates all candidate migrations inside fresh PostgreSQL 16 Docker containers.',
+                  })
                 >
                   <AxiomLogo size={68} variant="mark" className="cortex-axiom-knot-icon" title="Axiom Kernel" />
                 </div>
@@ -816,162 +415,496 @@ export function CortexVaultSection({
               </div>
             </div>
 
-            {/* Column 2: Precision Tri-Color SVG Connecting Bus Lines */}
-            <div className="cortex-bus-col" aria-hidden="true">
-              <svg className="cortex-bus-svg" viewBox="0 0 100 520" preserveAspectRatio="none">
-                {/* Layer 01 Bus (Electric Cyan) */}
-                <path d="M 0 260 C 48 260, 48 85, 100 85" className="cortex-bus-path cortex-bus-path--cyan" />
-                <circle cx="100" cy="85" r="4" fill="#00f0ff" />
-
-                {/* Layer 02 Bus (Tactical Emerald) */}
-                <path d="M 0 260 C 48 260, 48 260, 100 260" className="cortex-bus-path cortex-bus-path--emerald" />
-                <circle cx="100" cy="260" r="4.5" fill="#10b981" />
-
-                {/* Layer 03 Bus (Precision Amber) */}
-                <path d="M 0 260 C 48 260, 48 435, 100 435" className="cortex-bus-path cortex-bus-path--amber" />
-                <circle cx="100" cy="435" r="4" fill="#f59e0b" />
-              </svg>
-            </div>
-
-            {/* Column 3: The 3 Distinctly Styled Architectural Layer Cards */}
-            <div className="cortex-cards-col">
-              {/* LAYER 01: Cryptographic Memory Vault (Electric Ice Cyan) */}
-              <div className="cortex-card cortex-card--tier1">
-                <div className="cortex-card-head">
-                  <div>
-                    <div className="cortex-layer-badge-row">
-                      <span className="cortex-layer-tag cortex-layer-tag--cyan">LAYER 01 // STORAGE TIER</span>
-                      <span className="cortex-layer-meta">SHA-256 IMMUTABLE</span>
-                    </div>
-                    <h3 className="cortex-card-title">Cryptographic Memory Vault</h3>
-                  </div>
-                  <div className="cortex-card-icon cortex-card-icon--cyan" title="SHA-256 Provenance & Ledgers">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                  </div>
-                </div>
-                <p className="cortex-card-sub">
-                  FIFO Ring-Buffer (cap 25) &amp; twin provenance ledgers. Lessons are calibrated on Train and verified by SHA-256 hash.
-                </p>
-                <div className="cortex-chips-wrap">
-                  {MEMORY_VAULT_FILES.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      className={`cortex-tag cortex-tag--cyan ${activeItem?.id === f.id ? 'is-active' : ''}`}
-                      onClick={() => setActiveItem(f)}
-                    >
-                      <span className="cortex-tag-name">{f.name}</span>
-                      {f.badge && <span className="cortex-tag-badge">{f.badge}</span>}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* LAYER 02: 39 Enterprise Database Contracts (Tactical Emerald) */}
-              <div className="cortex-card cortex-card--tier2">
-                <div className="cortex-card-head">
-                  <div>
-                    <div className="cortex-layer-badge-row">
-                      <span className="cortex-layer-tag cortex-layer-tag--emerald">LAYER 02 // ORACLE CRUCIBLE</span>
-                      <span className="cortex-layer-meta">POSTGRESQL 16 DOCKER</span>
-                    </div>
-                    <h3 className="cortex-card-title">39 Enterprise Database Contracts</h3>
-                  </div>
-                  <div className="cortex-card-icon cortex-card-icon--emerald" title="PostgreSQL 16 Docker Behavioral Probes">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-                      <polygon points="12 2 2 7 12 12 22 7 12 2" />
-                      <polyline points="2 17 12 22 22 17" />
-                      <polyline points="2 12 12 17 22 12" />
-                    </svg>
-                  </div>
-                </div>
-                <p className="cortex-card-sub">
-                  Migrations execute as role <code>deployer</code>; 34 behavioral contracts probe live tables as role <code>application</code>.
-                </p>
-                <div className="cortex-chips-wrap">
-                  {displayedContracts.map((c) => {
-                    const fCount = c.code ? factCountLookup.get(c.code) : undefined;
-                    return (
-                      <button
-                        key={c.id}
-                        type="button"
-                        className={`cortex-tag cortex-tag--emerald ${activeItem?.id === c.id ? 'is-active' : ''}`}
-                        onClick={() => setActiveItem(c)}
-                      >
-                        {c.code && <span className="cortex-tag-code">{c.code}</span>}
-                        <span className="cortex-tag-name">{c.name}</span>
-                        {c.spec && <span className="cortex-tag-spec">{c.spec}</span>}
-                        {fCount !== undefined && <span className="cortex-tag-freq">{fCount}</span>}
-                      </button>
-                    );
-                  })}
+            {/* CONDITION COMPLIANCE BAR (compact, horizontal) */}
+            <div className="cortex-cond-bar" role="region" aria-label="Condition Compliance">
+              {liveConditions.map((item, idx) => {
+                const isSelected = selectedCondition === item.code;
+                return (
                   <button
+                    key={item.code}
                     type="button"
-                    className="cortex-tag cortex-tag-more"
-                    onClick={() => setShowAllContracts(!showAllContracts)}
-                    aria-expanded={showAllContracts}
+                    role="tab"
+                    aria-selected={isSelected}
+                    onClick={() => setSelectedCondition(item.code)}
+                    onMouseEnter={() => setSelectedCondition(item.code)}
+                    className={`cortex-cond-mini ${isSelected ? 'is-active' : ''}`}
+                    style={{ '--cond-accent': item.accent } as React.CSSProperties}
                   >
-                    {showAllContracts ? 'COLLAPSE CONTRACTS ⌃' : '+25 MORE CONTRACTS'}
+                    <span className="cortex-cond-mini-code">{item.code}</span>
+                    <span className="cortex-cond-mini-pct">{item.pct}%</span>
+                    <span className="cortex-cond-mini-name">{item.shortName}</span>
                   </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* BUS LINES */}
+          <div className="cortex-bus-col" aria-hidden="true">
+            <svg className="cortex-bus-svg" viewBox="0 0 100 520" preserveAspectRatio="none">
+              <path d="M 0 260 C 48 260, 48 85, 100 85" className="cortex-bus-path cortex-bus-path--cyan" />
+              <circle cx="100" cy="85" r="4" fill="#00f0ff" />
+              <path d="M 0 260 C 48 260, 48 260, 100 260" className="cortex-bus-path cortex-bus-path--emerald" />
+              <circle cx="100" cy="260" r="4.5" fill="#10b981" />
+              <path d="M 0 260 C 48 260, 48 435, 100 435" className="cortex-bus-path cortex-bus-path--amber" />
+              <circle cx="100" cy="435" r="4" fill="#f59e0b" />
+            </svg>
+          </div>
+
+          {/* RIGHT: TAB CONTENT PANELS */}
+          <div className="cortex-content-col">
+            {activeTab === 'overview' && (
+              <div className="cortex-overview-panel">
+                <div className="cortex-scale-head">
+                  <p className="cortex-scale-eyebrow">// SCALE & EFFICIENCY · MULTI-MODEL EMPIRICAL PROVENANCE</p>
+                  <h2 className="cortex-scale-title">Built to heal. Built to be cheap.</h2>
+                </div>
+
+                {/* Fleet Strip */}
+                <div className="cortex-fleet-strip" role="region" aria-label="Simultaneous 720-Trial Ablation Fleet">
+                  <div className="cortex-fleet-strip-head">
+                    <div className="cortex-fleet-strip-title">
+                      <span className="cortex-live-pulse-dot" />
+                      <span>MULTI-MODEL 720-TRIAL ABLATION FLEET</span>
+                    </div>
+                    <span className="cortex-fleet-strip-meta">
+                      SIMULTANEOUS BACKGROUND EXECUTION · QWEN 3.8 27B + GLM-5.3 (2 × 720 TRIALS)
+                    </span>
+                  </div>
+                  <div className="cortex-fleet-grid">
+                    {runOptions.map((runOpt) => {
+                      const st = fleet.find((f) => f.run.id === runOpt.id);
+                      const isSelected = activeRunId === runOpt.id;
+                      const done = st ? st.done : 0;
+                      const total = st ? st.total : 720;
+                      const pct = Math.min(100, Math.round((done / total) * 100));
+                      const conv =
+                        st?.convergence !== null && st?.convergence !== undefined
+                          ? `${(st.convergence * 100).toFixed(1)}%`
+                          : 'CALIBRATING';
+                      const statusBadge =
+                        st?.state === 'live'
+                          ? `LIVE · ${done}/${total}`
+                          : done >= total
+                          ? `VERIFIED · ${done}/${total}`
+                          : done > 0
+                          ? `IN PROGRESS · ${done}/${total}`
+                          : `PARALLEL BG · ${done}/${total}`;
+
+                      return (
+                        <button
+                          key={runOpt.id}
+                          type="button"
+                          onClick={() => onSelectRun?.(runOpt.id)}
+                          className={`cortex-fleet-card ${isSelected ? 'is-selected' : ''}`}
+                          style={{ '--fleet-accent': runOpt.accent } as React.CSSProperties}
+                        >
+                          <div className="cortex-fleet-card-top">
+                            <div className="cortex-fleet-model-id">
+                              <span className="cortex-fleet-dot" />
+                              <b>{runOpt.label}</b>
+                              {isSelected && <span className="cortex-fleet-active-tag">ACTIVE VIEW</span>}
+                            </div>
+                            <span className="cortex-fleet-badge">{statusBadge}</span>
+                          </div>
+                          <div className="cortex-fleet-model-slug">{runOpt.model}</div>
+                          <div className="cortex-fleet-progress-track" aria-hidden="true">
+                            <div
+                              className={`cortex-fleet-progress-fill ${done === 0 ? 'is-indeterminate' : ''}`}
+                              style={{ width: done === 0 ? '38%' : `${pct}%` }}
+                            />
+                          </div>
+                          <div className="cortex-fleet-card-foot">
+                            <span>TRIALS: <b>{done} / {total}</b></span>
+                            <span>CONVERGENCE: <b>{conv}</b></span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Key Metrics Row - Compact */}
+                <div className="cortex-metric-row">
+                  <div className="cortex-metric-card">
+                    <span className="cortex-metric-tag">VERIFIER</span>
+                    <div className="cortex-metric-value">39</div>
+                    <div className="cortex-metric-label">CONTRACTS</div>
+                  </div>
+                  <div className="cortex-metric-card">
+                    <span className="cortex-metric-tag">TOKEN SAVINGS</span>
+                    <div className="cortex-metric-value">51.3%</div>
+                    <div className="cortex-metric-label">REDUCTION</div>
+                  </div>
+                  <div className="cortex-metric-card">
+                    <span className="cortex-metric-tag">TRIALS / RUN</span>
+                    <div className="cortex-metric-value">720</div>
+                    <div className="cortex-metric-label">ABLATION</div>
+                  </div>
+                  <div className="cortex-metric-card">
+                    <span className="cortex-metric-tag">MODELS</span>
+                    <div className="cortex-metric-value">{runOptions.length}</div>
+                    <div className="cortex-metric-label">FLEET</div>
+                  </div>
                 </div>
               </div>
+            )}
 
-              {/* LAYER 03: 6-Stage Operational Circuit (Precision Amber/Gold) */}
-              <div className="cortex-card cortex-card--tier3">
-                <div className="cortex-card-head">
-                  <div>
-                    <div className="cortex-layer-badge-row">
-                      <span className="cortex-layer-tag cortex-layer-tag--amber">LAYER 03 // EXECUTION PIPELINE</span>
-                      <span className="cortex-layer-meta">ZERO-LLM VERIFIER</span>
+            {activeTab === 'conditions' && (
+              <div className="cortex-conditions-panel">
+                <div className="cortex-charts-grid">
+                  {/* Compliance Chart */}
+                  <div className="cortex-chart-panel">
+                    <div className="cortex-chart-head">
+                      <div>
+                        <span className="cortex-chart-eyebrow">ABLATION V2 // PRIMARY COMPLIANCE</span>
+                        <h3 className="cortex-chart-title">Compliance Across 6 Conditions</h3>
+                      </div>
+                      <span className="cortex-chart-tag">CLICK TO INSPECT</span>
                     </div>
-                    <h3 className="cortex-card-title">6-Stage Operational Circuit &amp; Arbiter</h3>
-                  </div>
-                  <div className="cortex-card-icon cortex-card-icon--amber" title="Deterministic Invariant Gate & Arbiter">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      <polyline points="9 12 11 14 15 10" />
+                    <svg className="cortex-svg-chart" viewBox="0 0 520 220" preserveAspectRatio="none">
+                      <line x1="44" y1="36" x2="496" y2="36" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                      <text x="36" y="39" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">90%</text>
+                      <line x1="44" y1="92" x2="496" y2="92" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                      <text x="36" y="95" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">60%</text>
+                      <line x1="44" y1="148" x2="496" y2="148" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                      <text x="36" y="151" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">30%</text>
+                      <line x1="44" y1="176" x2="496" y2="176" stroke="rgba(148, 163, 184, 0.22)" strokeWidth="1" />
+                      {liveConditions.map((item, idx) => {
+                        const barWidth = 44;
+                        const gap = 30;
+                        const x = 58 + idx * (barWidth + gap);
+                        const center = x + barWidth / 2;
+                        const maxH = 148;
+                        const height = Math.max(8, (item.pct / 100) * maxH);
+                        const y = 176 - height;
+                        const isSelected = selectedCondition === item.code;
+                        return (
+                          <g
+                            key={item.code}
+                            style={{ cursor: 'pointer' }}
+                            onClick={() => setSelectedCondition(item.code)}
+                            onMouseEnter={() => setSelectedCondition(item.code)}
+                          >
+                            <rect x={x - 6} y={16} width={barWidth + 12} height={198} fill="transparent" />
+                            <rect
+                              x={x}
+                              y={y}
+                              width={barWidth}
+                              height={height}
+                              rx="5"
+                              fill={isSelected ? item.accent : 'rgba(51, 65, 85, 0.75)'}
+                              stroke={isSelected ? '#ffffff' : item.accent}
+                              strokeWidth={isSelected ? 1.8 : 1}
+                              opacity={isSelected ? 1 : 0.85}
+                            />
+                            <text
+                              x={center}
+                              y={y - 8}
+                              textAnchor="middle"
+                              fill={isSelected ? '#ffffff' : '#cbd5e1'}
+                              fontSize="11"
+                              fontFamily="monospace"
+                              fontWeight={isSelected ? '700' : '600'}
+                            >
+                              {item.pct}%
+                            </text>
+                            <text
+                              x={center}
+                              y={196}
+                              textAnchor="middle"
+                              fill={isSelected ? item.accent : '#e2e8f0'}
+                              fontSize="11.5"
+                              fontFamily="monospace"
+                              fontWeight="700"
+                            >
+                              {item.code}
+                            </text>
+                          </g>
+                        );
+                      })}
                     </svg>
                   </div>
-                </div>
-                <p className="cortex-card-sub">
-                  Strict authority separation: candidate rules are quarantined and never written directly into domain files.
-                </p>
-                <div className="cortex-circuit-grid">
-                  {OPERATIONAL_CIRCUIT.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      className={`cortex-circuit-step ${activeItem?.id === a.id ? 'is-active' : ''}`}
-                      onClick={() => setActiveItem(a)}
-                    >
-                      <div className="cortex-circuit-step-top">
-                        <span className="cortex-circuit-num">{a.code}</span>
-                        <span className="cortex-circuit-badge">{a.badge}</span>
+
+                  {/* Condition Detail Card - Inline with findings */}
+                  <div
+                    className="cortex-cond-detail-card"
+                    style={{ '--cond-accent': activeCondition.accent } as React.CSSProperties}
+                  >
+                    <div className="cortex-cond-detail-header">
+                      <div className="cortex-cond-detail-title-group">
+                        <span className="cortex-cond-code-badge">{activeCondition.code}</span>
+                        <div>
+                          <h4 className="cortex-cond-title">{activeCondition.name}</h4>
+                          <p className="cortex-cond-role">{activeCondition.role}</p>
+                        </div>
                       </div>
-                      <div className="cortex-circuit-name">{a.name}</div>
-                    </button>
-                  ))}
+                      <div className="cortex-cond-metrics-group">
+                        <div className="cortex-cond-metric-item">
+                          <span className="cortex-cond-metric-val cortex-cond-metric-val--accent">
+                            {activeCondition.pct}%
+                          </span>
+                          <span className="cortex-cond-metric-lbl">COMPLIANCE</span>
+                        </div>
+                        <div className="cortex-cond-metric-item">
+                          <span className="cortex-cond-metric-val">{activeCondition.deltaBaseline}</span>
+                          <span className="cortex-cond-metric-lbl">VS BASELINE</span>
+                        </div>
+                        <div className="cortex-cond-metric-item">
+                          <span className="cortex-cond-metric-val">{activeCondition.tokens}</span>
+                          <span className="cortex-cond-metric-lbl">TOKENS</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="cortex-cond-detail-body">
+                      <div className="cortex-cond-desc-col">
+                        <p className="cortex-cond-desc-text">{activeCondition.description}</p>
+                      </div>
+                      <div className="cortex-cond-finding-col">
+                        <p className="cortex-cond-finding-text">{activeCondition.keyFinding}</p>
+<div className="cortex-cond-meta-badge">
+                          <span className="cortex-cond-meta-dot" />
+                          <span>720 RUNS \u00B7 PG16 ORACLE \u00B7 HOLM P { '<' } 0.0001</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Token Cost Chart */}
+                <div className="cortex-chart-panel">
+                  <div className="cortex-chart-head">
+                    <div>
+                      <span className="cortex-chart-eyebrow">TELEMETRY // PROMPT FOOTPRINT</span>
+                      <h3 className="cortex-chart-title">Token Cost Optimization Curve</h3>
+                    </div>
+                    <span className="cortex-chart-tag">554 TOK OPTIMUM · -51.3%</span>
+                  </div>
+                  <svg className="cortex-svg-chart" viewBox="0 0 520 220" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="token-curve-grad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.26" />
+                        <stop offset="100%" stopColor="#00f0ff" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <line x1="48" y1="42" x2="488" y2="42" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                    <text x="40" y="45" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">1.8k</text>
+                    <line x1="48" y1="104" x2="488" y2="104" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                    <text x="40" y="107" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">1.0k</text>
+                    <line x1="48" y1="164" x2="488" y2="164" stroke="rgba(148, 163, 184, 0.12)" strokeWidth="1" />
+                    <text x="40" y="167" textAnchor="end" fill="#64748b" fontSize="10" fontFamily="monospace">500</text>
+                    <line x1="96" y1="42" x2="96" y2="180" stroke="rgba(148, 163, 184, 0.22)" strokeDasharray="4 4" />
+                    <line x1="272" y1="104" x2="272" y2="180" stroke="rgba(148, 163, 184, 0.22)" strokeDasharray="4 4" />
+                    <line x1="448" y1="160" x2="448" y2="180" stroke="rgba(0, 240, 255, 0.45)" strokeDasharray="4 4" />
+                    <path d="M 96 42 C 165 56, 215 84, 272 104 C 330 124, 385 150, 448 160 L 448 180 L 96 180 Z" fill="url(#token-curve-grad)" />
+                    <path d="M 96 42 C 165 56, 215 84, 272 104 C 330 124, 385 150, 448 160" fill="none" stroke="#e2e8f0" strokeWidth="3" strokeLinecap="round" />
+                    <g transform="translate(96, 24)">
+                      <rect x="-42" y="-13" width="84" height="19" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(148, 163, 184, 0.3)" />
+                      <text x="0" y="0" textAnchor="middle" fill="#cbd5e1" fontSize="10.5" fontFamily="monospace" fontWeight="600">1,852 tok</text>
+                    </g>
+                    <g transform="translate(272, 86)">
+                      <rect x="-38" y="-13" width="76" height="19" rx="4" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(148, 163, 184, 0.3)" />
+                      <text x="0" y="0" textAnchor="middle" fill="#cbd5e1" fontSize="10.5" fontFamily="monospace" fontWeight="600">915 tok</text>
+                    </g>
+                    <g transform="translate(432, 138)">
+                      <rect x="-62" y="-14" width="124" height="20" rx="4" fill="rgba(0, 240, 255, 0.14)" stroke="#00f0ff" />
+                      <text x="0" y="0" textAnchor="middle" fill="#00f0ff" fontSize="10.5" fontFamily="monospace" fontWeight="700">554 tok (-51.3%)</text>
+                    </g>
+                    <circle cx="96" cy="42" r="5.5" fill="#0f172a" stroke="#f8fafc" strokeWidth="2.5" />
+                    <circle cx="272" cy="104" r="5.5" fill="#0f172a" stroke="#f8fafc" strokeWidth="2.5" />
+                    <circle cx="448" cy="160" r="8" fill="#00f0ff" filter="drop-shadow(0 0 10px #00f0ff)" />
+                    <circle cx="448" cy="160" r="3" fill="#ffffff" />
+                    <text x="96" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Static (B)</text>
+                    <text x="96" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">+102% bloat</text>
+                    <text x="272" y="198" textAnchor="middle" fill="#94a3b8" fontSize="11" fontFamily="monospace" fontWeight="600">Zero-Shot (A)</text>
+                    <text x="272" y="212" textAnchor="middle" fill="#64748b" fontSize="9.5" fontFamily="monospace">Unassisted</text>
+                    <text x="448" y="198" textAnchor="middle" fill="#00f0ff" fontSize="11" fontFamily="monospace" fontWeight="700">Verbatim (C0)</text>
+                    <text x="448" y="212" textAnchor="middle" fill="#10b981" fontSize="9.5" fontFamily="monospace">86.3% · -51.3%</text>
+                  </svg>
                 </div>
               </div>
+            )}
 
-              {/* Interactive Detail Inspector Banner */}
-              {activeItem && (
-                <div className="cortex-detail-banner" role="status">
-                  <div className="cortex-detail-info">
-                    <span className="cortex-detail-tag">INSPECTOR</span>
-                    <b>{activeItem.code ? `[${activeItem.code}] ${activeItem.name}` : activeItem.name}:</b>{' '}
-                    <span>{activeItem.role}</span>
+            {activeTab === 'contracts' && (
+              <div className="cortex-contracts-panel">
+                <div className="cortex-card cortex-card--tier2">
+                  <div className="cortex-card-head">
+                    <div>
+                      <div className="cortex-layer-badge-row">
+                        <span className="cortex-layer-tag cortex-layer-tag--emerald">LAYER 02 // ORACLE CRUCIBLE</span>
+                        <span className="cortex-layer-meta">POSTGRESQL 16 DOCKER</span>
+                      </div>
+                      <h3 className="cortex-card-title">39 Enterprise Database Contracts</h3>
+                    </div>
+                    <div className="cortex-card-icon cortex-card-icon--emerald" title="PostgreSQL 16 Docker Behavioral Probes">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2" />
+                        <polyline points="2 17 12 22 22 17" />
+                        <polyline points="2 12 12 17 22 12" />
+                      </svg>
+                    </div>
                   </div>
-                  <div className="cortex-detail-badge">DETERMINISTIC VERIFIED</div>
+                  <p className="cortex-card-sub">
+                    Migrations execute as role <code>deployer</code>; 34 behavioral contracts probe live tables as role <code>application</code>.
+                  </p>
+
+                  {/* Fact Violation Frequencies - Inline in Contracts Tab */}
+                  <div className="cortex-freq-panel" style={{ marginTop: '16px' }}>
+                    <div className="cortex-freq-head">
+                      <div>
+                        <span className="cortex-chart-eyebrow">ORACLE TELEMETRY // INVARIANT VIOLATION SPECTRUM</span>
+                        <h3 className="cortex-chart-title">Empirical Fact-Failure Frequency Distribution</h3>
+                      </div>
+                      <span className="cortex-chart-tag">
+                        MODEL: {activeModelName.split('/').pop()?.toUpperCase()} · POSTGRESQL 16 PROBES
+                      </span>
+                    </div>
+                    <div className="cortex-freq-grid">
+                      {factFrequencies.map((item) => {
+                        const ratio = Math.max(12, Math.round((item.count / maxFactCount) * 100));
+                        return (
+                          <div key={item.fact} className="cortex-freq-row">
+                            <div className="cortex-freq-row-meta">
+                              <span className="cortex-freq-code">{item.fact}</span>
+                              <span className="cortex-freq-name">{item.name}</span>
+                              <span className="cortex-freq-domain">{item.domain}</span>
+                              <b className="cortex-freq-count">{item.count} faults</b>
+                            </div>
+                            <div className="cortex-freq-bar-track">
+                              <div className="cortex-freq-bar-fill" style={{ width: `${ratio}%` }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Contract Chips */}
+                  <div className="cortex-chips-wrap" style={{ marginTop: '20px' }}>
+                    {displayedContracts.map((c) => {
+                      const fCount = c.code ? factCountLookup.get(c.code) : undefined;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          className={`cortex-tag cortex-tag--emerald ${activeItem?.id === c.id ? 'is-active' : ''}`}
+                          onClick={() => setActiveItem(c)}
+                        >
+                          {c.code && <span className="cortex-tag-code">{c.code}</span>}
+                          <span className="cortex-tag-name">{c.name}</span>
+                          {c.spec && <span className="cortex-tag-spec">{c.spec}</span>}
+                          {fCount !== undefined && <span className="cortex-tag-freq">{fCount}</span>}
+                        </button>
+                      );
+                    })}
+                    <button
+                      type="button"
+                      className="cortex-tag cortex-tag-more"
+                      onClick={() => setShowAllContracts(!showAllContracts)}
+                      aria-expanded={showAllContracts}
+                    >
+                      {showAllContracts ? 'COLLAPSE CONTRACTS ⌃' : '+25 MORE CONTRACTS'}
+                    </button>
+                  </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {activeTab === 'memory' && (
+              <div className="cortex-memory-panel">
+                <div className="cortex-card cortex-card--tier1">
+                  <div className="cortex-card-head">
+                    <div>
+                      <div className="cortex-layer-badge-row">
+                        <span className="cortex-layer-tag cortex-layer-tag--cyan">LAYER 01 // STORAGE TIER</span>
+                        <span className="cortex-layer-meta">SHA-256 IMMUTABLE</span>
+                      </div>
+                      <h3 className="cortex-card-title">Cryptographic Memory Vault</h3>
+                    </div>
+                    <div className="cortex-card-icon cortex-card-icon--cyan" title="SHA-256 Provenance & Ledgers">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="cortex-card-sub">
+                    FIFO Ring-Buffer (cap 25) & twin provenance ledgers. Lessons are calibrated on Train and verified by SHA-256 hash.
+                  </p>
+                  <div className="cortex-chips-wrap">
+                    {MEMORY_VAULT_FILES.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`cortex-tag cortex-tag--cyan ${activeItem?.id === f.id ? 'is-active' : ''}`}
+                        onClick={() => setActiveItem(f)}
+                      >
+                        <span className="cortex-tag-name">{f.name}</span>
+                        {f.badge && <span className="cortex-tag-badge">{f.badge}</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'circuit' && (
+              <div className="cortex-circuit-panel">
+                <div className="cortex-card cortex-card--tier3">
+                  <div className="cortex-card-head">
+                    <div>
+                      <div className="cortex-layer-badge-row">
+                        <span className="cortex-layer-tag cortex-layer-tag--amber">LAYER 03 // EXECUTION PIPELINE</span>
+                        <span className="cortex-layer-meta">ZERO-LLM VERIFIER</span>
+                      </div>
+                      <h3 className="cortex-card-title">6-Stage Operational Circuit & Arbiter</h3>
+                    </div>
+                    <div className="cortex-card-icon cortex-card-icon--amber" title="Deterministic Invariant Gate & Arbiter">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        <polyline points="9 12 11 14 15 10" />
+                      </svg>
+                    </div>
+                  </div>
+                  <p className="cortex-card-sub">
+                    Strict authority separation: candidate rules are quarantined and never written directly into domain files.
+                  </p>
+                  <div className="cortex-circuit-grid">
+                    {OPERATIONAL_CIRCUIT.map((a) => (
+                      <button
+                        key={a.id}
+                        type="button"
+                        className={`cortex-circuit-step ${activeItem?.id === a.id ? 'is-active' : ''}`}
+                        onClick={() => setActiveItem(a)}
+                      >
+                        <div className="cortex-circuit-step-top">
+                          <span className="cortex-circuit-num">{a.code}</span>
+                          <span className="cortex-circuit-badge">{a.badge}</span>
+                        </div>
+                        <div className="cortex-circuit-name">{a.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Detail Inspector Banner - Always visible when item selected */}
+            {activeItem && (
+              <div className="cortex-detail-banner" role="status">
+                <div className="cortex-detail-info">
+                  <span className="cortex-detail-tag">INSPECTOR</span>
+                  <b>{activeItem.code ? `[${activeItem.code}] ${activeItem.name}` : activeItem.name}:</b>{' '}
+                  <span>{activeItem.role}</span>
+                </div>
+                <div className="cortex-detail-badge">DETERMINISTIC VERIFIED</div>
+              </div>
+            )}
           </div>
         </div>
       </div>
     </section>
   );
 }
+
+export default CortexVaultSection;

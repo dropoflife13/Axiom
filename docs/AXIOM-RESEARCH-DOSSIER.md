@@ -1,6 +1,6 @@
 # AXIOM: Empirical Research Dossier & Ablation v3 Design Specification
 
-> **Purpose:** This dossier compiles the audited empirical dataset, forensic analysis, and v3 pre-registration design from **Axiom** — a dual-track self-healing architectural verification and SQL migration reflexion harness. It incorporates the complete read-only evaluation of Items 1–8 across the 5 valid completed 720-trial model runs, replacing preliminary uncorrected claims with paired clean-intersection contrasts, non-retrieved stratification, live PostgreSQL 16 statement-sufficiency diagnostics, and crossed random-effects models.
+> **Purpose:** This dossier compiles the audited empirical dataset, forensic analysis, and v3 pre-registration design from **Axiom** — a dual-track self-healing architectural verification and SQL migration reflexion harness. It incorporates the complete read-only evaluation of Items 1–8 across the 6 valid completed 720-trial model runs, replacing preliminary uncorrected claims with paired clean-intersection contrasts, non-retrieved stratification, live PostgreSQL 16 statement-sufficiency diagnostics, and crossed random-effects models.
 >
 > **Core Architecture Invariant (Invariant 0 — Authority Separation):** LLM generation is untrusted candidate material. Only deterministic external verifiers (PostgreSQL 16 container execution + deterministic AST verifiers) possess grading authority (`AGENTS.md` / `BN-00`).
 
@@ -12,9 +12,9 @@ The empirical benchmark covers **720-trial factorial ablations** evaluated on th
 
 | Corpus Division | Runs Included | Scored Trials | Purpose / Role |
 | :--- | :--- | :---: | :--- |
-| **Confirmatory Primary Dataset** | `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, `gemini-flash-lite-full` | **3,600** (5 × 720) | Valid completed runs satisfying the Post-Hoc Validity Gate (constant model ID, zero reasoning leaks, $B > A$). |
+| **Confirmatory Primary Dataset** | `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, `gemini-flash-lite-full`, `qwen27b-2` | **4,320** (6 × 720) | Valid completed runs satisfying the Post-Hoc Validity Gate (constant model ID, zero reasoning leaks, $B > A$). |
 | **Invalid / Failed-Gate Runs** | `gemma4-26b-full` (model alias mismatch: returned `a4b-it`), `nemotron-lightning-full` (failed $B > A$ gate; high 5xx cache instability) | **1,440** (2 × 720) | Analyzed for failure mode discovery (e.g. Placebo tip syntax collapse); excluded from primary efficacy claims. |
-| **In-Progress Runs** | `qwen27b-2` (439/720), `gptoss-120b-expanded` (298/720) | **737** | Monitored live; excluded from finalized v3-prep inferential statistics. |
+| **In-Progress Runs** | `gptoss-120b-expanded` (~550/720) | **~550** | Monitored live; excluded from finalized v3-prep inferential statistics. |
 | **Exploratory Mini Runs** | `liquid17b-mini` (48), `xingchen-mini` (48), `gemini-mini` (18) | **114** | Architecture boundary probes (reasoning-budget exhaustion, token limits). |
 | **Calibration Baselines** | Train calibration (40 tasks), Dev calibration (40 tasks) on `gemma-4-31b-it` | **80** | Pre-ablation difficulty estimation and memory seeding. |
 | **Oracle Test Suites** | 30 golden schemas, 40 bad schemas, 374 single-statement mutation schemas | **444** | Verifier validation (100% positive, 100% negative exact-fact kill, 73.5% mutation kill). |
@@ -37,7 +37,7 @@ Audit of `STATIC_FACTS` (`src/eval/ablation.ts`) against `FACT_STATEMENTS` (`scr
 
 ---
 
-## 3. Primary Benchmark Results Across the 5 Valid Completed Runs
+## 3. Primary Benchmark Results Across the 6 Valid Completed Runs
 
 ### 3.1 Unconditional Benchmark Scores ($N = 120$ Tasks / Condition, 720 Trials / Run)
 
@@ -50,6 +50,7 @@ Audit of `STATIC_FACTS` (`src/eval/ablation.ts`) against `FACT_STATEMENTS` (`scr
 | **`glm5-2`** | `glm-5.3-flash` | 41.5% (4.2%) \| 0.98k | 29.9% (2.5%) \| 1.53k | **74.5% (38.3%)** \| 1.19k | 72.1% (**48.3%**) \| 1.19k | 90.2% (69.2%) \| 1.80k | 82 / 169 |
 | **`gemini-3.1-flash-lite`** | `gemini-3.1-flash-lite` | 47.9% (2.5%) \| 0.69k | 46.2% (1.7%) \| 1.35k | 66.1% (25.0%) \| 1.07k | **83.4% (44.2%)** \| 1.09k | **75.5% (52.5%)** \| 1.78k | 41 / 192 |
 | **`gemini-flash-lite-full`** | `gemini-3.5-flash-lite` | 35.8% (0.0%) \| 0.80k | 31.8% (1.7%) \| 1.44k | 68.4% (31.7%) \| 1.15k | **70.8% (32.5%)** \| 1.16k | 85.8% (52.5%) \| 1.92k | 54 / 94 |
+| **`qwen27b-2`** | `qwen/qwen3.8-27b` | 46.3% (3.3%) \| 1.48k | 49.5% (3.3%) \| 2.10k | 71.7% (25.0%) \| 2.13k | **88.2% (63.3%)** \| 2.10k | 92.5% (72.5%) \| 3.15k | 5 / 58 |
 
 ---
 
@@ -67,9 +68,10 @@ Conditioning comparisons on task pairs where **both conditions executed without 
 | `glm5-2` | 58, −0.72 [−4.7, +3.1] | 75, +31.87 [+24.4, +38.9] | 64, +44.79 [+37.0, +52.3] | 70, +45.29 [+39.2, +51.3] | **78, +12.67 [+7.4, +18.0]** | 63, +30.19 [+23.4, +36.9] | 76, −3.18 [−7.9, +1.1] |
 | `gemini-3.1-flash-lite` | 59, −4.27 [−8.6, +0.1] | 74, +22.09 [+15.5, +28.7] | 84, +35.93 [+29.6, +42.1] | 69, +38.41 [+31.9, +44.8] | **79, +15.36 [+11.1, +19.9]** | 57, +29.36 [+22.0, +36.5] | 77, −4.76 [−8.8, −0.6] |
 | `gemini-flash-lite-full` | 75, +0.33 [−2.5, +3.2] | 98, +29.44 [+23.5, +35.2] | 94, +36.74 [+30.9, +42.5] | 96, +48.00 [+42.0, +54.2] | **101, +5.68 [+1.1, +10.4]** | 77, +32.75 [+26.7, +38.7] | 97, −12.35 [−16.9, −7.8] |
+| `qwen27b-2` | 91, −1.34 [−4.5, +1.7] | 96, +22.66 [+16.3, +28.8] | 65, +28.41 [+20.5, +35.8] | 68, +38.46 [+33.5, +43.5] | **69, +10.14 [+5.6, +14.8]** | 99, +23.62 [+16.8, +30.4] | 64, −10.94 [−16.1, −6.3] |
 
 **Key Takeaways:**
-1. Under paired clean contrasts, $C_0$ outperforms $C$ with 95% bootstrap CIs strictly above zero across **all 5 valid models** (`+5.68%` to `+15.36%`). The unconditional null on `glm5-2` was driven entirely by syntax failures.
+1. Under paired clean contrasts, $C_0$ outperforms $C$ with 95% bootstrap CIs strictly above zero across **all 6 valid models** (`+5.68%` to `+15.36%`). The unconditional null on `glm5-2` was driven entirely by syntax failures.
 2. The apparent unconditional reversal $C_0 > B$ on `gemini-3.1-flash-lite` (`83.4%` vs `75.5%`) vanishes when paired clean ($B > C_0$ by $+4.76\%$); $B$'s lower unconditional score was caused by DDL syntax crashes under the 34-rule prompt, not inferior rule content.
 
 ---
@@ -90,8 +92,10 @@ Across the 478 bound task-fact pairs per run, comparing differences vs Zero-Shot
 | | Non-Ret (82) | 70.7% | 64.6% | 48.8% | 59.8% | 76.8% | −6.10 [−17.4, +4.9] | **−21.95 [−34.9, −7.7]** | −10.98 [−22.9, +1.4] | +6.10 [−7.6, +19.8] |
 | **`gemini-flash-lite-full`**| Retrieved (396) | 35.1% | 32.8% | 80.8% | 80.1% | 83.1% | −2.27 [−6.6, +2.0] | +45.71 [+40.0, +51.3] | +44.95 [+37.4, +52.2] | +47.98 [+41.1, +54.8] |
 | | Non-Ret (82) | 41.5% | 25.6% | 8.5% | 24.4% | 96.3% | −15.85 [−25.0, −6.6] | **−32.93 [−40.5, −25.0]** | **−17.07 [−27.5, −7.2]** | +54.88 [+45.0, +64.9] |
+| **`qwen27b-2`** | Retrieved (396) | 41.7% | 38.4% | 79.5% | 82.6% | 92.7% | −3.28 [−8.1, +1.3] | +37.88 [+31.8, +43.9] | +40.91 [+34.9, +46.6] | +51.01 [+45.4, +56.6] |
+| | Non-Ret (82) | 72.0% | 81.7% | 45.1% | 67.1% | 97.6% | +9.76 [−2.4, +22.5] | **−26.83 [−40.7, −11.7]** | −4.88 [−19.8, +10.4] | +25.61 [+15.5, +36.9] |
 
-**Observation:** Where Placebo $D$ does not cause syntax errors (`nemotron-2`, `gemma4-31b`, `gemini-3.1`), $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C_0 - A$ drops ($-10.98\%$ to $-24.39\%$). Adding an incomplete checklist displaces unprompted default knowledge; distilled natural language exacerbates this displacement compared to verbatim text.
+**Observation:** Where Placebo $D$ does not cause syntax errors (`nemotron-2`, `gemma4-31b`, `gemini-3.1`, `qwen27b-2`), $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C_0 - A$ drops ($-10.98\%$ to $-24.39\%$). Adding an incomplete checklist displaces unprompted default knowledge; distilled natural language exacerbates this displacement compared to verbatim text.
 
 ---
 
@@ -99,16 +103,16 @@ Across the 478 bound task-fact pairs per run, comparing differences vs Zero-Shot
 
 The $C_0 - C$ advantage concentrates heavily in append-only cells (`010`, `110`, `111`), which contain concrete identifier-heavy invariants:
 
-| Cell (`T A I`) | `nemotron-2` $\Delta$ [95% CI] | `gemma4-31b` $\Delta$ [95% CI] | `glm5-2` $\Delta$ [95% CI] | `gemini-3.1` $\Delta$ [95% CI] | `gemini-3.5` $\Delta$ [95% CI] | Bound Invariants with Stripped Identifiers |
-| :---: | :---: | :---: | :---: | :---: | :---: | :--- |
-| `000` | +0.00 [−4.0, +4.0] | +1.33 [−3.7, +6.7] | −52.00 [−77.3, −26.7] | −1.89 [−8.0, +3.7] | −5.00 [−21.0, +6.0] | `F-05`, `F-10`, `F-15`, `F-16`, `F-17`, `F-21` |
-| `001` | +13.22 [+4.9, +21.7] | +0.33 [−4.0, +5.0] | −17.44 [−41.0, +2.7] | +6.22 [0.0, +13.3] | −13.56 [−36.9, +10.9] | `000` + `F-32` (`idempotency_key`), `F-37` (`received_at`, `now()`) |
-| **`010`** | **+27.89 [+20.8, +34.3]** | **+15.55 [−3.6, +31.0]** | **+28.89 [+18.0, +38.4]** | **+41.44 [+29.0, +55.8]** | **+17.89 [+9.0, +26.0]** | `F-19` (`PUBLIC`, `application`), `F-20` (audit log error msg), `F-27`, `F-36` (`supersedes_id`) |
-| `011` | +17.22 [+3.2, +32.1] | +1.67 [−11.1, +13.2] | −4.89 [−27.9, +15.9] | +8.00 [+1.3, +14.7] | −2.11 [−19.3, +15.5] | `010` + `F-32`, `F-37` |
-| `100` | +13.67 [+2.1, +25.7] | +4.78 [−14.2, +25.7] | −18.78 [−38.7, −0.7] | +13.89 [+5.3, +23.5] | −12.78 [−23.6, −1.6] | `000` + `F-25` (`ENABLE/FORCE RLS`), `F-26` (`app_metadata.tenant_id`) |
-| `101` | −1.67 [−12.7, +10.8] | +39.11 [+22.0, +56.4] | +2.89 [−8.1, +14.0] | +15.67 [+5.7, +27.3] | −2.11 [−15.4, +11.1] | `100` + `F-32`, `F-37` |
-| **`110`** | **+16.44 [+4.3, +27.6]** | **+25.67 [+2.0, +50.1]** | **+22.78 [+9.1, +38.1]** | **+31.11 [+20.8, +42.1]** | **+10.22 [+0.6, +19.4]** | `010` + `F-25`, `F-26` |
-| **`111`** | **+28.33 [+14.7, +43.7]** | **+23.33 [+6.6, +38.3]** | **+19.33 [+5.1, +33.3]** | **+24.44 [+13.3, +35.3]** | **+26.56 [+13.6, +38.5]** | `110` + `F-32`, `F-37` |
+| Cell (`T A I`) | `nemotron-2` $\Delta$ [95% CI] | `gemma4-31b` $\Delta$ [95% CI] | `glm5-2` $\Delta$ [95% CI] | `gemini-3.1` $\Delta$ [95% CI] | `gemini-3.5` $\Delta$ [95% CI] | `qwen27b-2` $\Delta$ [95% CI] | Bound Invariants with Stripped Identifiers |
+| :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| `000` | +0.00 [−4.0, +4.0] | +1.33 [−3.7, +6.7] | −52.00 [−77.3, −26.7] | −1.89 [−8.0, +3.7] | −5.00 [−21.0, +6.0] | +0.00 [0.0, 0.0] | `F-05`, `F-10`, `F-15`, `F-16`, `F-17`, `F-21` |
+| `001` | +13.22 [+4.9, +21.7] | +0.33 [−4.0, +5.0] | −17.44 [−41.0, +2.7] | +6.22 [0.0, +13.3] | −13.56 [−36.9, +10.9] | +14.67 [+6.3, +23.3] | `000` + `F-32` (`idempotency_key`), `F-37` (`received_at`, `now()`) |
+| **`010`** | **+27.89 [+20.8, +34.3]** | **+15.55 [−3.6, +31.0]** | **+28.89 [+18.0, +38.4]** | **+41.44 [+29.0, +55.8]** | **+17.89 [+9.0, +26.0]** | **+25.89 [+18.1, +32.7]** | `F-19` (`PUBLIC`, `application`), `F-20` (audit log error msg), `F-27`, `F-36` (`supersedes_id`) |
+| `011` | +17.22 [+3.2, +32.1] | +1.67 [−11.1, +13.2] | −4.89 [−27.9, +15.9] | +8.00 [+1.3, +14.7] | −2.11 [−19.3, +15.5] | +13.67 [−3.9, +32.0] | `010` + `F-32`, `F-37` |
+| `100` | +13.67 [+2.1, +25.7] | +4.78 [−14.2, +25.7] | −18.78 [−38.7, −0.7] | +13.89 [+5.3, +23.5] | −12.78 [−23.6, −1.6] | −9.67 [−24.7, 0.0] | `000` + `F-25` (`ENABLE/FORCE RLS`), `F-26` (`app_metadata.tenant_id`) |
+| `101` | −1.67 [−12.7, +10.8] | +39.11 [+22.0, +56.4] | +2.89 [−8.1, +14.0] | +15.67 [+5.7, +27.3] | −2.11 [−15.4, +11.1] | −16.78 [−38.0, +4.2] | `100` + `F-32`, `F-37` |
+| **`110`** | **+16.44 [+4.3, +27.6]** | **+25.67 [+2.0, +50.1]** | **+22.78 [+9.1, +38.1]** | **+31.11 [+20.8, +42.1]** | **+10.22 [+0.6, +19.4]** | −10.33 [−26.8, +4.2] | `010` + `F-25`, `F-26` |
+| **`111`** | **+28.33 [+14.7, +43.7]** | **+23.33 [+6.6, +38.3]** | **+19.33 [+5.1, +33.3]** | **+24.44 [+13.3, +35.3]** | **+26.56 [+13.6, +38.5]** | **+29.67 [+13.7, +44.3]** | `110` + `F-32`, `F-37` |
 
 ---
 
@@ -117,8 +121,8 @@ The $C_0 - C$ advantage concentrates heavily in append-only cells (`010`, `110`,
 1. **The $F\text{-}16 / F\text{-}36$ Inline `REFERENCES` Collision:**
    - $F\text{-}36$ literally states: `...supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT`.
    - In PostgreSQL 16, inline `REFERENCES` creates an auto-named constraint `<table>_supersedes_id_fkey`, violating $F\text{-}16$ (`fk_<table>_<column>`). If a model emits both inline `REFERENCES` and a table-level `CONSTRAINT fk_...`, both constraints are created, still violating $F\text{-}16$.
-   - **Observed empirical rate:** Across all 5 models and all conditions, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$** (e.g. `gemini-3.1` $C_0$: 58 trials at 0.0%; $B$: 59 trials at 0.0%).
-   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rate in $C_0$ was **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b`, and **83.3%** in `glm5-2`.
+   - **Observed empirical rate:** Across all 6 models and all conditions, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$** (e.g. `gemini-3.1` $C_0$: 58 trials at 0.0%; $B$: 59 trials at 0.0%).
+   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rate in $C_0$ was **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b`, **83.3%** in `glm5-2`, and **100.0%** in `qwen27b-2`.
 
 2. **The GLM Duplicate `PRIMARY KEY` Mechanism:**
    - In `glm5-2` Condition $C_0$, exactly **20 trials** emitted duplicate primary keys (e.g. `id uuid PRIMARY KEY ...` column-level plus `CONSTRAINT ... PRIMARY KEY (id)` table-level), resulting in **20/20 fatal `tableMissing` transaction rollbacks**.
@@ -172,42 +176,47 @@ Audit of the 99 single-statement deletion survivors from `out/mutation-and-metam
 
 ### 4.7 Crossed Random-Effects Mixed Model (Item 7)
 
-To account for clustering across tasks, facts, and factorial cells, an exact REML Linear Mixed-Effects Model ($y_{tfc,k} \sim \text{condition}_k + (1|\text{task}_t) + (1|\text{fact}_f) + (1|\text{cell}_c)$) was fit using the Bates et al. (2015) profiled Cholesky formulation on all 478 bound task-fact pairs ($N = 2,390$ observations per run). Small-sample CR1 task-clustered sandwich standard errors were computed alongside model-based REML SEs:
+To account for clustering across tasks, facts, factorial cells, and condition-by-fact interaction slopes, an exact REML Linear Mixed-Effects Model ($y_{tfc,k} \sim \text{condition}_k + (1|\text{task}_t) + (1|\text{fact}_f) + (1|\text{cell}_c) + (1|\text{fact:condition}_{f,k})$) was fit using the Bates et al. (2015) profiled Cholesky formulation on all 478 bound task-fact pairs ($N = 2,390$ observations per run). Small-sample CR1 task-clustered sandwich standard errors were computed alongside model-based REML SEs:
 
 #### Variance Components & ICCs ($N = 2,390$ Observations / Run)
 
-| Run ID | REML Deviance | `task` ($k=120$) SD / ICC% | `fact` ($k=18$) SD / ICC% | `cell` ($k=8$) SD / ICC% | Residual SD | Clustered Share |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| `nemotron-2` | −4398.39 | 0.000 / 0.00% | 0.160 / 14.17% | 0.061 / 2.07% | 0.3898 | 16.24% |
-| `gemma4-31b-full` | −4234.53 | 0.061 / 1.90% | 0.130 / 8.74% | 0.113 / 6.60% | 0.3999 | 17.24% |
-| `glm5-2` | −4282.81 | 0.055 / 1.56% | 0.166 / 14.23% | 0.079 / 3.20% | 0.3961 | 18.99% |
-| `gemini-3.1-flash-lite` | −4200.38 | 0.050 / 1.19% | 0.185 / 16.35% | 0.101 / 4.86% | 0.4030 | 22.39% |
-| `gemini-flash-lite-full` | −4281.26 | 0.054 / 1.46% | 0.184 / 17.13% | 0.065 / 2.13% | 0.3962 | 20.71% |
+| Run ID | REML Deviance | `task` ($k=120$) SD / ICC% | `fact` ($k=18$) SD / ICC% | `cell` ($k=8$) SD / ICC% | `fact:cond` ($k=90$) SD / ICC% | Residual SD | Clustered Share |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `nemotron-2` | −4867.95 | 0.016 / 0.14% | 0.124 / 8.17% | 0.062 / 2.05% | 0.231 / 28.17% | 0.3404 | 38.54% |
+| `gemma4-31b-full` | −4596.94 | 0.073 / 2.69% | 0.089 / 3.98% | 0.114 / 6.42% | 0.217 / 23.44% | 0.3567 | 36.54% |
+| `glm5-2` | −4784.39 | 0.073 / 2.62% | 0.133 / 8.66% | 0.080 / 3.16% | 0.239 / 28.12% | 0.3411 | 42.56% |
+| `gemini-3.1-flash-lite` | −4710.86 | 0.073 / 2.41% | 0.152 / 10.54% | 0.101 / 4.64% | 0.248 / 28.02% | 0.3458 | 45.61% |
+| `gemini-flash-lite-full` | −5023.94 | 0.074 / 2.68% | 0.142 / 9.78% | 0.065 / 2.08% | 0.269 / 35.18% | 0.3221 | 49.72% |
+| `qwen27b-2` | −5167.48 | 0.059 / 1.70% | 0.172 / 14.65% | 0.087 / 3.72% | 0.252 / 31.28% | 0.3138 | 51.34% |
 
 #### Fixed Effect Contrasts (Percentage Points; REML Model SE vs CR1 Task-Cluster SE)
 
 | Run ID | Contrast | Estimate (pp) | REML SE | REML 95% CI | $p_{\text{REML}}$ | CR1 Task SE | CR1 95% CI | $p_{\text{CR1}}$ |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **`nemotron-2`** | `C0 - C` | **+14.64** | 2.52 | [+9.70, +19.59] | <0.0001 | 2.24 | [+10.25, +19.04] | <0.0001 |
-| | `C - A` | +24.48 | 2.52 | [+19.54, +29.42] | <0.0001 | 2.83 | [+18.94, +30.02] | <0.0001 |
-| | `C0 - A` | +39.12 | 2.52 | [+34.18, +44.06] | <0.0001 | 2.74 | [+33.75, +44.49] | <0.0001 |
-| | `B - A` | +46.86 | 2.52 | [+41.92, +51.80] | <0.0001 | 2.67 | [+41.62, +52.10] | <0.0001 |
-| **`gemma4-31b-full`** | `C0 - C` | **+14.44** | 2.59 | [+9.37, +19.51] | <0.0001 | 3.29 | [+7.99, +20.88] | <0.0001 |
-| | `C - A` | +21.97 | 2.59 | [+16.90, +27.04] | <0.0001 | 3.55 | [+15.01, +28.93] | <0.0001 |
-| | `C0 - A` | +36.40 | 2.59 | [+31.33, +41.47] | <0.0001 | 3.30 | [+29.93, +42.87] | <0.0001 |
-| | `B - A` | +52.30 | 2.59 | [+47.23, +57.37] | <0.0001 | 2.54 | [+47.32, +57.28] | <0.0001 |
-| **`glm5-2`** | `C0 - C` | **−2.30** | 2.56 | [−7.32, +2.72] | 0.3691 | 4.01 | [−10.16, +5.56] | 0.5659 |
-| | `C - A` | +34.10 | 2.56 | [+29.08, +39.12] | <0.0001 | 3.24 | [+27.75, +40.45] | <0.0001 |
-| | `C0 - A` | +31.80 | 2.56 | [+26.78, +36.82] | <0.0001 | 4.64 | [+22.71, +40.89] | <0.0001 |
-| | `B - A` | +48.95 | 2.56 | [+43.93, +53.98] | <0.0001 | 2.53 | [+43.99, +53.92] | <0.0001 |
-| **`gemini-3.1-flash-lite`**| `C0 - C` | **+17.99** | 2.61 | [+12.88, +23.10] | <0.0001 | 2.20 | [+13.68, +22.30] | <0.0001 |
-| | `C - A` | +17.78 | 2.61 | [+12.67, +22.89] | <0.0001 | 2.74 | [+12.42, +23.14] | <0.0001 |
-| | `C0 - A` | +35.77 | 2.61 | [+30.66, +40.88] | <0.0001 | 2.57 | [+30.74, +40.81] | <0.0001 |
-| | `B - A` | +27.82 | 2.61 | [+22.71, +32.93] | <0.0001 | 3.52 | [+20.93, +34.72] | <0.0001 |
-| **`gemini-flash-lite-full`**| `C0 - C` | **+2.09** | 2.56 | [−2.93, +7.12] | 0.4144 | 2.75 | [−3.30, +7.48] | 0.4468 |
-| | `C - A` | +32.22 | 2.56 | [+27.19, +37.24] | <0.0001 | 3.03 | [+26.28, +38.16] | <0.0001 |
-| | `C0 - A` | +34.31 | 2.56 | [+29.29, +39.33] | <0.0001 | 3.47 | [+27.51, +41.11] | <0.0001 |
-| | `B - A` | +49.16 | 2.56 | [+44.14, +54.19] | <0.0001 | 3.10 | [+43.10, +55.23] | <0.0001 |
+| **`nemotron-2`** | `C0 - C` | **+18.26** | 8.12 | [+2.35, +34.18] | 0.0245 | 2.30 | [+13.75, +22.78] | <0.0001 |
+| | `C - A` | +27.32 | 8.12 | [+11.40, +43.23] | 0.0008 | 2.73 | [+21.96, +32.68] | <0.0001 |
+| | `C0 - A` | +45.58 | 8.12 | [+29.67, +61.50] | <0.0001 | 2.74 | [+40.21, +50.96] | <0.0001 |
+| | `B - A` | +54.38 | 8.12 | [+38.47, +70.29] | <0.0001 | 2.21 | [+50.05, +58.71] | <0.0001 |
+| **`gemma4-31b-full`** | `C0 - C` | **+21.93** | 7.73 | [+6.79, +37.08] | 0.0045 | 3.35 | [+15.36, +28.51] | <0.0001 |
+| | `C - A` | +21.12 | 7.73 | [+5.97, +36.26] | 0.0063 | 2.75 | [+15.73, +26.51] | <0.0001 |
+| | `C0 - A` | +43.05 | 7.73 | [+27.91, +58.20] | <0.0001 | 3.07 | [+37.03, +49.08] | <0.0001 |
+| | `B - A` | +59.02 | 7.73 | [+43.88, +74.16] | <0.0001 | 2.04 | [+55.02, +63.02] | <0.0001 |
+| **`glm5-2`** | `C0 - C` | **+3.65** | 8.38 | [−12.77, +20.07] | 0.6630 | 3.35 | [−2.92, +10.22] | 0.2759 |
+| | `C - A` | +31.14 | 8.38 | [+14.71, +47.56] | 0.0002 | 2.56 | [+26.13, +36.15] | <0.0001 |
+| | `C0 - A` | +34.79 | 8.38 | [+18.36, +51.21] | <0.0001 | 4.07 | [+26.81, +42.77] | <0.0001 |
+| | `B - A` | +49.51 | 8.38 | [+33.09, +65.93] | <0.0001 | 2.32 | [+44.96, +54.06] | <0.0001 |
+| **`gemini-3.1-flash-lite`**| `C0 - C` | **+29.01** | 8.70 | [+11.97, +46.06] | 0.0009 | 2.22 | [+24.66, +33.36] | <0.0001 |
+| | `C - A` | +15.84 | 8.70 | [−1.21, +32.88] | 0.0685 | 2.59 | [+10.76, +20.92] | <0.0001 |
+| | `C0 - A` | +44.85 | 8.70 | [+27.81, +61.89] | <0.0001 | 2.05 | [+40.83, +48.87] | <0.0001 |
+| | `B - A` | +36.95 | 8.70 | [+19.91, +53.99] | <0.0001 | 3.65 | [+29.80, +44.10] | <0.0001 |
+| **`gemini-flash-lite-full`**| `C0 - C` | **+7.18** | 9.33 | [−11.10, +25.45] | 0.4415 | 2.27 | [+2.73, +11.62] | 0.0016 |
+| | `C - A` | +33.67 | 9.33 | [+15.39, +51.95] | 0.0003 | 2.34 | [+29.08, +38.26] | <0.0001 |
+| | `C0 - A` | +40.85 | 9.33 | [+22.57, +59.12] | <0.0001 | 2.91 | [+35.15, +46.54] | <0.0001 |
+| | `B - A` | +58.14 | 9.33 | [+39.86, +76.42] | <0.0001 | 2.21 | [+53.80, +62.48] | <0.0001 |
+| **`qwen27b-2`** | `C0 - C` | **+9.81** | 8.73 | [−7.30, +26.93] | 0.2612 | 2.93 | [+4.06, +15.56] | 0.0008 |
+| | `C - A` | +27.73 | 8.73 | [+10.61, +44.84] | 0.0015 | 2.35 | [+23.11, +32.34] | <0.0001 |
+| | `C0 - A` | +37.54 | 8.73 | [+20.42, +54.66] | <0.0001 | 3.15 | [+31.36, +43.72] | <0.0001 |
+| | `B - A` | +50.06 | 8.73 | [+32.94, +67.18] | <0.0001 | 2.11 | [+45.93, +54.19] | <0.0001 |
 
 ---
 

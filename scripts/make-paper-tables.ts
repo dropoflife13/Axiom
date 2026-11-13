@@ -16,6 +16,7 @@ const VALID_RUN_IDS = [
   'glm5-2',
   'gemini-3.1-flash-lite',
   'gemini-flash-lite-full',
+  'qwen27b-2',
 ] as const;
 
 type ValidRunId = (typeof VALID_RUN_IDS)[number];
@@ -45,6 +46,11 @@ const RUN_DISPLAY_NAMES: Record<ValidRunId, { name: string; model: string; provi
     name: 'Gemini-3.5-Flash-Lite',
     model: 'google/gemini-3.5-flash-lite',
     provider: 'Google AI Studio',
+  },
+  'qwen27b-2': {
+    name: 'Qwen-3.8-27B',
+    model: 'qwen/qwen3.8-27b',
+    provider: 'Groq',
   },
 };
 
@@ -216,8 +222,8 @@ export function generateEightCellsTable(analysis: Record<ValidRunId, any>): stri
   };
 
   const lines: string[] = [
-    '| Cell (T A I) | Feature Description | Nemotron-550B C−A | Gemma-31B C−A | GLM-5.3 C−A | Gemini-3.1 C−A | Gemini-3.5 C−A |',
-    '| :---: | :--- | :---: | :---: | :---: | :---: | :---: |',
+    '| Cell (T A I) | Feature Description | Nemotron-550B C−A | Gemma-31B C−A | GLM-5.3 C−A | Gemini-3.1 C−A | Gemini-3.5 C−A | Qwen-27B C−A |',
+    '| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |',
   ];
 
   for (const k of cellKeys) {
@@ -236,8 +242,8 @@ export function generateEightCellsTable(analysis: Record<ValidRunId, any>): stri
 export function generateEightCellsC0MinusCTable(items2346: any): string {
   const cellCodes = ['000', '001', '010', '011', '100', '101', '110', '111'];
   const lines: string[] = [
-    '| Cell (T A I) | Flag Semantics | Nemotron-550B C0−C [95% CI] | Gemma-31B C0−C [95% CI] | GLM-5.3 C0−C [95% CI] | Gemini-3.1 C0−C [95% CI] | Gemini-3.5 C0−C [95% CI] |',
-    '| :---: | :--- | :---: | :---: | :---: | :---: | :---: |',
+    '| Cell (T A I) | Flag Semantics | Nemotron-550B C0−C [95% CI] | Gemma-31B C0−C [95% CI] | GLM-5.3 C0−C [95% CI] | Gemini-3.1 C0−C [95% CI] | Gemini-3.5 C0−C [95% CI] | Qwen-27B C0−C [95% CI] |',
+    '| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |',
   ];
 
   for (const code of cellCodes) {
@@ -292,7 +298,11 @@ export function generateMixedModelVarianceTable(mixedModel: any): string {
     const taskRe = r.randomEffects.find((x: any) => x.name === 'task') ?? { stdDev: 0, iccPct: 0 };
     const factRe = r.randomEffects.find((x: any) => x.name === 'fact') ?? { stdDev: 0, iccPct: 0 };
     const cellRe = r.randomEffects.find((x: any) => x.name === 'cell') ?? { stdDev: 0, iccPct: 0 };
-    const factCondRe = r.randomEffects.find((x: any) => x.name === 'fact:cond') ?? { stdDev: 0, iccPct: 0 };
+    const factCondRe =
+      r.randomEffects.find((x: any) => x.name === 'fact:condition' || x.name === 'fact:cond') ?? {
+        stdDev: 0,
+        iccPct: 0,
+      };
 
     const taskStr = `${taskRe.stdDev.toFixed(3)} / ${taskRe.iccPct.toFixed(2)}%`;
     const factStr = `${factRe.stdDev.toFixed(3)} / ${factRe.iccPct.toFixed(2)}%`;
@@ -412,9 +422,9 @@ export function buildAllPlaceholders() {
   dict['table_run_ledger'] = generateRunLedgerTable(ledger);
 
   // High-level trial counts
-  dict['total_trials'] = '3,600';
-  dict['independent_generations'] = '3,000';
-  dict['confirmatory_runs_count'] = '5';
+  dict['total_trials'] = '4,320';
+  dict['independent_generations'] = '3,600';
+  dict['confirmatory_runs_count'] = '6';
   dict['held_out_tasks_count'] = '120';
   dict['factorial_cells_count'] = '8';
   dict['tasks_per_cell'] = '15';
@@ -506,7 +516,7 @@ export function buildAllPlaceholders() {
     }
   }
 
-  // Summary ranges computed across the 5 confirmatory models
+  // Summary ranges computed across the 6 confirmatory models
   const cVsADiffs = VALID_RUN_IDS.map((rId) => analysis[rId].analysis.comparisons.C_vs_A.primary.meanDifference * 100);
   const minCvsA = Math.min(...cVsADiffs);
   const maxCvsA = Math.max(...cVsADiffs);
@@ -519,35 +529,55 @@ export function buildAllPlaceholders() {
   dict['summary_clean_c0_c_min_diff'] = formatPtsRaw(minCleanC0VsC);
   dict['summary_clean_c0_c_max_diff'] = formatPtsRaw(maxCleanC0VsC);
 
-  // Append-only cells (010, 011, 110, 111) C0 - C ranges across 5 models
+  // Append-only cells (010, 011, 110, 111) C0 - C ranges across all 6 models
+  const ao010: number[] = [];
+  const ao111: number[] = [];
+  const ao110Positive: number[] = [];
+  const ao011: number[] = [];
   const ao010_110_111: number[] = [];
+
   for (const rId of VALID_RUN_IDS) {
-    for (const cellCode of ['010', '110', '111']) {
-      const v = items2346.item3[rId]?.[cellCode]?.c0MinusCPts;
-      if (typeof v === 'number') ao010_110_111.push(v);
+    const v010 = items2346.item3[rId]?.['010']?.c0MinusCPts;
+    if (typeof v010 === 'number') {
+      ao010.push(v010);
+      ao010_110_111.push(v010);
     }
+    const v111 = items2346.item3[rId]?.['111']?.c0MinusCPts;
+    if (typeof v111 === 'number') {
+      ao111.push(v111);
+      ao010_110_111.push(v111);
+    }
+    const v110 = items2346.item3[rId]?.['110']?.c0MinusCPts;
+    if (typeof v110 === 'number') {
+      if (v110 > 0) ao110Positive.push(v110);
+      ao010_110_111.push(v110);
+    }
+    const v011 = items2346.item3[rId]?.['011']?.c0MinusCPts;
+    if (typeof v011 === 'number') ao011.push(v011);
   }
+
+  dict['summary_ao_010_min_diff'] = formatPtsRaw(Math.min(...ao010));
+  dict['summary_ao_010_max_diff'] = formatPtsRaw(Math.max(...ao010));
+  dict['summary_ao_111_min_diff'] = formatPtsRaw(Math.min(...ao111));
+  dict['summary_ao_111_max_diff'] = formatPtsRaw(Math.max(...ao111));
+  dict['summary_ao_110_5models_min_diff'] = formatPtsRaw(Math.min(...ao110Positive));
+  dict['summary_ao_110_5models_max_diff'] = formatPtsRaw(Math.max(...ao110Positive));
+  const qwen110 = items2346.item3['qwen27b-2']?.['110']?.c0MinusCPts ?? 0;
+  dict['summary_ao_110_qwen_diff'] = formatPtsRaw(qwen110);
+  dict['summary_ao_011_min_diff'] = formatPtsRaw(Math.min(...ao011));
+  dict['summary_ao_011_max_diff'] = formatPtsRaw(Math.max(...ao011));
+
   dict['summary_ao_010_110_111_min_diff'] = formatPtsRaw(Math.min(...ao010_110_111));
   dict['summary_ao_010_110_111_max_diff'] = formatPtsRaw(Math.max(...ao010_110_111));
   dict['summary_append_only_c0_c_min_diff'] = formatPtsRaw(Math.min(...ao010_110_111));
   dict['summary_append_only_c0_c_max_diff'] = formatPtsRaw(Math.max(...ao010_110_111));
 
-  // Cell 011 specifically across 5 models
-  const ao011: number[] = [];
-  for (const rId of VALID_RUN_IDS) {
-    const v = items2346.item3[rId]?.['011']?.c0MinusCPts;
-    if (typeof v === 'number') ao011.push(v);
-  }
-  dict['summary_ao_011_min_diff'] = formatPtsRaw(Math.min(...ao011));
-  dict['summary_ao_011_max_diff'] = formatPtsRaw(Math.max(...ao011));
-
-  // All 4 append-only cells (010, 011, 110, 111)
   const aoAll = [...ao010_110_111, ...ao011];
   dict['summary_ao_all_min_diff'] = formatPtsRaw(Math.min(...aoAll));
   dict['summary_ao_all_max_diff'] = formatPtsRaw(Math.max(...aoAll));
 
-  // Significant C0 - C models (nemotron-2, gemma4-31b-full, gemini-3.1-flash-lite)
-  const sigC0VsCDiffs = ['nemotron-2', 'gemma4-31b-full', 'gemini-3.1-flash-lite'].map(
+  // Significant C0 - C models (nemotron-2, gemma4-31b-full, gemini-3.1-flash-lite, qwen27b-2)
+  const sigC0VsCDiffs = ['nemotron-2', 'gemma4-31b-full', 'gemini-3.1-flash-lite', 'qwen27b-2'].map(
     (rId) => -analysis[rId].analysis.comparisons.C_vs_C0.primary.meanDifference * 100
   );
   dict['summary_sig_c0_c_min_diff'] = formatPtsRaw(Math.min(...sigC0VsCDiffs));

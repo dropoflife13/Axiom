@@ -10,6 +10,7 @@ const VALID_RUNS = [
   'glm5-2',
   'gemini-3.1-flash-lite',
   'gemini-flash-lite-full',
+  'qwen27b-2',
 ] as const;
 
 const CONDITIONS = ['A', 'D', 'C', 'C0', 'B'] as const;

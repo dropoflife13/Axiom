@@ -6,14 +6,14 @@ Automated software engineering agents frequently generate syntactically plausibl
 
 In this work, we present **Axiom**, a dual-track architectural verification and evaluation system founded on the strict design principle of **Authority Separation (Invariant 0)**: *generative language models are untrusted candidate producers and only external deterministic execution oracles hold grading authority*. Axiom couples two decoupled mechanisms: (1) an *operational reflexion loop* that enforces deterministic grammar, vault consistency, and executable security AST checks on agent architecture rules, and (2) an *empirical SQL migration ablation harness* evaluating candidate DDL against an isolated PostgreSQL 16 container oracle across an 8-cell factorial corpus of {{held_out_tasks_count}} held-out enterprise migration tasks.
 
-We report results from an extensive empirical evaluation across **{{independent_generations}} independent model generations ({{total_trials}} scored trials)** across {{confirmatory_runs_count}} valid completed runs meeting a pre-registered post-hoc validity gate: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, and `google/gemini-3.5-flash-lite`. Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
+We report results from an extensive empirical evaluation across **{{independent_generations}} independent model generations ({{total_trials}} scored trials)** across {{confirmatory_runs_count}} valid completed runs meeting a pre-registered post-hoc validity gate: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, `google/gemini-3.5-flash-lite`, and `qwen/qwen3.8-27b`. Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
 
-Retrieval of failure-prioritized rule text improved compliance over zero-shot in all five valid models (+18.19 to +33.04 points). Verbatim rule text beat LLM-distilled paraphrases in three of five models under the pre-registered analysis ({{summary_sig_c0_c_min_diff}} to {{summary_sig_c0_c_max_diff}} points), with no detectable difference in the other two.
+Retrieval of failure-prioritized rule text improved compliance over zero-shot in all six valid models (+18.19 to +33.04 points). Verbatim rule text beat LLM-distilled paraphrases in four of six models under the pre-registered analysis ({{summary_sig_c0_c_min_diff}} to {{summary_sig_c0_c_max_diff}} points), with no detectable difference in the other two.
 
 Our principal findings demonstrate:
 
-1. **Failure-Prioritized Rule Retrieval Utility (H1):** In-context injection of failure-prioritized rules (Condition C) produces large, statistically significant improvements over zero-shot baselines (Condition A) across all five models, increasing mean bound-fact compliance by {{summary_c_a_min_diff}} to {{summary_c_a_max_diff}} percentage points (paired sign-flip $p < 0.0001$).
-2. **The Distillation Penalty (H3):** In the pre-registered primary analysis across all {{held_out_tasks_count}} test tasks, verbatim injection of canonical rule statements ($C_0$) significantly outperforms natural-language lesson summaries ($C$) in **3 of 5 models** (`nemotron-2`, `gemma4-31b-full`, and `gemini-3.1-flash-lite`, with Holm-adjusted $p \le 0.0001$). In secondary clean-intersection sensitivity analysis conditioning on migrations that execute without DDL syntax errors, $C_0$ exceeds $C$ across **all five models** by **{{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points**. This advantage concentrates heavily in append-only schema cells `010`, `110`, and `111` ({{summary_ao_010_110_111_min_diff}} to {{summary_ao_010_110_111_max_diff}} pp), while cell `011` exhibits wider variation across model families ({{summary_ao_011_min_diff}} to {{summary_ao_011_max_diff}} pp; {{summary_ao_all_min_diff}} to {{summary_ao_all_max_diff}} pp across all four append-only cells), where natural language summaries strip concrete SQL identifiers (`supersedes_id`, `app_metadata.tenant_id`).
+1. **Failure-Prioritized Rule Retrieval Utility (H1):** In-context injection of failure-prioritized rules (Condition C) produces large, statistically significant improvements over zero-shot baselines (Condition A) across all six models, increasing mean bound-fact compliance by {{summary_c_a_min_diff}} to {{summary_c_a_max_diff}} percentage points (paired sign-flip $p < 0.0001$).
+2. **The Distillation Penalty (H3):** In the pre-registered primary analysis across all {{held_out_tasks_count}} test tasks, verbatim injection of canonical rule statements ($C_0$) significantly outperforms natural-language lesson summaries ($C$) in **4 of 6 models** (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`, and `qwen27b-2`, with Holm-adjusted $p \le 0.0001$). In secondary clean-intersection sensitivity analysis conditioning on migrations that execute without DDL syntax errors, $C_0$ exceeds $C$ across **all six models** by **{{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points**. Specifically, in cells `010` and `111`, verbatim rules ($C_0$) outperform distilled summaries ($C$) across all six models ({{summary_ao_010_min_diff}} to {{summary_ao_010_max_diff}} pp in `010`; {{summary_ao_111_min_diff}} to {{summary_ao_111_max_diff}} pp in `111`), and in cell `110` across five of six models ({{summary_ao_110_5models_min_diff}} to {{summary_ao_110_5models_max_diff}} pp, with `qwen27b-2` at {{summary_ao_110_qwen_diff}} pp due to $F\text{-}36$ inline `REFERENCES` collisions), while cell `011` ranges from {{summary_ao_011_min_diff}} to {{summary_ao_011_max_diff}} pp across models, where natural language summaries strip concrete SQL identifiers (`supersedes_id`, `app_metadata.tenant_id`).
 3. **Exploratory Efficiency Frontier (H4):** Evaluating Condition C against Condition B, and computing exploratory $C_0 / B$ compliance ratios across models, $C_0$ achieves {{summary_c0_b_min_ratio}} to {{summary_c0_b_max_ratio}} of the performance of the static reference condition ($B$, which injects all {{active_facts_count}} active rules), while reducing prompt token consumption by {{summary_c0_prompt_min_reduction}} to {{summary_c0_prompt_max_reduction}}. Condition B is evaluated as a static in-context reference, not an unreachable ceiling.
 4. **Partial-Checklist Displacement:** When supplied with a partial subset of $K=10$ retrieved rules, models regress below zero-shot baseline on non-retrieved bound facts, indicating that incomplete in-context checklists displace unprompted default knowledge.
 5. **Forensic Invariant Collisions:** Verbatim rule injection can fail when canonical statements contain latent syntactic ambiguities. Specifically, an inline `REFERENCES` clause in invariant $F\text{-}36$ induces a 100% failure rate on constraint-naming rule $F\text{-}16$, and unretrieved primary key guidance in GLM-5.3 triggers fatal duplicate primary key syntax crashes.
@@ -34,7 +34,7 @@ To resolve this challenge, we introduce **Axiom**, a dual-track architectural ve
 
 Crucially, the Track 2 ablation harness evaluates single-turn generation with **no retry or reflection loop** during testing. Models receive the task prompt (along with condition-specific in-context rules) and generate a single candidate migration. This isolates whether rules harvested from historical failures improve subsequent zero-shot generation, eliminating confounding from multi-turn conversational repair.
 
-This paper presents the complete empirical findings from the Track 2 program across **{{independent_generations}} independent generations ({{total_trials}} scored trials)** spanning five distinct model families: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, and `google/gemini-3.5-flash-lite`.
+This paper presents the complete empirical findings from the Track 2 program across **{{independent_generations}} independent generations ({{total_trials}} scored trials)** spanning six distinct model families: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, `google/gemini-3.5-flash-lite`, and `qwen/qwen3.8-27b`.
 
 ---
 
@@ -143,7 +143,7 @@ To ensure statistical comparability, runs must satisfy a pre-registered validity
 2. **Verified Output Sanitization:** Completions must contain pure SQL without conversational preambles or raw `<think>` tokens.
 3. **Monotonic Reference Check ($B > A$):** The static reference prompt ($B$) must exceed zero-shot baseline ($A$) with a 95% bootstrap confidence interval strictly excluding zero.
 
-Five completed runs satisfy all validity criteria: `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, and `gemini-flash-lite-full` ($N = {{total_trials}}$ scored trials, {{independent_generations}} independent generations).
+Six completed runs satisfy all validity criteria: `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, `gemini-flash-lite-full`, and `qwen27b-2` ($N = {{total_trials}}$ scored trials, {{independent_generations}} independent generations).
 
 ---
 
@@ -165,7 +165,7 @@ To maintain strict Family-Wise Error Rate ($\alpha = 0.05$), **Holm-Bonferroni s
 ## 6. Multi-Model Benchmark Results
 
 ### 6.1 Master Benchmark Performance
-Table 2 details aggregate bound compliance, strict Pass@1, token consumption, and execution stability across all five valid completed runs:
+Table 2 details aggregate bound compliance, strict Pass@1, token consumption, and execution stability across all six valid completed runs:
 
 {{table_primary_benchmark}}
 
@@ -177,33 +177,36 @@ Table 3 details paired differences, bootstrap confidence intervals, exact permut
 ### 6.3 Evaluation of Pre-Registered Hypotheses
 
 #### H1: Failure-Prioritized Rule Retrieval Utility ($C > A$) — Strongly Confirmed Across All Models
-Across all five models, selective retrieval of failure-prioritized rules produces massive, statistically significant improvements over zero-shot prompting:
+Across all six models, selective retrieval of failure-prioritized rules produces massive, statistically significant improvements over zero-shot prompting:
 * `nemotron-2`: {{nemotron_2_c_a_diff}} pp ($95\%$ CI {{nemotron_2_c_a_ci}}, Holm $p = {{nemotron_2_c_a_holm_p}}$); strict Pass@1 increases from {{nemotron_2_a_pass1}} to {{nemotron_2_c_pass1}}.
 * `gemma4-31b-full`: {{gemma4_31b_full_c_a_diff}} pp ($95\%$ CI {{gemma4_31b_full_c_a_ci}}, Holm $p = {{gemma4_31b_full_c_a_holm_p}}$); strict Pass@1 increases from {{gemma4_31b_full_a_pass1}} to {{gemma4_31b_full_c_pass1}}.
 * `glm5-2`: {{glm5_2_c_a_diff}} pp ($95\%$ CI {{glm5_2_c_a_ci}}, Holm $p = {{glm5_2_c_a_holm_p}}$); strict Pass@1 increases from {{glm5_2_a_pass1}} to {{glm5_2_c_pass1}}.
 * `gemini-3.1-flash-lite`: {{gemini_3_1_flash_lite_c_a_diff}} pp ($95\%$ CI {{gemini_3_1_flash_lite_c_a_ci}}, Holm $p = {{gemini_3_1_flash_lite_c_a_holm_p}}$); strict Pass@1 increases from {{gemini_3_1_flash_lite_a_pass1}} to {{gemini_3_1_flash_lite_c_pass1}}.
 * `gemini-flash-lite-full`: {{gemini_flash_lite_full_c_a_diff}} pp ($95\%$ CI {{gemini_flash_lite_full_c_a_ci}}, Holm $p = {{gemini_flash_lite_full_c_a_holm_p}}$); strict Pass@1 increases from {{gemini_flash_lite_full_a_pass1}} to {{gemini_flash_lite_full_c_pass1}}.
+* `qwen27b-2`: {{qwen27b_2_c_a_diff}} pp ($95\%$ CI {{qwen27b_2_c_a_ci}}, Holm $p = {{qwen27b_2_c_a_holm_p}}$); strict Pass@1 increases from {{qwen27b_2_a_pass1}} to {{qwen27b_2_c_pass1}}.
 
 #### H2: Content Validity vs. Placebo Distractors ($C > D$) — Confirmed Under Non-Pathological Execution
-Where Placebo condition $D$ does not trigger syntax crashes (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`), Condition $D$ performs similarly to zero-shot baseline ($40.5\%$ to $48.1\%$). In these models, Condition $C$ exceeds $D$ by {{nemotron_2_c_d_diff}} pp, {{gemma4_31b_full_c_d_diff}} pp, and {{gemini_3_1_flash_lite_c_d_diff}} pp (all Holm $p \le 0.0001$). This confirms that observed gains stem from relevant rule content rather than prompt token volume.
+Where Placebo condition $D$ does not trigger syntax crashes (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`, `qwen27b-2`), Condition $D$ performs similarly to zero-shot baseline ($40.5\%$ to $49.5\%$). In these models, Condition $C$ exceeds $D$ by {{nemotron_2_c_d_diff}} pp, {{gemma4_31b_full_c_d_diff}} pp, {{gemini_3_1_flash_lite_c_d_diff}} pp, and {{qwen27b_2_c_d_diff}} pp (all Holm $p \le 0.0001$). This confirms that observed gains stem from relevant rule content rather than prompt token volume.
 
-#### H3: The Distillation Penalty ($C \neq C0$) — Significant in 3 of 5 Models
-In the unconditional pre-registered primary analysis, verbatim rule injection ($C0$) differs significantly from distilled advice ($C$) in **3 of 5 models**:
-* `nemotron-2`: $C0$ exceeds $C$ by {{nemotron_2_c0_c_diff}} pp ($C \text{ vs } C0 = {{nemotron_2_c_c0_diff}}$, Holm $p = {{nemotron_2_c_c0_holm_p}}$).
-* `gemma4-31b-full`: $C0$ exceeds $C$ by {{gemma4_31b_full_c0_c_diff}} pp ($C \text{ vs } C0 = {{gemma4_31b_full_c_c0_diff}}$, Holm $p = {{gemma4_31b_full_c_c0_holm_p}}$).
-* `gemini-3.1-flash-lite`: $C0$ exceeds $C$ by {{gemini_3_1_flash_lite_c0_c_diff}} pp ($C \text{ vs } C0 = {{gemini_3_1_flash_lite_c_c0_diff}}$, Holm $p = {{gemini_3_1_flash_lite_c_c0_holm_p}}$).
+#### H3: The Distillation Penalty ($C \text{ vs } C_0$) — Significant in 4 of 6 Models
+In the unconditional pre-registered primary analysis, verbatim rule injection ($C_0$) differs significantly from distilled advice ($C$) in **4 of 6 models**:
+* `nemotron-2`: $C_0$ exceeds $C$ by {{nemotron_2_c0_c_diff}} pp ($C \text{ vs } C_0 = {{nemotron_2_c_c0_diff}}$, Holm $p = {{nemotron_2_c_c0_holm_p}}$).
+* `gemma4-31b-full`: $C_0$ exceeds $C$ by {{gemma4_31b_full_c0_c_diff}} pp ($C \text{ vs } C_0 = {{gemma4_31b_full_c_c0_diff}}$, Holm $p = {{gemma4_31b_full_c_c0_holm_p}}$).
+* `gemini-3.1-flash-lite`: $C_0$ exceeds $C$ by {{gemini_3_1_flash_lite_c0_c_diff}} pp ($C \text{ vs } C_0 = {{gemini_3_1_flash_lite_c_c0_diff}}$, Holm $p = {{gemini_3_1_flash_lite_c_c0_holm_p}}$).
+* `qwen27b-2`: $C_0$ exceeds $C$ by {{qwen27b_2_c0_c_diff}} pp ($C \text{ vs } C_0 = {{qwen27b_2_c_c0_diff}}$, Holm $p = {{qwen27b_2_c_c0_holm_p}}$).
 
-In `glm5-2` ($C \text{ vs } C0 = {{glm5_2_c_c0_diff}}$, Holm $p = {{glm5_2_c_c0_holm_p}}$) and `gemini-flash-lite-full` ($C \text{ vs } C0 = {{gemini_flash_lite_full_c_c0_diff}}$, Holm $p = {{gemini_flash_lite_full_c_c0_holm_p}}$), the unconditional difference is not statistically significant. As detailed in Section 7.1, this lack of unconditional significance was caused by DDL syntax crashes; when conditioned on clean execution, $C0$ strictly outperforms $C$ across all five models.
+In `glm5-2` ($C \text{ vs } C_0 = {{glm5_2_c_c0_diff}}$, Holm $p = {{glm5_2_c_c0_holm_p}}$) and `gemini-flash-lite-full` ($C \text{ vs } C_0 = {{gemini_flash_lite_full_c_c0_diff}}$, Holm $p = {{gemini_flash_lite_full_c_c0_holm_p}}$), the unconditional difference is not statistically significant. As detailed in Section 7.1, this lack of unconditional significance was caused by DDL syntax crashes; when conditioned on clean execution, $C_0$ strictly outperforms $C$ across all six models.
 
 #### H4: Token-Performance Trade-Off (Exploratory Evaluation)
 Evaluating Condition C against static reference Condition B: Condition C consumes {{nemotron_2_c_prompt_tok}} prompt tokens compared to Condition B's {{nemotron_2_b_prompt_tok}} tokens on Nemotron (a {{nemotron_2_c_prompt_reduction}} prompt token reduction), while achieving {{nemotron_2_c_mean}} bound compliance compared to B's {{nemotron_2_b_mean}}.
 
-Computing exploratory $C0 / B$ compliance ratios across models:
+Computing exploratory $C_0 / B$ compliance ratios across models:
 * `nemotron-2`: {{nemotron_2_c0_b_ratio}} of B's score with {{nemotron_2_c0_prompt_reduction}} prompt token reduction ({{nemotron_2_c0_total_reduction}} total token reduction).
 * `gemma4-31b-full`: {{gemma4_31b_full_c0_b_ratio}} of B's score with {{gemma4_31b_full_c0_prompt_reduction}} prompt token reduction ({{gemma4_31b_full_c0_total_reduction}} total token reduction).
 * `glm5-2`: {{glm5_2_c0_b_ratio}} of B's score with {{glm5_2_c0_prompt_reduction}} prompt token reduction ({{glm5_2_c0_total_reduction}} total token reduction).
 * `gemini-3.1-flash-lite`: {{gemini_3_1_flash_lite_c0_b_ratio}} of B's score with {{gemini_3_1_flash_lite_c0_prompt_reduction}} prompt token reduction ({{gemini_3_1_flash_lite_c0_total_reduction}} total token reduction).
 * `gemini-flash-lite-full`: {{gemini_flash_lite_full_c0_b_ratio}} of B's score with {{gemini_flash_lite_full_c0_prompt_reduction}} prompt token reduction ({{gemini_flash_lite_full_c0_total_reduction}} total token reduction).
+* `qwen27b-2`: {{qwen27b_2_c0_b_ratio}} of B's score with {{qwen27b_2_c0_prompt_reduction}} prompt token reduction ({{qwen27b_2_c0_total_reduction}} total token reduction).
 
 Condition B is treated as a static reference point, not an absolute ceiling.
 
@@ -216,7 +219,7 @@ Table 5 breaks down the $C_0 - C$ difference across all eight factorial cells:
 
 {{table_eight_cells_c0_c}}
 
-Across cells `010`, `110`, and `111`, verbatim rules ($C_0$) strictly outperform distilled summaries ($C$) across all models by {{summary_ao_010_110_111_min_diff}} to {{summary_ao_010_110_111_max_diff}} percentage points. In cell `011` (`tenant=0, append_only=1, ingestion=1`), where streaming event ingestion interacts with immutability, the $C_0 - C$ difference ranges from {{summary_ao_011_min_diff}} to {{summary_ao_011_max_diff}} percentage points across models (spanning {{summary_ao_all_min_diff}} to {{summary_ao_all_max_diff}} percentage points across all four append-only cells). Natural language summaries in append-only tasks omit explicit column and trigger identifiers (e.g., `supersedes_id`, `P0001`), driving substantial compliance drops under distilled advice in non-streaming cells, while ingestion triggers introduce syntax interactions that moderate the gap in cell `011`.
+In cells `010` and `111`, verbatim rules ($C_0$) outperform distilled summaries ($C$) across all six models ({{summary_ao_010_min_diff}} to {{summary_ao_010_max_diff}} pp in `010`; {{summary_ao_111_min_diff}} to {{summary_ao_111_max_diff}} pp in `111`), and in cell `110` across five of six models ({{summary_ao_110_5models_min_diff}} to {{summary_ao_110_5models_max_diff}} pp, with `qwen27b-2` at {{summary_ao_110_qwen_diff}} pp due to $F\text{-}36$ inline `REFERENCES` collisions), while cell `011` ranges from {{summary_ao_011_min_diff}} to {{summary_ao_011_max_diff}} pp across models. Natural language summaries in append-only tasks omit explicit column and trigger identifiers (e.g., `supersedes_id`, `P0001`), driving substantial compliance drops under distilled advice in non-streaming cells, while ingestion triggers introduce syntax interactions that moderate the gap in cell `011`.
 
 ---
 
@@ -232,7 +235,7 @@ In Condition A and Condition D, models frequently generate invalid SQL syntax th
 {{table_clean_pairs}}
 
 **Key Findings:**
-1. When conditioned on clean execution, $C_0$ outperforms $C$ with 95% bootstrap confidence intervals strictly excluding zero across **all five models** ({{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points).
+1. When conditioned on clean execution, $C_0$ outperforms $C$ with 95% bootstrap confidence intervals strictly excluding zero across **all six models** ({{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points).
 2. On `gemini-3.1-flash-lite`, the unconditional reversal $C_0 > B$ ($83.4\%$ vs $75.5\%$) vanishes when paired clean ($B > C_0$ by $+4.76\%$, $95\%$ CI $[-8.81, -0.65]$). Condition B's lower unconditional score was driven by DDL syntax crashes under the 34-rule prompt on that model, not inferior rule content when clean.
 
 ### 7.2 Crossed Random-Effects Linear Mixed Model
@@ -249,9 +252,9 @@ Table 6B: Fixed Effect Contrasts (REML Model SE vs CR1 Task-Cluster SE)
 {{table_mixed_model_contrasts}}
 
 **Key Findings:**
-1. Fact-level random intercepts ($4.0\%$ to $10.5\%$) and condition-by-fact random slopes ($23.4\%$ to $35.2\%$) capture the predominant share of clustered variance (total clustered share $36.5\%$ to $49.7\%$), confirming substantial intrinsic difficulty variation across relational invariants and heterogeneous rule sensitivity across experimental conditions.
+1. Fact-level random intercepts ($4.0\%$ to $14.7\%$) and condition-by-fact random slopes ($23.4\%$ to $35.2\%$) capture the predominant share of clustered variance (total clustered share $36.5\%$ to $51.3\%$), confirming substantial intrinsic difficulty variation across relational invariants and heterogeneous rule sensitivity across experimental conditions.
 2. Cell-level clustering accounts for $2.1\%$ to $6.4\%$ of variance, reflecting the added complexity of multi-tenancy and immutability, while task-level clustering accounts for $0.1\%$ to $2.7\%$.
-3. Fixed-effect condition estimates under small-sample CR1 task-clustered sandwich standard errors remain statistically significant ($p < 0.0001$ for $C - A$, $C0 - A$, and $B - A$), confirming that primary contrast conclusions are robust to arbitrary task-level covariance and condition-by-fact random variation.
+3. Fixed-effect condition estimates under small-sample CR1 task-clustered sandwich standard errors remain statistically significant ($p < 0.0001$ for $C - A$, $C_0 - A$, and $B - A$), confirming that primary contrast conclusions are robust to arbitrary task-level covariance and condition-by-fact random variation.
 
 ### 7.3 Retrieval Stratification: Retrieved vs. Non-Retrieved Bound Facts
 *(Descriptive sensitivity analysis on bound task-fact pairs)*
@@ -260,7 +263,7 @@ Table 7 breaks down pass rates on bound task-fact pairs stratified by whether th
 
 {{table_retrieval_stratification}}
 
-**Observation (Checklist Displacement):** Where Placebo $D$ does not trigger syntax crashes, $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C0 - A$ drops ($-10.98\%$ to $-24.39\%$). Providing an incomplete checklist of retrieved rules causes models to displace unprompted baseline knowledge; natural language summaries exacerbate this displacement relative to verbatim text.
+**Observation (Checklist Displacement):** Where Placebo $D$ does not trigger syntax crashes, $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C_0 - A$ drops ($-10.98\%$ to $-24.39\%$). Providing an incomplete checklist of retrieved rules causes models to displace unprompted baseline knowledge; natural language summaries exacerbate this displacement relative to verbatim text.
 
 ### 7.4 Forensic Invariant Collisions: F-16/F-36 & Duplicate Primary Keys
 *(Observational post-hoc diagnostics)*
@@ -268,8 +271,8 @@ Table 7 breaks down pass rates on bound task-fact pairs stratified by whether th
 1. **The $F\text{-}16 / F\text{-}36$ Inline `REFERENCES` Collision:**
    - Invariant $F\text{-}36$ states: `...supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT`.
    - In PostgreSQL 16, inline `REFERENCES` automatically creates an auto-named constraint `<table>_supersedes_id_fkey`, violating invariant $F\text{-}16$ (`fk_<table>_<column>`).
-   - Across all five models, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$**.
-   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rates in $C0$ were **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b-full`, and **83.3%** in `glm5-2`.
+   - Across all six models, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$**.
+   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rates in $C0$ were **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b-full`, **83.3%** in `glm5-2`, and **100.0%** in `qwen27b-2`.
 2. **GLM Duplicate Primary Key Defect:**
    - In `glm5-2` Condition $C0$, exactly 20 trials emitted duplicate primary keys (column-level plus table-level), resulting in 20 fatal `tableMissing` transaction rollbacks.
    - $F\text{-}01$ was retrieved 0 times across all 120 tasks in Condition C0 (0/120). Unretrieved $F\text{-}01$ allowed GLM-5.3 to emit redundant primary key clauses under $C0$, suppressing its unconditional score.
@@ -296,7 +299,7 @@ The Reflexion framework (Shinn et al., 2023) demonstrated that language agents c
 Recent studies in code and query generation, such as LAST-CQ (Prokopiou et al., 2026) and MERIT (Vo et al., 2026; Mishra & Mishra, 2026), have explored retrieving past execution traces and error feedback to guide query formulation and agentic self-repair. While these approaches demonstrate the utility of episodic memory retrieval, they do not isolate the difference between natural-language distillation and verbatim rule representation, nor do they examine the partial-checklist displacement observed in our retrieval stratification.
 
 ### 8.3 Memory Degradation and Negative Transfer
-Zhang et al. (2026), in *"Useful Memories Become Faulty When Continuously Updated by LLMs"*, demonstrated that accumulated memory in language agents can induce negative transfer, where updated lessons degrade performance across tasks. Our observation of partial-checklist displacement (Section 7.3) provides direct empirical confirmation in relational schema engineering: injecting $K=10$ rules suppresses compliance on non-retrieved baseline invariants.
+Zhang et al. (2026), in *"Useful Memories Become Faulty When Continuously Updated by LLMs"*, demonstrated that accumulated memory in language agents can induce negative transfer, where updated lessons degrade performance across tasks. Our observation of partial-checklist displacement (Section 7.3) provides direct empirical confirmation in relational schema engineering: injecting $K=10$ rules suppresses compliance on non-retrieved baseline invariants. Furthermore, Zhang et al. document **Concrete-Vocabulary Erosion** (Section D.2), showing how iterative LLM consolidation rewrites concrete domain properties (such as `"max size"`) into un-actionable generalizations (`"a derived per-object numeric attribute"`). Their empirical benchmark demonstrates an immediate **Initial Compression Error** (Table 5), where even single-batch distillation without prior-store conditioning trails raw trajectories (70.0% vs. 76.6%). This directly grounds our primary mechanism: when the Advisor summarizes historical SQL failures into conversational guidance, it strips exact relational identifiers (`supersedes_id`, `app_metadata.tenant_id`, `P0001`), producing a severe distillation penalty ($C_0 > C$) in syntax-rigid contracts.
 
 ### 8.4 Self-Evolving Agents and Experience Abstraction
 Zhao et al. (2026) investigated whether language agents can faithfully improve via self-reflection (*"Large Language Model Agents Are Not Always Faithful Self-Evolvers"*), finding that agent updates frequently suffer from ungrounded hallucination unless verified by external execution feedback. Shen et al. (2026), in *"Decocted Experience Improves Test-Time Inference in LLM Agents"*, investigated the distillation of experiential memory, demonstrating that structured abstractions can improve test-time inference across multi-step workflows. Our results in relational schema generation establish a crucial boundary condition: for syntax-rigid structural contracts, distilled abstractions omit decisive schema identifiers, causing verbatim canonical specifications to strictly outperform distilled advice.
@@ -331,9 +334,9 @@ We document four deviations from the initial experimental plan:
 
 Axiom establishes that reliable automated database engineering requires **Authority Separation (Invariant 0)**: language models must be treated as untrusted candidate generators graded exclusively by deterministic execution oracles.
 
-Across **{{independent_generations}} independent generations ({{total_trials}} scored trials)** on five model families, our findings demonstrate that:
+Across **{{independent_generations}} independent generations ({{total_trials}} scored trials)** on six model families, our findings demonstrate that:
 1. **Failure-Prioritized Rule Retrieval is Highly Effective:** Injecting targeted failure rules improves bound-fact compliance by {{summary_c_a_min_diff}} to {{summary_c_a_max_diff}} percentage points over zero-shot baselines ($p < 0.0001$).
-2. **Verbatim Specifications Beat Distilled Summaries:** In rigid software engineering contracts, natural language summaries strip critical identifiers. Verbatim canonical statements significantly outperform distilled advice in 3 of 5 models unconditionally, and in all 5 models under clean execution (by {{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points).
+2. **Verbatim Specifications Beat Distilled Summaries:** In rigid software engineering contracts, natural language summaries strip critical identifiers. Verbatim canonical statements significantly outperform distilled advice in 4 of 6 models unconditionally, and in all 6 models under clean execution (by {{summary_clean_c0_c_min_diff}} to {{summary_clean_c0_c_max_diff}} percentage points).
 3. **Exploratory Token Efficiency:** Selective verbatim rule retrieval achieves {{summary_c0_b_min_ratio}} to {{summary_c0_b_max_ratio}} of the performance of the full static reference condition while reducing prompt token consumption by {{summary_c0_prompt_min_reduction}} to {{summary_c0_prompt_max_reduction}}.
 4. **Verbatim Invariants Require Precise Syntactic Specification:** Syntactic ambiguities in rule text (such as inline foreign keys) produce deterministic failure cascades that can only be diagnosed through rigorous statement-sufficiency validation.
 

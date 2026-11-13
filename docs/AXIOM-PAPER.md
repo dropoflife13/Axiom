@@ -6,14 +6,14 @@ Automated software engineering agents frequently generate syntactically plausibl
 
 In this work, we present **Axiom**, a dual-track architectural verification and evaluation system founded on the strict design principle of **Authority Separation (Invariant 0)**: *generative language models are untrusted candidate producers and only external deterministic execution oracles hold grading authority*. Axiom couples two decoupled mechanisms: (1) an *operational reflexion loop* that enforces deterministic grammar, vault consistency, and executable security AST checks on agent architecture rules, and (2) an *empirical SQL migration ablation harness* evaluating candidate DDL against an isolated PostgreSQL 16 container oracle across an 8-cell factorial corpus of 120 held-out enterprise migration tasks.
 
-We report results from an extensive empirical evaluation across **3,000 independent model generations (3,600 scored trials)** across 5 valid completed runs meeting a pre-registered post-hoc validity gate: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, and `google/gemini-3.5-flash-lite`. Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
+We report results from an extensive empirical evaluation across **3,600 independent model generations (4,320 scored trials)** across 6 valid completed runs meeting a pre-registered post-hoc validity gate: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, `google/gemini-3.5-flash-lite`, and `qwen/qwen3.8-27b`. Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
 
-Retrieval of failure-prioritized rule text improved compliance over zero-shot in all five valid models (+18.19 to +33.04 points). Verbatim rule text beat LLM-distilled paraphrases in three of five models under the pre-registered analysis (+13.97 to +17.36 points), with no detectable difference in the other two.
+Retrieval of failure-prioritized rule text improved compliance over zero-shot in all six valid models (+18.19 to +33.04 points). Verbatim rule text beat LLM-distilled paraphrases in four of six models under the pre-registered analysis (+13.97 to +17.36 points), with no detectable difference in the other two.
 
 Our principal findings demonstrate:
 
-1. **Failure-Prioritized Rule Retrieval Utility (H1):** In-context injection of failure-prioritized rules (Condition C) produces large, statistically significant improvements over zero-shot baselines (Condition A) across all five models, increasing mean bound-fact compliance by +18.19 to +33.04 percentage points (paired sign-flip $p < 0.0001$).
-2. **The Distillation Penalty (H3):** In the pre-registered primary analysis across all 120 test tasks, verbatim injection of canonical rule statements ($C_0$) significantly outperforms natural-language lesson summaries ($C$) in **3 of 5 models** (`nemotron-2`, `gemma4-31b-full`, and `gemini-3.1-flash-lite`, with Holm-adjusted $p \le 0.0001$). In secondary clean-intersection sensitivity analysis conditioning on migrations that execute without DDL syntax errors, $C_0$ exceeds $C$ across **all five models** by **+5.68 to +15.36 percentage points**. This advantage concentrates heavily in append-only schema cells `010`, `110`, and `111` (+10.22 to +41.44 pp), while cell `011` exhibits wider variation across model families (-4.89 to +17.22 pp; -4.89 to +41.44 pp across all four append-only cells), where natural language summaries strip concrete SQL identifiers (`supersedes_id`, `app_metadata.tenant_id`).
+1. **Failure-Prioritized Rule Retrieval Utility (H1):** In-context injection of failure-prioritized rules (Condition C) produces large, statistically significant improvements over zero-shot baselines (Condition A) across all six models, increasing mean bound-fact compliance by +18.19 to +33.04 percentage points (paired sign-flip $p < 0.0001$).
+2. **The Distillation Penalty (H3):** In the pre-registered primary analysis across all 120 test tasks, verbatim injection of canonical rule statements ($C_0$) significantly outperforms natural-language lesson summaries ($C$) in **4 of 6 models** (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`, and `qwen27b-2`, with Holm-adjusted $p \le 0.0001$). In secondary clean-intersection sensitivity analysis conditioning on migrations that execute without DDL syntax errors, $C_0$ exceeds $C$ across **all six models** by **+5.68 to +15.36 percentage points**. Specifically, in cells `010` and `111`, verbatim rules ($C_0$) outperform distilled summaries ($C$) across all six models (+15.55 to +41.44 pp in `010`; +19.33 to +29.67 pp in `111`), and in cell `110` across five of six models (+10.22 to +31.11 pp, with `qwen27b-2` at -10.33 pp due to $F\text{-}36$ inline `REFERENCES` collisions), while cell `011` ranges from -4.89 to +17.22 pp across models, where natural language summaries strip concrete SQL identifiers (`supersedes_id`, `app_metadata.tenant_id`).
 3. **Exploratory Efficiency Frontier (H4):** Evaluating Condition C against Condition B, and computing exploratory $C_0 / B$ compliance ratios across models, $C_0$ achieves 79.9% to 110.6% of the performance of the static reference condition ($B$, which injects all 34 active rules), while reducing prompt token consumption by 51.0% to 53.3%. Condition B is evaluated as a static in-context reference, not an unreachable ceiling.
 4. **Partial-Checklist Displacement:** When supplied with a partial subset of $K=10$ retrieved rules, models regress below zero-shot baseline on non-retrieved bound facts, indicating that incomplete in-context checklists displace unprompted default knowledge.
 5. **Forensic Invariant Collisions:** Verbatim rule injection can fail when canonical statements contain latent syntactic ambiguities. Specifically, an inline `REFERENCES` clause in invariant $F\text{-}36$ induces a 100% failure rate on constraint-naming rule $F\text{-}16$, and unretrieved primary key guidance in GLM-5.3 triggers fatal duplicate primary key syntax crashes.
@@ -34,7 +34,7 @@ To resolve this challenge, we introduce **Axiom**, a dual-track architectural ve
 
 Crucially, the Track 2 ablation harness evaluates single-turn generation with **no retry or reflection loop** during testing. Models receive the task prompt (along with condition-specific in-context rules) and generate a single candidate migration. This isolates whether rules harvested from historical failures improve subsequent zero-shot generation, eliminating confounding from multi-turn conversational repair.
 
-This paper presents the complete empirical findings from the Track 2 program across **3,000 independent generations (3,600 scored trials)** spanning five distinct model families: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, and `google/gemini-3.5-flash-lite`.
+This paper presents the complete empirical findings from the Track 2 program across **3,600 independent generations (4,320 scored trials)** spanning six distinct model families: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, `google/gemini-3.5-flash-lite`, and `qwen/qwen3.8-27b`.
 
 ---
 
@@ -191,7 +191,7 @@ To ensure statistical comparability, runs must satisfy a pre-registered validity
 2. **Verified Output Sanitization:** Completions must contain pure SQL without conversational preambles or raw `<think>` tokens.
 3. **Monotonic Reference Check ($B > A$):** The static reference prompt ($B$) must exceed zero-shot baseline ($A$) with a 95% bootstrap confidence interval strictly excluding zero.
 
-Five completed runs satisfy all validity criteria: `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, and `gemini-flash-lite-full` ($N = 3,600$ scored trials, 3,000 independent generations).
+Six completed runs satisfy all validity criteria: `nemotron-2`, `gemma4-31b-full`, `glm5-2`, `gemini-3.1-flash-lite`, `gemini-flash-lite-full`, and `qwen27b-2` ($N = 4,320$ scored trials, 3,600 independent generations).
 
 ---
 
@@ -213,9 +213,9 @@ To maintain strict Family-Wise Error Rate ($\alpha = 0.05$), **Holm-Bonferroni s
 ## 6. Multi-Model Benchmark Results
 
 ### 6.1 Master Benchmark Performance
-Table 2 details aggregate bound compliance, strict Pass@1, token consumption, and execution stability across all five valid completed runs:
+Table 2 details aggregate bound compliance, strict Pass@1, token consumption, and execution stability across all six valid completed runs:
 
-| Run ID | Model Family | Cond | Prompt Treatment | Mean Bound % | Strict Pass@1 [Wilson 95% CI] | Prompt Tok | Total Tok | Crashes (Exitâ‰ 0) | Table Missing |
+| Run ID | Model Family | Cond | Prompt Treatment | Mean Bound % | Strict Pass@1 [Wilson 95% CI] | Prompt Tok | Total Tok | Crashes (Exit≠0) | Table Missing |
 | :--- | :--- | :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
 | `nemotron-2` | Nemotron-3-Ultra-550B | **A** | Zero-Shot Baseline | 47.4% | 4.2% [1.8%, 9.4%] | 247.2 | 1476.5 | 20 | 2 |
 | `nemotron-2` | Nemotron-3-Ultra-550B | **D** | Placebo Distractor | 48.1% | 3.3% [1.3%, 8.3%] | 849.2 | 2060.2 | 8 | 1 |
@@ -247,99 +247,113 @@ Table 2 details aggregate bound compliance, strict Pass@1, token consumption, an
 | `gemini-flash-lite-full` | Gemini-3.5-Flash-Lite | **C0** | Failure-Prioritized Verbatim (Top 10) | 70.8% | 32.5% [24.8%, 41.3%] | 543.1 | 1158.1 | 12 | 8 |
 | `gemini-flash-lite-full` | Gemini-3.5-Flash-Lite | **B** | Static Reference (34 Active Rules) | 85.8% | 52.5% [43.6%, 61.2%] | 1162.7 | 1917.5 | 11 | 1 |
 | `gemini-flash-lite-full` | Gemini-3.5-Flash-Lite | **E_B** | Ablation Reference (Reused B) | 85.8% | 52.5% [43.6%, 61.2%] | 1162.7 | 1917.5 | 11 | 1 |
+| `qwen27b-2` | Qwen-3.8-27B | **A** | Zero-Shot Baseline | 46.3% | 3.3% [1.3%, 8.3%] | 247.2 | 1480.5 | 34 | 3 |
+| `qwen27b-2` | Qwen-3.8-27B | **D** | Placebo Distractor | 49.5% | 3.3% [1.3%, 8.3%] | 849.2 | 2103.6 | 11 | 2 |
+| `qwen27b-2` | Qwen-3.8-27B | **C** | Failure-Prioritized Distilled (Top 10) | 71.7% | 25.0% [18.1%, 33.4%] | 521.9 | 2133.3 | 8 | 0 |
+| `qwen27b-2` | Qwen-3.8-27B | **C0** | Failure-Prioritized Verbatim (Top 10) | 88.2% | 63.3% [54.4%, 71.4%] | 554.3 | 2097.4 | 5 | 0 |
+| `qwen27b-2` | Qwen-3.8-27B | **B** | Static Reference (34 Active Rules) | 92.5% | 72.5% [63.9%, 79.7%] | 1138.2 | 3145.9 | 0 | 0 |
+| `qwen27b-2` | Qwen-3.8-27B | **E_B** | Ablation Reference (Reused B) | 92.5% | 72.5% [63.9%, 79.7%] | 1138.2 | 3145.9 | 0 | 0 |
 
 ### 6.2 Confirmatory Statistical Hypothesis Testing
 Table 3 details paired differences, bootstrap confidence intervals, exact permutation p-values, Holm-Bonferroni adjustments, and cell-level sign-flip p-values across all confirmatory contrasts:
 
 | Model Family | Contrast | Mean Diff (pp) | 95% Bootstrap CI | Sign-Flip p (raw) | Holm Primary p | Cell-Level Exact p |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| Nemotron-3-Ultra-550B | **C vs A** | +24.47 | [+18.89, +29.96] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0313 |
-| Nemotron-3-Ultra-550B | **C vs D** | +23.81 | [+18.08, +29.40] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0625 |
-| Nemotron-3-Ultra-550B | **C vs C0** | -14.39 | [-18.78, -10.12] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0625 |
-| Nemotron-3-Ultra-550B | **C vs B** | -21.96 | [-26.89, -17.12] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0469 |
-| Nemotron-3-Ultra-550B | **B vs A** | +46.43 | [+41.11, +51.65] | 1.00 Ã— 10^-5 | â€” | â€” |
-| Gemma-4-31B-IT | **C vs A** | +22.39 | [+15.33, +29.25] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0703 |
-| Gemma-4-31B-IT | **C vs D** | +23.25 | [+16.47, +29.97] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0703 |
-| Gemma-4-31B-IT | **C vs C0** | -13.97 | [-20.21, -7.75] | 4.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0313 |
-| Gemma-4-31B-IT | **C vs B** | -29.56 | [-35.89, -23.26] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0703 |
-| Gemma-4-31B-IT | **B vs A** | +51.94 | [+46.75, +56.99] | 1.00 Ã— 10^-5 | â€” | â€” |
-| GLM-5.3-Flash | **C vs A** | +33.04 | [+26.17, +39.47] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0313 |
-| GLM-5.3-Flash | **C vs D** | +44.64 | [+38.04, +51.01] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0313 |
+| Nemotron-3-Ultra-550B | **C vs A** | +24.47 | [+18.89, +29.96] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
+| Nemotron-3-Ultra-550B | **C vs D** | +23.81 | [+18.08, +29.40] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0625 |
+| Nemotron-3-Ultra-550B | **C vs C0** | -14.39 | [-18.78, -10.12] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0625 |
+| Nemotron-3-Ultra-550B | **C vs B** | -21.96 | [-26.89, -17.12] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0469 |
+| Nemotron-3-Ultra-550B | **B vs A** | +46.43 | [+41.11, +51.65] | 1.00 × 10^-5 | — | — |
+| Gemma-4-31B-IT | **C vs A** | +22.39 | [+15.33, +29.25] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0703 |
+| Gemma-4-31B-IT | **C vs D** | +23.25 | [+16.47, +29.97] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0703 |
+| Gemma-4-31B-IT | **C vs C0** | -13.97 | [-20.21, -7.75] | 4.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
+| Gemma-4-31B-IT | **C vs B** | -29.56 | [-35.89, -23.26] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0703 |
+| Gemma-4-31B-IT | **B vs A** | +51.94 | [+46.75, +56.99] | 1.00 × 10^-5 | — | — |
+| GLM-5.3-Flash | **C vs A** | +33.04 | [+26.17, +39.47] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
+| GLM-5.3-Flash | **C vs D** | +44.64 | [+38.04, +51.01] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
 | GLM-5.3-Flash | **C vs C0** | +2.40 | [-5.18, +10.28] | 0.5454 | 0.5454 | 0.8281 |
-| GLM-5.3-Flash | **C vs B** | -15.72 | [-21.21, -10.37] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0625 |
-| GLM-5.3-Flash | **B vs A** | +48.76 | [+43.64, +53.87] | 1.00 Ã— 10^-5 | â€” | â€” |
-| Gemini-3.1-Flash-Lite | **C vs A** | +18.19 | [+12.89, +23.42] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.1172 |
-| Gemini-3.1-Flash-Lite | **C vs D** | +19.88 | [+14.62, +24.97] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.1172 |
-| Gemini-3.1-Flash-Lite | **C vs C0** | -17.36 | [-21.68, -13.31] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0625 |
+| GLM-5.3-Flash | **C vs B** | -15.72 | [-21.21, -10.37] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0625 |
+| GLM-5.3-Flash | **B vs A** | +48.76 | [+43.64, +53.87] | 1.00 × 10^-5 | — | — |
+| Gemini-3.1-Flash-Lite | **C vs A** | +18.19 | [+12.89, +23.42] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.1172 |
+| Gemini-3.1-Flash-Lite | **C vs D** | +19.88 | [+14.62, +24.97] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.1172 |
+| Gemini-3.1-Flash-Lite | **C vs C0** | -17.36 | [-21.68, -13.31] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0625 |
 | Gemini-3.1-Flash-Lite | **C vs B** | -9.39 | [-16.57, -2.25] | 0.0126 | 0.0126 | 0.3047 |
-| Gemini-3.1-Flash-Lite | **B vs A** | +27.58 | [+20.67, +34.40] | 1.00 Ã— 10^-5 | â€” | â€” |
-| Gemini-3.5-Flash-Lite | **C vs A** | +32.58 | [+26.24, +38.71] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0469 |
-| Gemini-3.5-Flash-Lite | **C vs D** | +36.60 | [+30.94, +42.36] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0313 |
+| Gemini-3.1-Flash-Lite | **B vs A** | +27.58 | [+20.67, +34.40] | 1.00 × 10^-5 | — | — |
+| Gemini-3.5-Flash-Lite | **C vs A** | +32.58 | [+26.24, +38.71] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0469 |
+| Gemini-3.5-Flash-Lite | **C vs D** | +36.60 | [+30.94, +42.36] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
 | Gemini-3.5-Flash-Lite | **C vs C0** | -2.39 | [-8.07, +3.44] | 0.4129 | 0.4129 | 0.6641 |
-| Gemini-3.5-Flash-Lite | **C vs B** | -17.46 | [-24.04, -10.75] | 1.00 Ã— 10^-5 | 4.00 Ã— 10^-5 | 0.0938 |
-| Gemini-3.5-Flash-Lite | **B vs A** | +50.04 | [+43.88, +56.11] | 1.00 Ã— 10^-5 | â€” | â€” |
+| Gemini-3.5-Flash-Lite | **C vs B** | -17.46 | [-24.04, -10.75] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0938 |
+| Gemini-3.5-Flash-Lite | **B vs A** | +50.04 | [+43.88, +56.11] | 1.00 × 10^-5 | — | — |
+| Qwen-3.8-27B | **C vs A** | +25.35 | [+19.57, +30.99] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0469 |
+| Qwen-3.8-27B | **C vs D** | +22.15 | [+16.53, +27.74] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0469 |
+| Qwen-3.8-27B | **C vs C0** | -16.53 | [-20.46, -12.56] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0313 |
+| Qwen-3.8-27B | **C vs B** | -20.83 | [-25.65, -15.99] | 1.00 × 10^-5 | 4.00 × 10^-5 | 0.0469 |
+| Qwen-3.8-27B | **B vs A** | +46.18 | [+41.22, +51.08] | 1.00 × 10^-5 | — | — |
 
 ### 6.3 Evaluation of Pre-Registered Hypotheses
 
 #### H1: Failure-Prioritized Rule Retrieval Utility ($C > A$) — Strongly Confirmed Across All Models
-Across all five models, selective retrieval of failure-prioritized rules produces massive, statistically significant improvements over zero-shot prompting:
-* `nemotron-2`: +24.47 pp ($95\%$ CI [+18.89, +29.96], Holm $p = 4.00 Ã— 10^-5$); strict Pass@1 increases from 4.2% to 29.2%.
-* `gemma4-31b-full`: +22.39 pp ($95\%$ CI [+15.33, +29.25], Holm $p = 4.00 Ã— 10^-5$); strict Pass@1 increases from 2.5% to 30.0%.
-* `glm5-2`: +33.04 pp ($95\%$ CI [+26.17, +39.47], Holm $p = 4.00 Ã— 10^-5$); strict Pass@1 increases from 4.2% to 38.3%.
-* `gemini-3.1-flash-lite`: +18.19 pp ($95\%$ CI [+12.89, +23.42], Holm $p = 4.00 Ã— 10^-5$); strict Pass@1 increases from 2.5% to 25.0%.
-* `gemini-flash-lite-full`: +32.58 pp ($95\%$ CI [+26.24, +38.71], Holm $p = 4.00 Ã— 10^-5$); strict Pass@1 increases from 0.0% to 31.7%.
+Across all six models, selective retrieval of failure-prioritized rules produces massive, statistically significant improvements over zero-shot prompting:
+* `nemotron-2`: +24.47 pp ($95\%$ CI [+18.89, +29.96], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 4.2% to 29.2%.
+* `gemma4-31b-full`: +22.39 pp ($95\%$ CI [+15.33, +29.25], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 2.5% to 30.0%.
+* `glm5-2`: +33.04 pp ($95\%$ CI [+26.17, +39.47], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 4.2% to 38.3%.
+* `gemini-3.1-flash-lite`: +18.19 pp ($95\%$ CI [+12.89, +23.42], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 2.5% to 25.0%.
+* `gemini-flash-lite-full`: +32.58 pp ($95\%$ CI [+26.24, +38.71], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 0.0% to 31.7%.
+* `qwen27b-2`: +25.35 pp ($95\%$ CI [+19.57, +30.99], Holm $p = 4.00 × 10^-5$); strict Pass@1 increases from 3.3% to 25.0%.
 
 #### H2: Content Validity vs. Placebo Distractors ($C > D$) — Confirmed Under Non-Pathological Execution
-Where Placebo condition $D$ does not trigger syntax crashes (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`), Condition $D$ performs similarly to zero-shot baseline ($40.5\%$ to $48.1\%$). In these models, Condition $C$ exceeds $D$ by +23.81 pp, +23.25 pp, and +19.88 pp (all Holm $p \le 0.0001$). This confirms that observed gains stem from relevant rule content rather than prompt token volume.
+Where Placebo condition $D$ does not trigger syntax crashes (`nemotron-2`, `gemma4-31b-full`, `gemini-3.1-flash-lite`, `qwen27b-2`), Condition $D$ performs similarly to zero-shot baseline ($40.5\%$ to $49.5\%$). In these models, Condition $C$ exceeds $D$ by +23.81 pp, +23.25 pp, +19.88 pp, and +22.15 pp (all Holm $p \le 0.0001$). This confirms that observed gains stem from relevant rule content rather than prompt token volume.
 
-#### H3: The Distillation Penalty ($C \neq C0$) — Significant in 3 of 5 Models
-In the unconditional pre-registered primary analysis, verbatim rule injection ($C0$) differs significantly from distilled advice ($C$) in **3 of 5 models**:
-* `nemotron-2`: $C0$ exceeds $C$ by +14.39 pp ($C \text{ vs } C0 = -14.39$, Holm $p = 4.00 Ã— 10^-5$).
-* `gemma4-31b-full`: $C0$ exceeds $C$ by +13.97 pp ($C \text{ vs } C0 = -13.97$, Holm $p = 4.00 Ã— 10^-5$).
-* `gemini-3.1-flash-lite`: $C0$ exceeds $C$ by +17.36 pp ($C \text{ vs } C0 = -17.36$, Holm $p = 4.00 Ã— 10^-5$).
+#### H3: The Distillation Penalty ($C \text{ vs } C_0$) — Significant in 4 of 6 Models
+In the unconditional pre-registered primary analysis, verbatim rule injection ($C_0$) differs significantly from distilled advice ($C$) in **4 of 6 models**:
+* `nemotron-2`: $C_0$ exceeds $C$ by +14.39 pp ($C \text{ vs } C_0 = -14.39$, Holm $p = 4.00 × 10^-5$).
+* `gemma4-31b-full`: $C_0$ exceeds $C$ by +13.97 pp ($C \text{ vs } C_0 = -13.97$, Holm $p = 4.00 × 10^-5$).
+* `gemini-3.1-flash-lite`: $C_0$ exceeds $C$ by +17.36 pp ($C \text{ vs } C_0 = -17.36$, Holm $p = 4.00 × 10^-5$).
+* `qwen27b-2`: $C_0$ exceeds $C$ by +16.53 pp ($C \text{ vs } C_0 = -16.53$, Holm $p = 4.00 × 10^-5$).
 
-In `glm5-2` ($C \text{ vs } C0 = +2.40$, Holm $p = 0.5454$) and `gemini-flash-lite-full` ($C \text{ vs } C0 = -2.39$, Holm $p = 0.4129$), the unconditional difference is not statistically significant. As detailed in Section 7.1, this lack of unconditional significance was caused by DDL syntax crashes; when conditioned on clean execution, $C0$ strictly outperforms $C$ across all five models.
+In `glm5-2` ($C \text{ vs } C_0 = +2.40$, Holm $p = 0.5454$) and `gemini-flash-lite-full` ($C \text{ vs } C_0 = -2.39$, Holm $p = 0.4129$), the unconditional difference is not statistically significant. As detailed in Section 7.1, this lack of unconditional significance was caused by DDL syntax crashes; when conditioned on clean execution, $C_0$ strictly outperforms $C$ across all six models.
 
 #### H4: Token-Performance Trade-Off (Exploratory Evaluation)
 Evaluating Condition C against static reference Condition B: Condition C consumes 521.9 prompt tokens compared to Condition B's 1139.2 tokens on Nemotron (a 54.2% prompt token reduction), while achieving 71.9% bound compliance compared to B's 93.9%.
 
-Computing exploratory $C0 / B$ compliance ratios across models:
+Computing exploratory $C_0 / B$ compliance ratios across models:
 * `nemotron-2`: 91.9% of B's score with 51.3% prompt token reduction (32.1% total token reduction).
 * `gemma4-31b-full`: 83.3% of B's score with 53.3% prompt token reduction (34.5% total token reduction).
 * `glm5-2`: 79.9% of B's score with 51.0% prompt token reduction (34.0% total token reduction).
 * `gemini-3.1-flash-lite`: 110.6% of B's score with 53.3% prompt token reduction (38.5% total token reduction).
 * `gemini-flash-lite-full`: 82.4% of B's score with 53.3% prompt token reduction (39.6% total token reduction).
+* `qwen27b-2`: 95.3% of B's score with 51.3% prompt token reduction (33.3% total token reduction).
 
 Condition B is treated as a static reference point, not an absolute ceiling.
 
 ### 6.4 Factorial Cell Analysis Across All Eight Cells
 Table 4 displays the per-cell performance of Condition C vs. Condition A across all eight factorial feature cells:
 
-| Cell (T A I) | Feature Description | Nemotron-550B Câˆ’A | Gemma-31B Câˆ’A | GLM-5.3 Câˆ’A | Gemini-3.1 Câˆ’A | Gemini-3.5 Câˆ’A |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **`000`** | `tenant=false,append_only=false,ingestion=false` | +24.22 | +33.11 | +24.00 | +26.89 | +52.89 |
-| **`001`** | `tenant=false,append_only=false,ingestion=true` | +19.22 | +39.78 | +36.33 | +21.78 | +34.22 |
-| **`010`** | `tenant=false,append_only=true,ingestion=false` | +33.78 | +37.22 | +25.33 | +24.00 | +45.67 |
-| **`011`** | `tenant=false,append_only=true,ingestion=true` | +2.00 | -12.00 | +0.67 | -5.00 | -0.89 |
-| **`100`** | `tenant=true,append_only=false,ingestion=false` | +44.22 | +53.44 | +57.67 | +42.44 | +49.89 |
-| **`101`** | `tenant=true,append_only=false,ingestion=true` | +38.22 | +11.11 | +45.00 | +31.89 | +28.78 |
-| **`110`** | `tenant=true,append_only=true,ingestion=false` | +31.89 | +19.56 | +50.33 | +7.67 | +32.78 |
-| **`111`** | `tenant=true,append_only=true,ingestion=true` | +2.22 | -3.11 | +25.00 | -4.11 | +17.33 |
+| Cell (T A I) | Feature Description | Nemotron-550B C−A | Gemma-31B C−A | GLM-5.3 C−A | Gemini-3.1 C−A | Gemini-3.5 C−A | Qwen-27B C−A |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`000`** | `tenant=false,append_only=false,ingestion=false` | +24.22 | +33.11 | +24.00 | +26.89 | +52.89 | +33.33 |
+| **`001`** | `tenant=false,append_only=false,ingestion=true` | +19.22 | +39.78 | +36.33 | +21.78 | +34.22 | +18.33 |
+| **`010`** | `tenant=false,append_only=true,ingestion=false` | +33.78 | +37.22 | +25.33 | +24.00 | +45.67 | +22.22 |
+| **`011`** | `tenant=false,append_only=true,ingestion=true` | +2.00 | -12.00 | +0.67 | -5.00 | -0.89 | +4.00 |
+| **`100`** | `tenant=true,append_only=false,ingestion=false` | +44.22 | +53.44 | +57.67 | +42.44 | +49.89 | +54.00 |
+| **`101`** | `tenant=true,append_only=false,ingestion=true` | +38.22 | +11.11 | +45.00 | +31.89 | +28.78 | +37.22 |
+| **`110`** | `tenant=true,append_only=true,ingestion=false` | +31.89 | +19.56 | +50.33 | +7.67 | +32.78 | +36.00 |
+| **`111`** | `tenant=true,append_only=true,ingestion=true` | +2.22 | -3.11 | +25.00 | -4.11 | +17.33 | -2.33 |
 
 Table 5 breaks down the $C_0 - C$ difference across all eight factorial cells:
 
-| Cell (T A I) | Flag Semantics | Nemotron-550B C0âˆ’C [95% CI] | Gemma-31B C0âˆ’C [95% CI] | GLM-5.3 C0âˆ’C [95% CI] | Gemini-3.1 C0âˆ’C [95% CI] | Gemini-3.5 C0âˆ’C [95% CI] |
-| :---: | :--- | :---: | :---: | :---: | :---: | :---: |
-| **`000`** | Cell `000` | 0.00 [-4.00, +4.00] | +1.33 [-3.67, +6.67] | -52.00 [-77.33, -26.67] | -1.89 [-8.00, +3.67] | -5.00 [-21.00, +6.00] |
-| **`001`** | Cell `001` | +13.22 [+4.89, +21.67] | +0.33 [-4.00, +5.00] | -17.44 [-41.00, +2.67] | +6.22 [0.00, +13.33] | -13.56 [-36.89, +10.89] |
-| **`010`** | Cell `010` | +27.89 [+20.78, +34.33] | +15.55 [-3.56, +31.00] | +28.89 [+18.00, +38.44] | +41.44 [+29.00, +55.78] | +17.89 [+9.00, +26.00] |
-| **`011`** | Cell `011` | +17.22 [+3.22, +32.11] | +1.67 [-11.11, +13.22] | -4.89 [-27.89, +15.89] | +8.00 [+1.33, +14.67] | -2.11 [-19.33, +15.45] |
-| **`100`** | Cell `100` | +13.67 [+2.11, +25.67] | +4.78 [-14.22, +25.67] | -18.78 [-38.67, -0.67] | +13.89 [+5.33, +23.45] | -12.78 [-23.55, -1.56] |
-| **`101`** | Cell `101` | -1.67 [-12.67, +10.78] | +39.11 [+22.00, +56.44] | +2.89 [-8.11, +14.00] | +15.67 [+5.67, +27.33] | -2.11 [-15.44, +11.11] |
-| **`110`** | Cell `110` | +16.44 [+4.33, +27.55] | +25.67 [+2.00, +50.11] | +22.78 [+9.11, +38.11] | +31.11 [+20.78, +42.11] | +10.22 [+0.56, +19.44] |
-| **`111`** | Cell `111` | +28.33 [+14.67, +43.67] | +23.33 [+6.56, +38.33] | +19.33 [+5.11, +33.33] | +24.44 [+13.33, +35.33] | +26.56 [+13.56, +38.45] |
+| Cell (T A I) | Flag Semantics | Nemotron-550B C0−C [95% CI] | Gemma-31B C0−C [95% CI] | GLM-5.3 C0−C [95% CI] | Gemini-3.1 C0−C [95% CI] | Gemini-3.5 C0−C [95% CI] | Qwen-27B C0−C [95% CI] |
+| :---: | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **`000`** | Cell `000` | 0.00 [-4.00, +4.00] | +1.33 [-3.67, +6.67] | -52.00 [-77.33, -26.67] | -1.89 [-8.00, +3.67] | -5.00 [-21.00, +6.00] | 0.00 [0.00, 0.00] |
+| **`001`** | Cell `001` | +13.22 [+4.89, +21.67] | +0.33 [-4.00, +5.00] | -17.44 [-41.00, +2.67] | +6.22 [0.00, +13.33] | -13.56 [-36.89, +10.89] | +14.67 [+6.33, +23.33] |
+| **`010`** | Cell `010` | +27.89 [+20.78, +34.33] | +15.55 [-3.56, +31.00] | +28.89 [+18.00, +38.44] | +41.44 [+29.00, +55.78] | +17.89 [+9.00, +26.00] | +25.89 [+18.11, +32.67] |
+| **`011`** | Cell `011` | +17.22 [+3.22, +32.11] | +1.67 [-11.11, +13.22] | -4.89 [-27.89, +15.89] | +8.00 [+1.33, +14.67] | -2.11 [-19.33, +15.45] | +13.67 [-3.89, +32.00] |
+| **`100`** | Cell `100` | +13.67 [+2.11, +25.67] | +4.78 [-14.22, +25.67] | -18.78 [-38.67, -0.67] | +13.89 [+5.33, +23.45] | -12.78 [-23.55, -1.56] | -9.67 [-24.67, 0.00] |
+| **`101`** | Cell `101` | -1.67 [-12.67, +10.78] | +39.11 [+22.00, +56.44] | +2.89 [-8.11, +14.00] | +15.67 [+5.67, +27.33] | -2.11 [-15.44, +11.11] | -16.78 [-38.00, +4.22] |
+| **`110`** | Cell `110` | +16.44 [+4.33, +27.55] | +25.67 [+2.00, +50.11] | +22.78 [+9.11, +38.11] | +31.11 [+20.78, +42.11] | +10.22 [+0.56, +19.44] | -10.33 [-26.78, +4.22] |
+| **`111`** | Cell `111` | +28.33 [+14.67, +43.67] | +23.33 [+6.56, +38.33] | +19.33 [+5.11, +33.33] | +24.44 [+13.33, +35.33] | +26.56 [+13.56, +38.45] | +29.67 [+13.67, +44.33] |
 
-Across cells `010`, `110`, and `111`, verbatim rules ($C_0$) strictly outperform distilled summaries ($C$) across all models by +10.22 to +41.44 percentage points. In cell `011` (`tenant=0, append_only=1, ingestion=1`), where streaming event ingestion interacts with immutability, the $C_0 - C$ difference ranges from -4.89 to +17.22 percentage points across models (spanning -4.89 to +41.44 percentage points across all four append-only cells). Natural language summaries in append-only tasks omit explicit column and trigger identifiers (e.g., `supersedes_id`, `P0001`), driving substantial compliance drops under distilled advice in non-streaming cells, while ingestion triggers introduce syntax interactions that moderate the gap in cell `011`.
+In cells `010` and `111`, verbatim rules ($C_0$) outperform distilled summaries ($C$) across all six models (+15.55 to +41.44 pp in `010`; +19.33 to +29.67 pp in `111`), and in cell `110` across five of six models (+10.22 to +31.11 pp, with `qwen27b-2` at -10.33 pp due to $F\text{-}36$ inline `REFERENCES` collisions), while cell `011` ranges from -4.89 to +17.22 pp across models. Natural language summaries in append-only tasks omit explicit column and trigger identifiers (e.g., `supersedes_id`, `P0001`), driving substantial compliance drops under distilled advice in non-streaming cells, while ingestion triggers introduce syntax interactions that moderate the gap in cell `011`.
 
 ---
 
@@ -389,9 +403,16 @@ In Condition A and Condition D, models frequently generate invalid SQL syntax th
 | Gemini-3.5-Flash-Lite | **C0 vs C** | 101 | +5.68 | [+1.09, +10.36] |
 | Gemini-3.5-Flash-Lite | **C vs D** | 77 | +32.75 | [+26.65, +38.66] |
 | Gemini-3.5-Flash-Lite | **C0 vs B** | 97 | -12.35 | [-16.92, -7.78] |
+| Qwen-3.8-27B | **D vs A** | 91 | -1.34 | [-4.51, +1.74] |
+| Qwen-3.8-27B | **C vs A** | 96 | +22.66 | [+16.32, +28.82] |
+| Qwen-3.8-27B | **C0 vs A** | 65 | +28.41 | [+20.46, +35.80] |
+| Qwen-3.8-27B | **B vs A** | 68 | +38.46 | [+33.46, +43.46] |
+| Qwen-3.8-27B | **C0 vs C** | 69 | +10.14 | [+5.60, +14.76] |
+| Qwen-3.8-27B | **C vs D** | 99 | +23.62 | [+16.85, +30.44] |
+| Qwen-3.8-27B | **C0 vs B** | 64 | -10.94 | [-16.09, -6.33] |
 
 **Key Findings:**
-1. When conditioned on clean execution, $C_0$ outperforms $C$ with 95% bootstrap confidence intervals strictly excluding zero across **all five models** (+5.68 to +15.36 percentage points).
+1. When conditioned on clean execution, $C_0$ outperforms $C$ with 95% bootstrap confidence intervals strictly excluding zero across **all six models** (+5.68 to +15.36 percentage points).
 2. On `gemini-3.1-flash-lite`, the unconditional reversal $C_0 > B$ ($83.4\%$ vs $75.5\%$) vanishes when paired clean ($B > C_0$ by $+4.76\%$, $95\%$ CI $[-8.81, -0.65]$). Condition B's lower unconditional score was driven by DDL syntax crashes under the 34-rule prompt on that model, not inferior rule content when clean.
 
 ### 7.2 Crossed Random-Effects Linear Mixed Model
@@ -403,63 +424,71 @@ Table 6A: Mixed Model Variance Components & Intraclass Correlation Coefficients
 
 | Model Family | Observations (N) | REML Deviance | `task` (k=120) SD / ICC% | `fact` (k=18) SD / ICC% | `cell` (k=8) SD / ICC% | `fact:cond` (k=90) SD / ICC% | Residual SD | Clustered Share |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| Nemotron-3-Ultra-550B | 2390 | -4867.95 | 0.016 / 0.14% | 0.124 / 8.17% | 0.062 / 2.05% | 0.000 / 0.00% | 0.3404 | 38.54% |
-| Gemma-4-31B-IT | 2390 | -4596.94 | 0.073 / 2.69% | 0.089 / 3.98% | 0.114 / 6.42% | 0.000 / 0.00% | 0.3567 | 36.54% |
-| GLM-5.3-Flash | 2390 | -4784.39 | 0.073 / 2.62% | 0.133 / 8.66% | 0.080 / 3.16% | 0.000 / 0.00% | 0.3411 | 42.56% |
-| Gemini-3.1-Flash-Lite | 2390 | -4710.86 | 0.073 / 2.41% | 0.152 / 10.54% | 0.101 / 4.64% | 0.000 / 0.00% | 0.3458 | 45.61% |
-| Gemini-3.5-Flash-Lite | 2390 | -5023.94 | 0.074 / 2.68% | 0.142 / 9.78% | 0.065 / 2.08% | 0.000 / 0.00% | 0.3221 | 49.72% |
+| Nemotron-3-Ultra-550B | 2390 | -4867.95 | 0.016 / 0.14% | 0.124 / 8.17% | 0.062 / 2.05% | 0.231 / 28.17% | 0.3404 | 38.54% |
+| Gemma-4-31B-IT | 2390 | -4596.94 | 0.073 / 2.69% | 0.089 / 3.98% | 0.114 / 6.42% | 0.217 / 23.44% | 0.3567 | 36.54% |
+| GLM-5.3-Flash | 2390 | -4784.39 | 0.073 / 2.62% | 0.133 / 8.66% | 0.080 / 3.16% | 0.239 / 28.12% | 0.3411 | 42.56% |
+| Gemini-3.1-Flash-Lite | 2390 | -4710.86 | 0.073 / 2.41% | 0.152 / 10.54% | 0.101 / 4.64% | 0.248 / 28.02% | 0.3458 | 45.61% |
+| Gemini-3.5-Flash-Lite | 2390 | -5023.94 | 0.074 / 2.68% | 0.142 / 9.78% | 0.065 / 2.08% | 0.269 / 35.18% | 0.3221 | 49.72% |
+| Qwen-3.8-27B | 2390 | -5167.48 | 0.059 / 1.70% | 0.172 / 14.65% | 0.087 / 3.72% | 0.252 / 31.28% | 0.3138 | 51.34% |
 
 Table 6B: Fixed Effect Contrasts (REML Model SE vs CR1 Task-Cluster SE)
 
 | Model Family | Contrast | Est (pp) | REML SE | REML 95% CI | REML p | CR1 Task SE | CR1 95% CI | CR1 p |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Nemotron-3-Ultra-550B | **D - A** | -0.29 | 8.12 | [-16.21, +15.62] | 0.9711 | 2.10 | [-4.41, +3.82] | 0.8886 |
-| Nemotron-3-Ultra-550B | **C - A** | +27.32 | 8.12 | [+11.40, +43.23] | 0.0008 | 2.73 | [+21.96, +32.68] | 1.66 Ã— 10^-23 |
-| Nemotron-3-Ultra-550B | **C0 - A** | +45.58 | 8.12 | [+29.67, +61.50] | 1.98 Ã— 10^-8 | 2.74 | [+40.21, +50.96] | 5.33 Ã— 10^-62 |
-| Nemotron-3-Ultra-550B | **B - A** | +54.38 | 8.12 | [+38.47, +70.29] | 2.12 Ã— 10^-11 | 2.21 | [+50.05, +58.71] | 1.13 Ã— 10^-133 |
-| Nemotron-3-Ultra-550B | **C0 - C** | +18.26 | 8.12 | [+2.35, +34.18] | 0.0245 | 2.30 | [+13.75, +22.78] | 2.12 Ã— 10^-15 |
-| Nemotron-3-Ultra-550B | **C - D** | +27.61 | 8.12 | [+11.70, +43.53] | 0.0007 | 2.70 | [+22.31, +32.91] | 1.73 Ã— 10^-24 |
-| Nemotron-3-Ultra-550B | **B - C0** | +8.80 | 8.12 | [-7.12, +24.71] | 0.2786 | 2.16 | [+4.57, +13.03] | 4.56 Ã— 10^-5 |
+| Nemotron-3-Ultra-550B | **C - A** | +27.32 | 8.12 | [+11.40, +43.23] | 0.0008 | 2.73 | [+21.96, +32.68] | 1.66 × 10^-23 |
+| Nemotron-3-Ultra-550B | **C0 - A** | +45.58 | 8.12 | [+29.67, +61.50] | 1.98 × 10^-8 | 2.74 | [+40.21, +50.96] | 5.33 × 10^-62 |
+| Nemotron-3-Ultra-550B | **B - A** | +54.38 | 8.12 | [+38.47, +70.29] | 2.12 × 10^-11 | 2.21 | [+50.05, +58.71] | 1.13 × 10^-133 |
+| Nemotron-3-Ultra-550B | **C0 - C** | +18.26 | 8.12 | [+2.35, +34.18] | 0.0245 | 2.30 | [+13.75, +22.78] | 2.12 × 10^-15 |
+| Nemotron-3-Ultra-550B | **C - D** | +27.61 | 8.12 | [+11.70, +43.53] | 0.0007 | 2.70 | [+22.31, +32.91] | 1.73 × 10^-24 |
+| Nemotron-3-Ultra-550B | **B - C0** | +8.80 | 8.12 | [-7.12, +24.71] | 0.2786 | 2.16 | [+4.57, +13.03] | 4.56 × 10^-5 |
 | Gemma-4-31B-IT | **D - A** | -2.07 | 7.73 | [-17.21, +13.07] | 0.7887 | 1.87 | [-5.73, +1.59] | 0.2672 |
-| Gemma-4-31B-IT | **C - A** | +21.12 | 7.73 | [+5.97, +36.26] | 0.0063 | 2.75 | [+15.73, +26.51] | 1.61 Ã— 10^-14 |
-| Gemma-4-31B-IT | **C0 - A** | +43.05 | 7.73 | [+27.91, +58.20] | 2.52 Ã— 10^-8 | 3.07 | [+37.03, +49.08] | 1.50 Ã— 10^-44 |
-| Gemma-4-31B-IT | **B - A** | +59.02 | 7.73 | [+43.88, +74.16] | 2.19 Ã— 10^-14 | 2.04 | [+55.02, +63.02] | 9.85 Ã— 10^-184 |
-| Gemma-4-31B-IT | **C0 - C** | +21.93 | 7.73 | [+6.79, +37.08] | 0.0045 | 3.35 | [+15.36, +28.51] | 6.07 Ã— 10^-11 |
-| Gemma-4-31B-IT | **C - D** | +23.19 | 7.73 | [+8.04, +38.33] | 0.0027 | 2.83 | [+17.65, +28.73] | 2.40 Ã— 10^-16 |
-| Gemma-4-31B-IT | **B - C0** | +15.97 | 7.73 | [+0.82, +31.11] | 0.0388 | 3.17 | [+9.75, +22.19] | 4.83 Ã— 10^-7 |
-| GLM-5.3-Flash | **D - A** | -13.40 | 8.38 | [-29.82, +3.03] | 0.1099 | 2.63 | [-18.55, -8.24] | 3.46 Ã— 10^-7 |
-| GLM-5.3-Flash | **C - A** | +31.14 | 8.38 | [+14.71, +47.56] | 0.0002 | 2.56 | [+26.13, +36.15] | 3.99 Ã— 10^-34 |
-| GLM-5.3-Flash | **C0 - A** | +34.79 | 8.38 | [+18.36, +51.21] | 3.30 Ã— 10^-5 | 4.07 | [+26.81, +42.77] | 1.31 Ã— 10^-17 |
-| GLM-5.3-Flash | **B - A** | +49.51 | 8.38 | [+33.09, +65.93] | 3.45 Ã— 10^-9 | 2.32 | [+44.96, +54.06] | 5.24 Ã— 10^-101 |
+| Gemma-4-31B-IT | **C - A** | +21.12 | 7.73 | [+5.97, +36.26] | 0.0063 | 2.75 | [+15.73, +26.51] | 1.61 × 10^-14 |
+| Gemma-4-31B-IT | **C0 - A** | +43.05 | 7.73 | [+27.91, +58.20] | 2.52 × 10^-8 | 3.07 | [+37.03, +49.08] | 1.50 × 10^-44 |
+| Gemma-4-31B-IT | **B - A** | +59.02 | 7.73 | [+43.88, +74.16] | 2.19 × 10^-14 | 2.04 | [+55.02, +63.02] | 9.85 × 10^-184 |
+| Gemma-4-31B-IT | **C0 - C** | +21.93 | 7.73 | [+6.79, +37.08] | 0.0045 | 3.35 | [+15.36, +28.51] | 6.07 × 10^-11 |
+| Gemma-4-31B-IT | **C - D** | +23.19 | 7.73 | [+8.04, +38.33] | 0.0027 | 2.83 | [+17.65, +28.73] | 2.40 × 10^-16 |
+| Gemma-4-31B-IT | **B - C0** | +15.97 | 7.73 | [+0.82, +31.11] | 0.0388 | 3.17 | [+9.75, +22.19] | 4.83 × 10^-7 |
+| GLM-5.3-Flash | **D - A** | -13.40 | 8.38 | [-29.82, +3.03] | 0.1099 | 2.63 | [-18.55, -8.24] | 3.46 × 10^-7 |
+| GLM-5.3-Flash | **C - A** | +31.14 | 8.38 | [+14.71, +47.56] | 0.0002 | 2.56 | [+26.13, +36.15] | 3.99 × 10^-34 |
+| GLM-5.3-Flash | **C0 - A** | +34.79 | 8.38 | [+18.36, +51.21] | 3.30 × 10^-5 | 4.07 | [+26.81, +42.77] | 1.31 × 10^-17 |
+| GLM-5.3-Flash | **B - A** | +49.51 | 8.38 | [+33.09, +65.93] | 3.45 × 10^-9 | 2.32 | [+44.96, +54.06] | 5.24 × 10^-101 |
 | GLM-5.3-Flash | **C0 - C** | +3.65 | 8.38 | [-12.77, +20.07] | 0.6630 | 3.35 | [-2.92, +10.22] | 0.2759 |
-| GLM-5.3-Flash | **C - D** | +44.53 | 8.38 | [+28.11, +60.95] | 1.07 Ã— 10^-7 | 2.60 | [+39.43, +49.64] | 1.53 Ã— 10^-65 |
-| GLM-5.3-Flash | **B - C0** | +14.72 | 8.38 | [-1.70, +31.15] | 0.0789 | 3.45 | [+7.95, +21.49] | 2.02 Ã— 10^-5 |
+| GLM-5.3-Flash | **C - D** | +44.53 | 8.38 | [+28.11, +60.95] | 1.07 × 10^-7 | 2.60 | [+39.43, +49.64] | 1.53 × 10^-65 |
+| GLM-5.3-Flash | **B - C0** | +14.72 | 8.38 | [-1.70, +31.15] | 0.0789 | 3.45 | [+7.95, +21.49] | 2.02 × 10^-5 |
 | Gemini-3.1-Flash-Lite | **D - A** | -1.75 | 8.70 | [-18.79, +15.30] | 0.8406 | 1.34 | [-4.38, +0.88] | 0.1922 |
-| Gemini-3.1-Flash-Lite | **C - A** | +15.84 | 8.70 | [-1.21, +32.88] | 0.0685 | 2.59 | [+10.76, +20.92] | 9.74 Ã— 10^-10 |
-| Gemini-3.1-Flash-Lite | **C0 - A** | +44.85 | 8.70 | [+27.81, +61.89] | 2.51 Ã— 10^-7 | 2.05 | [+40.83, +48.87] | 8.43 Ã— 10^-106 |
-| Gemini-3.1-Flash-Lite | **B - A** | +36.95 | 8.70 | [+19.91, +53.99] | 2.15 Ã— 10^-5 | 3.65 | [+29.80, +44.10] | 4.14 Ã— 10^-24 |
-| Gemini-3.1-Flash-Lite | **C0 - C** | +29.01 | 8.70 | [+11.97, +46.06] | 0.0009 | 2.22 | [+24.66, +33.36] | 5.65 Ã— 10^-39 |
-| Gemini-3.1-Flash-Lite | **C - D** | +17.59 | 8.70 | [+0.54, +34.63] | 0.0431 | 2.73 | [+12.24, +22.94] | 1.14 Ã— 10^-10 |
+| Gemini-3.1-Flash-Lite | **C - A** | +15.84 | 8.70 | [-1.21, +32.88] | 0.0685 | 2.59 | [+10.76, +20.92] | 9.74 × 10^-10 |
+| Gemini-3.1-Flash-Lite | **C0 - A** | +44.85 | 8.70 | [+27.81, +61.89] | 2.51 × 10^-7 | 2.05 | [+40.83, +48.87] | 8.43 × 10^-106 |
+| Gemini-3.1-Flash-Lite | **B - A** | +36.95 | 8.70 | [+19.91, +53.99] | 2.15 × 10^-5 | 3.65 | [+29.80, +44.10] | 4.14 × 10^-24 |
+| Gemini-3.1-Flash-Lite | **C0 - C** | +29.01 | 8.70 | [+11.97, +46.06] | 0.0009 | 2.22 | [+24.66, +33.36] | 5.65 × 10^-39 |
+| Gemini-3.1-Flash-Lite | **C - D** | +17.59 | 8.70 | [+0.54, +34.63] | 0.0431 | 2.73 | [+12.24, +22.94] | 1.14 × 10^-10 |
 | Gemini-3.1-Flash-Lite | **B - C0** | -7.90 | 8.70 | [-24.94, +9.14] | 0.3636 | 3.89 | [-15.52, -0.28] | 0.0421 |
 | Gemini-3.5-Flash-Lite | **D - A** | -4.30 | 9.33 | [-22.57, +13.98] | 0.6450 | 1.91 | [-8.04, -0.56] | 0.0243 |
-| Gemini-3.5-Flash-Lite | **C - A** | +33.67 | 9.33 | [+15.39, +51.95] | 0.0003 | 2.34 | [+29.08, +38.26] | 5.84 Ã— 10^-47 |
-| Gemini-3.5-Flash-Lite | **C0 - A** | +40.85 | 9.33 | [+22.57, +59.12] | 1.18 Ã— 10^-5 | 2.91 | [+35.15, +46.54] | 6.82 Ã— 10^-45 |
-| Gemini-3.5-Flash-Lite | **B - A** | +58.14 | 9.33 | [+39.86, +76.42] | 4.53 Ã— 10^-10 | 2.21 | [+53.80, +62.48] | 4.96 Ã— 10^-152 |
+| Gemini-3.5-Flash-Lite | **C - A** | +33.67 | 9.33 | [+15.39, +51.95] | 0.0003 | 2.34 | [+29.08, +38.26] | 5.84 × 10^-47 |
+| Gemini-3.5-Flash-Lite | **C0 - A** | +40.85 | 9.33 | [+22.57, +59.12] | 1.18 × 10^-5 | 2.91 | [+35.15, +46.54] | 6.82 × 10^-45 |
+| Gemini-3.5-Flash-Lite | **B - A** | +58.14 | 9.33 | [+39.86, +76.42] | 4.53 × 10^-10 | 2.21 | [+53.80, +62.48] | 4.96 × 10^-152 |
 | Gemini-3.5-Flash-Lite | **C0 - C** | +7.18 | 9.33 | [-11.10, +25.45] | 0.4415 | 2.27 | [+2.73, +11.62] | 0.0016 |
-| Gemini-3.5-Flash-Lite | **C - D** | +37.97 | 9.33 | [+19.69, +56.24] | 4.67 Ã— 10^-5 | 1.94 | [+34.15, +41.78] | 7.37 Ã— 10^-85 |
-| Gemini-3.5-Flash-Lite | **B - C0** | +17.29 | 9.33 | [-0.99, +35.57] | 0.0637 | 2.73 | [+11.93, +22.65] | 2.50 Ã— 10^-10 |
+| Gemini-3.5-Flash-Lite | **C - D** | +37.97 | 9.33 | [+19.69, +56.24] | 4.67 × 10^-5 | 1.94 | [+34.15, +41.78] | 7.37 × 10^-85 |
+| Gemini-3.5-Flash-Lite | **B - C0** | +17.29 | 9.33 | [-0.99, +35.57] | 0.0637 | 2.73 | [+11.93, +22.65] | 2.50 × 10^-10 |
+| Qwen-3.8-27B | **D - A** | -1.32 | 8.73 | [-18.44, +15.79] | 0.8796 | 2.32 | [-5.87, +3.22] | 0.5683 |
+| Qwen-3.8-27B | **C - A** | +27.73 | 8.73 | [+10.61, +44.84] | 0.0015 | 2.35 | [+23.11, +32.34] | 5.23 × 10^-32 |
+| Qwen-3.8-27B | **C0 - A** | +37.54 | 8.73 | [+20.42, +54.66] | 1.72 × 10^-5 | 3.15 | [+31.36, +43.72] | 1.07 × 10^-32 |
+| Qwen-3.8-27B | **B - A** | +50.06 | 8.73 | [+32.94, +67.18] | 9.94 × 10^-9 | 2.11 | [+45.93, +54.19] | 5.42 × 10^-125 |
+| Qwen-3.8-27B | **C0 - C** | +9.81 | 8.73 | [-7.30, +26.93] | 0.2612 | 2.93 | [+4.06, +15.56] | 0.0008 |
+| Qwen-3.8-27B | **C - D** | +29.05 | 8.73 | [+11.93, +46.17] | 0.0009 | 2.86 | [+23.45, +34.65] | 2.73 × 10^-24 |
+| Qwen-3.8-27B | **B - C0** | +12.52 | 8.73 | [-4.60, +29.64] | 0.1517 | 2.75 | [+7.13, +17.91] | 5.34 × 10^-6 |
 
 **Key Findings:**
-1. Fact-level random intercepts ($4.0\%$ to $10.5\%$) and condition-by-fact random slopes ($23.4\%$ to $35.2\%$) capture the predominant share of clustered variance (total clustered share $36.5\%$ to $49.7\%$), confirming substantial intrinsic difficulty variation across relational invariants and heterogeneous rule sensitivity across experimental conditions.
+1. Fact-level random intercepts ($4.0\%$ to $14.7\%$) and condition-by-fact random slopes ($23.4\%$ to $35.2\%$) capture the predominant share of clustered variance (total clustered share $36.5\%$ to $51.3\%$), confirming substantial intrinsic difficulty variation across relational invariants and heterogeneous rule sensitivity across experimental conditions.
 2. Cell-level clustering accounts for $2.1\%$ to $6.4\%$ of variance, reflecting the added complexity of multi-tenancy and immutability, while task-level clustering accounts for $0.1\%$ to $2.7\%$.
-3. Fixed-effect condition estimates under small-sample CR1 task-clustered sandwich standard errors remain statistically significant ($p < 0.0001$ for $C - A$, $C0 - A$, and $B - A$), confirming that primary contrast conclusions are robust to arbitrary task-level covariance and condition-by-fact random variation.
+3. Fixed-effect condition estimates under small-sample CR1 task-clustered sandwich standard errors remain statistically significant ($p < 0.0001$ for $C - A$, $C_0 - A$, and $B - A$), confirming that primary contrast conclusions are robust to arbitrary task-level covariance and condition-by-fact random variation.
 
 ### 7.3 Retrieval Stratification: Retrieved vs. Non-Retrieved Bound Facts
 *(Descriptive sensitivity analysis on bound task-fact pairs)*
 
 Table 7 breaks down pass rates on bound task-fact pairs stratified by whether the fact was retrieved ($n=396$) or non-retrieved ($n=82$):
 
-| Model Family | Stratum | A % | D % | C % | C0 % | B % | Dâˆ’A [95% CI] | Câˆ’A [95% CI] | C0âˆ’A [95% CI] | Bâˆ’A [95% CI] |
+| Model Family | Stratum | A % | D % | C % | C0 % | B % | D−A [95% CI] | C−A [95% CI] | C0−A [95% CI] | B−A [95% CI] |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Nemotron-3-Ultra-550B | **Retrieved (n=396)** | 41.7% | 41.7% | 76.5% | 91.9% | 93.2% | 0.00 [-4.04, +4.07] | +34.85 [+29.55, +40.21] | +50.25 [+44.53, +55.77] | +51.52 [+45.34, +57.64] |
 | | **Non-Retrieved (n=82)** | 73.2% | 78.0% | 47.6% | 58.5% | 97.6% | +4.88 [-4.05, +14.29] | -25.61 [-36.14, -13.75] | -14.63 [-25.61, -2.53] | +24.39 [+15.07, +34.18] |
@@ -471,8 +500,10 @@ Table 7 breaks down pass rates on bound task-fact pairs stratified by whether th
 | | **Non-Retrieved (n=82)** | 70.7% | 64.6% | 48.8% | 59.8% | 76.8% | -6.10 [-17.44, +4.94] | -21.95 [-34.94, -7.69] | -10.98 [-22.89, +1.35] | +6.10 [-7.59, +19.75] |
 | Gemini-3.5-Flash-Lite | **Retrieved (n=396)** | 35.1% | 32.8% | 80.8% | 80.0% | 83.1% | -2.27 [-6.62, +1.99] | +45.71 [+40.00, +51.26] | +44.95 [+37.38, +52.24] | +47.98 [+41.10, +54.78] |
 | | **Non-Retrieved (n=82)** | 41.5% | 25.6% | 8.5% | 24.4% | 96.3% | -15.85 [-25.00, -6.58] | -32.93 [-40.48, -25.00] | -17.07 [-27.50, -7.23] | +54.88 [+45.00, +64.94] |
+| Qwen-3.8-27B | **Retrieved (n=396)** | 41.7% | 38.4% | 79.5% | 82.6% | 92.7% | -3.28 [-8.05, +1.31] | +37.88 [+31.77, +43.89] | +40.91 [+34.91, +46.62] | +51.01 [+45.43, +56.62] |
+| | **Non-Retrieved (n=82)** | 72.0% | 81.7% | 45.1% | 67.1% | 97.6% | +9.76 [-2.38, +22.47] | -26.83 [-40.74, -11.69] | -4.88 [-19.75, +10.39] | +25.61 [+15.48, +36.90] |
 
-**Observation (Checklist Displacement):** Where Placebo $D$ does not trigger syntax crashes, $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C0 - A$ drops ($-10.98\%$ to $-24.39\%$). Providing an incomplete checklist of retrieved rules causes models to displace unprompted baseline knowledge; natural language summaries exacerbate this displacement relative to verbatim text.
+**Observation (Checklist Displacement):** Where Placebo $D$ does not trigger syntax crashes, $D - A$ on the non-retrieved set is flat ($[-4.88\%, +4.88\%]$). By contrast, $C - A$ drops sharply ($-21.95\%$ to $-37.80\%$) and $C_0 - A$ drops ($-10.98\%$ to $-24.39\%$). Providing an incomplete checklist of retrieved rules causes models to displace unprompted baseline knowledge; natural language summaries exacerbate this displacement relative to verbatim text.
 
 ### 7.4 Forensic Invariant Collisions: F-16/F-36 & Duplicate Primary Keys
 *(Observational post-hoc diagnostics)*
@@ -480,8 +511,8 @@ Table 7 breaks down pass rates on bound task-fact pairs stratified by whether th
 1. **The $F\text{-}16 / F\text{-}36$ Inline `REFERENCES` Collision:**
    - Invariant $F\text{-}36$ states: `...supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT`.
    - In PostgreSQL 16, inline `REFERENCES` automatically creates an auto-named constraint `<table>_supersedes_id_fkey`, violating invariant $F\text{-}16$ (`fk_<table>_<column>`).
-   - Across all five models, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$**.
-   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rates in $C0$ were **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b-full`, and **83.3%** in `glm5-2`.
+   - Across all six models, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$**.
+   - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rates in $C0$ were **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b-full`, **83.3%** in `glm5-2`, and **100.0%** in `qwen27b-2`.
 2. **GLM Duplicate Primary Key Defect:**
    - In `glm5-2` Condition $C0$, exactly 20 trials emitted duplicate primary keys (column-level plus table-level), resulting in 20 fatal `tableMissing` transaction rollbacks.
    - $F\text{-}01$ was retrieved 0 times across all 120 tasks in Condition C0 (0/120). Unretrieved $F\text{-}01$ allowed GLM-5.3 to emit redundant primary key clauses under $C0$, suppressing its unconditional score.
@@ -508,7 +539,7 @@ The Reflexion framework (Shinn et al., 2023) demonstrated that language agents c
 Recent studies in code and query generation, such as LAST-CQ (Prokopiou et al., 2026) and MERIT (Vo et al., 2026; Mishra & Mishra, 2026), have explored retrieving past execution traces and error feedback to guide query formulation and agentic self-repair. While these approaches demonstrate the utility of episodic memory retrieval, they do not isolate the difference between natural-language distillation and verbatim rule representation, nor do they examine the partial-checklist displacement observed in our retrieval stratification.
 
 ### 8.3 Memory Degradation and Negative Transfer
-Zhang et al. (2026), in *"Useful Memories Become Faulty When Continuously Updated by LLMs"*, demonstrated that accumulated memory in language agents can induce negative transfer, where updated lessons degrade performance across tasks. Our observation of partial-checklist displacement (Section 7.3) provides direct empirical confirmation in relational schema engineering: injecting $K=10$ rules suppresses compliance on non-retrieved baseline invariants.
+Zhang et al. (2026), in *"Useful Memories Become Faulty When Continuously Updated by LLMs"*, demonstrated that accumulated memory in language agents can induce negative transfer, where updated lessons degrade performance across tasks. Our observation of partial-checklist displacement (Section 7.3) provides direct empirical confirmation in relational schema engineering: injecting $K=10$ rules suppresses compliance on non-retrieved baseline invariants. Furthermore, Zhang et al. document **Concrete-Vocabulary Erosion** (Section D.2), showing how iterative LLM consolidation rewrites concrete domain properties (such as `"max size"`) into un-actionable generalizations (`"a derived per-object numeric attribute"`). Their empirical benchmark demonstrates an immediate **Initial Compression Error** (Table 5), where even single-batch distillation without prior-store conditioning trails raw trajectories (70.0% vs. 76.6%). This directly grounds our primary mechanism: when the Advisor summarizes historical SQL failures into conversational guidance, it strips exact relational identifiers (`supersedes_id`, `app_metadata.tenant_id`, `P0001`), producing a severe distillation penalty ($C_0 > C$) in syntax-rigid contracts.
 
 ### 8.4 Self-Evolving Agents and Experience Abstraction
 Zhao et al. (2026) investigated whether language agents can faithfully improve via self-reflection (*"Large Language Model Agents Are Not Always Faithful Self-Evolvers"*), finding that agent updates frequently suffer from ungrounded hallucination unless verified by external execution feedback. Shen et al. (2026), in *"Decocted Experience Improves Test-Time Inference in LLM Agents"*, investigated the distillation of experiential memory, demonstrating that structured abstractions can improve test-time inference across multi-step workflows. Our results in relational schema generation establish a crucial boundary condition: for syntax-rigid structural contracts, distilled abstractions omit decisive schema identifiers, causing verbatim canonical specifications to strictly outperform distilled advice.
@@ -543,9 +574,9 @@ We document four deviations from the initial experimental plan:
 
 Axiom establishes that reliable automated database engineering requires **Authority Separation (Invariant 0)**: language models must be treated as untrusted candidate generators graded exclusively by deterministic execution oracles.
 
-Across **3,000 independent generations (3,600 scored trials)** on five model families, our findings demonstrate that:
+Across **3,600 independent generations (4,320 scored trials)** on six model families, our findings demonstrate that:
 1. **Failure-Prioritized Rule Retrieval is Highly Effective:** Injecting targeted failure rules improves bound-fact compliance by +18.19 to +33.04 percentage points over zero-shot baselines ($p < 0.0001$).
-2. **Verbatim Specifications Beat Distilled Summaries:** In rigid software engineering contracts, natural language summaries strip critical identifiers. Verbatim canonical statements significantly outperform distilled advice in 3 of 5 models unconditionally, and in all 5 models under clean execution (by +5.68 to +15.36 percentage points).
+2. **Verbatim Specifications Beat Distilled Summaries:** In rigid software engineering contracts, natural language summaries strip critical identifiers. Verbatim canonical statements significantly outperform distilled advice in 4 of 6 models unconditionally, and in all 6 models under clean execution (by +5.68 to +15.36 percentage points).
 3. **Exploratory Token Efficiency:** Selective verbatim rule retrieval achieves 79.9% to 110.6% of the performance of the full static reference condition while reducing prompt token consumption by 51.0% to 53.3%.
 4. **Verbatim Invariants Require Precise Syntactic Specification:** Syntactic ambiguities in rule text (such as inline foreign keys) produce deterministic failure cascades that can only be diagnosed through rigorous statement-sufficiency validation.
 
@@ -557,23 +588,22 @@ Table A1 documents the complete campaign execution ledger across all completed, 
 
 | Run ID | Requested Model | Provider | Trials | Matrix Scope | Inclusion Status | Exclusion Criteria & Governance Note |
 | :--- | :--- | :--- | :---: | :---: | :---: | :--- |
-| `dev-calibration` | `dev-calibration` | nvidia | 40 | â€” | **excluded** | `archived_historical`:  |
-| `gemini-3.1-flash-lite` | `gemini-3.1-flash-lite` | gemini | 480 | eligible_until_deadline | **eligible_until_deadline** | Stopped at 480 trials (80 balanced tasks H-001..H-080 across all 6 conditions) due to Google AI Studio daily quota limit (infrastructure exhaustion, not result peeking); model pinned to gemini-3.1-flash-lite on standard endpoint; treated identically to gemini-3.5-flash-lite; eligible until deadline upon resumption. |
-| `gemini-flash-lite-full` | `gemini-3.5-flash-lite` | gemini | 480 | eligible_until_deadline | **eligible_until_deadline** | Stopped at 480 trials (80 balanced tasks H-001..H-080 across all 6 conditions) due to Google AI Studio daily quota limit (infrastructure exhaustion, not result peeking); model pinned to gemini-3.5-flash-lite on standard endpoint; eligible until deadline upon resumption. |
-| `gemini-mini` | `gemini-3.6-flash` | gemini | 15 | excluded_pilot | **excluded** | `completion_720`: Excluded under criterion completion_720: aborted at 15 trials (3 tasks) during mini-subset probe. |
-| `gemma4-26b-full` | `gemma-4-26b-it` | gemini | 446 | excluded_model_set_and_alias_mismatch | **excluded** | `pinned_model_version`: Excluded under criterion pinned_model_version: completed 720 trials, but returnedModel alias shifted mid-campaign (requested gemma-4-26b-it, returned gemma-4-26b-a4b-it). |
+| `dev-calibration` | `dev-calibration` | nvidia | 40 | — | **excluded** | `archived_historical`:  |
+| `gemini-3.1-flash-lite` | `gemini-3.1-flash-lite` | gemini | 720 | main | **included** | Completed all 720 trials with constant settings on standard Google AI Studio endpoint with pinned model version; output sanitization verified; passed B > A validity gate (75.46% vs 34.68%, 95% CI strictly excluding zero). |
+| `gemini-flash-lite-full` | `gemini-3.5-flash-lite` | gemini | 720 | main | **included** | Completed all 720 trials with constant settings on standard Google AI Studio endpoint with pinned model version; output sanitization verified; passed B > A validity gate (85.82% vs 26.94%, 95% CI strictly excluding zero). |
+| `gemini-mini` | `gemini-3.6-flash` | gemini | 18 | excluded_pilot | **excluded** | `completion_720`: Excluded under criterion completion_720: aborted at 18 trials (3 tasks) during mini-subset probe. |
+| `gemma4-26b-full` | `gemma-4-26b-it` | gemini | 720 | excluded_model_set_and_alias_mismatch | **excluded** | `pinned_model_version`: Excluded under criterion pinned_model_version: completed 720 trials, but returnedModel alias shifted mid-campaign (requested gemma-4-26b-it, returned gemma-4-26b-a4b-it). |
 | `gemma4-26b-full-archived-tag-leak` | `gemma4-26b-full-archived-tag-leak` | gemini | 446 | excluded_invalid_sanitization | **excluded** | `archived_historical`: Halted at 446 trials (out of 720) and archived to out/archive/gemma-tag-leak-2026-11-08 after discovering pre-fix executor did not strip unescaped <thought>...</thought> blocks (156 trials leaked raw tags into SQL) and 141 trials truncated at length limit (8192 max_tokens). Infrastructure/sanitization defect, not result peeking. |
-| `gemma4-31b-full` | `gemma-4-31b-it` | gemini | 720 | eligible_until_deadline | **eligible_until_deadline** | In-progress run on Google AI Studio post-fix (thinking_level=minimal, verified sanitization); eligible until deadline upon completion. |
+| `gemma4-31b-full` | `gemma-4-31b-it` | gemini | 720 | main | **included** | Completed all 720 trials on Google AI Studio with constant settings (thinking_level=minimal, verified sanitization); passed B > A validity gate (93.33% vs 41.25%, 95% CI strictly excluding zero). |
 | `gemma4-31b-full-archived-tag-leak` | `gemma4-31b-full-archived-tag-leak` | gemini | 22 | excluded_invalid_sanitization | **excluded** | `archived_historical`: Halted at 22 trials (H-001..H-004 partial) and archived to out/archive/gemma-tag-leak-2026-11-08 due to the same pre-fix <thought> tag leak (15 trials) plus B/E_B hitting length truncation (7 trials). Infrastructure/sanitization defect. |
 | `glm5-2` | `z-ai/glm-5.3-flash` | nvidia | 720 | main | **included** | Completed all 720 trials with constant settings on standard NVIDIA API endpoint with pinned model version; output sanitization verified; passed B > A validity gate (90.22% vs 41.46%, 95% CI strictly excluding zero). |
-| `gptoss-120b-expanded` | `openai/gpt-oss-120b` | groq | 124 | eligible_until_deadline | **eligible_until_deadline** | In-progress run against Groq standard endpoint (model pinned to openai/gpt-oss-120b); eligible until deadline upon completion. |
-| `gptoss-120b-mini` | `openai/gpt-oss-120b` | groq | 48 | excluded_mini_subset | **excluded** | `completion_720`: Excluded under criterion completion_720: 48-trial 8-task diagnostic mini-probe. |
+| `gptoss-120b-expanded` | `openai/gpt-oss-120b` | groq | 550 | eligible_until_deadline | **eligible_until_deadline** | In-progress run against Groq standard endpoint (model pinned to openai/gpt-oss-120b); eligible until deadline upon completion. |
 | `liquid17b-mini` | `liquid/lfm-3-1.7b` | openrouter | 48 | excluded_mini_subset | **excluded** | `completion_720, verified_sanitization, validity_gate_b_gt_a`: Excluded under criteria completion_720 (48 trials), verified_sanitization (37/48 length truncation), and validity_gate_b_gt_a (B < A). |
-| `nemotron-1` | `nemotron-1` | nvidia | 720 | â€” | **excluded** | `archived_historical`:  |
+| `nemotron-1` | `nemotron-1` | nvidia | 720 | — | **excluded** | `archived_historical`:  |
 | `nemotron-2` | `nvidia/nemotron-3-ultra-550b-a55b` | nvidia | 720 | main | **included** | Completed all 720 trials with constant settings on standard NVIDIA API endpoint with pinned model version; output sanitization verified; passed B > A validity gate (93.88% vs 47.44%, 95% CI strictly excluding zero). |
 | `nemotron-lightning-full` | `nvidia/nemotron-3.5-lightning:free` | kilo | 720 | exploratory_excluded | **excluded** | `constant_settings, standard_endpoint, validity_gate_b_gt_a`: Excluded under rule criteria: non-constant settings (Trial 1 max_tokens=8192 with default reasoning vs Trials 2-720 max_tokens=16384 with reasoning disabled), served via unstable third-party gateway (kilo.ai), and failed post-hoc validity gate (B 42.71% vs A 42.00%, CI includes zero). |
-| `qwen27b-2` | `qwen/qwen3.8-27b` | groq | 217 | eligible_until_deadline | **eligible_until_deadline** | In-progress run against Groq standard endpoint (model pinned to qwen/qwen3.8-27b); eligible until deadline upon completion. |
-| `train-calibration` | `train-calibration` | nvidia | 40 | â€” | **excluded** | `archived_historical`:  |
+| `qwen27b-2` | `qwen/qwen3.8-27b` | groq | 720 | main | **included** | Completed all 720 trials with constant settings on standard Groq API endpoint with pinned model version; output sanitization verified; passed B > A validity gate (92.49% vs 46.31%, 95% CI strictly excluding zero). |
+| `train-calibration` | `train-calibration` | nvidia | 40 | — | **excluded** | `archived_historical`:  |
 | `xingchen-mini` | `xingchen-agi/xing4.0-29b-a4b:free` | openrouter | 48 | excluded_mini_subset | **excluded** | `completion_720, verified_sanitization`: Excluded under criteria completion_720 (48 trials) and verified_sanitization (13/48 length truncation, 9/48 empty). |
 
 ---

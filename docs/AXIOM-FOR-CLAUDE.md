@@ -34,7 +34,7 @@ verification and promotion gates.
 - [`fixtures/task-v2/`](../fixtures/task-v2/) - frozen facts, tasks, seed database,
   and good/bad Oracle fixtures.
 - [`docs/AXIOM-RESEARCH-DOSSIER.md`](./AXIOM-RESEARCH-DOSSIER.md) - complete audited empirical research dossier, paired clean contrasts, forensic collision analysis, statement-sufficiency pilot, and v3 pre-registration design.
-- [`docs/AXIOM-PAPER.md`](./AXIOM-PAPER.md) - complete academic manuscript covering the 5-model evaluation fleet across 3,600 confirmatory trials.
+- [`docs/AXIOM-PAPER.md`](./AXIOM-PAPER.md) - complete academic manuscript covering the 6-model evaluation fleet across 4,320 confirmatory trials.
 - [`docs/spec/task-v2.md`](./spec/task-v2.md) - task design and scoring contract.
 
 ## Non-negotiable invariants
