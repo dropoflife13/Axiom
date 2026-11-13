@@ -107,6 +107,24 @@ describe('Step 2: realtime-research-daemon', () => {
       JSON.stringify({ metadata, trials: allTrials.slice(0, 16) }),
       'utf8'
     );
+    // Phase 1a: Blind mode on partial 16/960 checkpoint omits interim condition means and quarantine candidates
+    const blindPartialRes = runDaemonOnce({
+      runsDir,
+      outDir,
+      dashboardFile,
+      quarantineFile,
+      dossierFile,
+      templateFile,
+      tasksFile,
+      runIds: [runId],
+      blind: true,
+    });
+    expect(blindPartialRes.telemetry.blindMode).toBe(true);
+    expect(blindPartialRes.telemetry.runs[runId].blinded).toBe(true);
+    expect(blindPartialRes.telemetry.runs[runId].conditionMeans.A.meanBoundPct).toBe(0);
+    expect(blindPartialRes.quarantine.candidates).toEqual([]);
+
+    // Phase 1b: Unblinded partial 16/960 checkpoint
     const partialRes = runDaemonOnce({
       runsDir,
       outDir,
@@ -124,6 +142,7 @@ describe('Step 2: realtime-research-daemon', () => {
     expect(partialRes.quarantine.candidates.length).toBeGreaterThanOrEqual(1);
     const f18Cand = partialRes.quarantine.candidates.find((c) => c.factId === 'F-18');
     expect(f18Cand).toBeDefined();
+    expect(f18Cand!.scope).toBe('v4-only');
     expect(f18Cand!.readyForNextGenerationPromotion).toBe(true);
 
     // Phase 2: Complete 960/960 checkpoint
@@ -171,5 +190,5 @@ describe('Step 2: realtime-research-daemon', () => {
     expect(cliOut).toContain('nemotron-v3=');
 
     fs.rmSync(tmp, { recursive: true, force: true });
-  }, 20_000);
+  }, 40_000);
 });

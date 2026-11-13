@@ -25,7 +25,7 @@
 
 ---
 
-## 4. Forensic Mediation & Self-Healing Quarantine
+## 4. Failure-Mode Attribution & Self-Healing Quarantine
 
 ### Observed Defect Rates in `C0_clean` / `C_ID` (Live Across All Runs)
 {{forensic_summary_table}}

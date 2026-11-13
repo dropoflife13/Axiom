@@ -32,6 +32,7 @@ export const DEFAULT_V3_RUN_IDS = [
 
 export interface QuarantineCandidate {
   candidateId: string;
+  scope: 'v4-only';
   factId: string;
   triggerFlag: SqlForensicFlagName;
   triggerConditions: Array<'C0_clean' | 'C_ID'>;
@@ -79,6 +80,7 @@ export interface RunTelemetrySummary {
   finalized: boolean;
   lastTaskId: string | null;
   lastCondition: string | null;
+  blinded?: boolean;
   conditionMeans: Record<
     ConditionV3Id,
     {
@@ -95,6 +97,7 @@ export interface RunTelemetrySummary {
 export interface LiveTelemetrySnapshot {
   generatedAt: string;
   protocol: 'Ablation v3';
+  blindMode: boolean;
   runs: Record<string, RunTelemetrySummary>;
 }
 
@@ -107,6 +110,7 @@ export interface DaemonOptions {
   templateFile?: string;
   tasksFile?: string;
   runIds?: readonly string[];
+  blind?: boolean;
 }
 
 interface DaemonState {
@@ -260,7 +264,8 @@ function compileDossierFromTemplate(
   ];
   for (const id of runIds) {
     const r = telemetry.runs[id];
-    const fmt = (c: ConditionV3Id) => `${r.conditionMeans[c].meanBoundPct.toFixed(1)}%`;
+    const fmt = (c: ConditionV3Id) =>
+      r.blinded ? 'BLIND' : `${r.conditionMeans[c].meanBoundPct.toFixed(1)}%`;
     fleetLines.push(
       `| ${id} | ${r.trialsCompleted}/${r.targetTrials} | ${r.lastTaskId ?? '-'} ${r.lastCondition ?? ''} | ${fmt('A')} | ${fmt('D_safe')} | ${fmt('C')} | ${fmt('C0')} | ${fmt('C0_clean')} | ${fmt('C_ID')} | ${fmt('C0_rand')} | ${fmt('B')} |`
     );
@@ -363,6 +368,7 @@ export function runDaemonOnce(options?: DaemonOptions): {
   const templateFile =
     options?.templateFile ?? path.join(root, 'docs', 'AXIOM-V3-LIVE-DOSSIER.template.md');
   const tasksFile = options?.tasksFile ?? path.join(root, 'fixtures', 'task-v3', 'tasks.json');
+  const blindMode = Boolean(options?.blind);
 
   const taskLookup = new Map<string, TaskV2Item>();
   const forensicLookup = new Map<string, ForensicTaskContext>();
@@ -458,6 +464,9 @@ export function runDaemonOnce(options?: DaemonOptions): {
     for (const c of V3_CONDITIONS) byCond.set(c, []);
     const forensicCounts = { ...emptyForensic };
 
+    const isRunComplete = trials.length === 960;
+    const isBlindedRun = blindMode && !isRunComplete;
+
     for (const tr of trials) {
       byCond.get(tr.condition)?.push(tr);
       const ctx = forensicLookup.get(tr.taskId) ?? {
@@ -469,6 +478,7 @@ export function runDaemonOnce(options?: DaemonOptions): {
         if (flags[fname]) {
           forensicCounts[fname]++;
           if (
+            !isBlindedRun &&
             (tr.condition === 'C0_clean' || tr.condition === 'C_ID') &&
             QUARANTINE_BLUEPRINTS[fname]
           ) {
@@ -489,13 +499,15 @@ export function runDaemonOnce(options?: DaemonOptions): {
     for (const c of V3_CONDITIONS) {
       const list = byCond.get(c) ?? [];
       const n = list.length;
-      conditionMeans[c] = {
-        n,
-        meanBoundPct: n ? (100 * list.reduce((s, r) => s + r.boundFactFraction, 0)) / n : 0,
-        strictPassPct: n ? (100 * list.filter((r) => r.boundPassed).length) / n : 0,
-        crashes: list.filter((r) => Boolean(r.migrationExitNonZero)).length,
-        tableMissing: list.filter((r) => Boolean(r.tableMissing)).length,
-      };
+      conditionMeans[c] = isBlindedRun
+        ? { n, meanBoundPct: 0, strictPassPct: 0, crashes: 0, tableMissing: 0 }
+        : {
+            n,
+            meanBoundPct: n ? (100 * list.reduce((s, r) => s + r.boundFactFraction, 0)) / n : 0,
+            strictPassPct: n ? (100 * list.filter((r) => r.boundPassed).length) / n : 0,
+            crashes: list.filter((r) => Boolean(r.migrationExitNonZero)).length,
+            tableMissing: list.filter((r) => Boolean(r.tableMissing)).length,
+          };
     }
 
     state.lastTrialCountByRun[runId] = trials.length;
@@ -529,8 +541,9 @@ export function runDaemonOnce(options?: DaemonOptions): {
       finalized: trials.length === 960 && Boolean(ledger[runId]),
       lastTaskId: last?.taskId ?? null,
       lastCondition: last?.condition ?? null,
+      blinded: isBlindedRun,
       conditionMeans,
-      forensicCounts,
+      forensicCounts: isBlindedRun ? { ...emptyForensic } : forensicCounts,
     };
   }
 
@@ -538,6 +551,7 @@ export function runDaemonOnce(options?: DaemonOptions): {
   const telemetry: LiveTelemetrySnapshot = {
     generatedAt: nowIso,
     protocol: 'Ablation v3',
+    blindMode,
     runs: runsTelemetry,
   };
 
@@ -549,6 +563,7 @@ export function runDaemonOnce(options?: DaemonOptions): {
     const verification = verifyCandidateRule(bp.factId, bp.proposedLesson);
     candidates.push({
       candidateId: `Q-${bp.factId}-${flagName}`,
+      scope: 'v4-only',
       factId: bp.factId,
       triggerFlag: flagName,
       triggerConditions: [...bucket.conditions].sort(),
@@ -599,18 +614,19 @@ function main(): void {
   const args = process.argv.slice(2);
   const once = args.includes('--once');
   const watch = args.includes('--watch');
+  const blind = args.includes('--blind');
   const intervalIdx = args.indexOf('--interval-ms');
   const intervalMs = intervalIdx >= 0 && args[intervalIdx + 1] ? Number(args[intervalIdx + 1]) : 15_000;
 
   if (!once && !watch) {
     console.error(
-      'Usage: npx tsx scripts/v3/realtime-research-daemon.ts (--once | --watch [--interval-ms 15000])'
+      'Usage: npx tsx scripts/v3/realtime-research-daemon.ts (--once | --watch [--interval-ms 15000]) [--blind]'
     );
     process.exit(1);
   }
 
   const tick = () => {
-    const res = runDaemonOnce();
+    const res = runDaemonOnce({ blind });
     const summary = Object.values(res.telemetry.runs)
       .map((r) => `${r.runId}=${r.trialsCompleted}/960`)
       .join(' ');

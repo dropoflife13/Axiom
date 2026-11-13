@@ -7,12 +7,19 @@ export interface ForensicTaskContext {
   };
 }
 
+export type ForensicExecutionClass =
+  | 'execution_fatal'
+  | 'invariant_violating'
+  | 'compliance_marker';
+
 export interface SqlForensicFlags {
   hasInlineSupersedesFk: boolean;
   hasExplicitSupersedesFk: boolean;
   hasDuplicatePrimaryKey: boolean;
   hasPublicAuthJwt: boolean;
   hasPublicConstraintQualifier: boolean;
+  omittedSupersedesId: boolean;
+  inventedLineageCol: boolean;
   hasHallucinatedLineageCol: boolean;
   hasUserMetadataLeak: boolean;
   hasSingularCompositeIndexName: boolean;
@@ -29,6 +36,8 @@ export const SQL_FORENSIC_FLAG_NAMES: readonly SqlForensicFlagName[] = Object.fr
   'hasDuplicatePrimaryKey',
   'hasPublicAuthJwt',
   'hasPublicConstraintQualifier',
+  'omittedSupersedesId',
+  'inventedLineageCol',
   'hasHallucinatedLineageCol',
   'hasUserMetadataLeak',
   'hasSingularCompositeIndexName',
@@ -36,6 +45,64 @@ export const SQL_FORENSIC_FLAG_NAMES: readonly SqlForensicFlagName[] = Object.fr
   'missingCreatedAtColumn',
   'missingDeletedAtOnMutable',
 ]);
+
+export const FORENSIC_FLAG_METADATA: Record<
+  SqlForensicFlagName,
+  { executionClass: ForensicExecutionClass; description: string }
+> = Object.freeze({
+  hasInlineSupersedesFk: {
+    executionClass: 'invariant_violating',
+    description: 'Inline supersedes_id REFERENCES without explicit CONSTRAINT fk_<table>_supersedes_id',
+  },
+  hasExplicitSupersedesFk: {
+    executionClass: 'compliance_marker',
+    description: 'Explicit table-level CONSTRAINT fk_<table>_supersedes_id FOREIGN KEY (supersedes_id) REFERENCES',
+  },
+  hasDuplicatePrimaryKey: {
+    executionClass: 'execution_fatal',
+    description: 'Two or more PRIMARY KEY declarations inside a single CREATE TABLE block',
+  },
+  hasPublicAuthJwt: {
+    executionClass: 'execution_fatal',
+    description: 'Invalid schema qualification public.auth.jwt()',
+  },
+  hasPublicConstraintQualifier: {
+    executionClass: 'execution_fatal',
+    description: 'Invalid schema qualification CONSTRAINT public.<name>',
+  },
+  omittedSupersedesId: {
+    executionClass: 'invariant_violating',
+    description: 'Append-only table omits supersedes_id column',
+  },
+  inventedLineageCol: {
+    executionClass: 'invariant_violating',
+    description: 'Append-only table declares an invented lineage column (parent_id, previous_id, prior_id, superseded_by, prev_id)',
+  },
+  hasHallucinatedLineageCol: {
+    executionClass: 'invariant_violating',
+    description: 'Append-only table omits supersedes_id and invents an alternative lineage column',
+  },
+  hasUserMetadataLeak: {
+    executionClass: 'invariant_violating',
+    description: 'CREATE POLICY references user_metadata instead of app_metadata',
+  },
+  hasSingularCompositeIndexName: {
+    executionClass: 'invariant_violating',
+    description: 'Multi-column index named idx_<table>_<col1> omitting <col2>',
+  },
+  hasRevokeWithoutPositiveGrant: {
+    executionClass: 'invariant_violating',
+    description: 'Append-only REVOKE without positive GRANT SELECT (readonly_user) and GRANT SELECT, INSERT (application)',
+  },
+  missingCreatedAtColumn: {
+    executionClass: 'invariant_violating',
+    description: 'CREATE TABLE omits created_at column completely',
+  },
+  missingDeletedAtOnMutable: {
+    executionClass: 'invariant_violating',
+    description: 'Mutable CREATE TABLE omits deleted_at column completely',
+  },
+});
 
 /**
  * Strips SQL `--` line comments and `/* ... *\/` block comments while preserving
@@ -88,6 +155,24 @@ export function stripSqlComments(sql: string): string {
         i++;
       }
       continue;
+    }
+
+    // Dollar-quoted PL/pgSQL string / body ($tag$...$tag$ or $$...$$)
+    if (ch === '$') {
+      const dollarMatch = sql.slice(i).match(/^\$([A-Za-z_][A-Za-z0-9_]*)?\$/);
+      if (dollarMatch) {
+        const tag = dollarMatch[0];
+        out += tag;
+        i += tag.length;
+        const closeIdx = sql.indexOf(tag, i);
+        if (closeIdx === -1) {
+          out += sql.slice(i);
+          break;
+        }
+        out += sql.slice(i, closeIdx + tag.length);
+        i = closeIdx + tag.length;
+        continue;
+      }
     }
 
     // Line comment --
@@ -195,6 +280,50 @@ function extractTargetCreateTableBody(strippedSql: string, table: string): strin
     }
   }
   return strippedSql.slice(openParenIdx + 1);
+}
+
+function extractAllCreateTableBodies(strippedSql: string): string[] {
+  const bodies: string[] = [];
+  const createRegex =
+    /\bCREATE\s+(?:UNLOGGED\s+|TEMP(?:ORARY)?\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:[a-zA-Z_][a-zA-Z0-9_"]*\.)?[a-zA-Z_][a-zA-Z0-9_"]*\s*\(/gi;
+  let match: RegExpExecArray | null;
+  while ((match = createRegex.exec(strippedSql)) !== null) {
+    const openParenIdx = match.index + match[0].length - 1;
+    let depth = 0;
+    let inSingleQuote = false;
+    let inDoubleQuote = false;
+    let endIdx = strippedSql.length;
+
+    for (let i = openParenIdx; i < strippedSql.length; i++) {
+      const ch = strippedSql[i];
+      if (inSingleQuote) {
+        if (ch === "'") {
+          if (i + 1 < strippedSql.length && strippedSql[i + 1] === "'") i++;
+          else inSingleQuote = false;
+        }
+        continue;
+      }
+      if (inDoubleQuote) {
+        if (ch === '"') {
+          if (i + 1 < strippedSql.length && strippedSql[i + 1] === '"') i++;
+          else inDoubleQuote = false;
+        }
+        continue;
+      }
+      if (ch === "'") inSingleQuote = true;
+      else if (ch === '"') inDoubleQuote = true;
+      else if (ch === '(') depth++;
+      else if (ch === ')') {
+        depth--;
+        if (depth === 0) {
+          endIdx = i;
+          break;
+        }
+      }
+    }
+    bodies.push(strippedSql.slice(openParenIdx + 1, endIdx));
+  }
+  return bodies;
 }
 
 function splitTopLevelCommas(exprList: string): string[] {
@@ -306,10 +435,11 @@ export function classifySqlForensics(
   const hasInlineSupersedesFk =
     inlineSupersedesFkRegex.test(stripped) && !hasNamedSupersedesConstraint;
 
-  // 3: Duplicate PRIMARY KEY declarations in target CREATE TABLE block
-  const pkScanTarget = tableBody ?? '';
-  const pkMatches = pkScanTarget.match(/\bPRIMARY\s+KEY\b/gi);
-  const hasDuplicatePrimaryKey = (pkMatches?.length ?? 0) >= 2;
+  // 3: Duplicate PRIMARY KEY declarations scoped per CREATE TABLE block
+  const allTableBodies = extractAllCreateTableBodies(stripped);
+  const hasDuplicatePrimaryKey = allTableBodies.some(
+    (body) => (body.match(/\bPRIMARY\s+KEY\b/gi)?.length ?? 0) >= 2
+  );
 
   // 4: public.auth.jwt()
   const hasPublicAuthJwt = /\bpublic\s*\.\s*auth\s*\.\s*jwt\s*\(\s*\)/i.test(stripped);
@@ -318,11 +448,13 @@ export function classifySqlForensics(
   const hasPublicConstraintQualifier =
     /\bCONSTRAINT\s+"?public"?\s*\.\s*"?[a-zA-Z_][a-zA-Z0-9_]*"?/i.test(stripped);
 
-  // 6: Hallucinated lineage column on append_only tasks when supersedes_id is absent
-  const hasHallucinatedLineageCol =
+  // 6: Orthogonal append_only lineage flags (omittedSupersedesId & inventedLineageCol)
+  const lineageScope = tableBody ?? stripped;
+  const omittedSupersedesId = task.features.append_only && !/\bsupersedes_id\b/i.test(lineageScope);
+  const inventedLineageCol =
     task.features.append_only &&
-    !/\bsupersedes_id\b/i.test(stripped) &&
-    /\b(parent_id|previous_id|prior_id|superseded_by|prev_id)\b/i.test(stripped);
+    /\b(parent_id|previous_id|prior_id|superseded_by|prev_id)\b/i.test(lineageScope);
+  const hasHallucinatedLineageCol = omittedSupersedesId && inventedLineageCol;
 
   // 7: user_metadata inside CREATE POLICY
   const hasUserMetadataLeak = detectUserMetadataLeak(stripped);
@@ -361,6 +493,8 @@ export function classifySqlForensics(
     hasDuplicatePrimaryKey,
     hasPublicAuthJwt,
     hasPublicConstraintQualifier,
+    omittedSupersedesId,
+    inventedLineageCol,
     hasHallucinatedLineageCol,
     hasUserMetadataLeak,
     hasSingularCompositeIndexName,

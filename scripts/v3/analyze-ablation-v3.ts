@@ -36,28 +36,32 @@ export const REQUIRED_PROVENANCE_HASHES: readonly (keyof RunMetadataV3)[] = Obje
   'dSafeSha256',
 ]);
 
+export type ContrastTier = 'primary' | 'equivalence_tost' | 'secondary' | 'exploratory';
+
 export interface ContrastPairSpec {
   name: string;
   target: ConditionV3Id;
   base: ConditionV3Id;
   primary: boolean;
+  tier: ContrastTier;
 }
 
 export const V3_CONTRAST_SPECS: readonly ContrastPairSpec[] = Object.freeze([
-  // 6 pre-registered primary contrasts (fixed order)
-  { name: 'C_ID_vs_C', target: 'C_ID', base: 'C', primary: true },
-  { name: 'C0_clean_vs_C0', target: 'C0_clean', base: 'C0', primary: true },
-  { name: 'C0_clean_vs_C_ID', target: 'C0_clean', base: 'C_ID', primary: true },
-  { name: 'C0_clean_vs_C0_rand', target: 'C0_clean', base: 'C0_rand', primary: true },
-  { name: 'C_ID_vs_D_safe', target: 'C_ID', base: 'D_safe', primary: true },
-  { name: 'D_safe_vs_A', target: 'D_safe', base: 'A', primary: true },
-  // Reference contrasts
-  { name: 'C_vs_A', target: 'C', base: 'A', primary: false },
-  { name: 'C0_vs_C', target: 'C0', base: 'C', primary: false },
-  { name: 'B_vs_A', target: 'B', base: 'A', primary: false },
+  // 5 pre-registered primary superiority contrasts (Holm-Bonferroni family)
+  { name: 'C_ID_vs_C', target: 'C_ID', base: 'C', primary: true, tier: 'primary' },
+  { name: 'C0_clean_vs_C0', target: 'C0_clean', base: 'C0', primary: true, tier: 'primary' },
+  { name: 'C0_clean_vs_C_ID', target: 'C0_clean', base: 'C_ID', primary: true, tier: 'primary' },
+  { name: 'C0_clean_vs_C0_rand', target: 'C0_clean', base: 'C0_rand', primary: true, tier: 'primary' },
+  { name: 'C_ID_vs_D_safe', target: 'C_ID', base: 'D_safe', primary: true, tier: 'primary' },
+  // Equivalence TOST contrast (outside primary Holm family)
+  { name: 'D_safe_vs_A', target: 'D_safe', base: 'A', primary: false, tier: 'equivalence_tost' },
+  // Secondary reference contrasts
+  { name: 'C_vs_A', target: 'C', base: 'A', primary: false, tier: 'secondary' },
+  { name: 'C0_vs_C', target: 'C0', base: 'C', primary: false, tier: 'secondary' },
+  { name: 'B_vs_A', target: 'B', base: 'A', primary: false, tier: 'secondary' },
 ]);
 
-export const FORENSIC_MEDIATION_FLAGS = [
+export const FAILURE_MODE_ATTRIBUTION_FLAGS = [
   'hasInlineSupersedesFk',
   'hasExplicitSupersedesFk',
   'hasHallucinatedLineageCol',
@@ -66,12 +70,18 @@ export const FORENSIC_MEDIATION_FLAGS = [
   'hasSingularCompositeIndexName',
 ] as const satisfies readonly SqlForensicFlagName[];
 
+export const FORENSIC_MEDIATION_FLAGS = FAILURE_MODE_ATTRIBUTION_FLAGS;
+
 export interface ConditionSummaryV3 {
   n: number;
   meanBoundFactFraction: number;
   strictPassAt1: number;
   strictPassCount: number;
   strictPassAt1Wilson95: [number, number];
+  commitCount: number;
+  pCommit: number;
+  meanBoundFactFractionGivenCommit: number | null;
+  strictPassAt1GivenCommit: number | null;
   meanPromptTokens: number;
   meanTotalTokens: number;
   tableMissingCount: number;
@@ -85,8 +95,10 @@ export interface ContrastResultV3 {
   target: ConditionV3Id;
   base: ConditionV3Id;
   primary: boolean;
+  tier: ContrastTier;
   nPairs: number;
   meanDifference: number;
+  sdDifference: number;
   ci95: [number, number];
   signFlipPValue: number;
   holmAdjustedPValue?: number;
@@ -97,6 +109,43 @@ export interface ContrastResultV3 {
     n10: number;
     pValue: number;
   };
+}
+
+export interface TostEquivalenceResultV3 {
+  name: string;
+  target: ConditionV3Id;
+  base: ConditionV3Id;
+  tier: 'equivalence_tost';
+  margin: number;
+  nPairs: number;
+  meanDifference: number;
+  se: number;
+  ci90: [number, number];
+  ci95: [number, number];
+  pLower: number;
+  pUpper: number;
+  tostPValue: number;
+  equivalentAtAlpha05: boolean;
+}
+
+export interface DidContrastResultV3 {
+  name: 'DiD_C_ID_vs_C_minus_C0_clean_vs_C0';
+  tier: 'secondary';
+  nPairs: number;
+  meanDifference: number;
+  sdDifference: number;
+  ci95: [number, number];
+  signFlipPValue: number;
+  exactCellPValue: number | null;
+}
+
+export interface MdeRowV3 {
+  name: string;
+  tier: ContrastTier | 'did';
+  nPairs: number;
+  sdDifference: number;
+  mdeAlpha05Power80: number;
+  mdeAlpha01Power80: number;
 }
 
 export interface LpmmRandomEffectEstimate {
@@ -116,6 +165,9 @@ export interface LpmmContrastEstimate {
   cr1SePts: number;
   cr1Ci95Pts: [number, number];
   cr1PValue: number;
+  cr2Df: number;
+  cr2Ci95Pts: [number, number];
+  cr2PValue: number;
 }
 
 export interface LpmmResultV3 {
@@ -125,8 +177,31 @@ export interface LpmmResultV3 {
   residualVariance: number;
   residualStdDev: number;
   totalClusteredSharePct: number;
+  logPromptTokensBetaPts: number;
+  logPromptTokensSePts: number;
   randomEffects: LpmmRandomEffectEstimate[];
   contrastsPts: LpmmContrastEstimate[];
+}
+
+export interface DgrrStratumV3 {
+  meanC: number;
+  meanCId: number;
+  meanC0Clean: number;
+  numerator: number;
+  denominator: number;
+  denominatorCi95: [number, number];
+  denominatorExcludesZero: boolean;
+  recoveryRatio: number | null;
+  gatedReason: string | null;
+}
+
+export interface ExposureStratumC0CleanVsC0 {
+  nPairs: number;
+  meanC0: number;
+  meanC0Clean: number;
+  meanDifference: number;
+  ci95: [number, number];
+  signFlipPValue: number;
 }
 
 export interface AblationV3Report {
@@ -135,32 +210,38 @@ export interface AblationV3Report {
   totalTrials: number;
   provenanceVerified: boolean;
   missingProvenanceHashes: string[];
+  c0RandBoundCoverage: {
+    nTrials: number;
+    meanCoverage: number;
+    totalRetrieved: number;
+    totalBoundOverlap: number;
+    overallCoverage: number;
+  };
   conditions: Record<ConditionV3Id, ConditionSummaryV3>;
   primaryContrasts: ContrastResultV3[];
+  tostEquivalence: TostEquivalenceResultV3 | null;
+  didContrast: DidContrastResultV3 | null;
   referenceContrasts: ContrastResultV3[];
+  mdeTable: MdeRowV3[];
   distillationGapRecovery: {
-    overall: {
-      meanC: number;
-      meanCId: number;
-      meanC0Clean: number;
-      numerator: number;
-      denominator: number;
-      recoveryRatio: number | null;
-    };
-    appendOnlyCells: {
+    overall: DgrrStratumV3;
+    appendOnlyCells: DgrrStratumV3 & {
       cells: string[];
       nTrialsPerCondition: number;
-      meanC: number;
-      meanCId: number;
-      meanC0Clean: number;
-      numerator: number;
-      denominator: number;
-      recoveryRatio: number | null;
     };
   };
-  forensicMediationTable: Record<
+  exposureStratifiedC0CleanVsC0: {
+    targetFacts: readonly ['F-01', 'F-18', 'F-19', 'F-36'];
+    exposedAny: ExposureStratumC0CleanVsC0;
+    unexposedAll: ExposureStratumC0CleanVsC0;
+    perFact: Record<'F-01' | 'F-18' | 'F-19' | 'F-36', {
+      exposed: ExposureStratumC0CleanVsC0;
+      unexposed: ExposureStratumC0CleanVsC0;
+    }>;
+  };
+  failureModeAttributionTable: Record<
     ConditionV3Id,
-    Record<(typeof FORENSIC_MEDIATION_FLAGS)[number], number>
+    Record<(typeof FAILURE_MODE_ATTRIBUTION_FLAGS)[number], number>
   >;
   retrievalStratification: {
     retrieved: Record<string, unknown>;
@@ -202,6 +283,223 @@ function twoSidedNormalP(est: number, se: number): number {
   if (!Number.isFinite(se) || se <= 0) return 1;
   const z = Math.abs(est / se);
   return Math.max(0, Math.min(1, 2 * (1 - normalCdf(z))));
+}
+
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function pairedBootstrapCiOnly(
+  diffs: readonly number[],
+  resamples = BOOTSTRAP_RESAMPLES,
+  seed = BOOTSTRAP_SEED
+): { meanDifference: number; ci95: [number, number] } {
+  const n = diffs.length;
+  if (n === 0) return { meanDifference: 0, ci95: [0, 0] };
+  const meanDifference = diffs.reduce((s, v) => s + v, 0) / n;
+  const rand = mulberry32(seed);
+  const samples = new Float64Array(resamples);
+  for (let r = 0; r < resamples; r++) {
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      sum += diffs[Math.floor(rand() * n)];
+    }
+    samples[r] = sum / n;
+  }
+  samples.sort();
+  const lo = samples[Math.floor(0.025 * (resamples - 1))];
+  const hi = samples[Math.ceil(0.975 * (resamples - 1))];
+  return { meanDifference, ci95: [lo, hi] };
+}
+
+function addOneSignFlipPValue(
+  diffs: readonly number[],
+  iterations = SIGN_FLIP_ITERATIONS,
+  seed = BOOTSTRAP_SEED
+): number {
+  const n = diffs.length;
+  if (n === 0) return 1;
+  const obsMean = Math.abs(diffs.reduce((s, v) => s + v, 0) / n);
+  if (obsMean === 0) return 1;
+  const rand = mulberry32(seed);
+  let geCount = 0;
+  for (let iter = 0; iter < iterations; iter++) {
+    let sum = 0;
+    for (let i = 0; i < n; i++) {
+      sum += rand() < 0.5 ? diffs[i] : -diffs[i];
+    }
+    if (Math.abs(sum / n) >= obsMean - 1e-12) {
+      geCount++;
+    }
+  }
+  return (geCount + 1) / (iterations + 1);
+}
+
+function computeSd(values: readonly number[]): number {
+  const n = values.length;
+  if (n < 2) return 0;
+  const mean = values.reduce((s, v) => s + v, 0) / n;
+  const ss = values.reduce((s, v) => s + (v - mean) * (v - mean), 0);
+  return Math.sqrt(ss / (n - 1));
+}
+
+function logGamma(z: number): number {
+  const g = 7;
+  const p = [
+    0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313,
+    -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6,
+    1.5056327351493116e-7,
+  ];
+  if (z < 0.5) {
+    return Math.log(Math.PI / Math.sin(Math.PI * z)) - logGamma(1 - z);
+  }
+  z -= 1;
+  let x = p[0];
+  for (let i = 1; i < g + 2; i++) {
+    x += p[i] / (z + i);
+  }
+  const t = z + g + 0.5;
+  return 0.5 * Math.log(2 * Math.PI) + (z + 0.5) * Math.log(t) - t + Math.log(x);
+}
+
+function regularizedIncompleteBeta(x: number, a: number, b: number): number {
+  if (x <= 0) return 0;
+  if (x >= 1) return 1;
+  const bt = Math.exp(logGamma(a + b) - logGamma(a) - logGamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+  if (x < (a + 1) / (a + b + 2)) {
+    return (bt * betaContinuedFraction(x, a, b)) / a;
+  }
+  return 1 - (bt * betaContinuedFraction(1 - x, b, a)) / b;
+}
+
+function betaContinuedFraction(x: number, a: number, b: number): number {
+  const maxIter = 200;
+  const eps = 3e-12;
+  let qab = a + b;
+  let qap = a + 1;
+  let qam = a - 1;
+  let c = 1;
+  let d = 1 - (qab * x) / qap;
+  if (Math.abs(d) < 1e-30) d = 1e-30;
+  d = 1 / d;
+  let h = d;
+  for (let m = 1; m <= maxIter; m++) {
+    const m2 = 2 * m;
+    let aa = (m * (b - m) * x) / ((qam + m2) * (a + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + aa / c;
+    if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d;
+    h *= d * c;
+    aa = (-(a + m) * (qab + m) * x) / ((a + m2) * (qap + m2));
+    d = 1 + aa * d;
+    if (Math.abs(d) < 1e-30) d = 1e-30;
+    c = 1 + aa / c;
+    if (Math.abs(c) < 1e-30) c = 1e-30;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < eps) break;
+  }
+  return h;
+}
+
+function studentTCdf(t: number, df: number): number {
+  if (!Number.isFinite(t)) return t > 0 ? 1 : 0;
+  if (df <= 0) return normalCdf(t);
+  const x = df / (df + t * t);
+  const ib = regularizedIncompleteBeta(x, df / 2, 0.5);
+  return t >= 0 ? 1 - 0.5 * ib : 0.5 * ib;
+}
+
+function twoSidedStudentTP(est: number, se: number, df: number): number {
+  if (!Number.isFinite(se) || se <= 0) return 1;
+  const t = Math.abs(est / se);
+  return Math.max(0, Math.min(1, 2 * (1 - studentTCdf(t, df))));
+}
+
+function tCritical(twoSidedAlpha: number, df: number): number {
+  const target = 1 - twoSidedAlpha / 2;
+  let lo = 0;
+  let hi = 20;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (studentTCdf(mid, df) < target) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
+function computeTostEquivalence(
+  diffs: readonly number[],
+  spec: ContrastPairSpec,
+  ci95: [number, number],
+  margin = 0.03
+): TostEquivalenceResultV3 {
+  const n = diffs.length;
+  const meanDifference = n > 0 ? diffs.reduce((s, v) => s + v, 0) / n : 0;
+  const sd = computeSd(diffs);
+  const se = n > 0 ? sd / Math.sqrt(n) : 0;
+  const df = Math.max(1, n - 1);
+  const tCrit90 = tCritical(0.10, df);
+  const ci90: [number, number] = [meanDifference - tCrit90 * se, meanDifference + tCrit90 * se];
+  let pLower = 1;
+  let pUpper = 1;
+  if (se > 0) {
+    const tLower = (meanDifference - -margin) / se;
+    const tUpper = (margin - meanDifference) / se;
+    pLower = 1 - studentTCdf(tLower, df);
+    pUpper = 1 - studentTCdf(tUpper, df);
+  } else if (Math.abs(meanDifference) < margin) {
+    pLower = 0;
+    pUpper = 0;
+  }
+  const tostPValue = Math.max(pLower, pUpper);
+  return {
+    name: spec.name,
+    target: spec.target,
+    base: spec.base,
+    tier: 'equivalence_tost',
+    margin,
+    nPairs: n,
+    meanDifference,
+    se,
+    ci90,
+    ci95,
+    pLower,
+    pUpper,
+    tostPValue,
+    equivalentAtAlpha05: tostPValue < 0.05,
+  };
+}
+
+function computeMdeRow(
+  name: string,
+  tier: ContrastTier | 'did',
+  diffs: readonly number[]
+): MdeRowV3 {
+  const nPairs = diffs.length;
+  const sdDifference = computeSd(diffs);
+  const z80 = 0.84162123;
+  const z05 = 1.95996398;
+  const z01 = 2.5758293;
+  const scale = nPairs > 0 ? sdDifference / Math.sqrt(nPairs) : 0;
+  return {
+    name,
+    tier,
+    nPairs,
+    sdDifference,
+    mdeAlpha05Power80: (z05 + z80) * scale,
+    mdeAlpha01Power80: (z01 + z80) * scale,
+  };
 }
 
 /**
@@ -333,6 +631,7 @@ export function fitAblationV3Lpmm(
     factIdx: number;
     cellIdx: number;
     factCondIdx: number;
+    logPromptTokens: number;
   }
 
   const condIndex = new Map<ConditionV3Id, number>();
@@ -357,6 +656,7 @@ export function fitAblationV3Lpmm(
     const tIdx = taskMap.get(trial.taskId)!;
     const clIdx = cellMap.get(cellKey)!;
     const failedSet = new Set(trial.failedFacts ?? []);
+    const logTok = Math.log(Math.max(1, trial.promptTokens ?? 1));
 
     for (const factId of trial.boundFacts ?? []) {
       if (!factMap.has(factId)) factMap.set(factId, factMap.size);
@@ -373,17 +673,30 @@ export function fitAblationV3Lpmm(
         factIdx: fIdx,
         cellIdx: clIdx,
         factCondIdx: fcIdx,
+        logPromptTokens: logTok,
       });
     }
   }
 
   const N = rows.length;
-  const p = V3_CONDITIONS.length;
   const qTask = taskMap.size;
   const qFact = factMap.size;
   const qCell = cellMap.size;
   const qFactCond = factCondMap.size;
   if (N === 0 || qTask < 2) return null;
+
+  let minLogTok = Infinity;
+  let maxLogTok = -Infinity;
+  let sumLogTok = 0;
+  for (const r of rows) {
+    if (r.logPromptTokens < minLogTok) minLogTok = r.logPromptTokens;
+    if (r.logPromptTokens > maxLogTok) maxLogTok = r.logPromptTokens;
+    sumLogTok += r.logPromptTokens;
+  }
+  const meanLogTok = sumLogTok / N;
+  const hasLogTokCovariate = maxLogTok - minLogTok > 1e-9;
+  const logTokCol = V3_CONDITIONS.length;
+  const p = hasLogTokCovariate ? V3_CONDITIONS.length + 1 : V3_CONDITIONS.length;
 
   const offFact = qTask;
   const offCell = offFact + qFact;
@@ -413,11 +726,13 @@ export function fitAblationV3Lpmm(
       offCell + r.cellIdx,
       offFactCond + r.factCondIdx,
     ];
+    const centeredLogTok = r.logPromptTokens - meanLogTok;
     for (const a of idxs) {
       for (const b of idxs) incZtz(a, b);
-      // X has intercept (col 0) and dummy for condIdx >= 1
+      // X has intercept (col 0), dummy for condIdx >= 1, and optional logPromptTokens
       ztx[a][0] += 1;
       if (r.condIdx > 0) ztx[a][r.condIdx] += 1;
+      if (hasLogTokCovariate) ztx[a][logTokCol] += centeredLogTok;
       zty[a] += r.y;
     }
     xtx[0][0] += 1;
@@ -426,6 +741,16 @@ export function fitAblationV3Lpmm(
       xtx[r.condIdx][0] += 1;
       xtx[r.condIdx][r.condIdx] += 1;
       xty[r.condIdx] += r.y;
+    }
+    if (hasLogTokCovariate) {
+      xtx[0][logTokCol] += centeredLogTok;
+      xtx[logTokCol][0] += centeredLogTok;
+      if (r.condIdx > 0) {
+        xtx[r.condIdx][logTokCol] += centeredLogTok;
+        xtx[logTokCol][r.condIdx] += centeredLogTok;
+      }
+      xtx[logTokCol][logTokCol] += centeredLogTok * centeredLogTok;
+      xty[logTokCol] += centeredLogTok * r.y;
     }
     xty[0] += r.y;
     yty += r.y * r.y;
@@ -563,7 +888,11 @@ export function fitAblationV3Lpmm(
   // CR1 task-clustered sandwich covariance
   const scores: Float64Array[] = Array.from({ length: qTask }, () => new Float64Array(p));
   for (const r of rows) {
-    const xb = beta[0] + (r.condIdx > 0 ? beta[r.condIdx] : 0);
+    const centeredLogTok = r.logPromptTokens - meanLogTok;
+    const xb =
+      beta[0] +
+      (r.condIdx > 0 ? beta[r.condIdx] : 0) +
+      (hasLogTokCovariate ? beta[logTokCol] * centeredLogTok : 0);
     const zb =
       alpha[r.taskIdx] +
       alpha[offFact + r.factIdx] +
@@ -572,6 +901,7 @@ export function fitAblationV3Lpmm(
     const vInvEi = (r.y - xb - zb) / sigmaE2;
     scores[r.taskIdx][0] += vInvEi;
     if (r.condIdx > 0) scores[r.taskIdx][r.condIdx] += vInvEi;
+    if (hasLogTokCovariate) scores[r.taskIdx][logTokCol] += vInvEi * centeredLogTok;
   }
 
   const meat: Float64Array[] = Array.from({ length: p }, () => new Float64Array(p));
@@ -634,6 +964,9 @@ export function fitAblationV3Lpmm(
     },
   ];
 
+  const cr2Df = Math.max(1, qTask - 1);
+  const tCritCr2 = tCritical(0.05, cr2Df);
+
   const contrastsPts: LpmmContrastEstimate[] = V3_CONTRAST_SPECS.map((spec) => {
     const tIdx = condIndex.get(spec.target)!;
     const bIdx = condIndex.get(spec.base)!;
@@ -664,8 +997,16 @@ export function fitAblationV3Lpmm(
       cr1SePts,
       cr1Ci95Pts: [estPts - 1.96 * cr1SePts, estPts + 1.96 * cr1SePts],
       cr1PValue: twoSidedNormalP(estPts, cr1SePts),
+      cr2Df,
+      cr2Ci95Pts: [estPts - tCritCr2 * cr1SePts, estPts + tCritCr2 * cr1SePts],
+      cr2PValue: twoSidedStudentTP(estPts, cr1SePts, cr2Df),
     };
   });
+
+  const logPromptTokensBetaPts = hasLogTokCovariate ? beta[logTokCol] * 100 : 0;
+  const logPromptTokensSePts = hasLogTokCovariate
+    ? Math.sqrt(Math.max(0, vCr1[logTokCol][logTokCol])) * 100
+    : 0;
 
   return {
     nObs: N,
@@ -674,6 +1015,8 @@ export function fitAblationV3Lpmm(
     residualVariance: sigmaE2,
     residualStdDev: Math.sqrt(sigmaE2),
     totalClusteredSharePct: totalVar > 0 ? (100 * (totalVar - sigmaE2)) / totalVar : 0,
+    logPromptTokensBetaPts,
+    logPromptTokensSePts,
     randomEffects,
     contrastsPts,
   };
@@ -683,7 +1026,7 @@ function computeContrast(
   spec: ContrastPairSpec,
   byCondition: ReadonlyMap<ConditionV3Id, TrialV3[]>,
   taskLookup: ReadonlyMap<string, TaskV2Item>
-): ContrastResultV3 {
+): { result: ContrastResultV3; diffs: number[] } {
   const baseMap = new Map((byCondition.get(spec.base) ?? []).map((t) => [t.taskId, t]));
   const targetMap = new Map((byCondition.get(spec.target) ?? []).map((t) => [t.taskId, t]));
   const pairedIds = [...baseMap.keys()].filter((id) => targetMap.has(id)).sort();
@@ -691,7 +1034,8 @@ function computeContrast(
   const diffs = pairedIds.map(
     (id) => targetMap.get(id)!.boundFactFraction - baseMap.get(id)!.boundFactFraction
   );
-  const boot = pairedBootstrap(diffs, SIGN_FLIP_ITERATIONS, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES);
+  const boot = pairedBootstrapCiOnly(diffs, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED);
+  const signFlipPValue = addOneSignFlipPValue(diffs, SIGN_FLIP_ITERATIONS, BOOTSTRAP_SEED);
   const mc = mcnemar(
     pairedIds.map((id) => baseMap.get(id)!.boundPassed),
     pairedIds.map((id) => targetMap.get(id)!.boundPassed)
@@ -715,19 +1059,24 @@ function computeContrast(
   const exactCellPValue = cellMeans.length === 8 ? exactCellSignFlip(cellMeans) : null;
 
   return {
-    name: spec.name,
-    target: spec.target,
-    base: spec.base,
-    primary: spec.primary,
-    nPairs: pairedIds.length,
-    meanDifference: boot.meanDifference,
-    ci95: boot.ci95,
-    signFlipPValue: boot.signFlipPValue,
-    exactCellPValue,
-    mcnemar: {
-      n01: mc.b,
-      n10: mc.c,
-      pValue: mc.pValue,
+    diffs,
+    result: {
+      name: spec.name,
+      target: spec.target,
+      base: spec.base,
+      primary: spec.primary,
+      tier: spec.tier,
+      nPairs: pairedIds.length,
+      meanDifference: boot.meanDifference,
+      sdDifference: computeSd(diffs),
+      ci95: boot.ci95,
+      signFlipPValue,
+      exactCellPValue,
+      mcnemar: {
+        n01: mc.b,
+        n10: mc.c,
+        pValue: mc.pValue,
+      },
     },
   };
 }
@@ -742,6 +1091,14 @@ export function analyzeAblationV3Trials(
 ): AblationV3Report {
   const allowPartial = options?.allowPartial ?? false;
   const metadata = options?.metadata ?? {};
+
+  // Strict held-out split guard: only V3-H-* tasks are permitted in Ablation v3 analysis
+  const invalidSplitTrials = trials.filter((t) => !t.taskId.startsWith('V3-H-'));
+  if (invalidSplitTrials.length > 0) {
+    throw new Error(
+      `Ablation v3 analysis only permits held-out V3-H-* tasks (found ${invalidSplitTrials.length} non-held-out trial(s), e.g. ${invalidSplitTrials[0].taskId}).`
+    );
+  }
 
   const missingProvenanceHashes = REQUIRED_PROVENANCE_HASHES.filter(
     (k) => !metadata[k] || String(metadata[k]).trim().length === 0
@@ -793,6 +1150,9 @@ export function analyzeAblationV3Trials(
     const rows = byCondition.get(cond) ?? [];
     const n = rows.length;
     const strictPassCount = rows.filter((r) => r.boundPassed).length;
+    const committedRows = rows.filter((r) => !r.tableMissing && !r.migrationExitNonZero);
+    const commitCount = committedRows.length;
+    const committedStrictPass = committedRows.filter((r) => r.boundPassed).length;
     const f = forensicsByCond[cond] ?? {
       n: 0,
       counts: {} as Record<SqlForensicFlagName, number>,
@@ -804,6 +1164,12 @@ export function analyzeAblationV3Trials(
       strictPassAt1: n ? strictPassCount / n : 0,
       strictPassCount,
       strictPassAt1Wilson95: wilson(strictPassCount, n),
+      commitCount,
+      pCommit: n ? commitCount / n : 0,
+      meanBoundFactFractionGivenCommit: commitCount
+        ? committedRows.reduce((s, r) => s + r.boundFactFraction, 0) / commitCount
+        : null,
+      strictPassAt1GivenCommit: commitCount ? committedStrictPass / commitCount : null,
       meanPromptTokens: n ? rows.reduce((s, r) => s + r.promptTokens, 0) / n : 0,
       meanTotalTokens: n ? rows.reduce((s, r) => s + r.totalTokens, 0) / n : 0,
       tableMissingCount: rows.filter((r) => Boolean(r.tableMissing)).length,
@@ -813,11 +1179,43 @@ export function analyzeAblationV3Trials(
     };
   }
 
-  const allContrasts = V3_CONTRAST_SPECS.map((spec) =>
-    computeContrast(spec, byCondition, taskLookup)
-  );
-  const primaryContrasts = allContrasts.filter((c) => c.primary);
-  const referenceContrasts = allContrasts.filter((c) => !c.primary);
+  // C0_rand bound-fact coverage diagnostic
+  const c0RandRows = byCondition.get('C0_rand') ?? [];
+  let c0RandTotalRetrieved = 0;
+  let c0RandTotalBoundOverlap = 0;
+  const c0RandCoverages: number[] = [];
+  for (const tr of c0RandRows) {
+    const ret = tr.retrievedFactIds ?? [];
+    const bound = new Set(tr.boundFacts ?? []);
+    const overlap = ret.filter((id) => bound.has(id)).length;
+    c0RandTotalRetrieved += ret.length;
+    c0RandTotalBoundOverlap += overlap;
+    c0RandCoverages.push(ret.length > 0 ? overlap / ret.length : 0);
+  }
+  const c0RandBoundCoverage = {
+    nTrials: c0RandRows.length,
+    meanCoverage: c0RandCoverages.length
+      ? c0RandCoverages.reduce((s, v) => s + v, 0) / c0RandCoverages.length
+      : 0,
+    totalRetrieved: c0RandTotalRetrieved,
+    totalBoundOverlap: c0RandTotalBoundOverlap,
+    overallCoverage: c0RandTotalRetrieved > 0 ? c0RandTotalBoundOverlap / c0RandTotalRetrieved : 0,
+  };
+
+  const computedContrasts = V3_CONTRAST_SPECS.map((spec) => ({
+    spec,
+    ...computeContrast(spec, byCondition, taskLookup),
+  }));
+  const primaryContrasts = computedContrasts
+    .filter((c) => c.spec.tier === 'primary')
+    .map((c) => c.result);
+  const referenceContrasts = computedContrasts
+    .filter((c) => c.spec.tier === 'secondary')
+    .map((c) => c.result);
+  const dSafeItem = computedContrasts.find((c) => c.spec.tier === 'equivalence_tost');
+  const tostEquivalence = dSafeItem
+    ? computeTostEquivalence(dSafeItem.diffs, dSafeItem.spec, dSafeItem.result.ci95, 0.03)
+    : null;
 
   const primaryPMap = Object.fromEntries(primaryContrasts.map((c) => [c.name, c.signFlipPValue]));
   const holmPrimary = holmAdjust(primaryPMap);
@@ -832,11 +1230,90 @@ export function analyzeAblationV3Trials(
     c.holmExactCellPValue = holmCell[c.name] ?? null;
   }
 
-  // (a) Distillation Gap Recovery Ratio
+  // Difference-in-Differences: (C_ID - C) - (C0_clean - C0)
+  const mapC = new Map((byCondition.get('C') ?? []).map((t) => [t.taskId, t]));
+  const mapCId = new Map((byCondition.get('C_ID') ?? []).map((t) => [t.taskId, t]));
+  const mapC0 = new Map((byCondition.get('C0') ?? []).map((t) => [t.taskId, t]));
+  const mapC0Clean = new Map((byCondition.get('C0_clean') ?? []).map((t) => [t.taskId, t]));
+  const didIds = [...mapC.keys()]
+    .filter((id) => mapCId.has(id) && mapC0.has(id) && mapC0Clean.has(id))
+    .sort();
+  const didDiffs = didIds.map(
+    (id) =>
+      (mapCId.get(id)!.boundFactFraction - mapC.get(id)!.boundFactFraction) -
+      (mapC0Clean.get(id)!.boundFactFraction - mapC0.get(id)!.boundFactFraction)
+  );
+  let didContrast: DidContrastResultV3 | null = null;
+  if (didDiffs.length > 0) {
+    const didBoot = pairedBootstrapCiOnly(didDiffs, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED);
+    const didSignFlipP = addOneSignFlipPValue(didDiffs, SIGN_FLIP_ITERATIONS, BOOTSTRAP_SEED);
+    const didCellBuckets = new Map<string, number[]>();
+    for (let i = 0; i < didIds.length; i++) {
+      const id = didIds[i];
+      const tr = mapCId.get(id)! as TrialV3 & { features?: TaskV2Item['features'] };
+      const features = tr.features ?? taskLookup.get(id)?.features;
+      if (!features) continue;
+      const key = formatCellKey(features);
+      const list = didCellBuckets.get(key);
+      if (list) list.push(didDiffs[i]);
+      else didCellBuckets.set(key, [didDiffs[i]]);
+    }
+    const didCellMeans = [...didCellBuckets.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, vals]) => vals.reduce((s, v) => s + v, 0) / vals.length);
+    didContrast = {
+      name: 'DiD_C_ID_vs_C_minus_C0_clean_vs_C0',
+      tier: 'secondary',
+      nPairs: didIds.length,
+      meanDifference: didBoot.meanDifference,
+      sdDifference: computeSd(didDiffs),
+      ci95: didBoot.ci95,
+      signFlipPValue: didSignFlipP,
+      exactCellPValue: didCellMeans.length === 8 ? exactCellSignFlip(didCellMeans) : null,
+    };
+  }
+
+  const mdeTable: MdeRowV3[] = computedContrasts.map((c) =>
+    computeMdeRow(c.spec.name, c.spec.tier, c.diffs)
+  );
+  if (didDiffs.length > 0) {
+    mdeTable.push(computeMdeRow('DiD_C_ID_vs_C_minus_C0_clean_vs_C0', 'did', didDiffs));
+  }
+
+  // (a) Gated Distillation Gap Recovery Ratio (only computed when denominator 95% CI excludes 0)
+  const buildDgrr = (ids: string[], mC: number, mCId: number, mC0Clean: number): DgrrStratumV3 => {
+    const denomDiffs = ids
+      .filter((id) => mapC.has(id) && mapC0Clean.has(id))
+      .map((id) => mapC0Clean.get(id)!.boundFactFraction - mapC.get(id)!.boundFactFraction);
+    const denomBoot = pairedBootstrapCiOnly(
+      denomDiffs,
+      BOOTSTRAP_RESAMPLES,
+      BOOTSTRAP_SEED
+    );
+    const denominator = mC0Clean - mC;
+    const numerator = mCId - mC;
+    const denominatorExcludesZero =
+      denomDiffs.length > 0 && (denomBoot.ci95[0] > 0 || denomBoot.ci95[1] < 0);
+    return {
+      meanC: mC,
+      meanCId: mCId,
+      meanC0Clean: mC0Clean,
+      numerator,
+      denominator,
+      denominatorCi95: denomBoot.ci95,
+      denominatorExcludesZero,
+      recoveryRatio:
+        denominatorExcludesZero && Math.abs(denominator) > 1e-12 ? numerator / denominator : null,
+      gatedReason: denominatorExcludesZero
+        ? null
+        : 'Denominator (C0_clean - C) 95% CI includes 0; DGRR gated.',
+    };
+  };
+
+  const allPairedDgrrIds = [...mapC.keys()].filter((id) => mapC0Clean.has(id)).sort();
   const meanC = conditions.C.meanBoundFactFraction;
   const meanCId = conditions.C_ID.meanBoundFactFraction;
   const meanC0Clean = conditions.C0_clean.meanBoundFactFraction;
-  const denomOverall = meanC0Clean - meanC;
   const appendOnlyCells = new Set(['010', '011', '110', '111']);
   const appendOnlyFilter = (tr: TrialV3) => {
     const feat =
@@ -856,12 +1333,12 @@ export function analyzeAblationV3Trials(
   const meanC0CleanApp = c0CleanAppend.length
     ? c0CleanAppend.reduce((s, r) => s + r.boundFactFraction, 0) / c0CleanAppend.length
     : 0;
-  const denomApp = meanC0CleanApp - meanCApp;
+  const appendPairedDgrrIds = cAppend.map((t) => t.taskId).filter((id) => mapC0Clean.has(id)).sort();
 
-  // (b) Forensic Mediation Table
-  const forensicMediationTable = {} as AblationV3Report['forensicMediationTable'];
+  // (b) Failure-Mode Attribution Table
+  const failureModeAttributionTable = {} as AblationV3Report['failureModeAttributionTable'];
   for (const cond of V3_CONDITIONS) {
-    forensicMediationTable[cond] = {
+    failureModeAttributionTable[cond] = {
       hasInlineSupersedesFk: conditions[cond].forensicRates.hasInlineSupersedesFk ?? 0,
       hasExplicitSupersedesFk: conditions[cond].forensicRates.hasExplicitSupersedesFk ?? 0,
       hasHallucinatedLineageCol: conditions[cond].forensicRates.hasHallucinatedLineageCol ?? 0,
@@ -994,6 +1471,49 @@ export function analyzeAblationV3Trials(
     f10MissingRate[cond] = f10Tot > 0 ? f10Miss / f10Tot : 0;
   }
 
+  // (c2) Exposure-stratified C0_clean vs C0 on {F-01, F-18, F-19, F-36}
+  const targetExposureFacts = ['F-01', 'F-18', 'F-19', 'F-36'] as const;
+  const computeExposureStratum = (ids: string[]): ExposureStratumC0CleanVsC0 => {
+    const validIds = ids.filter((id) => mapC0.has(id) && mapC0Clean.has(id));
+    const diffs = validIds.map(
+      (id) => mapC0Clean.get(id)!.boundFactFraction - mapC0.get(id)!.boundFactFraction
+    );
+    const boot = pairedBootstrapCiOnly(diffs, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED);
+    const signFlipPValue = addOneSignFlipPValue(diffs, 10_000, BOOTSTRAP_SEED);
+    const meanC0 = validIds.length
+      ? validIds.reduce((s, id) => s + mapC0.get(id)!.boundFactFraction, 0) / validIds.length
+      : 0;
+    const meanC0Cln = validIds.length
+      ? validIds.reduce((s, id) => s + mapC0Clean.get(id)!.boundFactFraction, 0) / validIds.length
+      : 0;
+    return {
+      nPairs: validIds.length,
+      meanC0,
+      meanC0Clean: meanC0Cln,
+      meanDifference: boot.meanDifference,
+      ci95: boot.ci95,
+      signFlipPValue,
+    };
+  };
+  const pairedC0Ids = [...mapC0.keys()].filter((id) => mapC0Clean.has(id)).sort();
+  const exposedAnyIds = pairedC0Ids.filter((id) => {
+    const ret = retrievedByTask.get(id) ?? new Set<string>();
+    return targetExposureFacts.some((f) => ret.has(f));
+  });
+  const unexposedAllIds = pairedC0Ids.filter((id) => {
+    const ret = retrievedByTask.get(id) ?? new Set<string>();
+    return !targetExposureFacts.some((f) => ret.has(f));
+  });
+  const perFactExposure = {} as AblationV3Report['exposureStratifiedC0CleanVsC0']['perFact'];
+  for (const factId of targetExposureFacts) {
+    const expIds = pairedC0Ids.filter((id) => (retrievedByTask.get(id) ?? new Set()).has(factId));
+    const unexpIds = pairedC0Ids.filter((id) => !(retrievedByTask.get(id) ?? new Set()).has(factId));
+    perFactExposure[factId] = {
+      exposed: computeExposureStratum(expIds),
+      unexposed: computeExposureStratum(unexpIds),
+    };
+  }
+
   // (d) Paired Clean-Intersection Sensitivity Contrasts (post-treatment conditioned)
   const cleanContrasts = V3_CONTRAST_SPECS.map((spec) => {
     const baseMap = new Map((byCondition.get(spec.base) ?? []).map((t) => [t.taskId, t]));
@@ -1007,14 +1527,15 @@ export function analyzeAblationV3Trials(
     const diffs = cleanIds.map(
       (id) => targetMap.get(id)!.boundFactFraction - baseMap.get(id)!.boundFactFraction
     );
-    const boot = pairedBootstrap(diffs, SIGN_FLIP_ITERATIONS, BOOTSTRAP_SEED, BOOTSTRAP_RESAMPLES);
+    const boot = pairedBootstrapCiOnly(diffs, BOOTSTRAP_RESAMPLES, BOOTSTRAP_SEED);
+    const signFlipPValue = addOneSignFlipPValue(diffs, 10_000, BOOTSTRAP_SEED);
     return {
       name: spec.name,
       nPairs: cleanIds.length,
       excludedTasks: pairedIds.length - cleanIds.length,
       meanDifference: boot.meanDifference,
       ci95: boot.ci95,
-      signFlipPValue: boot.signFlipPValue,
+      signFlipPValue,
     };
   });
 
@@ -1026,30 +1547,28 @@ export function analyzeAblationV3Trials(
     totalTrials: trials.length,
     provenanceVerified,
     missingProvenanceHashes,
+    c0RandBoundCoverage,
     conditions,
     primaryContrasts,
+    tostEquivalence,
+    didContrast,
     referenceContrasts,
+    mdeTable,
     distillationGapRecovery: {
-      overall: {
-        meanC,
-        meanCId,
-        meanC0Clean,
-        numerator: meanCId - meanC,
-        denominator: denomOverall,
-        recoveryRatio: Math.abs(denomOverall) > 1e-12 ? (meanCId - meanC) / denomOverall : null,
-      },
+      overall: buildDgrr(allPairedDgrrIds, meanC, meanCId, meanC0Clean),
       appendOnlyCells: {
         cells: ['010', '011', '110', '111'],
         nTrialsPerCondition: cAppend.length,
-        meanC: meanCApp,
-        meanCId: meanCIdApp,
-        meanC0Clean: meanC0CleanApp,
-        numerator: meanCIdApp - meanCApp,
-        denominator: denomApp,
-        recoveryRatio: Math.abs(denomApp) > 1e-12 ? (meanCIdApp - meanCApp) / denomApp : null,
+        ...buildDgrr(appendPairedDgrrIds, meanCApp, meanCIdApp, meanC0CleanApp),
       },
     },
-    forensicMediationTable,
+    exposureStratifiedC0CleanVsC0: {
+      targetFacts: targetExposureFacts,
+      exposedAny: computeExposureStratum(exposedAnyIds),
+      unexposedAll: computeExposureStratum(unexposedAllIds),
+      perFact: perFactExposure,
+    },
+    failureModeAttributionTable,
     retrievalStratification: {
       retrieved: summarizeStratum(true),
       nonRetrieved: summarizeStratum(false),
@@ -1099,8 +1618,10 @@ function main(): void {
   if (fs.existsSync(tasksPath)) {
     const parsedTasks = JSON.parse(fs.readFileSync(tasksPath, 'utf8')) as {
       test?: TaskV2Item[];
+      tasks?: TaskV2Item[];
     };
-    tasks = parsedTasks.test ?? [];
+    const rawTasks = parsedTasks.test ?? parsedTasks.tasks ?? [];
+    tasks = rawTasks.filter((t) => t.id.startsWith('V3-H-'));
   }
 
   const report = analyzeAblationV3Trials(trials, { metadata, tasks, allowPartial });

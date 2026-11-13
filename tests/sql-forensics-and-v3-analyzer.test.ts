@@ -77,6 +77,8 @@ describe('Step 1: classifySqlForensics', () => {
       hasDuplicatePrimaryKey: false,
       hasPublicAuthJwt: false,
       hasPublicConstraintQualifier: false,
+      omittedSupersedesId: false,
+      inventedLineageCol: false,
       hasHallucinatedLineageCol: false,
       hasUserMetadataLeak: false,
       hasSingularCompositeIndexName: false,
@@ -263,15 +265,46 @@ describe('Step 3: analyze-ablation-v3', () => {
     const report = analyzeAblationV3Trials(trials, { metadata, tasks, allowPartial: false });
     expect(report.totalTrials).toBe(960);
     expect(report.provenanceVerified).toBe(true);
-    expect(report.primaryContrasts).toHaveLength(6);
+    expect(report.primaryContrasts).toHaveLength(5);
+    expect(report.tostEquivalence?.name).toBe('D_safe_vs_A');
+    expect(report.tostEquivalence?.margin).toBe(0.03);
+    expect(report.didContrast?.name).toBe('DiD_C_ID_vs_C_minus_C0_clean_vs_C0');
     expect(report.referenceContrasts).toHaveLength(3);
+    expect(report.mdeTable.length).toBeGreaterThanOrEqual(9);
     expect(report.primaryContrasts[0].name).toBe('C_ID_vs_C');
+    expect(report.primaryContrasts[0].signFlipPValue).toBeGreaterThan(0);
     expect(report.primaryContrasts[0].holmAdjustedPValue).toBeTypeOf('number');
+    expect(report.conditions.A.pCommit).toBe(1);
+    expect(report.c0RandBoundCoverage.nTrials).toBe(120);
+    expect(report.exposureStratifiedC0CleanVsC0.targetFacts).toEqual(['F-01', 'F-18', 'F-19', 'F-36']);
+    expect(report.failureModeAttributionTable.A).toBeDefined();
+    expect(report.distillationGapRecovery.overall.denominatorExcludesZero).toBe(true);
     expect(report.distillationGapRecovery.overall.recoveryRatio).not.toBeNull();
     expect(report.cleanIntersectionSensitivity.postTreatmentConditioned).toBe(true);
     expect(report.mixedModel).not.toBeNull();
     expect(report.mixedModel!.nTasks).toBe(120);
     expect(report.mixedModel!.contrastsPts).toHaveLength(9);
+    expect(report.mixedModel!.contrastsPts[0].cr2Df).toBe(119);
+  }, 30_000);
+
+  it('rejects non-V3-H-* taskIds via the strict held-out split guard', () => {
+    expect(() =>
+      analyzeAblationV3Trials(
+        [
+          {
+            condition: 'A',
+            taskId: 'T-001',
+            boundFacts: ['F-01'],
+            failedFacts: [],
+            boundPassed: true,
+            boundFactFraction: 1,
+            promptTokens: 300,
+            totalTokens: 500,
+          } as unknown as TrialV3,
+        ],
+        { allowPartial: true }
+      )
+    ).toThrow(/V3-H-\*/);
   });
 
   it('executes cleanly with --allow-partial on available V3-H-001 smoke checkpoint if present', () => {

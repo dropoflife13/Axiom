@@ -58,17 +58,33 @@ Each held-out test task (`V3-H-001`..`V3-H-120`) is evaluated once per condition
 - **Primary Outcome:** `boundFactFraction` — proportion of task-bound facts satisfied per trial (0 if `F-13` table missing).
 - **Secondary Outcomes:** `boundPassed` (all bound facts satisfied), `passRaw` (Oracle `passRaw`), prompt tokens, and total tokens.
 
-### Pre-Registered Primary Contrasts (Tested in Fixed Order)
-1. **`C_ID` vs `C`** — Isolates the causal effect of preserving exact SQL identifiers during lesson distillation.
-2. **`C0_clean` vs `C0`** — Isolates the causal effect of repairing statement-level defects in v3 facts (`F-16`, `F-18`, `F-19`, `F-36`, etc.).
-3. **`C0_clean` vs `C_ID`** — Compares verbatim repaired Oracle rule text against identifier-preserving distilled lessons at identical retrieved fact IDs.
-4. **`C0_clean` vs `C0_rand`** — Isolates feature-matched Top-10 retrieval precision against a length-matched random 10-fact sample.
-5. **`C_ID` vs `D_safe`** — Tests identifier-preserving retrieval against neutral PostgreSQL internals context.
-6. **`D_safe` vs `A`** — Measures pure context/placebo effect of neutral internals text over zero-shot.
+### §4.1 Primary Superiority Family & Equivalence Testing (TOST)
+1. **`C_ID` vs `C`** (`tier: "primary"`) — Isolates the causal effect of preserving exact SQL identifiers during lesson distillation.
+2. **`C0_clean` vs `C0`** (`tier: "primary"`) — Isolates the causal effect of repairing statement-level defects in v3 facts (`F-16`, `F-18`, `F-19`, `F-36`, etc.).
+3. **`C0_clean` vs `C_ID`** (`tier: "primary"`) — Compares verbatim repaired Oracle rule text against identifier-preserving distilled lessons at identical retrieved fact IDs.
+4. **`C0_clean` vs `C0_rand`** (`tier: "primary"`) — Isolates feature-matched Top-10 retrieval precision against a length-matched random 10-fact sample.
+5. **`C_ID` vs `D_safe`** (`tier: "primary"`) — Tests identifier-preserving retrieval against neutral PostgreSQL internals context.
 
-### Multiple Comparison & Modeling
-- **Per-Model Inference:** Paired task-level mean difference across $n=120$ tasks with 95% confidence intervals and two-sided paired sign-flip permutation $p$-values ($10{,}000$ resamples).
-- **Family-Wise Error Control:** Holm-Bonferroni step-down adjusted $p$-values across the 6 pre-registered primary contrasts ($\alpha = 0.05$) in the fixed index order above.
-- **Crossed Random-Effects Sensitivity Model (REML):**
-  $$\text{boundFactFraction}_{ij} \sim \text{condition} + (1 \mid \text{model}_i) + (1 \mid \text{task}_j) + (1 \mid \text{model}_i:\text{condition})$$
-  with CR1 task-cluster-robust standard errors.
+- **`D_safe` vs `A` Equivalence (`tier: "equivalence_tost"`):** Tested outside the 5-contrast primary Holm-Bonferroni family using Two One-Sided Tests (TOST) with equivalence margin $\pm 0.03$ ($\pm 3.0\text{ pp}$).
+- **Secondary Contrasts (`tier: "secondary"`):** `C` vs `A`, `C0` vs `C`, `B` vs `A`, and the Difference-in-Differences contrast `(C_ID - C) - (C0_clean - C0)`.
+
+### §4.2 Inference, Permutations, Power & Gated DGRR
+- **Strict Split Guard:** `analyze-ablation-v3.ts` enforces that all analyzed trials belong strictly to the held-out `V3-H-*` split (`V3-H-001`..`V3-H-120`).
+- **Add-One Sign-Flip Permutations:** All paired sign-flip permutation $p$-values use add-one smoothing $(b + 1) / (N + 1)$ over $100{,}000$ iterations (`seed = 20260101`), alongside Holm-Bonferroni step-down adjustment across the 5 primary superiority contrasts ($\alpha = 0.05$).
+- **Minimum Detectable Effect (MDE):** Reported at $80\%$ power for both $\alpha = 0.05$ and $\alpha = 0.01$ from observed paired difference standard deviations.
+- **Gated Distillation Gap Recovery Ratio (DGRR):** `(meanCId - meanC) / (meanC0Clean - meanC)` is computed only when the denominator's paired 95% bootstrap CI strictly excludes zero (`denominatorExcludesZero === true`); otherwise `recoveryRatio` is `null`.
+
+### §4.3 Intention-to-Treat (ITT), Crash Censorship & Exposure Stratification
+- **ITT & Conditional Decomposition:** Every condition reports ITT `meanBoundFactFraction` and `strictPassAt1` over all $n$ tasks, plus `pCommit` (`!tableMissing && !migrationExitNonZero`), `meanBoundFactFractionGivenCommit`, and `strictPassAt1GivenCommit`.
+- **Exposure-Stratified `C0_clean` vs `C0`:** Stratified by whether `{F-01, F-18, F-19, F-36}` appeared in the task's deterministic Top-10 `retrievedFactIds` (`exposedAny`, `unexposedAll`, and per-fact).
+- **`C0_rand` Bound Coverage:** Reports `c0RandBoundCoverage` (overlap between randomly sampled `C0_rand` facts and `boundFacts`).
+
+### §4.4 Crossed Random-Effects LPMM (`logPromptTokens` & CR2 df Adjustment)
+- **Model:**
+  $$\text{passed}_{ij} \sim \text{condition} + \log(\text{promptTokens}) + (1 \mid \text{task}_i) + (1 \mid \text{fact}_j) + (1 \mid \text{cell}) + (1 \mid \text{fact}_j:\text{condition})$$
+- **Inference:** Reports REML SEs, CR1 task-clustered sandwich SEs, and CR2 small-sample $t$-inference with $\text{df} = n_{\text{tasks}} - 1$.
+
+### §4.5 Failure-Mode Attribution, Forensic Validity & Quarantine Isolation
+- **Failure-Mode Attribution:** `src/verifier/sql-forensics.ts` strips SQL comments while preserving dollar-quoted PL/pgSQL bodies (`$$...$$`, `$tag$...$tag$`), scopes `hasDuplicatePrimaryKey` per `CREATE TABLE` block, separates `omittedSupersedesId` from `inventedLineageCol`, and classifies every flag into `execution_fatal`, `invariant_violating`, or `compliance_marker`.
+- **Static Flag Validity & Audit:** `scripts/v3/validate-forensic-flags.ts` computes precision/recall/F1 against PostgreSQL 16 Oracle `failedFacts` and `migrationExitNonZero` (`out/v3/forensic-validity.json`) and exports a stratified 100-trial `out/v3/manual-audit-sample.csv`.
+- **Authority Separation & Blinding:** `analyze-ablation-v3.ts` never reads `.axiom-state/quarantine/`. Quarantine candidates in `realtime-research-daemon.ts` carry `"scope": "v4-only"`, and `--blind` mode suppresses interim condition means and quarantine staging until a run reaches `960/960`.
