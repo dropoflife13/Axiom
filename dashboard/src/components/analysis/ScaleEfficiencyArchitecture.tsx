@@ -271,9 +271,9 @@ function OrbitCanvas({
         }
 
         const ox = W / 2;
-        const oy = H * 0.54;
-        const R = Math.min(W * 0.44, H * 0.36);
-        const rad = (g: number) => 36 + (g / 70) * (R - 44);
+        const oy = H * 0.58;
+        const R = Math.min(W * 0.40, H * 0.31);
+        const rad = (g: number) => 30 + (g / 70) * (R - 36);
         const ps = (m: FleetModelItem) => (m.s ? 5 + (Math.log10(m.s) / Math.log10(550)) * 9 : 6);
 
         [10, 30, 50].forEach((g, j) => {
@@ -406,7 +406,7 @@ function OrbitCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -513,9 +513,9 @@ function DialsCanvas({
         }
 
         const wide = W > 680;
-        const cy = H * 0.60;
-        const r1 = Math.min(wide ? W * 0.17 : W * 0.36, H * 0.28);
-        const x1 = wide ? W * 0.28 : W / 2;
+        const cy = H * 0.65;
+        const r1 = Math.min(wide ? W * 0.15 : W * 0.30, H * 0.22);
+        const x1 = wide ? W * 0.27 : W / 2;
         const f = (v: number) => (v - GA) / (GB - GA);
         const ang = (v: number) => Math.PI + Math.PI * f(v);
 
@@ -571,7 +571,7 @@ function DialsCanvas({
         T(cx, A.id + ' · ' + A.n, x1, cy + 72, A.col, 11, 'center', 700);
 
         if (wide) {
-          const x2 = W * 0.74;
+          const x2 = W * 0.75;
           const rs: [number, string, number, string][] = [
             [r1, 'B · ANSWER KEY', 1852, VI],
             [r1 - 30, 'A · ZERO-SHOT', 1138, '#94a3b8'],
@@ -617,7 +617,7 @@ function DialsCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -683,12 +683,12 @@ function ConstellationCanvas({
       const k = `${w}x${h}`;
       if (CON.key === k || w <= 0 || h <= 0) return;
       const cx0 = w / 2;
-      const cy0 = h * 0.58;
-      const U = Math.min(h * 0.065, w * 0.05) / Math.sqrt(224);
+      const cy0 = h * 0.62;
+      const U = Math.min(h * 0.055, w * 0.045) / Math.sqrt(224);
       const N = FAULT.map((f, i) => ({
         r: Math.sqrt(f.n2) * U * 1.5,
-        x: cx0 + Math.cos(i * 0.785) * Math.min(w, h) * 0.28,
-        y: cy0 + Math.sin(i * 0.785) * Math.min(w, h) * 0.28,
+        x: cx0 + Math.cos(i * 0.785) * Math.min(w, h) * 0.26,
+        y: cy0 + Math.sin(i * 0.785) * Math.min(w, h) * 0.26,
       }));
       for (let it = 0; it < 400; it++) {
         N.forEach((a, i) => {
@@ -714,7 +714,7 @@ function ConstellationCanvas({
             a.y = cy0 + (dy / d) * m;
           }
           a.x = clamp(a.x, a.r + 14, w - a.r - 14);
-          a.y = clamp(a.y, a.r + 145, h - a.r - 40);
+          a.y = clamp(a.y, a.r + 200, h - a.r - 40);
         });
       }
       CON = { key: k, N, cx: cx0, cy: cy0 };
@@ -870,7 +870,7 @@ function ConstellationCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative min-h-[560px] sm:min-h-[640px] lg:min-h-[680px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
+      className="relative min-h-[640px] sm:min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] border border-[rgba(160,170,255,0.14)] rounded-[16px] overflow-hidden select-none"
       style={{ background: 'radial-gradient(ellipse at 50% 60%, #140b28 0%, #05060a 72%)' }}
     >
       <div
@@ -1066,14 +1066,14 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Every model sat the same test. The closer a model sits to the centre, the closer it gets to the best model&apos;s score.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_290px] gap-6 mt-6 items-start">
             <OrbitCanvas
               interaction={st0Ref}
               onSync={(idx, auto) => setRead0({ idx, auto, sel: st0Ref.current.sel })}
             >
               {/* Selected model inside to the left (no card frame) */}
               <div
-                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                className="absolute top-5 left-6 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
                 aria-live="polite"
               >
                 <div className="flex items-center gap-2">
@@ -1091,7 +1091,7 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
               </div>
 
               {/* How to Read It bullets inside to the right (no card frame) */}
-              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+              <div className="hidden sm:block absolute top-5 right-6 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
                 <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                   HOW TO READ IT
                 </div>
@@ -1191,14 +1191,14 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Left: how much of the distance between &ldquo;no help&rdquo; and &ldquo;the answer key&rdquo; each way of helping the model wins back. Right: how much text each approach puts in the prompt.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_290px] gap-6 mt-6 items-start">
             <DialsCanvas
               interaction={st1Ref}
               onSync={(idx, auto) => setRead1({ idx, auto, sel: st1Ref.current.sel })}
             >
               {/* Selected setup inside to the left (no card frame) */}
               <div
-                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                className="absolute top-5 left-6 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
                 aria-live="polite"
               >
                 <div className="flex items-center gap-2">
@@ -1211,12 +1211,24 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
                   {m1.v}%<span className="text-xs font-normal text-[#aab0c8] ml-1.5 font-sans">rules satisfied</span>
                 </div>
                 <p className="m-0 mt-1.5 text-xs text-[#c8cce0] leading-relaxed drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-                  {m1Desc}
+                  {m1.p}
                 </p>
+                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-[#aab0c8] drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                  {m1.id !== 'A' && (
+                    <span>
+                      Recovers <b className="text-[#22d3ee] font-bold">{gap1}%</b> of gap
+                    </span>
+                  )}
+                  {m1.tok && (
+                    <span>
+                      Prompt: <b className="text-[#e8eaf2] font-bold">{m1.tok.toLocaleString('en-US')}</b> tok
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* How to Read It bullets inside to the right (no card frame) */}
-              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+              <div className="hidden sm:block absolute top-5 right-6 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
                 <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                   HOW TO READ IT
                 </div>
@@ -1311,14 +1323,14 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
             Each cloud is one database rule. The bigger the cloud, the more often models broke it. The tests are run by a real PostgreSQL 16 database, the Oracle.
           </p>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 mt-6 items-start">
+          <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] lg:grid-cols-[minmax(0,1fr)_290px] gap-6 mt-6 items-start">
             <ConstellationCanvas
               interaction={st2Ref}
               onSync={(idx, auto) => setRead2({ idx, auto, sel: st2Ref.current.sel })}
             >
               {/* Selected rule inside to the left (no card frame) */}
               <div
-                className="absolute top-4 left-5 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
+                className="absolute top-5 left-6 z-10 max-w-[280px] sm:max-w-[320px] pointer-events-none select-none"
                 aria-live="polite"
               >
                 <div className="flex items-center gap-2">
@@ -1339,7 +1351,7 @@ export const ScaleEfficiencyArchitecture = memo(function ScaleEfficiencyArchitec
               </div>
 
               {/* How to Read It bullets inside to the right (no card frame) */}
-              <div className="hidden sm:block absolute top-4 right-5 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
+              <div className="hidden sm:block absolute top-5 right-6 z-10 max-w-[260px] sm:max-w-[290px] pointer-events-none select-none">
                 <div className="text-[10px] font-mono font-bold tracking-[0.18em] text-[#7c819a] uppercase mb-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                   HOW TO READ IT
                 </div>
