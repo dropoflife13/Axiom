@@ -219,6 +219,7 @@ export default function HealingLoopHero({
                     latency={desk.latency}
                     stageName={STAGES[stage][0]}
                     stageColor={color}
+                    conditionsCount={totalTrials === 960 || (displayRunId?.toLowerCase().includes('v3') ?? false) ? 8 : 6}
                   />
                 </div>
               </div>

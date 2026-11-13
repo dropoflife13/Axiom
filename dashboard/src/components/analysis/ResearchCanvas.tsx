@@ -1896,7 +1896,7 @@ export const ResearchCanvas = memo(function ResearchCanvas({
       {/* =========================================================================
           SECTION 08: AXIOM KNOWLEDGE BASE & EMPIRICAL PROOFS (FAQ)
           ========================================================================= */}
-      {(isWindowMode && currentWindow.id === 'questions') && (
+      {(!isWindowMode || currentWindow.id === 'questions') && (
         <AxiomFAQSection />
       )}
 

@@ -11,6 +11,15 @@ export interface RunOption {
 }
 
 export const RUN_DISPLAY_NAMES: Record<string, string> = {
+  // Confirmatory Ablation v3 Runs (Live)
+  'gemini-3.5-flash-lite-v3': 'GEMINI 3.5 FLASH LITE (V3 LIVE)',
+  'gemini-3.1-flash-lite-v3': 'GEMINI 3.1 FLASH LITE (V3 LIVE)',
+  'qwen27b-v3': 'QWEN 3.8 27B (V3 LIVE)',
+  'nemotron-v3': 'NEMOTRON 550B (V3 LIVE)',
+  'glm5-v3': 'GLM-5.3 (V3 LIVE)',
+  'gemma4-31b-v3': 'GEMMA 4 31B DENSE (V3 LIVE)',
+
+  // Confirmatory Ablation v2 Fleet
   'nemotron-2': 'NEMOTRON 550B',
   'nemotron-1': 'NEMOTRON 550B',
   'gemma4-31b-full': 'GEMMA 4 31B DENSE',
@@ -112,18 +121,24 @@ export function inferRunOption(id: string): RunOption {
 }
 
 export const DEFAULT_RUN_OPTIONS: readonly RunOption[] = [
+  inferRunOption('gemini-3.5-flash-lite-v3'),
+  inferRunOption('gemini-3.1-flash-lite-v3'),
+  inferRunOption('qwen27b-v3'),
+  inferRunOption('nemotron-v3'),
+  inferRunOption('glm5-v3'),
+  inferRunOption('gemma4-31b-v3'),
+  inferRunOption('gptoss-120b-expanded'),
   inferRunOption('nemotron-2'),
   inferRunOption('gemma4-31b-full'),
   inferRunOption('glm5-2'),
   inferRunOption('gemini-3.1-flash-lite'),
   inferRunOption('gemini-flash-lite-full'),
   inferRunOption('qwen27b-2'),
-  inferRunOption('gptoss-120b-expanded'),
 ];
 
 export const RUN_OPTIONS: readonly RunOption[] = DEFAULT_RUN_OPTIONS;
 
-export const DEFAULT_RUN_ID = 'nemotron-2';
+export const DEFAULT_RUN_ID = 'gemini-3.5-flash-lite-v3';
 export const TRIALS_PER_RUN = 720;
 
 export function runById(id: string | null | undefined, options: readonly RunOption[] = RUN_OPTIONS): RunOption | undefined {

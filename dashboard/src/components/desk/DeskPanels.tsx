@@ -37,10 +37,12 @@ export const ApiLatencyPanel = memo(function ApiLatencyPanel({
   latency,
   stageName = 'PASS',
   stageColor = '#34d399',
+  conditionsCount = 6,
 }: {
   latency: number[] | null;
   stageName?: string;
   stageColor?: string;
+  conditionsCount?: number;
 }) {
   const series = (latency ?? []).slice(-32);
   const max = Math.max(1, ...series);
@@ -87,7 +89,7 @@ export const ApiLatencyPanel = memo(function ApiLatencyPanel({
         </div>
         <div className="dk-telem-tag">
           <span>CONDITIONS</span>
-          <b className="text-zinc-200">06</b>
+          <b className="text-zinc-200">{String(conditionsCount).padStart(2, '0')}</b>
         </div>
         <div className="dk-telem-tag">
           <span>STAGE</span>
@@ -284,11 +286,11 @@ export const ConvergenceGauge = memo(function ConvergenceGauge({
   );
 });
 
-/* Precomputed asynchronous live-stream pulse styles for the 720 matrix squares.
+/* Precomputed asynchronous live-stream pulse styles for the matrix squares (supporting up to 960 trials).
  * Provides randomized delays (0 to 7s) and calm, natural blinking durations (4.5 to 7.5s)
  * with zero harsh white shadows, while maintaining deterministic SSR hydration consistency.
  */
-const MATRIX_PULSE_STYLES = Array.from({ length: TOTAL_TRIALS }, (_, i) => {
+const MATRIX_PULSE_STYLES = Array.from({ length: 960 }, (_, i) => {
   const row = Math.floor(i / 60);
   const col = i % 60;
   // High-entropy 2D pseudo-random hashes
@@ -319,11 +321,12 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
 }) {
   const isAwaiting = Boolean(snapshot?.awaiting);
   const total = totalTrials ?? (cells.length > 0 ? cells.length : TOTAL_TRIALS);
+  const isV3 = total === 960 || (snapshot?.runId ? snapshot.runId.toLowerCase().includes('v3') : false);
   const pending = Math.max(0, total - passed - failed);
   const runningIdx = passed + failed < total ? passed + failed : -1;
   const isLive = Boolean(snapshot?.isLive);
   const isMini = total <= 60;
-  const tasksPerCondition = Math.max(1, Math.round(total / 6));
+  const tasksPerCondition = Math.max(1, Math.round(total / (isV3 ? 8 : 6)));
 
   return (
     <div className="dk-panel dk-matrix" style={{ position: 'relative' }}>
@@ -398,7 +401,7 @@ export const EvidenceMatrix = memo(function EvidenceMatrix({
       <div
         className="dk-grid"
         role="img"
-        aria-label={`${passed} passed, ${failed} failed, ${pending} pending out of ${total} trials. Rows are conditions A, B, C, C0, D, E_B.`}
+        aria-label={`${passed} passed, ${failed} failed, ${pending} pending out of ${total} trials. Rows are conditions ${isV3 ? 'A, D_safe, C, C0, C0_clean, C_ID, C0_rand, B' : 'A, B, C, C0, D, E_B'}.`}
         style={isMini ? { gridTemplateColumns: `repeat(${tasksPerCondition}, minmax(0, 1fr))`, maxWidth: `${tasksPerCondition * 28}px`, margin: '0 auto' } : undefined}
       >
         {cells.map((c, i) => {

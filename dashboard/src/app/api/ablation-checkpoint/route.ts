@@ -29,12 +29,19 @@ function readJsonSafe(file: string | null): Record<string, unknown> | null {
   }
 }
 
-function loadFactStatements(): Record<string, string> {
-  const factsPath = findExistingFile([
+function loadFactStatements(isV3 = false): Record<string, string> {
+  const v3Paths = [
+    path.resolve(process.cwd(), 'fixtures/task-v3/facts.json'),
+    path.resolve(process.cwd(), '../fixtures/task-v3/facts.json'),
+    path.resolve(process.cwd(), '../../fixtures/task-v3/facts.json'),
+  ];
+  const v2Paths = [
     path.resolve(process.cwd(), 'fixtures/task-v2/facts.json'),
     path.resolve(process.cwd(), '../fixtures/task-v2/facts.json'),
     path.resolve(process.cwd(), '../../fixtures/task-v2/facts.json'),
-  ]);
+  ];
+  const candidates = isV3 ? [...v3Paths, ...v2Paths] : [...v2Paths, ...v3Paths];
+  const factsPath = findExistingFile(candidates);
   const doc = readJsonSafe(factsPath) as { facts?: Array<{ id: string; statement: string }> } | null;
   const statements: Record<string, string> = {};
   for (const f of doc?.facts ?? []) statements[f.id] = f.statement;
@@ -66,7 +73,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const isV3 = runId.toLowerCase().includes('v3');
+    const isMini = runId.toLowerCase().includes('mini');
+
     const foundPath = findExistingFile([
+      path.resolve(process.cwd(), `../../.axiom-state/runs-v3/${runId}/checkpoint.json`),
+      path.resolve(process.cwd(), `../.axiom-state/runs-v3/${runId}/checkpoint.json`),
+      path.resolve(process.cwd(), `.axiom-state/runs-v3/${runId}/checkpoint.json`),
       path.resolve(process.cwd(), `../../.axiom-state/runs/${runId}/checkpoint.json`),
       path.resolve(process.cwd(), `../.axiom-state/runs/${runId}/checkpoint.json`),
       path.resolve(process.cwd(), `.axiom-state/runs/${runId}/checkpoint.json`),
@@ -85,16 +98,18 @@ export async function GET(request: NextRequest) {
     ]);
 
     const resultsPath = findExistingFile([
+      path.resolve(process.cwd(), `../../.axiom-state/runs-v3/${runId}/results.json`),
+      path.resolve(process.cwd(), `../.axiom-state/runs-v3/${runId}/results.json`),
+      path.resolve(process.cwd(), `.axiom-state/runs-v3/${runId}/results.json`),
       path.resolve(process.cwd(), `../../.axiom-state/runs/${runId}/results.json`),
       path.resolve(process.cwd(), `../.axiom-state/runs/${runId}/results.json`),
       path.resolve(process.cwd(), `.axiom-state/runs/${runId}/results.json`),
     ]);
 
     const primaryPath = foundPath ?? resultsPath ?? snapshotPath;
-    const factStatements = loadFactStatements();
+    const factStatements = loadFactStatements(isV3);
 
     if (!primaryPath) {
-      const isMini = runId.toLowerCase().includes('mini');
       return NextResponse.json({
         id: runId,
         runId,
@@ -103,7 +118,7 @@ export async function GET(request: NextRequest) {
         startedAt: new Date().toISOString(),
         lastModified: new Date().toISOString(),
         trials: [],
-        totalTrials: isMini ? 48 : 720,
+        totalTrials: isV3 ? 960 : isMini ? 48 : 720,
         status: 'initializing',
         factStatements,
       });
@@ -139,39 +154,41 @@ export async function GET(request: NextRequest) {
       (extraSnap?.model as string | undefined) ||
       modelForRun(runId);
 
-    const isMini = runId.toLowerCase().includes('mini');
     const taskIds = new Set(trials.map((t: any) => t.taskId));
-    let totalTrials = 720;
-    if (Array.isArray(data.metadata?.targetTasks) && data.metadata.targetTasks.length > 0) {
-      totalTrials = data.metadata.targetTasks.length * 6;
-    } else if (Array.isArray(data.targetTasks) && data.targetTasks.length > 0) {
-      totalTrials = data.targetTasks.length * 6;
-    } else if (typeof data.totalTrials === 'number' && data.totalTrials > 0 && data.totalTrials >= trials.length) {
+    const condMultiplier = isV3 ? 8 : 6;
+    let totalTrials = isV3 ? 960 : 720;
+    if (typeof data.totalTrials === 'number' && data.totalTrials > 0 && data.totalTrials >= trials.length) {
       totalTrials = data.totalTrials;
     } else if (typeof data.metadata?.totalTrials === 'number' && data.metadata.totalTrials > 0 && data.metadata.totalTrials >= trials.length) {
       totalTrials = data.metadata.totalTrials;
-    } else if (Array.isArray(data.tasks) && data.tasks.length > 0) {
-      totalTrials = data.tasks.length * 6;
-    } else if (Array.isArray(data.metadata?.tasks) && data.metadata.tasks.length > 0) {
-      totalTrials = data.metadata.tasks.length * 6;
     } else if (typeof extraSnap?.totalTrials === 'number' && extraSnap.totalTrials > 0 && extraSnap.totalTrials >= trials.length) {
       totalTrials = extraSnap.totalTrials;
-    } else if (typeof extraResults?.testTasks === 'number' && extraResults.testTasks > 0 && trials.length <= extraResults.testTasks * 6) {
-      totalTrials = extraResults.testTasks * 6;
+    } else if (Array.isArray(data.metadata?.targetTasks) && data.metadata.targetTasks.length > 0) {
+      totalTrials = data.metadata.targetTasks.length * condMultiplier;
+    } else if (Array.isArray(data.targetTasks) && data.targetTasks.length > 0) {
+      totalTrials = data.targetTasks.length * condMultiplier;
+    } else if (Array.isArray(data.tasks) && data.tasks.length > 0) {
+      totalTrials = data.tasks.length * condMultiplier;
+    } else if (Array.isArray(data.metadata?.tasks) && data.metadata.tasks.length > 0) {
+      totalTrials = data.metadata.tasks.length * condMultiplier;
+    } else if (typeof extraResults?.testTasks === 'number' && extraResults.testTasks > 0 && trials.length <= extraResults.testTasks * condMultiplier) {
+      totalTrials = extraResults.testTasks * condMultiplier;
     } else if (isMini) {
       totalTrials = taskIds.size > 0 ? taskIds.size * 6 : 48;
-    } else if (taskIds.size > 0 && taskIds.size <= 8 && trials.length >= 24 && !runId.toLowerCase().includes('expanded')) {
+    } else if (taskIds.size > 0 && taskIds.size <= 8 && trials.length >= 24 && !runId.toLowerCase().includes('expanded') && !isV3) {
       totalTrials = taskIds.size * 6;
     }
 
-    // Dynamic scale-up for expanded or full runs
-    if (!isMini) {
-      if (trials.length > 240 || taskIds.size > 40 || runId.toLowerCase().includes('expanded')) {
+    // Dynamic scale-up for v3, expanded or full runs
+    if (isV3) {
+      totalTrials = Math.max(totalTrials, 960);
+    } else if (!isMini) {
+      if (trials.length > 240 || taskIds.size > 40 || runId.toLowerCase().includes('expanded') || totalTrials >= 480) {
         totalTrials = Math.max(totalTrials, 720);
       }
     }
     if (trials.length > totalTrials) {
-      totalTrials = Math.max(totalTrials, Math.ceil(trials.length / 6) * 6);
+      totalTrials = Math.max(totalTrials, Math.ceil(trials.length / condMultiplier) * condMultiplier);
     }
 
     const snapObj = extraSnap as Record<string, unknown> | null;

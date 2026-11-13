@@ -377,7 +377,8 @@ export function CortexVaultSection({
                     name: 'AXIOM KERNEL',
                     role: 'Deterministic ground-truth reactor. Evaluates all candidate migrations inside fresh PostgreSQL 16 Docker containers.',
                   })
-                >
+                }
+              >
                   <AxiomLogo size={68} variant="mark" className="cortex-axiom-knot-icon" title="Axiom Kernel" />
                 </div>
                 <span className="cortex-core-label">AXIOM KERNEL</span>
@@ -902,7 +903,6 @@ export function CortexVaultSection({
             )}
           </div>
         </div>
-      </div>
     </section>
   );
 }

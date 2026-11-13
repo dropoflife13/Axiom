@@ -4,50 +4,79 @@ import { NextResponse } from 'next/server';
 
 export const dynamic = 'force-dynamic';
 
+function getFoldersFromCandidates(candidates: string[]): string[] {
+  const dir = candidates.find((d) => {
+    try {
+      return fs.existsSync(d) && fs.statSync(d).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+  if (!dir) return [];
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    return entries
+      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'archive')
+      .map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
+
 export async function GET() {
   try {
-    const candidateDirs = [
+    const candidateDirsV3 = [
+      path.resolve(process.cwd(), '../../.axiom-state/runs-v3'),
+      path.resolve(process.cwd(), '../.axiom-state/runs-v3'),
+      path.resolve(process.cwd(), '.axiom-state/runs-v3'),
+    ];
+
+    const candidateDirsV2 = [
       path.resolve(process.cwd(), '../../.axiom-state/runs'),
       path.resolve(process.cwd(), '../.axiom-state/runs'),
       path.resolve(process.cwd(), '.axiom-state/runs'),
     ];
 
-    const runsDir = candidateDirs.find((dir) => {
-      try {
-        return fs.existsSync(dir) && fs.statSync(dir).isDirectory();
-      } catch {
-        return false;
-      }
-    });
+    const v3Folders = getFoldersFromCandidates(candidateDirsV3);
+    const v2Folders = getFoldersFromCandidates(candidateDirsV2);
+    const allRuns = Array.from(new Set([...v3Folders, ...v2Folders]));
 
-    if (!runsDir) {
+    if (allRuns.length === 0) {
       return NextResponse.json([
+        'gemini-3.5-flash-lite-v3',
+        'gemini-3.1-flash-lite-v3',
+        'qwen27b-v3',
+        'nemotron-v3',
+        'glm5-v3',
+        'gemma4-31b-v3',
+        'gptoss-120b-expanded',
         'nemotron-2',
         'gemma4-31b-full',
         'glm5-2',
         'gemini-3.1-flash-lite',
         'gemini-flash-lite-full',
         'qwen27b-2',
-        'gptoss-120b-expanded',
       ]);
     }
 
-    const entries = fs.readdirSync(runsDir, { withFileTypes: true });
-    const runFolders = entries
-      .filter((entry) => entry.isDirectory() && !entry.name.startsWith('.') && entry.name !== 'archive')
-      .map((entry) => entry.name);
-
-    // Prioritize Confirmatory Fleet + Live In-Progress Runs
+    // Prioritize Confirmatory V3 Fleet (Live), then V2 Fleet + Expanded Runs
     const preferredOrder = [
+      'gemini-3.5-flash-lite-v3',
+      'gemini-3.1-flash-lite-v3',
+      'qwen27b-v3',
+      'nemotron-v3',
+      'glm5-v3',
+      'gemma4-31b-v3',
+      'gptoss-120b-expanded',
       'nemotron-2',
       'gemma4-31b-full',
       'glm5-2',
       'gemini-3.1-flash-lite',
       'gemini-flash-lite-full',
       'qwen27b-2',
-      'gptoss-120b-expanded',
     ];
-    runFolders.sort((a, b) => {
+
+    allRuns.sort((a, b) => {
       const idxA = preferredOrder.indexOf(a);
       const idxB = preferredOrder.indexOf(b);
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
@@ -56,7 +85,7 @@ export async function GET() {
       return a.localeCompare(b);
     });
 
-    return NextResponse.json(runFolders);
+    return NextResponse.json(allRuns);
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to read runs directory', details: String(error) },

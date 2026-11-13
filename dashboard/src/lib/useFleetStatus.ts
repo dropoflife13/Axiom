@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CONDITIONS, type CheckpointTrial } from './desk';
+import { CONDITIONS, V3_CONDITIONS, V3_UNIQUE_CONDITIONS, type CheckpointTrial } from './desk';
 import { TRIALS_PER_RUN, type RunOption } from './runs';
 
 export interface ConditionStat {
@@ -33,8 +33,21 @@ export interface RunStatus {
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
-export function summarizeTrials(trials: CheckpointTrial[]) {
-  const conditions: ConditionStat[] = CONDITIONS.map((condition) => {
+export function summarizeTrials(trials: CheckpointTrial[], runId?: string) {
+  const isV3 =
+    Boolean(runId && runId.toLowerCase().includes('v3')) ||
+    trials.some(
+      (t) =>
+        t.taskId?.startsWith('V3-') ||
+        (t.condition &&
+          (t.condition.includes('_safe') ||
+            t.condition.includes('_clean') ||
+            t.condition.includes('_ID') ||
+            t.condition.includes('_rand') ||
+            (V3_UNIQUE_CONDITIONS as readonly string[]).includes(t.condition))),
+    );
+  const condList = isV3 ? V3_CONDITIONS : CONDITIONS;
+  const conditions: ConditionStat[] = condList.map((condition) => {
     const subset = trials.filter((t) => t.condition === condition);
     const n = subset.length;
     if (!n) return { condition, trials: 0, meanBound: null, passRate: null, meanTokens: null };
@@ -74,7 +87,8 @@ export function summarizeTrials(trials: CheckpointTrial[]) {
 async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus> {
   const isLocal =
     window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  const defaultTotal = run.id.toLowerCase().includes('mini') ? 48 : TRIALS_PER_RUN;
+  const isV3 = run.id.toLowerCase().includes('v3');
+  const defaultTotal = run.id.toLowerCase().includes('mini') ? 48 : isV3 ? 960 : TRIALS_PER_RUN;
   const empty: RunStatus = {
     run,
     state: 'awaiting',
@@ -82,7 +96,7 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
     total: defaultTotal,
     convergence: null,
     convergenceSeries: [],
-    conditions: summarizeTrials([]).conditions,
+    conditions: summarizeTrials([], run.id).conditions,
     factFailures: [],
     lastModified: null,
     totalTokens: 0,
@@ -101,16 +115,19 @@ async function fetchRun(run: RunOption, signal: AbortSignal): Promise<RunStatus>
       ? data.totalTrials
       : run.id.toLowerCase().includes('mini')
       ? 48
+      : isV3
+      ? 960
       : TRIALS_PER_RUN;
-    if (trials.length > total || (!run.id.toLowerCase().includes('mini') && (trials.length > 240 || run.id.toLowerCase().includes('expanded')))) {
-      total = Math.max(TRIALS_PER_RUN, Math.ceil(trials.length / 6) * 6);
+    if (trials.length > total || (!run.id.toLowerCase().includes('mini') && (trials.length > 240 || run.id.toLowerCase().includes('expanded') || isV3))) {
+      const benchmarkTarget = isV3 ? 960 : TRIALS_PER_RUN;
+      total = Math.max(benchmarkTarget, Math.ceil(trials.length / (isV3 ? 8 : 6)) * (isV3 ? 8 : 6));
     }
     const mtime = data.lastModified ? new Date(data.lastModified).getTime() : 0;
     const isGptOssLive = run.id.includes('gptoss') && trials.length < total && trials.length > 0;
-    const live = Boolean(isGptOssLive || (mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total));
+    const live = Boolean(isGptOssLive || isV3 || (mtime && Date.now() - mtime < FIVE_MINUTES_MS && trials.length < total));
     return {
       ...empty,
-      ...summarizeTrials(trials),
+      ...summarizeTrials(trials, run.id),
       state: trials.length === 0 ? 'awaiting' : live ? 'live' : 'snapshot',
       done: Math.min(total, trials.length),
       total,

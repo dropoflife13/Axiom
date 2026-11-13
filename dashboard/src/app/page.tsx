@@ -10,7 +10,7 @@ import { AxiomAutonomousKernel } from '@/components/cortex/AxiomAutonomousKernel
 import { AxiomFAQSection } from '@/components/faq/AxiomFAQSection';
 import { AxiomFooter } from '@/components/footer/AxiomFooter';
 import { AxiomLoadingScreen } from '@/components/AxiomLoadingScreen';
-import { CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial } from '@/lib/desk';
+import { CONDITIONS, V3_CONDITIONS, deriveDesk, TOTAL_TRIALS, type CheckpointTrial } from '@/lib/desk';
 import { DEFAULT_RUN_ID, DEFAULT_RUN_OPTIONS, inferRunOption, modelForRun, getDisplayName, type RunOption } from '@/lib/runs';
 import { useFleetStatus } from '@/lib/useFleetStatus';
 
@@ -26,6 +26,25 @@ export type AxiomWindow =
   | 'questions';
 
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+type Protocol = 'v2' | 'v3';
+const protocolOf = (runId: string): Protocol => (runId.toLowerCase().includes('v3') ? 'v3' : 'v2');
+const PROTOCOL_META: Record<Protocol, { label: string; sub: string; dot: string; active: string; glow: string }> = {
+  v2: {
+    label: 'ABLATION V2',
+    sub: '6 COND · 720',
+    dot: 'bg-violet-400',
+    active: 'text-violet-200',
+    glow: 'bg-violet-500/20 border-violet-400/60 shadow-[0_0_12px_rgba(167,139,250,0.3)]',
+  },
+  v3: {
+    label: 'ABLATION V3',
+    sub: '8 COND · 960',
+    dot: 'bg-emerald-400',
+    active: 'text-emerald-200',
+    glow: 'bg-emerald-500/20 border-emerald-400/60 shadow-[0_0_12px_rgba(52,211,153,0.3)]',
+  },
+};
 
 interface SettledRunState {
   runId: string;
@@ -154,6 +173,19 @@ export default function Page() {
       setPendingRunId(null);
     } else {
       setPendingRunId(runId);
+      setSettled({
+        runId,
+        checkpoint: [],
+        results: null,
+        awaitingSnapshot: false,
+        snapshotMeta: {
+          runId,
+          commit: 'live',
+          isLive: true,
+          model: modelForRun(runId),
+          awaiting: false,
+        },
+      });
     }
   }, []);
 
@@ -399,44 +431,50 @@ export default function Page() {
   const totalTrials = useMemo(() => {
     const rawData = results as Record<string, unknown> | null;
     const md = rawData?.metadata as Record<string, unknown> | undefined;
-
-    if (Array.isArray(md?.targetTasks) && md.targetTasks.length > 0) {
-      return md.targetTasks.length * 6;
-    }
-    if (Array.isArray(rawData?.targetTasks) && rawData.targetTasks.length > 0) {
-      return rawData.targetTasks.length * 6;
-    }
-    if (typeof rawData?.totalTrials === 'number' && rawData.totalTrials > 0) {
-      if (checkpoint.length > (rawData.totalTrials as number)) {
-        return Math.max(720, Math.ceil(checkpoint.length / 6) * 6);
-      }
-      return rawData.totalTrials;
-    }
+    const isV3 = displayRunId.toLowerCase().includes('v3') || (typeof md?.totalTrials === 'number' && md.totalTrials === 960);
     const isMini = displayRunId.toLowerCase().includes('mini');
     const isExpanded = displayRunId.toLowerCase().includes('expanded');
-    if (typeof md?.totalTrials === 'number' && md.totalTrials > 0) {
-      if (checkpoint.length > (md.totalTrials as number)) {
-        return Math.max(720, Math.ceil(checkpoint.length / 6) * 6);
-      }
-      return md.totalTrials;
-    }
-    if (Array.isArray(rawData?.tasks) && rawData.tasks.length > 0) {
-      return rawData.tasks.length * 6;
-    }
-    if (Array.isArray(md?.tasks) && md.tasks.length > 0) {
-      return md.tasks.length * 6;
-    }
     const taskIds = new Set(checkpoint.map((t) => t.taskId));
+    const condMultiplier = isV3 ? 8 : 6;
+
+    let inferred = isV3 ? 960 : TOTAL_TRIALS;
+
     if (isMini) {
-      return taskIds.size > 0 ? taskIds.size * 6 : 48;
+      inferred = taskIds.size > 0 ? taskIds.size * 6 : 48;
+      if (typeof rawData?.totalTrials === 'number' && rawData.totalTrials > 0) {
+        inferred = rawData.totalTrials;
+      }
+    } else if (typeof rawData?.totalTrials === 'number' && rawData.totalTrials > 0) {
+      inferred = rawData.totalTrials;
+    } else if (typeof md?.totalTrials === 'number' && md.totalTrials > 0) {
+      inferred = md.totalTrials;
+    } else if (taskIds.size > 0 && taskIds.size <= 8 && checkpoint.length >= 24 && !isExpanded && !isV3) {
+      inferred = taskIds.size * 6;
+    } else if (Array.isArray(rawData?.tasks) && rawData.tasks.length > 0) {
+      inferred = rawData.tasks.length * condMultiplier;
+    } else if (Array.isArray(md?.tasks) && md.tasks.length > 0) {
+      inferred = md.tasks.length * condMultiplier;
+    } else if (Array.isArray(md?.targetTasks) && md.targetTasks.length > 0) {
+      inferred = md.targetTasks.length * condMultiplier;
+    } else if (Array.isArray(rawData?.targetTasks) && rawData.targetTasks.length > 0) {
+      inferred = rawData.targetTasks.length * condMultiplier;
     }
-    if (taskIds.size > 0 && taskIds.size <= 8 && checkpoint.length >= 24 && !isExpanded) {
-      return taskIds.size * 6;
+
+    // Benchmark targets
+    if (isV3) {
+      inferred = Math.max(inferred, 960);
+    } else if (!isMini) {
+      if (isExpanded || checkpoint.length > 240 || taskIds.size > 40 || inferred >= 480) {
+        inferred = Math.max(inferred, 720);
+      }
     }
-    if (checkpoint.length > 240 || isExpanded) {
-      return 720;
+
+    // Total target must never be less than completed trials
+    if (checkpoint.length > inferred) {
+      inferred = Math.max(isV3 ? 960 : 720, Math.ceil(checkpoint.length / condMultiplier) * condMultiplier);
     }
-    return TOTAL_TRIALS;
+
+    return inferred;
   }, [results, checkpoint, displayRunId]);
 
   const lastModified = (results as { lastModified?: string } | null)?.lastModified;
@@ -446,8 +484,10 @@ export default function Page() {
   }, [checkpoint, totalTrials, lastModified, startedAt]);
 
   const live = useMemo<LiveRun>(() => {
+    const isV3 = displayRunId.toLowerCase().includes('v3') || totalTrials === 960;
+    const condList = isV3 ? V3_CONDITIONS : CONDITIONS;
     const done = Math.min(totalTrials, checkpoint.length);
-    const counts = CONDITIONS.map((condition) => checkpoint.filter((trial) => trial.condition === condition).length);
+    const counts = condList.map((condition) => checkpoint.filter((trial) => trial.condition === condition).length);
     const running = done > 0 && !checkpointError;
     return {
       done,
@@ -458,7 +498,7 @@ export default function Page() {
       label: snapshotMeta.isLive ? 'LIVE' : 'SNAPSHOT',
       awaiting: awaitingSnapshot,
     };
-  }, [checkpoint, checkpointError, snapshotMeta.isLive, awaitingSnapshot, totalTrials]);
+  }, [checkpoint, checkpointError, snapshotMeta.isLive, awaitingSnapshot, totalTrials, displayRunId]);
 
   const copyLogs = () => {
     const logs = JSON.stringify({ snapshotMeta, checkpoint, results, fetchedAt: new Date().toISOString() }, null, 2);
@@ -469,6 +509,30 @@ export default function Page() {
   const fleet = useFleetStatus(discoveredRuns);
   const stage = Math.max(0, Math.min(STAGES.length - 1, live.stage));
   const activeOption = discoveredRuns.find((r) => r.id === activeRunId) ?? inferRunOption(activeRunId);
+
+  // Protocol switch (Ablation v2 ↔ v3) — derived from the active run so it can never drift out of sync
+  const protocol: Protocol = protocolOf(activeRunId);
+  const protocolRuns = useMemo(
+    () => discoveredRuns.filter((r) => protocolOf(r.id) === protocol),
+    [discoveredRuns, protocol],
+  );
+  const lastRunByProtocolRef = useRef<Record<Protocol, string | null>>({ v2: null, v3: null });
+  lastRunByProtocolRef.current[protocol] = activeRunId;
+
+  const handleSelectProtocol = useCallback(
+    (next: Protocol) => {
+      if (next === protocol) return;
+      const remembered = lastRunByProtocolRef.current[next];
+      const candidates = discoveredRuns.filter((r) => protocolOf(r.id) === next);
+      const target =
+        (remembered && candidates.some((r) => r.id === remembered) ? remembered : null) ?? candidates[0]?.id;
+      if (!target) return;
+      setDropdownOpen(false);
+      setModelSearchQuery('');
+      handleSelectRun(target);
+    },
+    [protocol, discoveredRuns, handleSelectRun],
+  );
 
   return (
     <div className="w-full min-h-screen bg-[#050505] relative flex flex-col">
@@ -496,8 +560,49 @@ export default function Page() {
               <b className="font-mono text-xs tracking-wider text-white">AXIOM</b>
             </div>
 
-            <span className="text-zinc-700 font-mono text-xs hidden sm:inline">/</span>
-            <span className="text-zinc-500 font-mono text-[9.5px] tracking-wider uppercase hidden md:inline">
+            {/* Protocol Switch: Ablation v2 ↔ v3 (matches LIVE ENGINE / RESEARCH switcher) */}
+            <div
+              role="tablist"
+              aria-label="Ablation protocol"
+              className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg bg-zinc-900/90 border border-zinc-800/90 shadow-inner"
+            >
+              {(['v2', 'v3'] as const).map((p) => {
+                const meta = PROTOCOL_META[p];
+                const isOn = protocol === p;
+                const count = discoveredRuns.filter((r) => protocolOf(r.id) === p).length;
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    role="tab"
+                    aria-selected={isOn}
+                    disabled={count === 0}
+                    onClick={() => handleSelectProtocol(p)}
+                    title={`${meta.label} · ${meta.sub} · ${count} runs`}
+                    className={`relative flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider uppercase transition-colors duration-300 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isOn ? `${meta.active} font-bold` : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {isOn && (
+                      <motion.span
+                        layoutId="protocol-switch-pill"
+                        className={`absolute inset-0 rounded border ${meta.glow}`}
+                        transition={{ type: 'spring', stiffness: 420, damping: 34, mass: 0.8 }}
+                      />
+                    )}
+                    <span
+                      className={`relative w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                        isOn ? `${meta.dot} animate-pulse` : 'bg-zinc-600'
+                      }`}
+                    />
+                    <span className="relative">{p.toUpperCase()}</span>
+                    <span className="relative hidden xl:inline text-[8.5px] font-medium opacity-70">{meta.sub}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <span className="text-zinc-500 font-mono text-[9.5px] tracking-wider uppercase hidden 2xl:inline">
               ACTIVE MODEL / RUN
             </span>
 
@@ -520,10 +625,10 @@ export default function Page() {
                   className={`w-2 h-2 rounded-full flex-shrink-0 ${snapshotMeta.isLive ? 'animate-pulse' : ''}`}
                   style={{ backgroundColor: activeOption.accent }}
                 />
-                <span className="text-[11px] font-mono text-zinc-100 font-bold tracking-wider uppercase truncate max-w-[110px] sm:max-w-[160px]">
-                  {getDisplayName(displayRunId)}
+                <span className="text-[11px] font-mono text-zinc-100 font-bold tracking-wider uppercase truncate max-w-[150px] sm:max-w-[240px]">
+                  {getDisplayName(displayRunId || activeRunId)}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded font-medium tabular-nums hidden sm:inline">
+                <span className="text-[9px] font-mono text-zinc-400 bg-zinc-900 border border-zinc-800 px-1.5 py-0.5 rounded font-medium tabular-nums hidden sm:inline transition-colors duration-300">
                   {live.done}/{totalTrials}
                 </span>
                 <span className={`text-[9px] text-zinc-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180 text-cyan-400' : ''}`}>
@@ -545,10 +650,10 @@ export default function Page() {
                     <div className="p-2 border-b border-zinc-800/80 bg-zinc-950/60">
                       <div className="flex items-center justify-between mb-1.5 px-1">
                         <span className="text-[9px] font-mono text-zinc-400 tracking-wider font-semibold uppercase">
-                          SELECT ACTIVE RUN
+                          SELECT {PROTOCOL_META[protocol].label} RUN
                         </span>
                         <span className="text-[9px] font-mono text-zinc-500 tabular-nums">
-                          {discoveredRuns.length} MODELS
+                          {protocolRuns.length} MODELS
                         </span>
                       </div>
                       <input
@@ -563,7 +668,7 @@ export default function Page() {
 
                     {/* Model List */}
                     <div className="overflow-y-auto p-1.5 flex flex-col gap-1 max-h-[360px] scrollbar-thin">
-                      {discoveredRuns
+                      {protocolRuns
                         .filter((r) => {
                           if (!modelSearchQuery.trim()) return true;
                           const q = modelSearchQuery.toLowerCase();
@@ -572,9 +677,10 @@ export default function Page() {
                         .map((r) => {
                           const isSelected = r.id === activeRunId;
                           const fs = fleet?.find((f) => f.run.id === r.id);
+                          const isV3Run = r.id.toLowerCase().includes('v3');
                           const doneCount = fs ? fs.done : r.id === activeRunId ? live.done : 0;
-                          const totalCount = fs ? fs.total : r.id.toLowerCase().includes('mini') ? 48 : 720;
-                          const isLiveModel = fs?.state === 'live' || (r.id === activeRunId && snapshotMeta.isLive);
+                          const totalCount = fs ? fs.total : r.id.toLowerCase().includes('mini') ? 48 : isV3Run ? 960 : 720;
+                          const isLiveModel = fs?.state === 'live' || (r.id === activeRunId && snapshotMeta.isLive) || (isV3Run && doneCount < totalCount);
 
                           return (
                             <button
@@ -617,39 +723,10 @@ export default function Page() {
                 )}
               </AnimatePresence>
             </div>
-
-            {/* Snapshot Hash Chip */}
-            <div className="hidden xl:flex items-center px-2 py-0.5 rounded bg-zinc-900/60 border border-zinc-800 font-mono text-[9px] text-zinc-400">
-              <span className="text-zinc-500 mr-1">SNAPSHOT //</span>
-              <span className="text-cyan-400 font-bold">{snapshotMeta.commit}</span>
-            </div>
           </div>
 
-          {/* Center: Real-Time HUD Status Telemetry (Matching Image 3) */}
-          <div className="hidden lg:flex items-center gap-3.5 px-3 py-1 font-mono text-[10px] text-zinc-400 border-x border-zinc-800/60">
-            <div className="flex items-center gap-1.5">
-              <span className="text-zinc-500 uppercase">ORACLE</span>
-              <span className="text-cyan-400 font-bold tracking-wider">LOCKED</span>
-            </div>
-            <span className="text-zinc-700">|</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-zinc-500 uppercase">TEMP</span>
-              <span className="text-zinc-200 font-bold">0</span>
-            </div>
-            <span className="text-zinc-700">|</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-zinc-500 uppercase">CONDITIONS</span>
-              <span className="text-zinc-200 font-bold">06</span>
-            </div>
-            <span className="text-zinc-700">|</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-zinc-500 uppercase">STAGE</span>
-              <span className="text-emerald-400 font-bold tracking-wider">PASS</span>
-            </div>
-          </div>
-
-            {/* Right: Engine / Research View Switcher Tabs */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Right: Engine / Research View Switcher Tabs */}
+          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg bg-zinc-900/90 border border-zinc-800/90 shadow-inner">
                 <button
                   type="button"
@@ -687,6 +764,23 @@ export default function Page() {
 
         {/* Dynamic Center Canvas: Switches between Live Engine (with Anatomy & FAQ) and Dedicated Research Windows */}
         <div className="flex-1 min-w-0 relative w-full flex flex-col transition-all duration-300">
+          {/* Protocol switch wipe: overlay-only so heavy canvases are never remounted */}
+          <AnimatePresence initial={false}>
+            <motion.div
+              key={protocol}
+              aria-hidden
+              initial={{ opacity: 0.85, clipPath: 'inset(0 0 0 0)' }}
+              animate={{ opacity: 0, clipPath: 'inset(0 0 100% 0)' }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="pointer-events-none fixed inset-x-0 top-[52px] bottom-0 z-40"
+              style={{
+                background:
+                  protocol === 'v3'
+                    ? 'linear-gradient(180deg, rgba(16,185,129,0.18) 0%, rgba(5,5,5,0.92) 35%, rgba(5,5,5,0.6) 100%)'
+                    : 'linear-gradient(180deg, rgba(139,92,246,0.18) 0%, rgba(5,5,5,0.92) 35%, rgba(5,5,5,0.6) 100%)',
+              }}
+            />
+          </AnimatePresence>
           {/* Live Engine Canvas (Full-Screen Torus + Anatomy + FAQ + Footer) */}
           <div
             className={`w-full transition-opacity duration-200 ease-out ${

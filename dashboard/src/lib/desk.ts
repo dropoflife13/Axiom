@@ -5,6 +5,8 @@
 
 export const TOTAL_TRIALS = 720;
 export const CONDITIONS = ['A', 'B', 'C', 'C0', 'D', 'E_B'] as const;
+export const V3_CONDITIONS = ['A', 'D_safe', 'C', 'C0', 'C0_clean', 'C_ID', 'C0_rand', 'B'] as const;
+export const V3_UNIQUE_CONDITIONS = ['D_safe', 'C0_clean', 'C_ID', 'C0_rand'] as const;
 
 export interface CheckpointTrial {
   condition: string;
@@ -52,11 +54,28 @@ export interface DeskData {
 }
 
 /** Condition-major order: trial slot = conditionIndex * tasksPerCondition + taskOrdinal. */
-export function cellIndex(trial: CheckpointTrial, taskOrder: Map<string, number>, totalTrials = TOTAL_TRIALS): number {
-  const c = CONDITIONS.indexOf(trial.condition as (typeof CONDITIONS)[number]);
+export function cellIndex(
+  trial: CheckpointTrial,
+  taskOrder: Map<string, number>,
+  totalTrials = TOTAL_TRIALS,
+  conditionsList?: readonly string[]
+): number {
+  const isV3 =
+    totalTrials === 960 ||
+    Boolean(
+      trial.taskId?.startsWith('V3-') ||
+        (trial.condition &&
+          (trial.condition.includes('_safe') ||
+            trial.condition.includes('_clean') ||
+            trial.condition.includes('_ID') ||
+            trial.condition.includes('_rand') ||
+            (V3_UNIQUE_CONDITIONS as readonly string[]).includes(trial.condition))),
+    );
+  const conds = conditionsList ?? (isV3 ? V3_CONDITIONS : CONDITIONS);
+  const c = conds.indexOf(trial.condition as any);
   const t = taskOrder.get(trial.taskId);
   if (c < 0 || t === undefined) return -1;
-  const tasksPerCondition = Math.max(1, Math.round(totalTrials / CONDITIONS.length));
+  const tasksPerCondition = Math.max(1, Math.round(totalTrials / conds.length));
   return c * tasksPerCondition + t;
 }
 
@@ -67,6 +86,19 @@ export function deriveDesk(
   lastModified?: string | number,
   startedAt?: string | number
 ): DeskData {
+  const isV3 =
+    totalTrials === 960 ||
+    trials.some(
+      (t) =>
+        t.taskId?.startsWith('V3-') ||
+        (t.condition &&
+          (t.condition.includes('_safe') ||
+            t.condition.includes('_clean') ||
+            t.condition.includes('_ID') ||
+            t.condition.includes('_rand') ||
+            (V3_UNIQUE_CONDITIONS as readonly string[]).includes(t.condition))),
+    );
+  const activeConditions = isV3 ? V3_CONDITIONS : CONDITIONS;
   const cells: CellState[] = Array.from({ length: totalTrials }, () => 'pending');
   const taskOrder = new Map<string, number>();
   for (const t of trials) if (!taskOrder.has(t.taskId)) taskOrder.set(t.taskId, taskOrder.size);
@@ -76,7 +108,7 @@ export function deriveDesk(
   for (const t of trials) {
     if (t.boundPassed) passed++;
     fractionSum += t.boundFactFraction ?? 0;
-    const i = cellIndex(t, taskOrder, totalTrials);
+    const i = cellIndex(t, taskOrder, totalTrials, activeConditions);
     if (i >= 0 && i < totalTrials) cells[i] = t.boundPassed ? 'pass' : 'fail';
   }
 

@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import { AxiomLogo } from '@/components/AxiomLogo';
-import type { CheckpointTrial, DeskData } from '@/lib/desk';
+import { CONDITIONS, V3_CONDITIONS, type CheckpointTrial, type DeskData } from '@/lib/desk';
 import { modelForRun, DEFAULT_RUN_ID } from '@/lib/runs';
 
 export interface AxiomAnatomyProps {
@@ -1047,7 +1047,6 @@ function getAdj(id: string) {
 }
 
 const FREQ_LABELS = ['60', '125', '250', '500', '1k', '2k', '4k', '8k', '12k', '16k', '24k', '32k'];
-const CONDITIONS = ['A', 'B', 'C', 'C0', 'D', 'E_B'] as const;
 
 export const AxiomAnatomy = React.memo(function AxiomAnatomy({
   checkpoint,
@@ -1111,14 +1110,24 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
     return 0;
   }, [desk?.convergence, checkpoint]);
 
+  const isV3 = React.useMemo(() => {
+    return Boolean(
+      checkpoint?.some(
+        (t) => t.condition && (t.condition.includes('_') || (V3_CONDITIONS as readonly string[]).includes(t.condition)),
+      ),
+    );
+  }, [checkpoint]);
+
+  const activeConditions = isV3 ? V3_CONDITIONS : CONDITIONS;
+
   const conditionCounts = React.useMemo(() => {
-    return CONDITIONS.map((c) => {
+    return activeConditions.map((c) => {
       if (checkpoint && checkpoint.length > 0) {
         return checkpoint.filter((t) => t.condition === c).length;
       }
       return 0;
     });
-  }, [checkpoint]);
+  }, [checkpoint, activeConditions]);
 
   // Preset Views (Targeting the central Oracle Sun at [0, 0, 0])
   const setCameraView = React.useCallback((view: 'front' | 'side' | 'top' | 'iso') => {
@@ -2096,7 +2105,7 @@ export const AxiomAnatomy = React.memo(function AxiomAnatomy({
               <h3>
                 CONDITIONS <i>/ 120 EACH</i>
               </h3>
-              {CONDITIONS.map((c, i) => {
+              {activeConditions.map((c, i) => {
                 const count = conditionCounts[i] ?? 0;
                 const pct = Math.min(100, Math.round((count / 120) * 100));
                 return (
