@@ -1,0 +1,7218 @@
+{
+  "generatedAt": "2026-11-18T04:25:52.374Z",
+  "taskCount": 120,
+  "conditions": [
+    "A",
+    "D_safe",
+    "C",
+    "C0",
+    "C0_clean",
+    "C_ID",
+    "C0_rand",
+    "B"
+  ],
+  "conditionSummary": {
+    "A": {
+      "promptChars": {
+        "mean": 1037,
+        "median": 1039.5,
+        "min": 1000,
+        "max": 1068
+      },
+      "promptTokens": {
+        "mean": 212.4583,
+        "median": 213,
+        "min": 206,
+        "max": 219
+      },
+      "hintChars": {
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      },
+      "hintTokens": {
+        "mean": 0,
+        "median": 0,
+        "min": 0,
+        "max": 0
+      }
+    },
+    "D_safe": {
+      "promptChars": {
+        "mean": 2331,
+        "median": 2333.5,
+        "min": 2294,
+        "max": 2362
+      },
+      "promptTokens": {
+        "mean": 428.4583,
+        "median": 429,
+        "min": 422,
+        "max": 435
+      },
+      "hintChars": {
+        "mean": 1251,
+        "median": 1251,
+        "min": 1251,
+        "max": 1251
+      },
+      "hintTokens": {
+        "mean": 210,
+        "median": 210,
+        "min": 210,
+        "max": 210
+      }
+    },
+    "C": {
+      "promptChars": {
+        "mean": 2122.125,
+        "median": 2139,
+        "min": 2045,
+        "max": 2199
+      },
+      "promptTokens": {
+        "mean": 454.3333,
+        "median": 457,
+        "min": 437,
+        "max": 468
+      },
+      "hintChars": {
+        "mean": 1042.125,
+        "median": 1054.5,
+        "min": 982,
+        "max": 1089
+      },
+      "hintTokens": {
+        "mean": 235.875,
+        "median": 238.5,
+        "min": 225,
+        "max": 246
+      }
+    },
+    "C0": {
+      "promptChars": {
+        "mean": 2098.375,
+        "median": 2114,
+        "min": 1952,
+        "max": 2208
+      },
+      "promptTokens": {
+        "mean": 465.2083,
+        "median": 468.5,
+        "min": 440,
+        "max": 485
+      },
+      "hintChars": {
+        "mean": 1018.375,
+        "median": 1033.5,
+        "min": 906,
+        "max": 1097
+      },
+      "hintTokens": {
+        "mean": 246.75,
+        "median": 248,
+        "min": 228,
+        "max": 260
+      }
+    },
+    "C0_clean": {
+      "promptChars": {
+        "mean": 2342.375,
+        "median": 2358.5,
+        "min": 2067,
+        "max": 2571
+      },
+      "promptTokens": {
+        "mean": 522.4583,
+        "median": 524,
+        "min": 474,
+        "max": 573
+      },
+      "hintChars": {
+        "mean": 1262.375,
+        "median": 1273,
+        "min": 1021,
+        "max": 1460
+      },
+      "hintTokens": {
+        "mean": 304,
+        "median": 303.5,
+        "min": 262,
+        "max": 351
+      }
+    },
+    "C_ID": {
+      "promptChars": {
+        "mean": 2055.625,
+        "median": 2061.5,
+        "min": 1905,
+        "max": 2192
+      },
+      "promptTokens": {
+        "mean": 444.0833,
+        "median": 446.5,
+        "min": 417,
+        "max": 468
+      },
+      "hintChars": {
+        "mean": 975.625,
+        "median": 976,
+        "min": 859,
+        "max": 1081
+      },
+      "hintTokens": {
+        "mean": 225.625,
+        "median": 226,
+        "min": 205,
+        "max": 243
+      }
+    },
+    "C0_rand": {
+      "promptChars": {
+        "mean": 2210.5417,
+        "median": 2195,
+        "min": 1939,
+        "max": 2600
+      },
+      "promptTokens": {
+        "mean": 490.5,
+        "median": 487.5,
+        "min": 436,
+        "max": 562
+      },
+      "hintChars": {
+        "mean": 1130.5417,
+        "median": 1110.5,
+        "min": 847,
+        "max": 1523
+      },
+      "hintTokens": {
+        "mean": 272.0417,
+        "median": 270.5,
+        "min": 217,
+        "max": 349
+      }
+    },
+    "B": {
+      "promptChars": {
+        "mean": 4857,
+        "median": 4859.5,
+        "min": 4820,
+        "max": 4888
+      },
+      "promptTokens": {
+        "mean": 1104.4583,
+        "median": 1105,
+        "min": 1098,
+        "max": 1111
+      },
+      "hintChars": {
+        "mean": 3777,
+        "median": 3777,
+        "min": 3777,
+        "max": 3777
+      },
+      "hintTokens": {
+        "mean": 886,
+        "median": 886,
+        "min": 886,
+        "max": 886
+      }
+    }
+  },
+  "ratiosAndSimilarity": {
+    "dSafeOverCidPromptTokenRatio": {
+      "mean": 0.9662,
+      "median": 0.965,
+      "min": 0.9283,
+      "max": 1.012
+    },
+    "dSafeOverCidPromptCharRatio": {
+      "mean": 1.136,
+      "median": 1.1341,
+      "min": 1.0776,
+      "max": 1.2058
+    },
+    "cVsCidHintJaccard": {
+      "mean": 0.5153,
+      "median": 0.5017,
+      "min": 0.3952,
+      "max": 0.712
+    },
+    "cVsCidHintLevenshtein": {
+      "mean": 94.5,
+      "median": 99,
+      "min": 57,
+      "max": 122
+    },
+    "cVsCidHintNormalizedLevenshtein": {
+      "mean": 0.3968,
+      "median": 0.4093,
+      "min": 0.2533,
+      "max": 0.5021
+    }
+  },
+  "perTask": [
+    {
+      "taskId": "V3-H-001",
+      "dSafeOverCidPromptTokenRatio": 0.9295,
+      "dSafeOverCidPromptCharRatio": 1.0786,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1040,
+          "promptTokens": 219,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2334,
+          "promptTokens": 435,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2143,
+          "promptTokens": 466,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2180,
+          "promptTokens": 485,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2543,
+          "promptTokens": 562,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2164,
+          "promptTokens": 468,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2335,
+          "promptTokens": 524,
+          "hintChars": 1252,
+          "hintTokens": 299
+        },
+        "B": {
+          "promptChars": 4860,
+          "promptTokens": 1111,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-002",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0782,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1051,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2345,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2154,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2191,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2554,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2175,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2100,
+          "promptTokens": 470,
+          "hintChars": 1006,
+          "hintTokens": 248
+        },
+        "B": {
+          "promptChars": 4871,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-003",
+      "dSafeOverCidPromptTokenRatio": 0.9295,
+      "dSafeOverCidPromptCharRatio": 1.0782,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1049,
+          "promptTokens": 219,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2343,
+          "promptTokens": 435,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2152,
+          "promptTokens": 466,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2189,
+          "promptTokens": 485,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2552,
+          "promptTokens": 562,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2173,
+          "promptTokens": 468,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 1939,
+          "promptTokens": 447,
+          "hintChars": 847,
+          "hintTokens": 222
+        },
+        "B": {
+          "promptChars": 4869,
+          "promptTokens": 1111,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-004",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0776,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1068,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2362,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2171,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2208,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2571,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2192,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2329,
+          "promptTokens": 504,
+          "hintChars": 1218,
+          "hintTokens": 282
+        },
+        "B": {
+          "promptChars": 4888,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-005",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0788,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2137,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2174,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2537,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2158,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2025,
+          "promptTokens": 467,
+          "hintChars": 948,
+          "hintTokens": 245
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-006",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0786,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1038,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2332,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2141,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2178,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2541,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2162,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2130,
+          "promptTokens": 479,
+          "hintChars": 1049,
+          "hintTokens": 257
+        },
+        "B": {
+          "promptChars": 4858,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-007",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0787,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1035,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2329,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2138,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2175,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2538,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2159,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 1987,
+          "promptTokens": 451,
+          "hintChars": 909,
+          "hintTokens": 229
+        },
+        "B": {
+          "promptChars": 4855,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-008",
+      "dSafeOverCidPromptTokenRatio": 0.9292,
+      "dSafeOverCidPromptCharRatio": 1.0777,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1063,
+          "promptTokens": 217,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2357,
+          "promptTokens": 433,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2166,
+          "promptTokens": 464,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2203,
+          "promptTokens": 483,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2566,
+          "promptTokens": 560,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2187,
+          "promptTokens": 466,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2351,
+          "promptTokens": 516,
+          "hintChars": 1245,
+          "hintTokens": 293
+        },
+        "B": {
+          "promptChars": 4883,
+          "promptTokens": 1109,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-009",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0788,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2137,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2174,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2537,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2158,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 1965,
+          "promptTokens": 439,
+          "hintChars": 888,
+          "hintTokens": 217
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-010",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0789,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1031,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2325,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2134,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2171,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2534,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2155,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2135,
+          "promptTokens": 481,
+          "hintChars": 1061,
+          "hintTokens": 259
+        },
+        "B": {
+          "promptChars": 4851,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-011",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.078,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1055,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2349,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2158,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2195,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2558,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2179,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2261,
+          "promptTokens": 511,
+          "hintChars": 1163,
+          "hintTokens": 289
+        },
+        "B": {
+          "promptChars": 4875,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-012",
+      "dSafeOverCidPromptTokenRatio": 0.9293,
+      "dSafeOverCidPromptCharRatio": 1.0784,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1043,
+          "promptTokens": 218,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2337,
+          "promptTokens": 434,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2146,
+          "promptTokens": 465,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2183,
+          "promptTokens": 484,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2546,
+          "promptTokens": 561,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2167,
+          "promptTokens": 467,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2482,
+          "promptTokens": 553,
+          "hintChars": 1396,
+          "hintTokens": 329
+        },
+        "B": {
+          "promptChars": 4863,
+          "promptTokens": 1110,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-013",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0784,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1045,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2339,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2148,
+          "promptTokens": 463,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2185,
+          "promptTokens": 482,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2548,
+          "promptTokens": 559,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2169,
+          "promptTokens": 465,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2124,
+          "promptTokens": 486,
+          "hintChars": 1036,
+          "hintTokens": 264
+        },
+        "B": {
+          "promptChars": 4865,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-014",
+      "dSafeOverCidPromptTokenRatio": 0.9292,
+      "dSafeOverCidPromptCharRatio": 1.0783,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1048,
+          "promptTokens": 217,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2342,
+          "promptTokens": 433,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2151,
+          "promptTokens": 464,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2188,
+          "promptTokens": 483,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2551,
+          "promptTokens": 560,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2172,
+          "promptTokens": 466,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2359,
+          "promptTokens": 518,
+          "hintChars": 1268,
+          "hintTokens": 295
+        },
+        "B": {
+          "promptChars": 4868,
+          "promptTokens": 1109,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-015",
+      "dSafeOverCidPromptTokenRatio": 0.9292,
+      "dSafeOverCidPromptCharRatio": 1.0783,
+      "cVsCidHintJaccard": 0.39521,
+      "cVsCidHintLevenshtein": 122,
+      "cVsCidHintNormalizedLevenshtein": 0.5021,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 217,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 433,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2150,
+          "promptTokens": 464,
+          "hintChars": 1060,
+          "hintTokens": 241
+        },
+        "C0": {
+          "promptChars": 2187,
+          "promptTokens": 483,
+          "hintChars": 1097,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2550,
+          "promptTokens": 560,
+          "hintChars": 1460,
+          "hintTokens": 337
+        },
+        "C_ID": {
+          "promptChars": 2171,
+          "promptTokens": 466,
+          "hintChars": 1081,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2171,
+          "promptTokens": 497,
+          "hintChars": 1081,
+          "hintTokens": 274
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1109,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-016",
+      "dSafeOverCidPromptTokenRatio": 0.9391,
+      "dSafeOverCidPromptCharRatio": 1.0913,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1025,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2319,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2050,
+          "promptTokens": 451,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2119,
+          "promptTokens": 474,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2482,
+          "promptTokens": 551,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2125,
+          "promptTokens": 460,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2048,
+          "promptTokens": 470,
+          "hintChars": 980,
+          "hintTokens": 248
+        },
+        "B": {
+          "promptChars": 4845,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-017",
+      "dSafeOverCidPromptTokenRatio": 0.9389,
+      "dSafeOverCidPromptCharRatio": 1.0907,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1038,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2332,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2063,
+          "promptTokens": 449,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2132,
+          "promptTokens": 472,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2495,
+          "promptTokens": 549,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2138,
+          "promptTokens": 458,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2311,
+          "promptTokens": 510,
+          "hintChars": 1230,
+          "hintTokens": 290
+        },
+        "B": {
+          "promptChars": 4858,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-018",
+      "dSafeOverCidPromptTokenRatio": 0.9389,
+      "dSafeOverCidPromptCharRatio": 1.0908,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1037,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2331,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2062,
+          "promptTokens": 449,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2131,
+          "promptTokens": 472,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2494,
+          "promptTokens": 549,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2137,
+          "promptTokens": 458,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2263,
+          "promptTokens": 498,
+          "hintChars": 1183,
+          "hintTokens": 278
+        },
+        "B": {
+          "promptChars": 4857,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-019",
+      "dSafeOverCidPromptTokenRatio": 0.9389,
+      "dSafeOverCidPromptCharRatio": 1.0902,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1050,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2344,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2075,
+          "promptTokens": 449,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2144,
+          "promptTokens": 472,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2507,
+          "promptTokens": 549,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2150,
+          "promptTokens": 458,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2312,
+          "promptTokens": 514,
+          "hintChars": 1219,
+          "hintTokens": 294
+        },
+        "B": {
+          "promptChars": 4870,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-020",
+      "dSafeOverCidPromptTokenRatio": 0.9391,
+      "dSafeOverCidPromptCharRatio": 1.0903,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1048,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2342,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2073,
+          "promptTokens": 451,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2142,
+          "promptTokens": 474,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2505,
+          "promptTokens": 551,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2148,
+          "promptTokens": 460,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2142,
+          "promptTokens": 481,
+          "hintChars": 1051,
+          "hintTokens": 259
+        },
+        "B": {
+          "promptChars": 4868,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-021",
+      "dSafeOverCidPromptTokenRatio": 0.9389,
+      "dSafeOverCidPromptCharRatio": 1.0909,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2059,
+          "promptTokens": 449,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2128,
+          "promptTokens": 472,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2491,
+          "promptTokens": 549,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2134,
+          "promptTokens": 458,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2310,
+          "promptTokens": 510,
+          "hintChars": 1233,
+          "hintTokens": 290
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-022",
+      "dSafeOverCidPromptTokenRatio": 0.9389,
+      "dSafeOverCidPromptCharRatio": 1.0906,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1042,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2336,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2067,
+          "promptTokens": 449,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2136,
+          "promptTokens": 472,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2499,
+          "promptTokens": 549,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2142,
+          "promptTokens": 458,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2401,
+          "promptTokens": 531,
+          "hintChars": 1316,
+          "hintTokens": 311
+        },
+        "B": {
+          "promptChars": 4862,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-023",
+      "dSafeOverCidPromptTokenRatio": 0.939,
+      "dSafeOverCidPromptCharRatio": 1.0912,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1027,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2321,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2052,
+          "promptTokens": 450,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2121,
+          "promptTokens": 473,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2484,
+          "promptTokens": 550,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2127,
+          "promptTokens": 459,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2161,
+          "promptTokens": 485,
+          "hintChars": 1091,
+          "hintTokens": 264
+        },
+        "B": {
+          "promptChars": 4847,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-024",
+      "dSafeOverCidPromptTokenRatio": 0.939,
+      "dSafeOverCidPromptCharRatio": 1.0903,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1049,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2343,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2074,
+          "promptTokens": 450,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2143,
+          "promptTokens": 473,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2506,
+          "promptTokens": 550,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2149,
+          "promptTokens": 459,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 1991,
+          "promptTokens": 439,
+          "hintChars": 899,
+          "hintTokens": 218
+        },
+        "B": {
+          "promptChars": 4869,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-025",
+      "dSafeOverCidPromptTokenRatio": 0.9391,
+      "dSafeOverCidPromptCharRatio": 1.0901,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1053,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2347,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2078,
+          "promptTokens": 451,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2147,
+          "promptTokens": 474,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2510,
+          "promptTokens": 551,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2153,
+          "promptTokens": 460,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2407,
+          "promptTokens": 522,
+          "hintChars": 1311,
+          "hintTokens": 300
+        },
+        "B": {
+          "promptChars": 4873,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-026",
+      "dSafeOverCidPromptTokenRatio": 0.9393,
+      "dSafeOverCidPromptCharRatio": 1.0901,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1053,
+          "promptTokens": 217,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2347,
+          "promptTokens": 433,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2078,
+          "promptTokens": 452,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2147,
+          "promptTokens": 475,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2510,
+          "promptTokens": 552,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2153,
+          "promptTokens": 461,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2032,
+          "promptTokens": 454,
+          "hintChars": 936,
+          "hintTokens": 231
+        },
+        "B": {
+          "promptChars": 4873,
+          "promptTokens": 1109,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-027",
+      "dSafeOverCidPromptTokenRatio": 0.939,
+      "dSafeOverCidPromptCharRatio": 1.0904,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1046,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2340,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2071,
+          "promptTokens": 450,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2140,
+          "promptTokens": 473,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2503,
+          "promptTokens": 550,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2146,
+          "promptTokens": 459,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2151,
+          "promptTokens": 491,
+          "hintChars": 1062,
+          "hintTokens": 270
+        },
+        "B": {
+          "promptChars": 4866,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-028",
+      "dSafeOverCidPromptTokenRatio": 0.9394,
+      "dSafeOverCidPromptCharRatio": 1.091,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1031,
+          "promptTokens": 218,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2325,
+          "promptTokens": 434,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2056,
+          "promptTokens": 453,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2125,
+          "promptTokens": 476,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2488,
+          "promptTokens": 553,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2131,
+          "promptTokens": 462,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2094,
+          "promptTokens": 474,
+          "hintChars": 1020,
+          "hintTokens": 250
+        },
+        "B": {
+          "promptChars": 4851,
+          "promptTokens": 1110,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-029",
+      "dSafeOverCidPromptTokenRatio": 0.939,
+      "dSafeOverCidPromptCharRatio": 1.09,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1056,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2350,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2081,
+          "promptTokens": 450,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2150,
+          "promptTokens": 473,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2513,
+          "promptTokens": 550,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2156,
+          "promptTokens": 459,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2142,
+          "promptTokens": 468,
+          "hintChars": 1043,
+          "hintTokens": 247
+        },
+        "B": {
+          "promptChars": 4876,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-030",
+      "dSafeOverCidPromptTokenRatio": 0.9393,
+      "dSafeOverCidPromptCharRatio": 1.0898,
+      "cVsCidHintJaccard": 0.477707,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1061,
+          "promptTokens": 217,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2355,
+          "promptTokens": 433,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2086,
+          "promptTokens": 452,
+          "hintChars": 982,
+          "hintTokens": 229
+        },
+        "C0": {
+          "promptChars": 2155,
+          "promptTokens": 475,
+          "hintChars": 1051,
+          "hintTokens": 252
+        },
+        "C0_clean": {
+          "promptChars": 2518,
+          "promptTokens": 552,
+          "hintChars": 1414,
+          "hintTokens": 329
+        },
+        "C_ID": {
+          "promptChars": 2161,
+          "promptTokens": 461,
+          "hintChars": 1057,
+          "hintTokens": 238
+        },
+        "C0_rand": {
+          "promptChars": 2062,
+          "promptTokens": 448,
+          "hintChars": 958,
+          "hintTokens": 225
+        },
+        "B": {
+          "promptChars": 4881,
+          "promptTokens": 1109,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-031",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1686,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1028,
+          "promptTokens": 211,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2322,
+          "promptTokens": 427,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2120,
+          "promptTokens": 455,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2095,
+          "promptTokens": 461,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2210,
+          "promptTokens": 495,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1987,
+          "promptTokens": 431,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2364,
+          "promptTokens": 516,
+          "hintChars": 1293,
+          "hintTokens": 299
+        },
+        "B": {
+          "promptChars": 4848,
+          "promptTokens": 1103,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-032",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1675,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1041,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2335,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2133,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2108,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2223,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2000,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2286,
+          "promptTokens": 497,
+          "hintChars": 1202,
+          "hintTokens": 279
+        },
+        "B": {
+          "promptChars": 4861,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-033",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.167,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 211,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 427,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2139,
+          "promptTokens": 455,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2114,
+          "promptTokens": 461,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2229,
+          "promptTokens": 495,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2006,
+          "promptTokens": 431,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 1986,
+          "promptTokens": 436,
+          "hintChars": 896,
+          "hintTokens": 219
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1103,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-034",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.167,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2139,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2114,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2229,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2006,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2366,
+          "promptTokens": 533,
+          "hintChars": 1276,
+          "hintTokens": 315
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-035",
+      "dSafeOverCidPromptTokenRatio": 0.9908,
+      "dSafeOverCidPromptCharRatio": 1.1662,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1057,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2351,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2149,
+          "promptTokens": 459,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2124,
+          "promptTokens": 465,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2239,
+          "promptTokens": 499,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2016,
+          "promptTokens": 435,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2276,
+          "promptTokens": 519,
+          "hintChars": 1176,
+          "hintTokens": 298
+        },
+        "B": {
+          "promptChars": 4877,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-036",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1682,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1033,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2327,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2125,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2100,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2215,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1992,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2195,
+          "promptTokens": 486,
+          "hintChars": 1119,
+          "hintTokens": 268
+        },
+        "B": {
+          "promptChars": 4853,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-037",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1669,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1048,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2342,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2140,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2115,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2230,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2007,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2144,
+          "promptTokens": 474,
+          "hintChars": 1053,
+          "hintTokens": 256
+        },
+        "B": {
+          "promptChars": 4868,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-038",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1689,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1025,
+          "promptTokens": 211,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2319,
+          "promptTokens": 427,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2117,
+          "promptTokens": 455,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2092,
+          "promptTokens": 461,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2207,
+          "promptTokens": 495,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1984,
+          "promptTokens": 431,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2221,
+          "promptTokens": 499,
+          "hintChars": 1153,
+          "hintTokens": 282
+        },
+        "B": {
+          "promptChars": 4845,
+          "promptTokens": 1103,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-039",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1688,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1026,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2320,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2118,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2093,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2208,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1985,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2009,
+          "promptTokens": 447,
+          "hintChars": 940,
+          "hintTokens": 229
+        },
+        "B": {
+          "promptChars": 4846,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-040",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1676,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1040,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2334,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2132,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2107,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2222,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1999,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2126,
+          "promptTokens": 466,
+          "hintChars": 1043,
+          "hintTokens": 248
+        },
+        "B": {
+          "promptChars": 4860,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-041",
+      "dSafeOverCidPromptTokenRatio": 0.9908,
+      "dSafeOverCidPromptCharRatio": 1.1672,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1045,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2339,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2137,
+          "promptTokens": 458,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2112,
+          "promptTokens": 464,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2227,
+          "promptTokens": 498,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2004,
+          "promptTokens": 434,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2131,
+          "promptTokens": 470,
+          "hintChars": 1043,
+          "hintTokens": 250
+        },
+        "B": {
+          "promptChars": 4865,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-042",
+      "dSafeOverCidPromptTokenRatio": 0.9908,
+      "dSafeOverCidPromptCharRatio": 1.1663,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1056,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2350,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2148,
+          "promptTokens": 457,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2123,
+          "promptTokens": 463,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2238,
+          "promptTokens": 497,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2015,
+          "promptTokens": 433,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2273,
+          "promptTokens": 500,
+          "hintChars": 1174,
+          "hintTokens": 281
+        },
+        "B": {
+          "promptChars": 4876,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-043",
+      "dSafeOverCidPromptTokenRatio": 0.9908,
+      "dSafeOverCidPromptCharRatio": 1.167,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2139,
+          "promptTokens": 459,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2114,
+          "promptTokens": 465,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2229,
+          "promptTokens": 499,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2006,
+          "promptTokens": 435,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2202,
+          "promptTokens": 516,
+          "hintChars": 1112,
+          "hintTokens": 295
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-044",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1689,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1025,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2319,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2117,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2092,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2207,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 1984,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2467,
+          "promptTokens": 554,
+          "hintChars": 1399,
+          "hintTokens": 336
+        },
+        "B": {
+          "promptChars": 4845,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-045",
+      "dSafeOverCidPromptTokenRatio": 0.9907,
+      "dSafeOverCidPromptCharRatio": 1.1671,
+      "cVsCidHintJaccard": 0.468354,
+      "cVsCidHintLevenshtein": 100,
+      "cVsCidHintNormalizedLevenshtein": 0.4202,
+      "conditions": {
+        "A": {
+          "promptChars": 1046,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2340,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2138,
+          "promptTokens": 456,
+          "hintChars": 1049,
+          "hintTokens": 238
+        },
+        "C0": {
+          "promptChars": 2113,
+          "promptTokens": 462,
+          "hintChars": 1024,
+          "hintTokens": 244
+        },
+        "C0_clean": {
+          "promptChars": 2228,
+          "promptTokens": 496,
+          "hintChars": 1139,
+          "hintTokens": 278
+        },
+        "C_ID": {
+          "promptChars": 2005,
+          "promptTokens": 432,
+          "hintChars": 916,
+          "hintTokens": 214
+        },
+        "C0_rand": {
+          "promptChars": 2245,
+          "promptTokens": 487,
+          "hintChars": 1156,
+          "hintTokens": 269
+        },
+        "B": {
+          "promptChars": 4866,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-046",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1712,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1011,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2305,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2057,
+          "promptTokens": 440,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2040,
+          "promptTokens": 448,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2155,
+          "promptTokens": 482,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1968,
+          "promptTokens": 426,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2081,
+          "promptTokens": 473,
+          "hintChars": 1027,
+          "hintTokens": 260
+        },
+        "B": {
+          "promptChars": 4831,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-047",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1717,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1006,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2300,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2052,
+          "promptTokens": 440,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2035,
+          "promptTokens": 448,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2150,
+          "promptTokens": 482,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1963,
+          "promptTokens": 426,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2045,
+          "promptTokens": 453,
+          "hintChars": 996,
+          "hintTokens": 240
+        },
+        "B": {
+          "promptChars": 4826,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-048",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1721,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1001,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2295,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2047,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2030,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2145,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1958,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 1985,
+          "promptTokens": 459,
+          "hintChars": 941,
+          "hintTokens": 245
+        },
+        "B": {
+          "promptChars": 4821,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-049",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1722,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1000,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2294,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2046,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2029,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2144,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1957,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2286,
+          "promptTokens": 513,
+          "hintChars": 1243,
+          "hintTokens": 299
+        },
+        "B": {
+          "promptChars": 4820,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-050",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1712,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1012,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2306,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2058,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2041,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2156,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1969,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 1998,
+          "promptTokens": 448,
+          "hintChars": 943,
+          "hintTokens": 234
+        },
+        "B": {
+          "promptChars": 4832,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-051",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1719,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1003,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2297,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2049,
+          "promptTokens": 440,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2032,
+          "promptTokens": 448,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2147,
+          "promptTokens": 482,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1960,
+          "promptTokens": 426,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2004,
+          "promptTokens": 449,
+          "hintChars": 958,
+          "hintTokens": 236
+        },
+        "B": {
+          "promptChars": 4823,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-052",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1716,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1007,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2301,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2053,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2036,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2151,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1964,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2004,
+          "promptTokens": 441,
+          "hintChars": 954,
+          "hintTokens": 227
+        },
+        "B": {
+          "promptChars": 4827,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-053",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1718,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1005,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2299,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2051,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2034,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2149,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1962,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2363,
+          "promptTokens": 515,
+          "hintChars": 1315,
+          "hintTokens": 301
+        },
+        "B": {
+          "promptChars": 4825,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-054",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1713,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1010,
+          "promptTokens": 209,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2304,
+          "promptTokens": 425,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2056,
+          "promptTokens": 442,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2039,
+          "promptTokens": 450,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2154,
+          "promptTokens": 484,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1967,
+          "promptTokens": 428,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 1996,
+          "promptTokens": 445,
+          "hintChars": 943,
+          "hintTokens": 230
+        },
+        "B": {
+          "promptChars": 4830,
+          "promptTokens": 1101,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-055",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1709,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1015,
+          "promptTokens": 210,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2309,
+          "promptTokens": 426,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2061,
+          "promptTokens": 443,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2044,
+          "promptTokens": 451,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2159,
+          "promptTokens": 485,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1972,
+          "promptTokens": 429,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2380,
+          "promptTokens": 524,
+          "hintChars": 1322,
+          "hintTokens": 308
+        },
+        "B": {
+          "promptChars": 4835,
+          "promptTokens": 1102,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-056",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1719,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1004,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2298,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2050,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2033,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2148,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1961,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2127,
+          "promptTokens": 481,
+          "hintChars": 1080,
+          "hintTokens": 267
+        },
+        "B": {
+          "promptChars": 4824,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-057",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1722,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1000,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2294,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2046,
+          "promptTokens": 440,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2029,
+          "promptTokens": 448,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2144,
+          "promptTokens": 482,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1957,
+          "promptTokens": 426,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2349,
+          "promptTokens": 512,
+          "hintChars": 1306,
+          "hintTokens": 299
+        },
+        "B": {
+          "promptChars": 4820,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-058",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1706,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1018,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2312,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2064,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2047,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2162,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1975,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2274,
+          "promptTokens": 506,
+          "hintChars": 1213,
+          "hintTokens": 292
+        },
+        "B": {
+          "promptChars": 4838,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-059",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1717,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1006,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2300,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2052,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2035,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2150,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1963,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2019,
+          "promptTokens": 466,
+          "hintChars": 970,
+          "hintTokens": 252
+        },
+        "B": {
+          "promptChars": 4826,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-060",
+      "dSafeOverCidPromptTokenRatio": 0.993,
+      "dSafeOverCidPromptCharRatio": 1.1705,
+      "cVsCidHintJaccard": 0.52,
+      "cVsCidHintLevenshtein": 82,
+      "cVsCidHintNormalizedLevenshtein": 0.3612,
+      "conditions": {
+        "A": {
+          "promptChars": 1020,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2314,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2066,
+          "promptTokens": 441,
+          "hintChars": 1003,
+          "hintTokens": 227
+        },
+        "C0": {
+          "promptChars": 2049,
+          "promptTokens": 449,
+          "hintChars": 986,
+          "hintTokens": 235
+        },
+        "C0_clean": {
+          "promptChars": 2164,
+          "promptTokens": 483,
+          "hintChars": 1101,
+          "hintTokens": 269
+        },
+        "C_ID": {
+          "promptChars": 1977,
+          "promptTokens": 427,
+          "hintChars": 914,
+          "hintTokens": 213
+        },
+        "C0_rand": {
+          "promptChars": 2158,
+          "promptTokens": 473,
+          "hintChars": 1095,
+          "hintTokens": 259
+        },
+        "B": {
+          "promptChars": 4840,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-061",
+      "dSafeOverCidPromptTokenRatio": 0.9345,
+      "dSafeOverCidPromptCharRatio": 1.1015,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1039,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2333,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2155,
+          "promptTokens": 460,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2126,
+          "promptTokens": 475,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2489,
+          "promptTokens": 552,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2118,
+          "promptTokens": 458,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2102,
+          "promptTokens": 468,
+          "hintChars": 1020,
+          "hintTokens": 250
+        },
+        "B": {
+          "promptChars": 4859,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-062",
+      "dSafeOverCidPromptTokenRatio": 0.9346,
+      "dSafeOverCidPromptCharRatio": 1.1017,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1035,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2329,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2151,
+          "promptTokens": 461,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2122,
+          "promptTokens": 476,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2485,
+          "promptTokens": 553,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2114,
+          "promptTokens": 459,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2198,
+          "promptTokens": 480,
+          "hintChars": 1120,
+          "hintTokens": 261
+        },
+        "B": {
+          "promptChars": 4855,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-063",
+      "dSafeOverCidPromptTokenRatio": 0.9349,
+      "dSafeOverCidPromptCharRatio": 1.1012,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1046,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2340,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2162,
+          "promptTokens": 463,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2133,
+          "promptTokens": 478,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2496,
+          "promptTokens": 555,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2125,
+          "promptTokens": 461,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2315,
+          "promptTokens": 501,
+          "hintChars": 1226,
+          "hintTokens": 280
+        },
+        "B": {
+          "promptChars": 4866,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-064",
+      "dSafeOverCidPromptTokenRatio": 0.9345,
+      "dSafeOverCidPromptCharRatio": 1.1016,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1038,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2332,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2154,
+          "promptTokens": 460,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2125,
+          "promptTokens": 475,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2488,
+          "promptTokens": 552,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2117,
+          "promptTokens": 458,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2359,
+          "promptTokens": 516,
+          "hintChars": 1278,
+          "hintTokens": 298
+        },
+        "B": {
+          "promptChars": 4858,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-065",
+      "dSafeOverCidPromptTokenRatio": 0.9346,
+      "dSafeOverCidPromptCharRatio": 1.1011,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1048,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2342,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2164,
+          "promptTokens": 461,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2135,
+          "promptTokens": 476,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2498,
+          "promptTokens": 553,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2127,
+          "promptTokens": 459,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2220,
+          "promptTokens": 506,
+          "hintChars": 1129,
+          "hintTokens": 287
+        },
+        "B": {
+          "promptChars": 4868,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-066",
+      "dSafeOverCidPromptTokenRatio": 0.9349,
+      "dSafeOverCidPromptCharRatio": 1.102,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1028,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2322,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2144,
+          "promptTokens": 463,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2115,
+          "promptTokens": 478,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2478,
+          "promptTokens": 555,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2107,
+          "promptTokens": 461,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2338,
+          "promptTokens": 524,
+          "hintChars": 1267,
+          "hintTokens": 303
+        },
+        "B": {
+          "promptChars": 4848,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-067",
+      "dSafeOverCidPromptTokenRatio": 0.9345,
+      "dSafeOverCidPromptCharRatio": 1.1018,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1033,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2327,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2149,
+          "promptTokens": 460,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2120,
+          "promptTokens": 475,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2483,
+          "promptTokens": 552,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2112,
+          "promptTokens": 458,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2033,
+          "promptTokens": 455,
+          "hintChars": 957,
+          "hintTokens": 237
+        },
+        "B": {
+          "promptChars": 4853,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-068",
+      "dSafeOverCidPromptTokenRatio": 0.9346,
+      "dSafeOverCidPromptCharRatio": 1.1005,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1061,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2355,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2177,
+          "promptTokens": 461,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2148,
+          "promptTokens": 476,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2511,
+          "promptTokens": 553,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2140,
+          "promptTokens": 459,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2322,
+          "promptTokens": 509,
+          "hintChars": 1218,
+          "hintTokens": 290
+        },
+        "B": {
+          "promptChars": 4881,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-069",
+      "dSafeOverCidPromptTokenRatio": 0.9346,
+      "dSafeOverCidPromptCharRatio": 1.1008,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1054,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2348,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2170,
+          "promptTokens": 461,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2141,
+          "promptTokens": 476,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2504,
+          "promptTokens": 553,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2133,
+          "promptTokens": 459,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2153,
+          "promptTokens": 475,
+          "hintChars": 1056,
+          "hintTokens": 256
+        },
+        "B": {
+          "promptChars": 4874,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-070",
+      "dSafeOverCidPromptTokenRatio": 0.9345,
+      "dSafeOverCidPromptCharRatio": 1.101,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1049,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2343,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2165,
+          "promptTokens": 460,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2136,
+          "promptTokens": 475,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2499,
+          "promptTokens": 552,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2128,
+          "promptTokens": 458,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2266,
+          "promptTokens": 492,
+          "hintChars": 1174,
+          "hintTokens": 274
+        },
+        "B": {
+          "promptChars": 4869,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-071",
+      "dSafeOverCidPromptTokenRatio": 0.9351,
+      "dSafeOverCidPromptCharRatio": 1.1017,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1035,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2329,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2151,
+          "promptTokens": 464,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2122,
+          "promptTokens": 479,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2485,
+          "promptTokens": 556,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2114,
+          "promptTokens": 462,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2398,
+          "promptTokens": 521,
+          "hintChars": 1320,
+          "hintTokens": 299
+        },
+        "B": {
+          "promptChars": 4855,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-072",
+      "dSafeOverCidPromptTokenRatio": 0.9349,
+      "dSafeOverCidPromptCharRatio": 1.1011,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2163,
+          "promptTokens": 463,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2134,
+          "promptTokens": 478,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2497,
+          "promptTokens": 555,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2126,
+          "promptTokens": 461,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2338,
+          "promptTokens": 499,
+          "hintChars": 1248,
+          "hintTokens": 278
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-073",
+      "dSafeOverCidPromptTokenRatio": 0.9348,
+      "dSafeOverCidPromptCharRatio": 1.1014,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1041,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2335,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2157,
+          "promptTokens": 462,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2128,
+          "promptTokens": 477,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2491,
+          "promptTokens": 554,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2120,
+          "promptTokens": 460,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2180,
+          "promptTokens": 493,
+          "hintChars": 1096,
+          "hintTokens": 273
+        },
+        "B": {
+          "promptChars": 4861,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-074",
+      "dSafeOverCidPromptTokenRatio": 0.9345,
+      "dSafeOverCidPromptCharRatio": 1.1015,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1039,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2333,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2155,
+          "promptTokens": 460,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2126,
+          "promptTokens": 475,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2489,
+          "promptTokens": 552,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2118,
+          "promptTokens": 458,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2191,
+          "promptTokens": 486,
+          "hintChars": 1109,
+          "hintTokens": 268
+        },
+        "B": {
+          "promptChars": 4859,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-075",
+      "dSafeOverCidPromptTokenRatio": 0.9348,
+      "dSafeOverCidPromptCharRatio": 1.1017,
+      "cVsCidHintJaccard": 0.483444,
+      "cVsCidHintLevenshtein": 105,
+      "cVsCidHintNormalizedLevenshtein": 0.4339,
+      "conditions": {
+        "A": {
+          "promptChars": 1035,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2329,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2151,
+          "promptTokens": 462,
+          "hintChars": 1073,
+          "hintTokens": 242
+        },
+        "C0": {
+          "promptChars": 2122,
+          "promptTokens": 477,
+          "hintChars": 1044,
+          "hintTokens": 257
+        },
+        "C0_clean": {
+          "promptChars": 2485,
+          "promptTokens": 554,
+          "hintChars": 1407,
+          "hintTokens": 334
+        },
+        "C_ID": {
+          "promptChars": 2114,
+          "promptTokens": 460,
+          "hintChars": 1036,
+          "hintTokens": 240
+        },
+        "C0_rand": {
+          "promptChars": 2462,
+          "promptTokens": 555,
+          "hintChars": 1384,
+          "hintTokens": 335
+        },
+        "B": {
+          "promptChars": 4855,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-076",
+      "dSafeOverCidPromptTokenRatio": 0.9283,
+      "dSafeOverCidPromptCharRatio": 1.0921,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1053,
+          "promptTokens": 211,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2347,
+          "promptTokens": 427,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2178,
+          "promptTokens": 463,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2139,
+          "promptTokens": 477,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2542,
+          "promptTokens": 568,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2149,
+          "promptTokens": 460,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2299,
+          "promptTokens": 505,
+          "hintChars": 1203,
+          "hintTokens": 288
+        },
+        "B": {
+          "promptChars": 4873,
+          "promptTokens": 1103,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-077",
+      "dSafeOverCidPromptTokenRatio": 0.9283,
+      "dSafeOverCidPromptCharRatio": 1.0929,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1036,
+          "promptTokens": 211,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2330,
+          "promptTokens": 427,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2161,
+          "promptTokens": 463,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2122,
+          "promptTokens": 477,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2525,
+          "promptTokens": 568,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2132,
+          "promptTokens": 460,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2321,
+          "promptTokens": 528,
+          "hintChars": 1242,
+          "hintTokens": 311
+        },
+        "B": {
+          "promptChars": 4856,
+          "promptTokens": 1103,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-078",
+      "dSafeOverCidPromptTokenRatio": 0.9286,
+      "dSafeOverCidPromptCharRatio": 1.0927,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1039,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2333,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2164,
+          "promptTokens": 465,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2125,
+          "promptTokens": 479,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2528,
+          "promptTokens": 570,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2135,
+          "promptTokens": 462,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2082,
+          "promptTokens": 461,
+          "hintChars": 1000,
+          "hintTokens": 242
+        },
+        "B": {
+          "promptChars": 4859,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-079",
+      "dSafeOverCidPromptTokenRatio": 0.9286,
+      "dSafeOverCidPromptCharRatio": 1.0922,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1052,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2346,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2177,
+          "promptTokens": 465,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2138,
+          "promptTokens": 479,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2541,
+          "promptTokens": 570,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2148,
+          "promptTokens": 462,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2399,
+          "promptTokens": 504,
+          "hintChars": 1304,
+          "hintTokens": 285
+        },
+        "B": {
+          "promptChars": 4872,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-080",
+      "dSafeOverCidPromptTokenRatio": 0.929,
+      "dSafeOverCidPromptCharRatio": 1.0927,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1041,
+          "promptTokens": 216,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2335,
+          "promptTokens": 432,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2166,
+          "promptTokens": 468,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2127,
+          "promptTokens": 482,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2530,
+          "promptTokens": 573,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2137,
+          "promptTokens": 465,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2380,
+          "promptTokens": 518,
+          "hintChars": 1296,
+          "hintTokens": 296
+        },
+        "B": {
+          "promptChars": 4861,
+          "promptTokens": 1108,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-081",
+      "dSafeOverCidPromptTokenRatio": 0.9284,
+      "dSafeOverCidPromptCharRatio": 1.0919,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1058,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2352,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2183,
+          "promptTokens": 464,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2144,
+          "promptTokens": 478,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2547,
+          "promptTokens": 569,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2154,
+          "promptTokens": 461,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2201,
+          "promptTokens": 484,
+          "hintChars": 1100,
+          "hintTokens": 266
+        },
+        "B": {
+          "promptChars": 4878,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-082",
+      "dSafeOverCidPromptTokenRatio": 0.9284,
+      "dSafeOverCidPromptCharRatio": 1.0934,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1024,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2318,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2149,
+          "promptTokens": 464,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2110,
+          "promptTokens": 478,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2513,
+          "promptTokens": 569,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2120,
+          "promptTokens": 461,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2296,
+          "promptTokens": 506,
+          "hintChars": 1229,
+          "hintTokens": 288
+        },
+        "B": {
+          "promptChars": 4844,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-083",
+      "dSafeOverCidPromptTokenRatio": 0.9286,
+      "dSafeOverCidPromptCharRatio": 1.0926,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1042,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2336,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2167,
+          "promptTokens": 465,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2128,
+          "promptTokens": 479,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2531,
+          "promptTokens": 570,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2138,
+          "promptTokens": 462,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2190,
+          "promptTokens": 483,
+          "hintChars": 1105,
+          "hintTokens": 264
+        },
+        "B": {
+          "promptChars": 4862,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-084",
+      "dSafeOverCidPromptTokenRatio": 0.9287,
+      "dSafeOverCidPromptCharRatio": 1.0927,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1041,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2335,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2166,
+          "promptTokens": 466,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2127,
+          "promptTokens": 480,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2530,
+          "promptTokens": 571,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2137,
+          "promptTokens": 463,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2184,
+          "promptTokens": 484,
+          "hintChars": 1100,
+          "hintTokens": 264
+        },
+        "B": {
+          "promptChars": 4861,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-085",
+      "dSafeOverCidPromptTokenRatio": 0.9286,
+      "dSafeOverCidPromptCharRatio": 1.0924,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1048,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2342,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2173,
+          "promptTokens": 465,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2134,
+          "promptTokens": 479,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2537,
+          "promptTokens": 570,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2144,
+          "promptTokens": 462,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2470,
+          "promptTokens": 540,
+          "hintChars": 1379,
+          "hintTokens": 321
+        },
+        "B": {
+          "promptChars": 4868,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-086",
+      "dSafeOverCidPromptTokenRatio": 0.9287,
+      "dSafeOverCidPromptCharRatio": 1.0932,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1028,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2322,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2153,
+          "promptTokens": 466,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2114,
+          "promptTokens": 480,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2517,
+          "promptTokens": 571,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2124,
+          "promptTokens": 463,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2494,
+          "promptTokens": 539,
+          "hintChars": 1423,
+          "hintTokens": 319
+        },
+        "B": {
+          "promptChars": 4848,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-087",
+      "dSafeOverCidPromptTokenRatio": 0.9284,
+      "dSafeOverCidPromptCharRatio": 1.0937,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1017,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2311,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2142,
+          "promptTokens": 464,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2103,
+          "promptTokens": 478,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2506,
+          "promptTokens": 569,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2113,
+          "promptTokens": 461,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2031,
+          "promptTokens": 451,
+          "hintChars": 971,
+          "hintTokens": 233
+        },
+        "B": {
+          "promptChars": 4837,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-088",
+      "dSafeOverCidPromptTokenRatio": 0.9286,
+      "dSafeOverCidPromptCharRatio": 1.0927,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1039,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2333,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2164,
+          "promptTokens": 465,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2125,
+          "promptTokens": 479,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2528,
+          "promptTokens": 570,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2135,
+          "promptTokens": 462,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2188,
+          "promptTokens": 488,
+          "hintChars": 1106,
+          "hintTokens": 269
+        },
+        "B": {
+          "promptChars": 4859,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-089",
+      "dSafeOverCidPromptTokenRatio": 0.9284,
+      "dSafeOverCidPromptCharRatio": 1.0921,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1053,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2347,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2178,
+          "promptTokens": 464,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2139,
+          "promptTokens": 478,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2542,
+          "promptTokens": 569,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2149,
+          "promptTokens": 461,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2278,
+          "promptTokens": 493,
+          "hintChars": 1182,
+          "hintTokens": 275
+        },
+        "B": {
+          "promptChars": 4873,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-090",
+      "dSafeOverCidPromptTokenRatio": 0.9287,
+      "dSafeOverCidPromptCharRatio": 1.0938,
+      "cVsCidHintJaccard": 0.537415,
+      "cVsCidHintLevenshtein": 98,
+      "cVsCidHintNormalizedLevenshtein": 0.3984,
+      "conditions": {
+        "A": {
+          "promptChars": 1014,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2308,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2139,
+          "promptTokens": 466,
+          "hintChars": 1082,
+          "hintTokens": 246
+        },
+        "C0": {
+          "promptChars": 2100,
+          "promptTokens": 480,
+          "hintChars": 1043,
+          "hintTokens": 260
+        },
+        "C0_clean": {
+          "promptChars": 2503,
+          "promptTokens": 571,
+          "hintChars": 1446,
+          "hintTokens": 351
+        },
+        "C_ID": {
+          "promptChars": 2110,
+          "promptTokens": 463,
+          "hintChars": 1053,
+          "hintTokens": 243
+        },
+        "C0_rand": {
+          "promptChars": 2213,
+          "promptTokens": 494,
+          "hintChars": 1156,
+          "hintTokens": 274
+        },
+        "B": {
+          "promptChars": 4834,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-091",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1856,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1018,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2312,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2150,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2057,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2172,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1950,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2302,
+          "promptTokens": 528,
+          "hintChars": 1241,
+          "hintTokens": 310
+        },
+        "B": {
+          "promptChars": 4838,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-092",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1813,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1065,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2359,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2197,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2104,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2219,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1997,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2190,
+          "promptTokens": 463,
+          "hintChars": 1082,
+          "hintTokens": 245
+        },
+        "B": {
+          "promptChars": 4885,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-093",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1835,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1041,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2335,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2173,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2080,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2195,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1973,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2159,
+          "promptTokens": 478,
+          "hintChars": 1075,
+          "hintTokens": 260
+        },
+        "B": {
+          "promptChars": 4861,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-094",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1831,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1045,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2339,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2177,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2084,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2199,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1977,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2249,
+          "promptTokens": 501,
+          "hintChars": 1161,
+          "hintTokens": 283
+        },
+        "B": {
+          "promptChars": 4865,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-095",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1842,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1033,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2327,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2165,
+          "promptTokens": 458,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2072,
+          "promptTokens": 457,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2187,
+          "promptTokens": 491,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1965,
+          "promptTokens": 428,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2280,
+          "promptTokens": 505,
+          "hintChars": 1204,
+          "hintTokens": 286
+        },
+        "B": {
+          "promptChars": 4853,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-096",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1814,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1064,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2358,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2196,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2103,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2218,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1996,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2115,
+          "promptTokens": 471,
+          "hintChars": 1008,
+          "hintTokens": 253
+        },
+        "B": {
+          "promptChars": 4884,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-097",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1824,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1053,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2347,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2185,
+          "promptTokens": 459,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2092,
+          "promptTokens": 458,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2207,
+          "promptTokens": 492,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1985,
+          "promptTokens": 429,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2326,
+          "promptTokens": 509,
+          "hintChars": 1230,
+          "hintTokens": 289
+        },
+        "B": {
+          "promptChars": 4873,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-098",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1825,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1052,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2346,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2184,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2091,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2206,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1984,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2204,
+          "promptTokens": 476,
+          "hintChars": 1109,
+          "hintTokens": 258
+        },
+        "B": {
+          "promptChars": 4872,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-099",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1811,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1067,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2361,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2199,
+          "promptTokens": 459,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2106,
+          "promptTokens": 458,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2221,
+          "promptTokens": 492,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1999,
+          "promptTokens": 429,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2306,
+          "promptTokens": 508,
+          "hintChars": 1196,
+          "hintTokens": 288
+        },
+        "B": {
+          "promptChars": 4887,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-100",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1819,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1058,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2352,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2190,
+          "promptTokens": 460,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2097,
+          "promptTokens": 459,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2212,
+          "promptTokens": 493,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1990,
+          "promptTokens": 430,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2353,
+          "promptTokens": 515,
+          "hintChars": 1252,
+          "hintTokens": 294
+        },
+        "B": {
+          "promptChars": 4878,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-101",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1827,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1049,
+          "promptTokens": 214,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2343,
+          "promptTokens": 430,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2181,
+          "promptTokens": 459,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2088,
+          "promptTokens": 458,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2203,
+          "promptTokens": 492,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1981,
+          "promptTokens": 429,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2155,
+          "promptTokens": 483,
+          "hintChars": 1063,
+          "hintTokens": 263
+        },
+        "B": {
+          "promptChars": 4869,
+          "promptTokens": 1106,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-102",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1816,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1061,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2355,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2193,
+          "promptTokens": 460,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2100,
+          "promptTokens": 459,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2215,
+          "promptTokens": 493,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1993,
+          "promptTokens": 430,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2019,
+          "promptTokens": 464,
+          "hintChars": 915,
+          "hintTokens": 243
+        },
+        "B": {
+          "promptChars": 4881,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-103",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1819,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1058,
+          "promptTokens": 213,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2352,
+          "promptTokens": 429,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2190,
+          "promptTokens": 458,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2097,
+          "promptTokens": 457,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2212,
+          "promptTokens": 491,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1990,
+          "promptTokens": 428,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2182,
+          "promptTokens": 473,
+          "hintChars": 1081,
+          "hintTokens": 254
+        },
+        "B": {
+          "promptChars": 4878,
+          "promptTokens": 1105,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-104",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1826,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1051,
+          "promptTokens": 215,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2345,
+          "promptTokens": 431,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2183,
+          "promptTokens": 460,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2090,
+          "promptTokens": 459,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2205,
+          "promptTokens": 493,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1983,
+          "promptTokens": 430,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2195,
+          "promptTokens": 482,
+          "hintChars": 1101,
+          "hintTokens": 261
+        },
+        "B": {
+          "promptChars": 4871,
+          "promptTokens": 1107,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-105",
+      "dSafeOverCidPromptTokenRatio": 1.0023,
+      "dSafeOverCidPromptCharRatio": 1.1829,
+      "cVsCidHintJaccard": 0.528571,
+      "cVsCidHintLevenshtein": 92,
+      "cVsCidHintNormalizedLevenshtein": 0.3849,
+      "conditions": {
+        "A": {
+          "promptChars": 1047,
+          "promptTokens": 212,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2341,
+          "promptTokens": 428,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2179,
+          "promptTokens": 457,
+          "hintChars": 1089,
+          "hintTokens": 239
+        },
+        "C0": {
+          "promptChars": 2086,
+          "promptTokens": 456,
+          "hintChars": 996,
+          "hintTokens": 238
+        },
+        "C0_clean": {
+          "promptChars": 2201,
+          "promptTokens": 490,
+          "hintChars": 1111,
+          "hintTokens": 272
+        },
+        "C_ID": {
+          "promptChars": 1979,
+          "promptTokens": 427,
+          "hintChars": 889,
+          "hintTokens": 209
+        },
+        "C0_rand": {
+          "promptChars": 2026,
+          "promptTokens": 456,
+          "hintChars": 936,
+          "hintTokens": 238
+        },
+        "B": {
+          "promptChars": 4867,
+          "promptTokens": 1104,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-106",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2041,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1019,
+          "promptTokens": 206,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2313,
+          "promptTokens": 422,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2061,
+          "promptTokens": 437,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1968,
+          "promptTokens": 440,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2083,
+          "promptTokens": 474,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1921,
+          "promptTokens": 417,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2187,
+          "promptTokens": 483,
+          "hintChars": 1125,
+          "hintTokens": 271
+        },
+        "B": {
+          "promptChars": 4839,
+          "promptTokens": 1098,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-107",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2025,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2076,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1983,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2098,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1936,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2600,
+          "promptTokens": 562,
+          "hintChars": 1523,
+          "hintTokens": 349
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-108",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2026,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1033,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2327,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2075,
+          "promptTokens": 439,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1982,
+          "promptTokens": 442,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2097,
+          "promptTokens": 476,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1935,
+          "promptTokens": 419,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2022,
+          "promptTokens": 444,
+          "hintChars": 946,
+          "hintTokens": 230
+        },
+        "B": {
+          "promptChars": 4853,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-109",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2058,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1003,
+          "promptTokens": 208,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2297,
+          "promptTokens": 424,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2045,
+          "promptTokens": 439,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1952,
+          "promptTokens": 442,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2067,
+          "promptTokens": 476,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1905,
+          "promptTokens": 419,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2333,
+          "promptTokens": 517,
+          "hintChars": 1287,
+          "hintTokens": 303
+        },
+        "B": {
+          "promptChars": 4823,
+          "promptTokens": 1100,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-110",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.203,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1029,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2323,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2071,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1978,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2093,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1931,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2313,
+          "promptTokens": 497,
+          "hintChars": 1241,
+          "hintTokens": 284
+        },
+        "B": {
+          "promptChars": 4849,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-111",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2047,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1013,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2307,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2055,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1962,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2077,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1915,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2154,
+          "promptTokens": 470,
+          "hintChars": 1098,
+          "hintTokens": 257
+        },
+        "B": {
+          "promptChars": 4833,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-112",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2048,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1012,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2306,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2054,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1961,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2076,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1914,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2040,
+          "promptTokens": 463,
+          "hintChars": 985,
+          "hintTokens": 250
+        },
+        "B": {
+          "promptChars": 4832,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-113",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2025,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2076,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1983,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2098,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1936,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2039,
+          "promptTokens": 454,
+          "hintChars": 962,
+          "hintTokens": 241
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-114",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2055,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1006,
+          "promptTokens": 210,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2300,
+          "promptTokens": 426,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2048,
+          "promptTokens": 441,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1955,
+          "promptTokens": 444,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2070,
+          "promptTokens": 478,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1908,
+          "promptTokens": 421,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2156,
+          "promptTokens": 490,
+          "hintChars": 1107,
+          "hintTokens": 274
+        },
+        "B": {
+          "promptChars": 4826,
+          "promptTokens": 1102,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-115",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2009,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1049,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2343,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2091,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1998,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2113,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1951,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2178,
+          "promptTokens": 464,
+          "hintChars": 1086,
+          "hintTokens": 251
+        },
+        "B": {
+          "promptChars": 4869,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-116",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2012,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1046,
+          "promptTokens": 209,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2340,
+          "promptTokens": 425,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2088,
+          "promptTokens": 440,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1995,
+          "promptTokens": 443,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2110,
+          "promptTokens": 477,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1948,
+          "promptTokens": 420,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2537,
+          "promptTokens": 557,
+          "hintChars": 1448,
+          "hintTokens": 342
+        },
+        "B": {
+          "promptChars": 4866,
+          "promptTokens": 1101,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-117",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2037,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1022,
+          "promptTokens": 209,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2316,
+          "promptTokens": 425,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2064,
+          "promptTokens": 440,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1971,
+          "promptTokens": 443,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2086,
+          "promptTokens": 477,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1924,
+          "promptTokens": 420,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2187,
+          "promptTokens": 499,
+          "hintChars": 1122,
+          "hintTokens": 284
+        },
+        "B": {
+          "promptChars": 4842,
+          "promptTokens": 1101,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-118",
+      "dSafeOverCidPromptTokenRatio": 1.012,
+      "dSafeOverCidPromptCharRatio": 1.2025,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1034,
+          "promptTokens": 207,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2328,
+          "promptTokens": 423,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2076,
+          "promptTokens": 438,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1983,
+          "promptTokens": 441,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2098,
+          "promptTokens": 475,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1936,
+          "promptTokens": 418,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2132,
+          "promptTokens": 485,
+          "hintChars": 1055,
+          "hintTokens": 272
+        },
+        "B": {
+          "promptChars": 4854,
+          "promptTokens": 1099,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-119",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.203,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1029,
+          "promptTokens": 210,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2323,
+          "promptTokens": 426,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2071,
+          "promptTokens": 441,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1978,
+          "promptTokens": 444,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2093,
+          "promptTokens": 478,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1931,
+          "promptTokens": 421,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2208,
+          "promptTokens": 486,
+          "hintChars": 1136,
+          "hintTokens": 270
+        },
+        "B": {
+          "promptChars": 4849,
+          "promptTokens": 1102,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    },
+    {
+      "taskId": "V3-H-120",
+      "dSafeOverCidPromptTokenRatio": 1.0119,
+      "dSafeOverCidPromptCharRatio": 1.2016,
+      "cVsCidHintJaccard": 0.712,
+      "cVsCidHintLevenshtein": 57,
+      "cVsCidHintNormalizedLevenshtein": 0.2533,
+      "conditions": {
+        "A": {
+          "promptChars": 1042,
+          "promptTokens": 209,
+          "hintChars": 0,
+          "hintTokens": 0
+        },
+        "D_safe": {
+          "promptChars": 2336,
+          "promptTokens": 425,
+          "hintChars": 1251,
+          "hintTokens": 210
+        },
+        "C": {
+          "promptChars": 2084,
+          "promptTokens": 440,
+          "hintChars": 999,
+          "hintTokens": 225
+        },
+        "C0": {
+          "promptChars": 1991,
+          "promptTokens": 443,
+          "hintChars": 906,
+          "hintTokens": 228
+        },
+        "C0_clean": {
+          "promptChars": 2106,
+          "promptTokens": 477,
+          "hintChars": 1021,
+          "hintTokens": 262
+        },
+        "C_ID": {
+          "promptChars": 1944,
+          "promptTokens": 420,
+          "hintChars": 859,
+          "hintTokens": 205
+        },
+        "C0_rand": {
+          "promptChars": 2337,
+          "promptTokens": 523,
+          "hintChars": 1252,
+          "hintTokens": 308
+        },
+        "B": {
+          "promptChars": 4862,
+          "promptTokens": 1101,
+          "hintChars": 3777,
+          "hintTokens": 886
+        }
+      }
+    }
+  ]
+}

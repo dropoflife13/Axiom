@@ -1,0 +1,511 @@
+{
+  "generatedAt": "2026-11-18T04:26:43.777Z",
+  "protocol": "Ablation v3",
+  "blindMode": false,
+  "runs": {
+    "nemotron-v3": {
+      "runId": "nemotron-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "94d2b055eb313b025918f86086362eb43c676ef537f87d777731c7379fa59c5a",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 43.05549999999999,
+          "strictPassPct": 5.833333333333333,
+          "crashes": 36,
+          "tableMissing": 8
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 43.81924999999999,
+          "strictPassPct": 6.666666666666667,
+          "crashes": 25,
+          "tableMissing": 5
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 65.97266666666664,
+          "strictPassPct": 19.166666666666668,
+          "crashes": 8,
+          "tableMissing": 0
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 85.51433333333331,
+          "strictPassPct": 54.166666666666664,
+          "crashes": 7,
+          "tableMissing": 0
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 83.93083333333333,
+          "strictPassPct": 55,
+          "crashes": 2,
+          "tableMissing": 0
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 85.3475833333333,
+          "strictPassPct": 55.833333333333336,
+          "crashes": 5,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 53.18066666666665,
+          "strictPassPct": 12.5,
+          "crashes": 5,
+          "tableMissing": 1
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 89.87516666666667,
+          "strictPassPct": 75.83333333333333,
+          "crashes": 3,
+          "tableMissing": 2
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 13,
+        "hasExplicitSupersedesFk": 227,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 240,
+        "inventedLineageCol": 26,
+        "hasHallucinatedLineageCol": 26,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 5,
+        "hasRevokeWithoutPositiveGrant": 26,
+        "missingCreatedAtColumn": 220,
+        "missingDeletedAtOnMutable": 160
+      }
+    },
+    "gemma4-31b-v3": {
+      "runId": "gemma4-31b-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "de20ba43526b24830cc2327cb792dcba2d563a7cbd5e1a22fcf251248f147b42",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 38.27758333333332,
+          "strictPassPct": 5,
+          "crashes": 10,
+          "tableMissing": 7
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 39.59699999999998,
+          "strictPassPct": 5.833333333333333,
+          "crashes": 13,
+          "tableMissing": 8
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 59.264166666666675,
+          "strictPassPct": 25.833333333333332,
+          "crashes": 14,
+          "tableMissing": 13
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 81.44474999999997,
+          "strictPassPct": 54.166666666666664,
+          "crashes": 7,
+          "tableMissing": 7
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 83.23641666666664,
+          "strictPassPct": 58.333333333333336,
+          "crashes": 8,
+          "tableMissing": 8
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 85.30591666666663,
+          "strictPassPct": 58.333333333333336,
+          "crashes": 8,
+          "tableMissing": 5
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 59.25016666666664,
+          "strictPassPct": 18.333333333333332,
+          "crashes": 5,
+          "tableMissing": 3
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 93.23616666666666,
+          "strictPassPct": 87.5,
+          "crashes": 6,
+          "tableMissing": 6
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 37,
+        "hasExplicitSupersedesFk": 217,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 226,
+        "inventedLineageCol": 36,
+        "hasHallucinatedLineageCol": 36,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 4,
+        "hasRevokeWithoutPositiveGrant": 15,
+        "missingCreatedAtColumn": 88,
+        "missingDeletedAtOnMutable": 150
+      }
+    },
+    "qwen27b-v3": {
+      "runId": "qwen27b-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "4bcc62d4c3952b735b1218a40bcb9539582fef9dde617450d52b3569cc2e67e9",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 42.93041666666666,
+          "strictPassPct": 7.5,
+          "crashes": 16,
+          "tableMissing": 13
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 47.31924999999999,
+          "strictPassPct": 12.5,
+          "crashes": 7,
+          "tableMissing": 6
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 71.02799999999998,
+          "strictPassPct": 32.5,
+          "crashes": 4,
+          "tableMissing": 2
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 78.87516666666666,
+          "strictPassPct": 50,
+          "crashes": 51,
+          "tableMissing": 7
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 84.06974999999996,
+          "strictPassPct": 51.666666666666664,
+          "crashes": 54,
+          "tableMissing": 2
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 89.59733333333331,
+          "strictPassPct": 66.66666666666667,
+          "crashes": 6,
+          "tableMissing": 3
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 60.22266666666665,
+          "strictPassPct": 20.833333333333332,
+          "crashes": 23,
+          "tableMissing": 3
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 85.90291666666666,
+          "strictPassPct": 74.16666666666667,
+          "crashes": 35,
+          "tableMissing": 12
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 20,
+        "hasExplicitSupersedesFk": 230,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 229,
+        "inventedLineageCol": 44,
+        "hasHallucinatedLineageCol": 44,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 6,
+        "hasRevokeWithoutPositiveGrant": 15,
+        "missingCreatedAtColumn": 70,
+        "missingDeletedAtOnMutable": 146
+      }
+    },
+    "glm5-v3": {
+      "runId": "glm5-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "297a5d4d58864c648cf760d4f198a8908bc7b02a9a8d835922a4c15cf7a8453d",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 34.93041666666666,
+          "strictPassPct": 0.8333333333333334,
+          "crashes": 36,
+          "tableMissing": 10
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 37.805333333333316,
+          "strictPassPct": 2.5,
+          "crashes": 36,
+          "tableMissing": 6
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 65.68066666666667,
+          "strictPassPct": 25.833333333333332,
+          "crashes": 9,
+          "tableMissing": 2
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 80.55591666666666,
+          "strictPassPct": 50.833333333333336,
+          "crashes": 18,
+          "tableMissing": 9
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 83.88924999999996,
+          "strictPassPct": 55,
+          "crashes": 15,
+          "tableMissing": 6
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 89.29175,
+          "strictPassPct": 67.5,
+          "crashes": 22,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 53.73625,
+          "strictPassPct": 14.166666666666666,
+          "crashes": 26,
+          "tableMissing": 8
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 89.80575,
+          "strictPassPct": 72.5,
+          "crashes": 18,
+          "tableMissing": 5
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 38,
+        "hasExplicitSupersedesFk": 218,
+        "hasDuplicatePrimaryKey": 15,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 228,
+        "inventedLineageCol": 31,
+        "hasHallucinatedLineageCol": 31,
+        "hasUserMetadataLeak": 73,
+        "hasSingularCompositeIndexName": 19,
+        "hasRevokeWithoutPositiveGrant": 12,
+        "missingCreatedAtColumn": 95,
+        "missingDeletedAtOnMutable": 149
+      }
+    },
+    "gemini-3.1-flash-lite-v3": {
+      "runId": "gemini-3.1-flash-lite-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "7df207ab9a94c3c342ade3a905d4d94df9fe140ae1c40321e213121f53728b4f",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 46.805416666666666,
+          "strictPassPct": 7.5,
+          "crashes": 23,
+          "tableMissing": 2
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 46.56941666666665,
+          "strictPassPct": 9.166666666666666,
+          "crashes": 23,
+          "tableMissing": 3
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 59.79183333333334,
+          "strictPassPct": 20.833333333333332,
+          "crashes": 22,
+          "tableMissing": 0
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 86.01416666666664,
+          "strictPassPct": 51.666666666666664,
+          "crashes": 16,
+          "tableMissing": 0
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 89.22249999999995,
+          "strictPassPct": 61.666666666666664,
+          "crashes": 17,
+          "tableMissing": 0
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 84.34758333333329,
+          "strictPassPct": 47.5,
+          "crashes": 12,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 60.541916666666644,
+          "strictPassPct": 18.333333333333332,
+          "crashes": 20,
+          "tableMissing": 0
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 90.31949999999999,
+          "strictPassPct": 68.33333333333333,
+          "crashes": 21,
+          "tableMissing": 2
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 30,
+        "hasExplicitSupersedesFk": 198,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 247,
+        "inventedLineageCol": 33,
+        "hasHallucinatedLineageCol": 33,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 0,
+        "hasRevokeWithoutPositiveGrant": 18,
+        "missingCreatedAtColumn": 119,
+        "missingDeletedAtOnMutable": 159
+      }
+    },
+    "gemini-3.5-flash-lite-v3": {
+      "runId": "gemini-3.5-flash-lite-v3",
+      "trialsCompleted": 960,
+      "targetTrials": 960,
+      "progressPct": 100,
+      "checkpointSha256": "eb31406dea1a70db1d1d5d7816236d19b74a86e51ada0579bca710136102660a",
+      "finalized": true,
+      "lastTaskId": "V3-H-120",
+      "lastCondition": "B",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 120,
+          "meanBoundPct": 33.04141666666667,
+          "strictPassPct": 5,
+          "crashes": 11,
+          "tableMissing": 7
+        },
+        "D_safe": {
+          "n": 120,
+          "meanBoundPct": 31.985916666666665,
+          "strictPassPct": 3.3333333333333335,
+          "crashes": 11,
+          "tableMissing": 11
+        },
+        "C": {
+          "n": 120,
+          "meanBoundPct": 62.20833333333333,
+          "strictPassPct": 26.666666666666668,
+          "crashes": 8,
+          "tableMissing": 2
+        },
+        "C0": {
+          "n": 120,
+          "meanBoundPct": 74.56974999999998,
+          "strictPassPct": 34.166666666666664,
+          "crashes": 3,
+          "tableMissing": 3
+        },
+        "C0_clean": {
+          "n": 120,
+          "meanBoundPct": 74.52816666666664,
+          "strictPassPct": 31.666666666666668,
+          "crashes": 7,
+          "tableMissing": 4
+        },
+        "C_ID": {
+          "n": 120,
+          "meanBoundPct": 78.00033333333332,
+          "strictPassPct": 43.333333333333336,
+          "crashes": 10,
+          "tableMissing": 6
+        },
+        "C0_rand": {
+          "n": 120,
+          "meanBoundPct": 55.027999999999984,
+          "strictPassPct": 14.166666666666666,
+          "crashes": 9,
+          "tableMissing": 5
+        },
+        "B": {
+          "n": 120,
+          "meanBoundPct": 93.75016666666666,
+          "strictPassPct": 79.16666666666667,
+          "crashes": 7,
+          "tableMissing": 0
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 24,
+        "hasExplicitSupersedesFk": 214,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 228,
+        "inventedLineageCol": 24,
+        "hasHallucinatedLineageCol": 24,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 17,
+        "hasRevokeWithoutPositiveGrant": 14,
+        "missingCreatedAtColumn": 199,
+        "missingDeletedAtOnMutable": 149
+      }
+    }
+  }
+}

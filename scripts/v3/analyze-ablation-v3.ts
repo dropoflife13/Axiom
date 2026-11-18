@@ -1314,12 +1314,11 @@ export function analyzeAblationV3Trials(
   const meanC = conditions.C.meanBoundFactFraction;
   const meanCId = conditions.C_ID.meanBoundFactFraction;
   const meanC0Clean = conditions.C0_clean.meanBoundFactFraction;
-  const appendOnlyCells = new Set(['010', '011', '110', '111']);
   const appendOnlyFilter = (tr: TrialV3) => {
     const feat =
       (tr as TrialV3 & { features?: TaskV2Item['features'] }).features ??
       taskLookup.get(tr.taskId)?.features;
-    return feat ? appendOnlyCells.has(formatCellKey(feat)) : false;
+    return Boolean(feat?.append_only);
   };
   const cAppend = (byCondition.get('C') ?? []).filter(appendOnlyFilter);
   const cIdAppend = (byCondition.get('C_ID') ?? []).filter(appendOnlyFilter);

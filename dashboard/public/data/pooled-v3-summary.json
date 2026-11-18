@@ -1,0 +1,875 @@
+{
+  "runs": {
+    "nemotron-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "46.82",
+      "conditions": {
+        "A": {
+          "meanPct": "43.1",
+          "passPct": "5.8",
+          "pCommitPct": "69.2",
+          "meanGivenCommitPct": "43.8"
+        },
+        "D_safe": {
+          "meanPct": "43.8",
+          "passPct": "6.7",
+          "pCommitPct": "77.5",
+          "meanGivenCommitPct": "45.4"
+        },
+        "C0_rand": {
+          "meanPct": "53.2",
+          "passPct": "12.5",
+          "pCommitPct": "95.8",
+          "meanGivenCommitPct": "54.1"
+        },
+        "C": {
+          "meanPct": "66.0",
+          "passPct": "19.2",
+          "pCommitPct": "93.3",
+          "meanGivenCommitPct": "65.4"
+        },
+        "C0": {
+          "meanPct": "85.5",
+          "passPct": "54.2",
+          "pCommitPct": "94.2",
+          "meanGivenCommitPct": "85.7"
+        },
+        "C0_clean": {
+          "meanPct": "83.9",
+          "passPct": "55.0",
+          "pCommitPct": "98.3",
+          "meanGivenCommitPct": "84.3"
+        },
+        "C_ID": {
+          "meanPct": "85.3",
+          "passPct": "55.8",
+          "pCommitPct": "95.8",
+          "meanGivenCommitPct": "86.0"
+        },
+        "B": {
+          "meanPct": "89.9",
+          "passPct": "75.8",
+          "pCommitPct": "97.5",
+          "meanGivenCommitPct": "91.3"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "19.37",
+          "ci": [
+            "14.74",
+            "23.94"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "-1.58",
+          "ci": [
+            "-6.33",
+            "2.93"
+          ],
+          "holm": "9.74e-1"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "-1.42",
+          "ci": [
+            "-5.51",
+            "2.49"
+          ],
+          "holm": "9.74e-1"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "30.75",
+          "ci": [
+            "24.36",
+            "36.96"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "41.53",
+          "ci": [
+            "35.93",
+            "47.01"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "0.76",
+        "ci90": [
+          "-3.28",
+          "4.81"
+        ],
+        "p": "0.1808",
+        "eq": false
+      },
+      "did": {
+        "pp": "20.96",
+        "ci95": [
+          "14.89",
+          "26.97"
+        ],
+        "p": "1.00e-5"
+      },
+      "dgrrOverall": "107.9",
+      "dgrrAppend": "124.5",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 22.331430598333686,
+        "sePts": 7.1288700770489735,
+        "ci95Pts": [
+          8.358845247317698,
+          36.304015949349676
+        ],
+        "pValue": 0.0017331753342870737,
+        "cr1SePts": 18.51172587961159,
+        "cr1Ci95Pts": [
+          -13.951552125705032,
+          58.6144133223724
+        ],
+        "cr1PValue": 0.22768664460940458,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -14.323635528876377,
+          58.986496725543745
+        ],
+        "cr2PValue": 0.23007934474924152
+      },
+      "logTokBeta": "25.87"
+    },
+    "gemini-3.5-flash-lite-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "60.71",
+      "conditions": {
+        "A": {
+          "meanPct": "33.0",
+          "passPct": "5.0",
+          "pCommitPct": "90.8",
+          "meanGivenCommitPct": "35.1"
+        },
+        "D_safe": {
+          "meanPct": "32.0",
+          "passPct": "3.3",
+          "pCommitPct": "88.3",
+          "meanGivenCommitPct": "35.4"
+        },
+        "C0_rand": {
+          "meanPct": "55.0",
+          "passPct": "14.2",
+          "pCommitPct": "92.5",
+          "meanGivenCommitPct": "57.3"
+        },
+        "C": {
+          "meanPct": "62.2",
+          "passPct": "26.7",
+          "pCommitPct": "93.3",
+          "meanGivenCommitPct": "63.5"
+        },
+        "C0": {
+          "meanPct": "74.6",
+          "passPct": "34.2",
+          "pCommitPct": "97.5",
+          "meanGivenCommitPct": "76.5"
+        },
+        "C0_clean": {
+          "meanPct": "74.5",
+          "passPct": "31.7",
+          "pCommitPct": "94.2",
+          "meanGivenCommitPct": "77.8"
+        },
+        "C_ID": {
+          "meanPct": "78.0",
+          "passPct": "43.3",
+          "pCommitPct": "91.7",
+          "meanGivenCommitPct": "81.9"
+        },
+        "B": {
+          "meanPct": "93.8",
+          "passPct": "79.2",
+          "pCommitPct": "94.2",
+          "meanGivenCommitPct": "94.9"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "15.79",
+          "ci": [
+            "10.71",
+            "20.76"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "-0.04",
+          "ci": [
+            "-3.97",
+            "3.72"
+          ],
+          "holm": "9.88e-1"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "-3.47",
+          "ci": [
+            "-8.26",
+            "1.28"
+          ],
+          "holm": "3.37e-1"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "19.50",
+          "ci": [
+            "14.13",
+            "24.78"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "46.01",
+          "ci": [
+            "40.29",
+            "51.61"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "-1.06",
+        "ci90": [
+          "-3.64",
+          "1.53"
+        ],
+        "p": "0.1073",
+        "eq": false
+      },
+      "did": {
+        "pp": "15.83",
+        "ci95": [
+          "9.64",
+          "21.86"
+        ],
+        "p": "1.00e-5"
+      },
+      "dgrrOverall": "128.2",
+      "dgrrAppend": "89.0",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 16.755514534706105,
+        "sePts": 7.499544317343994,
+        "ci95Pts": [
+          2.0564076727118774,
+          31.454621396700333
+        ],
+        "pValue": 0.025469545718308284,
+        "cr1SePts": 33.84017996911955,
+        "cr1Ci95Pts": [
+          -49.57123820476822,
+          83.08226727418044
+        ],
+        "cr1PValue": 0.6205036320960275,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -50.25142164140331,
+          83.76245071081553
+        ],
+        "cr2PValue": 0.6214166619599633
+      },
+      "logTokBeta": "-8.04"
+    },
+    "gemini-3.1-flash-lite-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "43.51",
+      "conditions": {
+        "A": {
+          "meanPct": "46.8",
+          "passPct": "7.5",
+          "pCommitPct": "80.8",
+          "meanGivenCommitPct": "43.5"
+        },
+        "D_safe": {
+          "meanPct": "46.6",
+          "passPct": "9.2",
+          "pCommitPct": "80.8",
+          "meanGivenCommitPct": "45.7"
+        },
+        "C0_rand": {
+          "meanPct": "60.5",
+          "passPct": "18.3",
+          "pCommitPct": "83.3",
+          "meanGivenCommitPct": "59.9"
+        },
+        "C": {
+          "meanPct": "59.8",
+          "passPct": "20.8",
+          "pCommitPct": "81.7",
+          "meanGivenCommitPct": "60.4"
+        },
+        "C0": {
+          "meanPct": "86.0",
+          "passPct": "51.7",
+          "pCommitPct": "86.7",
+          "meanGivenCommitPct": "85.8"
+        },
+        "C0_clean": {
+          "meanPct": "89.2",
+          "passPct": "61.7",
+          "pCommitPct": "85.8",
+          "meanGivenCommitPct": "88.1"
+        },
+        "C_ID": {
+          "meanPct": "84.3",
+          "passPct": "47.5",
+          "pCommitPct": "90.0",
+          "meanGivenCommitPct": "84.0"
+        },
+        "B": {
+          "meanPct": "90.3",
+          "passPct": "68.3",
+          "pCommitPct": "82.5",
+          "meanGivenCommitPct": "92.9"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "24.56",
+          "ci": [
+            "20.32",
+            "28.76"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "3.21",
+          "ci": [
+            "1.26",
+            "5.24"
+          ],
+          "holm": "1.32e-3"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "4.87",
+          "ci": [
+            "2.79",
+            "7.22"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "28.68",
+          "ci": [
+            "24.04",
+            "33.26"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "37.78",
+          "ci": [
+            "32.43",
+            "43.00"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "-0.24",
+        "ci90": [
+          "-2.53",
+          "2.06"
+        ],
+        "p": "0.0242",
+        "eq": true
+      },
+      "did": {
+        "pp": "21.35",
+        "ci95": [
+          "16.88",
+          "25.74"
+        ],
+        "p": "1.00e-5"
+      },
+      "dgrrOverall": "83.4",
+      "dgrrAppend": "87.9",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 30.25005620174881,
+        "sePts": 8.070604635229955,
+        "ci95Pts": [
+          14.431671116698096,
+          46.06844128679952
+        ],
+        "pValue": 0.00017817923333618424,
+        "cr1SePts": 27.397857755160487,
+        "cr1Ci95Pts": [
+          -23.449744998365748,
+          83.94985740186337
+        ],
+        "cr1PValue": 0.2695485549162535,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -24.00043855440919,
+          84.50055095790681
+        ],
+        "cr2PValue": 0.27177603968192376
+      },
+      "logTokBeta": "32.71"
+    },
+    "glm5-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "54.88",
+      "conditions": {
+        "A": {
+          "meanPct": "34.9",
+          "passPct": "0.8",
+          "pCommitPct": "70.0",
+          "meanGivenCommitPct": "37.6"
+        },
+        "D_safe": {
+          "meanPct": "37.8",
+          "passPct": "2.5",
+          "pCommitPct": "70.0",
+          "meanGivenCommitPct": "38.7"
+        },
+        "C0_rand": {
+          "meanPct": "53.7",
+          "passPct": "14.2",
+          "pCommitPct": "78.3",
+          "meanGivenCommitPct": "57.9"
+        },
+        "C": {
+          "meanPct": "65.7",
+          "passPct": "25.8",
+          "pCommitPct": "92.5",
+          "meanGivenCommitPct": "65.8"
+        },
+        "C0": {
+          "meanPct": "80.6",
+          "passPct": "50.8",
+          "pCommitPct": "85.0",
+          "meanGivenCommitPct": "87.6"
+        },
+        "C0_clean": {
+          "meanPct": "83.9",
+          "passPct": "55.0",
+          "pCommitPct": "87.5",
+          "meanGivenCommitPct": "88.4"
+        },
+        "C_ID": {
+          "meanPct": "89.3",
+          "passPct": "67.5",
+          "pCommitPct": "81.7",
+          "meanGivenCommitPct": "93.8"
+        },
+        "B": {
+          "meanPct": "89.8",
+          "passPct": "72.5",
+          "pCommitPct": "85.0",
+          "meanGivenCommitPct": "94.5"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "23.61",
+          "ci": [
+            "18.78",
+            "28.54"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "3.33",
+          "ci": [
+            "-3.13",
+            "9.79"
+          ],
+          "holm": "3.22e-1"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "-5.40",
+          "ci": [
+            "-10.62",
+            "-0.47"
+          ],
+          "holm": "7.55e-2"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "30.15",
+          "ci": [
+            "22.54",
+            "37.22"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "51.49",
+          "ci": [
+            "46.63",
+            "56.25"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "2.87",
+        "ci90": [
+          "-0.25",
+          "6.00"
+        ],
+        "p": "0.4736",
+        "eq": false
+      },
+      "did": {
+        "pp": "20.28",
+        "ci95": [
+          "12.76",
+          "27.65"
+        ],
+        "p": "1.00e-5"
+      },
+      "dgrrOverall": "129.7",
+      "dgrrAppend": "94.2",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 24.234707732077826,
+        "sePts": 7.197681845960137,
+        "ci95Pts": [
+          10.127251313995957,
+          38.3421641501597
+        ],
+        "pValue": 0.0007599714179575834,
+        "cr1SePts": 24.929618999479313,
+        "cr1Ci95Pts": [
+          -24.62734550690163,
+          73.09676097105728
+        ],
+        "cr1PValue": 0.3309883183324529,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -25.12842776889146,
+          73.59784323304712
+        ],
+        "cr2PValue": 0.3329601787053553
+      },
+      "logTokBeta": "68.78"
+    },
+    "qwen27b-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "42.97",
+      "conditions": {
+        "A": {
+          "meanPct": "42.9",
+          "passPct": "7.5",
+          "pCommitPct": "86.7",
+          "meanGivenCommitPct": "47.5"
+        },
+        "D_safe": {
+          "meanPct": "47.3",
+          "passPct": "12.5",
+          "pCommitPct": "94.2",
+          "meanGivenCommitPct": "49.4"
+        },
+        "C0_rand": {
+          "meanPct": "60.2",
+          "passPct": "20.8",
+          "pCommitPct": "80.8",
+          "meanGivenCommitPct": "64.4"
+        },
+        "C": {
+          "meanPct": "71.0",
+          "passPct": "32.5",
+          "pCommitPct": "96.7",
+          "meanGivenCommitPct": "72.0"
+        },
+        "C0": {
+          "meanPct": "78.9",
+          "passPct": "50.0",
+          "pCommitPct": "57.5",
+          "meanGivenCommitPct": "88.9"
+        },
+        "C0_clean": {
+          "meanPct": "84.1",
+          "passPct": "51.7",
+          "pCommitPct": "55.0",
+          "meanGivenCommitPct": "91.3"
+        },
+        "C_ID": {
+          "meanPct": "89.6",
+          "passPct": "66.7",
+          "pCommitPct": "95.0",
+          "meanGivenCommitPct": "92.4"
+        },
+        "B": {
+          "meanPct": "85.9",
+          "passPct": "74.2",
+          "pCommitPct": "70.8",
+          "meanGivenCommitPct": "96.7"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "18.57",
+          "ci": [
+            "13.89",
+            "23.03"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "5.19",
+          "ci": [
+            "0.67",
+            "9.97"
+          ],
+          "holm": "2.74e-2"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "-5.53",
+          "ci": [
+            "-9.76",
+            "-1.06"
+          ],
+          "holm": "2.41e-2"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "23.85",
+          "ci": [
+            "18.58",
+            "28.92"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "42.28",
+          "ci": [
+            "36.40",
+            "47.83"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "4.39",
+        "ci90": [
+          "0.73",
+          "8.05"
+        ],
+        "p": "0.7347",
+        "eq": false
+      },
+      "did": {
+        "pp": "13.37",
+        "ci95": [
+          "6.58",
+          "19.92"
+        ],
+        "p": "1.10e-4"
+      },
+      "dgrrOverall": "142.4",
+      "dgrrAppend": "130.4",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 21.885336133238848,
+        "sePts": 8.159683749347842,
+        "ci95Pts": [
+          5.892355984517078,
+          37.87831628196062
+        ],
+        "pValue": 0.0073155866075882425,
+        "cr1SePts": 31.2719561678296,
+        "cr1Ci95Pts": [
+          -39.407697955707164,
+          83.17837022218487
+        ],
+        "cr1PValue": 0.4840276758111881,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -40.03626041122445,
+          83.80693267770214
+        ],
+        "cr2PValue": 0.4853936754903727
+      },
+      "logTokBeta": "-9.95"
+    },
+    "gemma4-31b-v3": {
+      "ledgerPass": true,
+      "bVsAPts": "54.96",
+      "conditions": {
+        "A": {
+          "meanPct": "38.3",
+          "passPct": "5.0",
+          "pCommitPct": "91.7",
+          "meanGivenCommitPct": "41.0"
+        },
+        "D_safe": {
+          "meanPct": "39.6",
+          "passPct": "5.8",
+          "pCommitPct": "89.2",
+          "meanGivenCommitPct": "41.5"
+        },
+        "C0_rand": {
+          "meanPct": "59.3",
+          "passPct": "18.3",
+          "pCommitPct": "95.8",
+          "meanGivenCommitPct": "61.0"
+        },
+        "C": {
+          "meanPct": "59.3",
+          "passPct": "25.8",
+          "pCommitPct": "88.3",
+          "meanGivenCommitPct": "67.1"
+        },
+        "C0": {
+          "meanPct": "81.4",
+          "passPct": "54.2",
+          "pCommitPct": "94.2",
+          "meanGivenCommitPct": "86.5"
+        },
+        "C0_clean": {
+          "meanPct": "83.2",
+          "passPct": "58.3",
+          "pCommitPct": "93.3",
+          "meanGivenCommitPct": "89.2"
+        },
+        "C_ID": {
+          "meanPct": "85.3",
+          "passPct": "58.3",
+          "pCommitPct": "93.3",
+          "meanGivenCommitPct": "88.9"
+        },
+        "B": {
+          "meanPct": "93.2",
+          "passPct": "87.5",
+          "pCommitPct": "95.0",
+          "meanGivenCommitPct": "98.1"
+        }
+      },
+      "primary": [
+        {
+          "name": "C_ID_vs_C",
+          "pp": "26.04",
+          "ci": [
+            "19.99",
+            "32.14"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C0_clean_vs_C0",
+          "pp": "1.79",
+          "ci": [
+            "-3.97",
+            "7.68"
+          ],
+          "holm": "9.07e-1"
+        },
+        {
+          "name": "C0_clean_vs_C_ID",
+          "pp": "-2.07",
+          "ci": [
+            "-7.39",
+            "3.07"
+          ],
+          "holm": "9.07e-1"
+        },
+        {
+          "name": "C0_clean_vs_C0_rand",
+          "pp": "23.99",
+          "ci": [
+            "17.36",
+            "30.24"
+          ],
+          "holm": "5.00e-5"
+        },
+        {
+          "name": "C_ID_vs_D_safe",
+          "pp": "45.71",
+          "ci": [
+            "40.08",
+            "51.28"
+          ],
+          "holm": "5.00e-5"
+        }
+      ],
+      "tost": {
+        "pp": "1.32",
+        "ci90": [
+          "-1.87",
+          "4.51"
+        ],
+        "p": "0.1919",
+        "eq": false
+      },
+      "did": {
+        "pp": "24.25",
+        "ci95": [
+          "16.43",
+          "32.10"
+        ],
+        "p": "1.00e-5"
+      },
+      "dgrrOverall": "108.6",
+      "dgrrAppend": "97.3",
+      "dgrrAppendN": 60,
+      "c0RandCov": "12.1",
+      "lpmmCIdVsC": {
+        "name": "C_ID_vs_C",
+        "estPts": 31.348792838473326,
+        "sePts": 7.060567566442584,
+        "ci95Pts": [
+          17.510080408245862,
+          45.18750526870079
+        ],
+        "pValue": 0.000009004343960894445,
+        "cr1SePts": 29.542768036932383,
+        "cr1Ci95Pts": [
+          -26.555032513914146,
+          89.2526181908608
+        ],
+        "cr1PValue": 0.2886297225201675,
+        "cr2Df": 119,
+        "cr2Ci95Pts": [
+          -27.148838501630845,
+          89.8464241785775
+        ],
+        "cr2PValue": 0.29077853760718586
+      },
+      "logTokBeta": "-4.51"
+    }
+  },
+  "pooled": {}
+}

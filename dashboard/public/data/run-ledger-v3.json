@@ -1,0 +1,104 @@
+{
+  "nemotron-v3": {
+    "runId": "nemotron-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 46.81966666666666,
+    "bVsACi95Pts": [
+      40.59733333333332,
+      52.944583333333306
+    ],
+    "passed": true,
+    "checkpointSha256": "94d2b055eb313b025918f86086362eb43c676ef537f87d777731c7379fa59c5a",
+    "analyzedAt": "2026-11-14T04:32:25.128Z"
+  },
+  "gemini-3.5-flash-lite-v3": {
+    "runId": "gemini-3.5-flash-lite-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 60.70875000000003,
+    "bVsACi95Pts": [
+      54.833499999999994,
+      66.27825
+    ],
+    "passed": true,
+    "checkpointSha256": "eb31406dea1a70db1d1d5d7816236d19b74a86e51ada0579bca710136102660a",
+    "analyzedAt": "2026-11-14T08:25:32.265Z"
+  },
+  "gemini-3.1-flash-lite-v3": {
+    "runId": "gemini-3.1-flash-lite-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 43.51408333333334,
+    "bVsACi95Pts": [
+      38.65316666666664,
+      48.319666666666656
+    ],
+    "passed": true,
+    "checkpointSha256": "7df207ab9a94c3c342ade3a905d4d94df9fe140ae1c40321e213121f53728b4f",
+    "analyzedAt": "2026-11-14T08:36:03.749Z"
+  },
+  "glm5-v3": {
+    "runId": "glm5-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 54.87533333333331,
+    "bVsACi95Pts": [
+      48.903333333333315,
+      60.764166666666675
+    ],
+    "passed": true,
+    "checkpointSha256": "297a5d4d58864c648cf760d4f198a8908bc7b02a9a8d835922a4c15cf7a8453d",
+    "analyzedAt": "2026-11-15T13:46:07.747Z"
+  },
+  "qwen27b-v3": {
+    "runId": "qwen27b-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 42.97250000000001,
+    "bVsACi95Pts": [
+      36.70866666666666,
+      49.028333333333315
+    ],
+    "passed": true,
+    "checkpointSha256": "4bcc62d4c3952b735b1218a40bcb9539582fef9dde617450d52b3569cc2e67e9",
+    "analyzedAt": "2026-11-17T15:07:24.640Z"
+  },
+  "gemma4-31b-v3": {
+    "runId": "gemma4-31b-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 54.95858333333333,
+    "bVsACi95Pts": [
+      49.18066666666667,
+      60.61166666666665
+    ],
+    "passed": true,
+    "checkpointSha256": "de20ba43526b24830cc2327cb792dcba2d563a7cbd5e1a22fcf251248f147b42",
+    "analyzedAt": "2026-11-18T04:10:10.007Z"
+  }
+}
