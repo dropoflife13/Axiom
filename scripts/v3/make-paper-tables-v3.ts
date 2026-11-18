@@ -217,6 +217,18 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
 
   const c0CleanVsC0Meta = metaResults.find((m) => m.contrast === 'C0_clean_vs_C0')!;
   const cIdVsCMeta = metaResults.find((m) => m.contrast === 'C_ID_vs_C')!;
+  const c0CleanSigCount = RUN_ORDER.filter(
+    (r) =>
+      (analyses
+        .get(r.runId)!
+        .primaryContrasts.find((c) => c.name === 'C0_clean_vs_C0')?.holmAdjustedPValue ?? 1) < 0.05
+  ).length;
+  const cIdBeatsC0CleanCount = RUN_ORDER.filter(
+    (r) =>
+      (analyses
+        .get(r.runId)!
+        .primaryContrasts.find((c) => c.name === 'C0_clean_vs_C_ID')?.meanDifference ?? 0) < 0
+  ).length;
 
   const totalPublicAuthJwt = RUN_ORDER.reduce((sum, r) => {
     const rep = analyses.get(r.runId)!;
@@ -258,7 +270,7 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
   lines.push('## Abstract');
   lines.push('');
   lines.push(
-    `In this pre-specified follow-up on a fresh 120-task held-out split, preserving exact SQL identifiers during LLM memory distillation (\`C_ID\`) recovers ${dgrrRange.min}% to ${dgrrRange.max}% of the gap between unconstrained distilled lessons (\`C\`) and repaired verbatim rules (\`C0_clean\`), outperforming naive distillation by +${cidRange.min} to +${cidRange.max} percentage points across all ${RUN_ORDER.length} evaluated models (pooled random-effects meta-analysis +${cIdVsCMeta.pooledMeanPts.toFixed(2)} pp, 95% CI [+${cIdVsCMeta.ci95Pts[0].toFixed(2)}, +${cIdVsCMeta.ci95Pts[1].toFixed(2)}]; all Holm-Bonferroni \`p < 5.00e-5\`; Difference-in-Differences +${didRange.min} to +${didRange.max} pp). In contrast, repairing cross-rule syntactic contradictions in verbatim rule text alone (\`C0_clean\` vs \`C0\`) yields a modest pooled effect (+${c0CleanVsC0Meta.pooledMeanPts.toFixed(2)} pp, 95% CI [${c0CleanVsC0Meta.ci95Pts[0].toFixed(2)}, +${c0CleanVsC0Meta.ci95Pts[1].toFixed(2)}]; ranging from ${c0cRange.min} to +${c0cRange.max} pp, Holm-significant on 2/6 models). Together, these ${totalTrials.toLocaleString()} confirmatory trials provide a mechanistic sufficiency test consistent with token-level identifier erosion—rather than summarization length or prose compression—as the primary driver of the "Distillation Penalty" in agentic memory systems.`
+    `In this pre-specified follow-up on a fresh 120-task held-out split, preserving exact SQL identifiers during LLM memory distillation (\`C_ID\`) recovers ${dgrrRange.min}% to ${dgrrRange.max}% of the gap between unconstrained distilled lessons (\`C\`) and repaired verbatim rules (\`C0_clean\`), outperforming naive distillation by +${cidRange.min} to +${cidRange.max} percentage points across all ${RUN_ORDER.length} evaluated models (pooled random-effects meta-analysis +${cIdVsCMeta.pooledMeanPts.toFixed(2)} pp, 95% CI [+${cIdVsCMeta.ci95Pts[0].toFixed(2)}, +${cIdVsCMeta.ci95Pts[1].toFixed(2)}]; all Holm-Bonferroni \`p < 5.00e-5\`; Difference-in-Differences +${didRange.min} to +${didRange.max} pp). In contrast, repairing cross-rule syntactic contradictions in verbatim rule text alone (\`C0_clean\` vs \`C0\`) yields a modest pooled effect (+${c0CleanVsC0Meta.pooledMeanPts.toFixed(2)} pp, 95% CI [${c0CleanVsC0Meta.ci95Pts[0].toFixed(2)}, +${c0CleanVsC0Meta.ci95Pts[1].toFixed(2)}]; ranging from ${c0cRange.min} to +${c0cRange.max} pp, Holm-significant on ${c0CleanSigCount}/${RUN_ORDER.length} models). Together, these ${totalTrials.toLocaleString()} confirmatory trials provide a mechanistic sufficiency test consistent with token-level identifier erosion—rather than summarization length or prose compression—as the primary driver of the "Distillation Penalty" in agentic memory systems.`
   );
   lines.push('');
 
@@ -317,12 +329,12 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
 
   lines.push('#### Table 2B: DerSimonian-Laird Random-Effects Meta-Analysis Across Evaluated Models');
   lines.push('');
-  lines.push('| Contrast | Models ($k$) | Pooled Mean (pp) | 95% Meta CI (pp) | Pooled $p$ | $I^2$ (%) | $\\tau^2$ |');
-  lines.push('|---|---:|---:|---:|---:|---:|---:|');
+  lines.push('| Contrast | Models ($k$) | Pooled Mean (pp) | 95% Meta CI (pp) | Pooled $p$ | $Q$ | $I^2$ (%) | $\\tau^2$ |');
+  lines.push('|---|---:|---:|---:|---:|---:|---:|---:|');
   for (const m of metaResults) {
     const sign = m.pooledMeanPts > 0 ? '+' : '';
     lines.push(
-      `| \`${m.contrast}\` | ${m.kModels} | ${sign}${m.pooledMeanPts.toFixed(2)} | [${m.ci95Pts[0].toFixed(2)}, ${m.ci95Pts[1].toFixed(2)}] | ${fmtP(m.pValue)} | ${m.i2Pct.toFixed(1)}% | ${m.tau2Pts.toFixed(2)} |`
+      `| \`${m.contrast}\` | ${m.kModels} | ${sign}${m.pooledMeanPts.toFixed(2)} | [${m.ci95Pts[0].toFixed(2)}, ${m.ci95Pts[1].toFixed(2)}] | ${fmtP(m.pValue)} | ${m.qStat.toFixed(2)} | ${m.i2Pct.toFixed(1)}% | ${m.tau2Pts.toFixed(2)} |`
     );
   }
   lines.push('');
@@ -376,7 +388,7 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
   lines.push('### 6.4 Distilled vs. Verbatim Equivalence (`C0_clean` vs `C_ID`, TOST `±3.0 pp`)');
   lines.push('');
   lines.push(
-    '`C_ID` numerically outperforms verbatim `C0_clean` on 5 of 6 models—reaching Holm-adjusted significance in favor of `C_ID` on Qwen 3.8 27B (`C0_clean - C_ID = -5.53 pp, Holm p = 0.0241`) and unadjusted 95% CI exclusion of zero on GLM-5.3 Flash (`-5.40 pp, 95% CI [-10.62, -0.47] pp, Holm p = 0.0755`), while `C0_clean` leads on Gemini 3.1 Flash-Lite (`+4.87 pp, Holm p < 5.00e-5`). Formal TOST (`±3.0 pp`) results are reported below rather than inferring equivalence from non-significance alone:'
+    `\`C_ID\` numerically outperforms verbatim \`C0_clean\` on ${cIdBeatsC0CleanCount} of ${RUN_ORDER.length} models—reaching Holm-adjusted significance in favor of \`C_ID\` on Qwen 3.8 27B (\`C0_clean - C_ID = -5.53 pp, Holm p = 0.0241\`) and unadjusted 95% CI exclusion of zero on GLM-5.3 Flash (\`-5.40 pp, 95% CI [-10.62, -0.47] pp, Holm p = 0.0755\`), while \`C0_clean\` leads on Gemini 3.1 Flash-Lite (\`+4.87 pp, Holm p < 5.00e-5\`). Formal TOST (\`±3.0 pp\`) results are reported below rather than inferring equivalence from non-significance alone:`
   );
   lines.push('');
   lines.push('| Model | `C0_clean - C_ID` (pp) | 90% CI (pp) | TOST `p` (`±3.0 pp`) | Equivalent at `α=0.05` |');
@@ -484,6 +496,43 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
     );
   }
   lines.push('');
+
+  const decision1AuditPath = path.join(outDir, 'decision1-audit.json');
+  if (fs.existsSync(decision1AuditPath)) {
+    const d1 = JSON.parse(fs.readFileSync(decision1AuditPath, 'utf8')) as {
+      model: string;
+      sampleCount: number;
+      metrics: {
+        totalFactJudgments: number;
+        precision: number;
+        recall: number;
+        f1: number;
+        hallucinatedComplianceRate: number;
+        hallucinatedComplianceCount: number;
+        oracleFailCount: number;
+        f36F16CollisionTotal: number;
+        f36F16CollisionFalsePositiveCount: number;
+        f36F16CollisionFalsePositiveRate: number;
+        ece: number;
+      };
+    };
+    const m = d1.metrics;
+    lines.push('### Table 7: Gemini Decision 1 LLM-as-Judge vs. PostgreSQL 16 Oracle Calibration (Invariant 0)');
+    lines.push('');
+    lines.push(
+      `To empirically substantiate **Authority Separation (Invariant 0)**, we audited \`${d1.model}\` against the deterministic PostgreSQL 16 Oracle across ${d1.sampleCount} sampled trials (${m.totalFactJudgments} fact-level judgments):`
+    );
+    lines.push('');
+    lines.push('| Metric | Value |');
+    lines.push('|---|---:|');
+    lines.push(`| Judge Model | \`${d1.model}\` |`);
+    lines.push(`| Sampled Trials / Fact Judgments | ${d1.sampleCount} / ${m.totalFactJudgments} |`);
+    lines.push(`| Precision / Recall / F1 | ${m.precision.toFixed(4)} / ${m.recall.toFixed(4)} / ${m.f1.toFixed(4)} |`);
+    lines.push(`| Hallucinated Compliance Rate (Oracle FAIL -> Judge PASS) | ${pct(m.hallucinatedComplianceRate)} (${m.hallucinatedComplianceCount}/${m.oracleFailCount}) |`);
+    lines.push(`| F-36 / F-16 Collision FP Rate | ${pct(m.f36F16CollisionFalsePositiveRate)} (${m.f36F16CollisionFalsePositiveCount}/${m.f36F16CollisionTotal}) |`);
+    lines.push(`| Expected Calibration Error (ECE) | ${m.ece.toFixed(4)} |`);
+    lines.push('');
+  }
 
   const ledgerPassCount = RUN_ORDER.filter((r) => ledger[r.runId]?.passed).length;
   lines.push(`*Ledger Verification: ${ledgerPassCount}/${RUN_ORDER.length} finalized runs passed all confirmatory validity gates.*`);
