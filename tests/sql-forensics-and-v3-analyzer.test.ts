@@ -268,9 +268,10 @@ describe('Step 3: analyze-ablation-v3', () => {
     expect(report.primaryContrasts).toHaveLength(5);
     expect(report.tostEquivalence?.name).toBe('D_safe_vs_A');
     expect(report.tostEquivalence?.margin).toBe(0.03);
+    expect(report.tostC0CleanVsCId?.name).toBe('C0_clean_vs_C_ID');
     expect(report.didContrast?.name).toBe('DiD_C_ID_vs_C_minus_C0_clean_vs_C0');
-    expect(report.referenceContrasts).toHaveLength(3);
-    expect(report.mdeTable.length).toBeGreaterThanOrEqual(9);
+    expect(report.referenceContrasts).toHaveLength(4);
+    expect(report.mdeTable.length).toBeGreaterThanOrEqual(10);
     expect(report.primaryContrasts[0].name).toBe('C_ID_vs_C');
     expect(report.primaryContrasts[0].signFlipPValue).toBeGreaterThan(0);
     expect(report.primaryContrasts[0].holmAdjustedPValue).toBeTypeOf('number');
@@ -280,10 +281,11 @@ describe('Step 3: analyze-ablation-v3', () => {
     expect(report.failureModeAttributionTable.A).toBeDefined();
     expect(report.distillationGapRecovery.overall.denominatorExcludesZero).toBe(true);
     expect(report.distillationGapRecovery.overall.recoveryRatio).not.toBeNull();
+    expect(report.distillationGapRecovery.overall.ratioCi95[0]).toBeTypeOf('number');
     expect(report.cleanIntersectionSensitivity.postTreatmentConditioned).toBe(true);
     expect(report.mixedModel).not.toBeNull();
     expect(report.mixedModel!.nTasks).toBe(120);
-    expect(report.mixedModel!.contrastsPts).toHaveLength(9);
+    expect(report.mixedModel!.contrastsPts).toHaveLength(10);
     expect(report.mixedModel!.contrastsPts[0].cr2Df).toBe(119);
   }, 30_000);
 

@@ -373,23 +373,34 @@ export class Decision1Client {
       }
     }
 
-    const res = await fetch(this.endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': this.apiKey,
-      },
-      body: JSON.stringify({
-        model: payload.model,
-        input: payload.inputText,
-        questions: questionsObj,
-      }),
-    });
-    if (!res.ok) {
-      const body = await res.text();
-      throw new Error(`Decision 1 API error (${res.status}): ${body.slice(0, 400)}`);
+    let json: Record<string, unknown> | null = null;
+    for (let attempt = 0; attempt < 6; attempt++) {
+      const res = await fetch(this.endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': this.apiKey,
+        },
+        body: JSON.stringify({
+          model: payload.model,
+          input: payload.inputText,
+          questions: questionsObj,
+        }),
+      });
+      if (res.status === 429 && attempt < 5) {
+        await new Promise((r) => setTimeout(r, 36_000));
+        continue;
+      }
+      if (!res.ok) {
+        const body = await res.text();
+        throw new Error(`Decision 1 API error (${res.status}): ${body.slice(0, 400)}`);
+      }
+      json = (await res.json()) as Record<string, unknown>;
+      break;
     }
-    const json = (await res.json()) as Record<string, unknown>;
+    if (!json) {
+      throw new Error('Decision 1 API failed after rate-limit retries.');
+    }
     const rawAnswers = (json.answers ?? json.decisions ?? json.results ?? json) as Record<
       string,
       Record<string, unknown>
@@ -482,7 +493,8 @@ async function runMemoryAuditMode(client: Decision1Client, outPath: string): Pro
 async function runOracleVsJudgeMode(
   client: Decision1Client,
   checkpointPath: string,
-  outPath: string
+  outPath: string,
+  limit = 60
 ): Promise<void> {
   const factsRaw = JSON.parse(
     fs.readFileSync(path.resolve('fixtures', 'task-v3', 'facts.json'), 'utf8')
@@ -508,7 +520,10 @@ async function runOracleVsJudgeMode(
   const samples: JudgeSampleInput[] = [];
   const predictions: JudgePredictionInput[] = [];
 
-  for (const trial of cp.trials ?? []) {
+  const allTrials = cp.trials ?? [];
+  const targetTrials = limit > 0 && allTrials.length > limit ? allTrials.slice(0, limit) : allTrials;
+  for (let idx = 0; idx < targetTrials.length; idx++) {
+    const trial = targetTrials[idx];
     const taskMeta = taskMap.get(trial.taskId);
     if (!taskMeta) continue;
     const sampleId = `${trial.taskId}::${trial.condition}`;
@@ -531,6 +546,7 @@ async function runOracleVsJudgeMode(
 
     const req = buildOracleVsJudgeRequest(sample);
     const res = await client.decide(req);
+    await new Promise((r) => setTimeout(r, 1500));
     const factPredictions = applicableFacts.map((f) => {
       const ans = res.answers.find((a) => a.id === `fact__${f.id}`);
       return {
@@ -540,6 +556,9 @@ async function runOracleVsJudgeMode(
       };
     });
     predictions.push({ sampleId, factPredictions });
+    if ((idx + 1) % 10 === 0 || idx + 1 === targetTrials.length) {
+      console.log(`[Decision1 oracle-vs-judge] ${idx + 1}/${targetTrials.length}`);
+    }
   }
 
   const metrics = evaluateDecision1VsOracle(samples, predictions);
@@ -568,6 +587,9 @@ async function main(): Promise<void> {
       : path.join('out', 'v3-prep', 'decision1-audit.json')
   );
 
+  const limitIdx = args.indexOf('--limit');
+  const limit = limitIdx >= 0 && args[limitIdx + 1] ? Number(args[limitIdx + 1]) : 60;
+
   const client = new Decision1Client();
   if (mode === 'memory-audit') {
     await runMemoryAuditMode(client, outPath);
@@ -575,7 +597,7 @@ async function main(): Promise<void> {
     if (cpIdx < 0 || !args[cpIdx + 1]) {
       throw new Error('--checkpoint <path> is required in oracle-vs-judge mode');
     }
-    await runOracleVsJudgeMode(client, path.resolve(args[cpIdx + 1]), outPath);
+    await runOracleVsJudgeMode(client, path.resolve(args[cpIdx + 1]), outPath, limit);
   } else {
     console.error(
       'Usage: npx tsx scripts/v3/audit-decision1-judge.ts --mode <memory-audit|oracle-vs-judge> [--checkpoint <path>] [--out <path>]'

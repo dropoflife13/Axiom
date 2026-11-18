@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-18T04:39:23.824Z",
+  "generatedAt": "2026-11-18T06:48:35.947Z",
   "protocol": "Ablation v3",
   "blindMode": false,
   "runs": {
@@ -505,6 +505,258 @@
         "hasRevokeWithoutPositiveGrant": 14,
         "missingCreatedAtColumn": 199,
         "missingDeletedAtOnMutable": 149
+      }
+    },
+    "kimi-v3": {
+      "runId": "kimi-v3",
+      "trialsCompleted": 36,
+      "targetTrials": 960,
+      "progressPct": 3.75,
+      "checkpointSha256": "967507703ca53fdce82c28d534e25d0856cdad82fa36f618365a9d34ed4a5de3",
+      "finalized": false,
+      "lastTaskId": "V3-H-005",
+      "lastCondition": "C0",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 5,
+          "meanBoundPct": 0,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "D_safe": {
+          "n": 5,
+          "meanBoundPct": 0,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C": {
+          "n": 5,
+          "meanBoundPct": 0,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0": {
+          "n": 5,
+          "meanBoundPct": 16,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0_clean": {
+          "n": 4,
+          "meanBoundPct": 0,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C_ID": {
+          "n": 4,
+          "meanBoundPct": 0,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 4,
+          "meanBoundPct": 18.75,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "B": {
+          "n": 4,
+          "meanBoundPct": 25,
+          "strictPassPct": 25,
+          "crashes": 0,
+          "tableMissing": 0
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 0,
+        "hasExplicitSupersedesFk": 3,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 33,
+        "inventedLineageCol": 0,
+        "hasHallucinatedLineageCol": 0,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 0,
+        "hasRevokeWithoutPositiveGrant": 0,
+        "missingCreatedAtColumn": 34,
+        "missingDeletedAtOnMutable": 0
+      }
+    },
+    "minimax-v3": {
+      "runId": "minimax-v3",
+      "trialsCompleted": 45,
+      "targetTrials": 960,
+      "progressPct": 4.69,
+      "checkpointSha256": "dd7e1019a8013a5a04d8f2eab4ae741a19037668d2d9a8bb9b0284e1e8ff275a",
+      "finalized": false,
+      "lastTaskId": "V3-H-006",
+      "lastCondition": "C0_clean",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 6,
+          "meanBoundPct": 20,
+          "strictPassPct": 0,
+          "crashes": 2,
+          "tableMissing": 1
+        },
+        "D_safe": {
+          "n": 6,
+          "meanBoundPct": 27.5,
+          "strictPassPct": 0,
+          "crashes": 1,
+          "tableMissing": 1
+        },
+        "C": {
+          "n": 6,
+          "meanBoundPct": 61.666666666666664,
+          "strictPassPct": 16.666666666666668,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0": {
+          "n": 6,
+          "meanBoundPct": 84.16666666666667,
+          "strictPassPct": 33.333333333333336,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0_clean": {
+          "n": 6,
+          "meanBoundPct": 67.5,
+          "strictPassPct": 16.666666666666668,
+          "crashes": 1,
+          "tableMissing": 1
+        },
+        "C_ID": {
+          "n": 5,
+          "meanBoundPct": 85,
+          "strictPassPct": 40,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 5,
+          "meanBoundPct": 49.666,
+          "strictPassPct": 0,
+          "crashes": 0,
+          "tableMissing": 0
+        },
+        "B": {
+          "n": 5,
+          "meanBoundPct": 80,
+          "strictPassPct": 80,
+          "crashes": 1,
+          "tableMissing": 1
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 0,
+        "hasExplicitSupersedesFk": 23,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 22,
+        "inventedLineageCol": 0,
+        "hasHallucinatedLineageCol": 0,
+        "hasUserMetadataLeak": 1,
+        "hasSingularCompositeIndexName": 0,
+        "hasRevokeWithoutPositiveGrant": 1,
+        "missingCreatedAtColumn": 21,
+        "missingDeletedAtOnMutable": 0
+      }
+    },
+    "super-vl-v3": {
+      "runId": "super-vl-v3",
+      "trialsCompleted": 687,
+      "targetTrials": 960,
+      "progressPct": 71.56,
+      "checkpointSha256": "62971efa9483cdf80e32189f3ce501a1b51efbabbb86290226b93a37d2463222",
+      "finalized": false,
+      "lastTaskId": "V3-H-086",
+      "lastCondition": "C0_rand",
+      "blinded": false,
+      "conditionMeans": {
+        "A": {
+          "n": 86,
+          "meanBoundPct": 31.123953488372084,
+          "strictPassPct": 3.488372093023256,
+          "crashes": 54,
+          "tableMissing": 26
+        },
+        "D_safe": {
+          "n": 86,
+          "meanBoundPct": 28.507441860465114,
+          "strictPassPct": 3.488372093023256,
+          "crashes": 53,
+          "tableMissing": 30
+        },
+        "C": {
+          "n": 86,
+          "meanBoundPct": 60.71709302325579,
+          "strictPassPct": 19.767441860465116,
+          "crashes": 35,
+          "tableMissing": 1
+        },
+        "C0": {
+          "n": 86,
+          "meanBoundPct": 69.16651162790698,
+          "strictPassPct": 33.72093023255814,
+          "crashes": 58,
+          "tableMissing": 1
+        },
+        "C0_clean": {
+          "n": 86,
+          "meanBoundPct": 69.70930232558139,
+          "strictPassPct": 30.232558139534884,
+          "crashes": 62,
+          "tableMissing": 0
+        },
+        "C_ID": {
+          "n": 86,
+          "meanBoundPct": 72.01546511627907,
+          "strictPassPct": 36.04651162790697,
+          "crashes": 53,
+          "tableMissing": 0
+        },
+        "C0_rand": {
+          "n": 86,
+          "meanBoundPct": 49.90325581395348,
+          "strictPassPct": 11.627906976744185,
+          "crashes": 33,
+          "tableMissing": 5
+        },
+        "B": {
+          "n": 85,
+          "meanBoundPct": 54.274705882352926,
+          "strictPassPct": 30.58823529411765,
+          "crashes": 50,
+          "tableMissing": 25
+        }
+      },
+      "forensicCounts": {
+        "hasInlineSupersedesFk": 4,
+        "hasExplicitSupersedesFk": 224,
+        "hasDuplicatePrimaryKey": 0,
+        "hasPublicAuthJwt": 0,
+        "hasPublicConstraintQualifier": 0,
+        "omittedSupersedesId": 221,
+        "inventedLineageCol": 55,
+        "hasHallucinatedLineageCol": 55,
+        "hasUserMetadataLeak": 0,
+        "hasSingularCompositeIndexName": 2,
+        "hasRevokeWithoutPositiveGrant": 76,
+        "missingCreatedAtColumn": 87,
+        "missingDeletedAtOnMutable": 13
       }
     }
   }

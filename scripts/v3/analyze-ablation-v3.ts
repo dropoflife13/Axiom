@@ -58,6 +58,7 @@ export const V3_CONTRAST_SPECS: readonly ContrastPairSpec[] = Object.freeze([
   // Secondary reference contrasts
   { name: 'C_vs_A', target: 'C', base: 'A', primary: false, tier: 'secondary' },
   { name: 'C0_vs_C', target: 'C0', base: 'C', primary: false, tier: 'secondary' },
+  { name: 'C_vs_C0_rand', target: 'C', base: 'C0_rand', primary: false, tier: 'secondary' },
   { name: 'B_vs_A', target: 'B', base: 'A', primary: false, tier: 'secondary' },
 ]);
 
@@ -192,6 +193,7 @@ export interface DgrrStratumV3 {
   denominatorCi95: [number, number];
   denominatorExcludesZero: boolean;
   recoveryRatio: number | null;
+  ratioCi95: [number | null, number | null];
   gatedReason: string | null;
 }
 
@@ -220,6 +222,7 @@ export interface AblationV3Report {
   conditions: Record<ConditionV3Id, ConditionSummaryV3>;
   primaryContrasts: ContrastResultV3[];
   tostEquivalence: TostEquivalenceResultV3 | null;
+  tostC0CleanVsCId: TostEquivalenceResultV3 | null;
   didContrast: DidContrastResultV3 | null;
   referenceContrasts: ContrastResultV3[];
   mdeTable: MdeRowV3[];
@@ -1246,6 +1249,15 @@ export function analyzeAblationV3Trials(
   const tostEquivalence = dSafeItem
     ? computeTostEquivalence(dSafeItem.diffs, dSafeItem.spec, dSafeItem.result.ci95, 0.03)
     : null;
+  const c0CleanVsCidItem = computedContrasts.find((c) => c.spec.name === 'C0_clean_vs_C_ID');
+  const tostC0CleanVsCId = c0CleanVsCidItem
+    ? computeTostEquivalence(
+        c0CleanVsCidItem.diffs,
+        c0CleanVsCidItem.spec,
+        c0CleanVsCidItem.result.ci95,
+        0.03
+      )
+    : null;
 
   const primaryPMap = Object.fromEntries(primaryContrasts.map((c) => [c.name, c.signFlipPValue]));
   const holmPrimary = holmAdjust(primaryPMap);
@@ -1312,9 +1324,13 @@ export function analyzeAblationV3Trials(
 
   // (a) Gated Distillation Gap Recovery Ratio (only computed when denominator 95% CI excludes 0)
   const buildDgrr = (ids: string[], mC: number, mCId: number, mC0Clean: number): DgrrStratumV3 => {
-    const denomDiffs = ids
-      .filter((id) => mapC.has(id) && mapC0Clean.has(id))
-      .map((id) => mapC0Clean.get(id)!.boundFactFraction - mapC.get(id)!.boundFactFraction);
+    const validIds = ids.filter((id) => mapC.has(id) && mapC0Clean.has(id) && mapCId.has(id));
+    const denomDiffs = validIds.map(
+      (id) => mapC0Clean.get(id)!.boundFactFraction - mapC.get(id)!.boundFactFraction
+    );
+    const numDiffs = validIds.map(
+      (id) => mapCId.get(id)!.boundFactFraction - mapC.get(id)!.boundFactFraction
+    );
     const denomBoot = pairedBootstrapCiOnly(
       denomDiffs,
       BOOTSTRAP_RESAMPLES,
@@ -1324,6 +1340,33 @@ export function analyzeAblationV3Trials(
     const numerator = mCId - mC;
     const denominatorExcludesZero =
       denomDiffs.length > 0 && (denomBoot.ci95[0] > 0 || denomBoot.ci95[1] < 0);
+
+    let ratioCi95: [number | null, number | null] = [null, null];
+    if (denominatorExcludesZero && validIds.length > 0) {
+      const rand = mulberry32(BOOTSTRAP_SEED);
+      const n = validIds.length;
+      const ratioSamples: number[] = [];
+      for (let r = 0; r < BOOTSTRAP_RESAMPLES; r++) {
+        let sumNum = 0;
+        let sumDen = 0;
+        for (let i = 0; i < n; i++) {
+          const idx = Math.floor(rand() * n);
+          sumNum += numDiffs[idx];
+          sumDen += denomDiffs[idx];
+        }
+        if (Math.abs(sumDen) > 1e-12) {
+          ratioSamples.push(sumNum / sumDen);
+        }
+      }
+      if (ratioSamples.length > 0) {
+        ratioSamples.sort((a, b) => a - b);
+        ratioCi95 = [
+          ratioSamples[Math.floor(0.025 * (ratioSamples.length - 1))],
+          ratioSamples[Math.ceil(0.975 * (ratioSamples.length - 1))],
+        ];
+      }
+    }
+
     return {
       meanC: mC,
       meanCId: mCId,
@@ -1334,6 +1377,7 @@ export function analyzeAblationV3Trials(
       denominatorExcludesZero,
       recoveryRatio:
         denominatorExcludesZero && Math.abs(denominator) > 1e-12 ? numerator / denominator : null,
+      ratioCi95,
       gatedReason: denominatorExcludesZero
         ? null
         : 'Denominator (C0_clean - C) 95% CI includes 0; DGRR gated.',
@@ -1580,6 +1624,7 @@ export function analyzeAblationV3Trials(
     conditions,
     primaryContrasts,
     tostEquivalence,
+    tostC0CleanVsCId,
     didContrast,
     referenceContrasts,
     mdeTable,
