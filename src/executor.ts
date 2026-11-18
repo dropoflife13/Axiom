@@ -216,13 +216,27 @@ export function getModelProfile(model: string): ModelProfile {
       },
     };
   }
-  if (effectiveModel.includes('lightning') || effectiveModel.includes('super-vl')) {
+  if (effectiveModel.includes('lightning')) {
     return {
       model: effectiveModel,
       reasoningMode: 'off',
       reasoningLabel: 'reasoning_effort=none, enable_thinking=false',
       maxTokens: 16384,
       timeoutMs: 180_000,
+      extraRequestBody: {
+        reasoning_effort: 'none',
+        chat_template_kwargs: { enable_thinking: false },
+      },
+    };
+  }
+  if (effectiveModel.includes('super-vl')) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'off',
+      reasoningLabel: 'reasoning_effort=none, enable_thinking=false',
+      maxTokens: 16384,
+      timeoutMs: 180_000,
+      cacheKeySuffix: '|profile=reasoning:none',
       extraRequestBody: {
         reasoning_effort: 'none',
         chat_template_kwargs: { enable_thinking: false },
@@ -236,18 +250,32 @@ export function getModelProfile(model: string): ModelProfile {
       reasoningLabel: 'thinking=false (chat_template_kwargs.thinking)',
       maxTokens: 8192,
       timeoutMs: 180_000,
+      cacheKeySuffix: '|profile=thinking:false',
       extraRequestBody: {
         chat_template_kwargs: { thinking: false },
       },
     };
   }
-  if (effectiveModel.includes('glm') || effectiveModel.includes('minimax')) {
+  if (effectiveModel.includes('glm')) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'low',
+      reasoningLabel: 'reasoning_effort=low',
+      maxTokens: 8192,
+      timeoutMs: 180_000,
+      extraRequestBody: {
+        reasoning_effort: 'low',
+      },
+    };
+  }
+  if (effectiveModel.includes('minimax')) {
     return {
       model: effectiveModel,
       reasoningMode: 'low',
       reasoningLabel: 'reasoning_effort=low',
       maxTokens: 16384,
       timeoutMs: 180_000,
+      cacheKeySuffix: '|profile=reasoning:low',
       extraRequestBody: {
         reasoning_effort: 'low',
       },
