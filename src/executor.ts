@@ -216,7 +216,7 @@ export function getModelProfile(model: string): ModelProfile {
       },
     };
   }
-  if (effectiveModel.includes('lightning')) {
+  if (effectiveModel.includes('lightning') || effectiveModel.includes('super-vl')) {
     return {
       model: effectiveModel,
       reasoningMode: 'off',
@@ -229,12 +229,24 @@ export function getModelProfile(model: string): ModelProfile {
       },
     };
   }
-  if (effectiveModel.includes('glm')) {
+  if (effectiveModel.includes('kimi')) {
+    return {
+      model: effectiveModel,
+      reasoningMode: 'off',
+      reasoningLabel: 'thinking=false (chat_template_kwargs.thinking)',
+      maxTokens: 8192,
+      timeoutMs: 180_000,
+      extraRequestBody: {
+        chat_template_kwargs: { thinking: false },
+      },
+    };
+  }
+  if (effectiveModel.includes('glm') || effectiveModel.includes('minimax')) {
     return {
       model: effectiveModel,
       reasoningMode: 'low',
       reasoningLabel: 'reasoning_effort=low',
-      maxTokens: 8192,
+      maxTokens: 16384,
       timeoutMs: 180_000,
       extraRequestBody: {
         reasoning_effort: 'low',
