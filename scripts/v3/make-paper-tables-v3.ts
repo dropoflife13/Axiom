@@ -5,13 +5,16 @@ import type { QuarantineFile, ValidityGateV3Result } from './realtime-research-d
 import type { FlagValidityMetrics } from './validate-forensic-flags.js';
 import { V3_CONDITIONS } from '../../src/eval/ablation-v3.js';
 
-const RUN_ORDER = [
+const ALL_RUN_CANDIDATES = [
   { runId: 'nemotron-v3', label: 'Nemotron-3 Ultra 550B' },
   { runId: 'gemini-3.5-flash-lite-v3', label: 'Gemini 3.5 Flash-Lite' },
   { runId: 'gemini-3.1-flash-lite-v3', label: 'Gemini 3.1 Flash-Lite' },
   { runId: 'glm5-v3', label: 'GLM-5.3 Flash' },
   { runId: 'qwen27b-v3', label: 'Qwen 3.8 27B' },
   { runId: 'gemma4-31b-v3', label: 'Gemma 4 31B' },
+  { runId: 'kimi-v3', label: 'Kimi K3.1 Pro' },
+  { runId: 'minimax-v3', label: 'MiniMax M3.1 Flash' },
+  { runId: 'super-vl-v3', label: 'Nemotron 3.5 Super VL 120B' },
 ] as const;
 
 function pct(val: number, digits = 1): string {
@@ -56,11 +59,15 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
   ) as QuarantineFile;
 
   const analyses = new Map<string, AblationV3Report>();
-  for (const r of RUN_ORDER) {
-    analyses.set(
-      r.runId,
-      JSON.parse(fs.readFileSync(path.join(outDir, `analysis-${r.runId}.json`), 'utf8')) as AblationV3Report
-    );
+  const RUN_ORDER: Array<(typeof ALL_RUN_CANDIDATES)[number]> = [];
+  for (const r of ALL_RUN_CANDIDATES) {
+    const p = path.join(outDir, `analysis-${r.runId}.json`);
+    if (!fs.existsSync(p)) continue;
+    const rep = JSON.parse(fs.readFileSync(p, 'utf8')) as AblationV3Report;
+    if (rep.totalTrials === 960) {
+      RUN_ORDER.push(r);
+      analyses.set(r.runId, rep);
+    }
   }
 
   const totalTrials = RUN_ORDER.reduce((s, r) => s + analyses.get(r.runId)!.totalTrials, 0);

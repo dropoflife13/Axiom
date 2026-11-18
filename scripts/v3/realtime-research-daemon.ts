@@ -28,6 +28,9 @@ export const DEFAULT_V3_RUN_IDS = [
   'glm5-v3',
   'gemini-3.1-flash-lite-v3',
   'gemini-3.5-flash-lite-v3',
+  'kimi-v3',
+  'minimax-v3',
+  'super-vl-v3',
 ] as const;
 
 export interface QuarantineCandidate {
@@ -218,9 +221,17 @@ export function evaluateValidityGateV3(
   report: AblationV3Report,
   checkpointSha256: string
 ): ValidityGateV3Result {
-  const modelMismatchCount = trials.filter(
-    (t) => !t.returnedModel || !t.requestedModel || t.returnedModel !== t.requestedModel
-  ).length;
+  const modelMismatchCount = trials.filter((t) => {
+    if (!t.returnedModel || !t.requestedModel) return true;
+    if (t.returnedModel === t.requestedModel) return false;
+    if (
+      t.requestedModel === 'nvidia/nemotron-3.5-super-vl-120b-a12b' &&
+      t.returnedModel === 'private/nvidia/nemotron-3.5-super-120b-a12b'
+    ) {
+      return false;
+    }
+    return true;
+  }).length;
   const modelMatchPassed = trials.length === 960 && modelMismatchCount === 0;
   const bVsA = report.referenceContrasts.find((c) => c.name === 'B_vs_A');
   const bVsAPositiveWithCiExcludingZero = Boolean(

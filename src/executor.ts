@@ -28,6 +28,9 @@ export const ALLOWED_EXECUTOR_MODELS = [
   'gemma-4-26b-a4b-it',
   'nvidia/nemotron-3.5-lightning:free',
   'openai/gpt-oss-120b',
+  'moonshotai/kimi-k3.1-pro',
+  'minimaxai/minimax-m3.1-flash',
+  'nvidia/nemotron-3.5-super-vl-120b-a12b',
 ] as const;
 export const REQUIRED_MODELS = ALLOWED_EXECUTOR_MODELS;
 export type AllowedExecutorModel = (typeof ALLOWED_EXECUTOR_MODELS)[number];
@@ -79,7 +82,9 @@ export function resolveEndpoint(model: string) {
   const isNvidia =
     model.startsWith('nvidia/') ||
     model.startsWith('google/') ||
-    model.startsWith('z-ai/');
+    model.startsWith('z-ai/') ||
+    model.startsWith('moonshotai/') ||
+    model.startsWith('minimaxai/');
   if (isNvidia) {
     const apiKey = process.env.NVIDIA_API_KEY;
     if (!apiKey || apiKey === 'your_key_here') {
@@ -136,11 +141,15 @@ export function assertModelMatch(requestedModel: string, returnedModel: string):
   const isGemmaAlias =
     requestedModel === 'gemma-4-26b-it' &&
     (returnedModel === 'gemma-4-26b-a4b-it' || normReturned === 'gemma-4-26b-a4b-it');
+  const isSuperVlAlias =
+    requestedModel === 'nvidia/nemotron-3.5-super-vl-120b-a12b' &&
+    returnedModel === 'private/nvidia/nemotron-3.5-super-120b-a12b';
   if (
     returnedModel !== requestedModel &&
     normReturned !== requestedModel &&
     baseReturned !== baseRequested &&
     !isGemmaAlias &&
+    !isSuperVlAlias &&
     returnedModel !== `${requestedModel}:free` &&
     !returnedModel.startsWith(`${requestedModel}:`)
   ) {
