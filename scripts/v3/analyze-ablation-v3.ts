@@ -685,16 +685,24 @@ export function fitAblationV3Lpmm(
   const qFactCond = factCondMap.size;
   if (N === 0 || qTask < 2) return null;
 
-  let minLogTok = Infinity;
-  let maxLogTok = -Infinity;
-  let sumLogTok = 0;
+  let minCenteredLogTok = Infinity;
+  let maxCenteredLogTok = -Infinity;
+  const sumLogTokByCond = new Float64Array(V3_CONDITIONS.length);
+  const countLogTokByCond = new Int32Array(V3_CONDITIONS.length);
   for (const r of rows) {
-    if (r.logPromptTokens < minLogTok) minLogTok = r.logPromptTokens;
-    if (r.logPromptTokens > maxLogTok) maxLogTok = r.logPromptTokens;
-    sumLogTok += r.logPromptTokens;
+    sumLogTokByCond[r.condIdx] += r.logPromptTokens;
+    countLogTokByCond[r.condIdx] += 1;
   }
-  const meanLogTok = sumLogTok / N;
-  const hasLogTokCovariate = maxLogTok - minLogTok > 1e-9;
+  const meanLogTokByCond = new Float64Array(V3_CONDITIONS.length);
+  for (let c = 0; c < V3_CONDITIONS.length; c++) {
+    meanLogTokByCond[c] = countLogTokByCond[c] > 0 ? sumLogTokByCond[c] / countLogTokByCond[c] : 0;
+  }
+  for (const r of rows) {
+    const centered = r.logPromptTokens - meanLogTokByCond[r.condIdx];
+    if (centered < minCenteredLogTok) minCenteredLogTok = centered;
+    if (centered > maxCenteredLogTok) maxCenteredLogTok = centered;
+  }
+  const hasLogTokCovariate = maxCenteredLogTok - minCenteredLogTok > 1e-9;
   const logTokCol = V3_CONDITIONS.length;
   const p = hasLogTokCovariate ? V3_CONDITIONS.length + 1 : V3_CONDITIONS.length;
 
@@ -726,7 +734,7 @@ export function fitAblationV3Lpmm(
       offCell + r.cellIdx,
       offFactCond + r.factCondIdx,
     ];
-    const centeredLogTok = r.logPromptTokens - meanLogTok;
+    const centeredLogTok = r.logPromptTokens - meanLogTokByCond[r.condIdx];
     for (const a of idxs) {
       for (const b of idxs) incZtz(a, b);
       // X has intercept (col 0), dummy for condIdx >= 1, and optional logPromptTokens
@@ -792,7 +800,7 @@ export function fitAblationV3Lpmm(
     }
 
     const lM = cholesky(mMat, qTotal);
-    if (!lM) return { deviance: 1e12, beta: null, xtvInvXInv: null, alpha: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
+    if (!lM) return { deviance: 1e12, beta: null, xtvInvXInv: null, alpha: null, vInvXWeights: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
 
     let logDetM = 0;
     for (let i = 0; i < qTotal; i++) logDetM += 2 * Math.log(lM[i][i]);
@@ -832,7 +840,7 @@ export function fitAblationV3Lpmm(
     }
 
     const lX = cholesky(xtvInvX, p);
-    if (!lX) return { deviance: 1e12, beta: null, xtvInvXInv: null, alpha: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
+    if (!lX) return { deviance: 1e12, beta: null, xtvInvXInv: null, alpha: null, vInvXWeights: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
 
     let logDetXtVX = 0;
     for (let i = 0; i < p; i++) logDetXtVX += 2 * Math.log(lX[i][i]);
@@ -850,7 +858,7 @@ export function fitAblationV3Lpmm(
 
     const deviance = logDetV + logDetXtVX + Math.max(0, quad);
     if (!computeDetails) {
-      return { deviance, beta: null, xtvInvXInv: null, alpha: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
+      return { deviance, beta: null, xtvInvXInv: null, alpha: null, vInvXWeights: null, sigmaE2, vars: [vTask, vFact, vCell, vFactCond] };
     }
 
     const xtvInvXInv = invertFromCholesky(lX, p);
@@ -861,12 +869,18 @@ export function fitAblationV3Lpmm(
       for (let c = 0; c < p; c++) s -= beta[c] * solX[c][i];
       alpha[i] = invS2 * sdVec[i] * s;
     }
+    const vInvXWeights: Float64Array[] = Array.from({ length: p }, (_, c) => {
+      const w = new Float64Array(qTotal);
+      for (let i = 0; i < qTotal; i++) w[i] = invS2 * sdVec[i] * solX[c][i];
+      return w;
+    });
 
     return {
       deviance,
       beta,
       xtvInvXInv,
       alpha,
+      vInvXWeights,
       sigmaE2,
       vars: [vTask, vFact, vCell, vFactCond],
     };
@@ -878,30 +892,46 @@ export function fitAblationV3Lpmm(
     220
   );
   const fit = evalReml(opt.x, true);
-  if (!fit.beta || !fit.xtvInvXInv || !fit.alpha) return null;
+  if (!fit.beta || !fit.xtvInvXInv || !fit.alpha || !fit.vInvXWeights) return null;
 
   const beta = fit.beta;
   const xtvInvXInv = fit.xtvInvXInv;
-  const alpha = fit.alpha;
+  const vInvXWeights = fit.vInvXWeights;
   const sigmaE2 = fit.sigmaE2;
+  const invS2 = 1 / sigmaE2;
 
-  // CR1 task-clustered sandwich covariance
+  // CR1 task-clustered sandwich covariance using matched (V^{-1} X)_g^T (y_g - X_g beta)
   const scores: Float64Array[] = Array.from({ length: qTask }, () => new Float64Array(p));
   for (const r of rows) {
-    const centeredLogTok = r.logPromptTokens - meanLogTok;
+    const centeredLogTok = r.logPromptTokens - meanLogTokByCond[r.condIdx];
     const xb =
       beta[0] +
       (r.condIdx > 0 ? beta[r.condIdx] : 0) +
       (hasLogTokCovariate ? beta[logTokCol] * centeredLogTok : 0);
-    const zb =
-      alpha[r.taskIdx] +
-      alpha[offFact + r.factIdx] +
-      alpha[offCell + r.cellIdx] +
-      alpha[offFactCond + r.factCondIdx];
-    const vInvEi = (r.y - xb - zb) / sigmaE2;
-    scores[r.taskIdx][0] += vInvEi;
-    if (r.condIdx > 0) scores[r.taskIdx][r.condIdx] += vInvEi;
-    if (hasLogTokCovariate) scores[r.taskIdx][logTokCol] += vInvEi * centeredLogTok;
+    const resid = r.y - xb;
+    const zIdxs = [
+      r.taskIdx,
+      offFact + r.factIdx,
+      offCell + r.cellIdx,
+      offFactCond + r.factCondIdx,
+    ];
+    for (let c = 0; c < p; c++) {
+      const xrc =
+        c === 0
+          ? 1
+          : c === r.condIdx
+            ? 1
+            : hasLogTokCovariate && c === logTokCol
+              ? centeredLogTok
+              : 0;
+      const zw =
+        vInvXWeights[c][zIdxs[0]] +
+        vInvXWeights[c][zIdxs[1]] +
+        vInvXWeights[c][zIdxs[2]] +
+        vInvXWeights[c][zIdxs[3]];
+      const vInvXrc = invS2 * (xrc - zw);
+      scores[r.taskIdx][c] += vInvXrc * resid;
+    }
   }
 
   const meat: Float64Array[] = Array.from({ length: p }, () => new Float64Array(p));
