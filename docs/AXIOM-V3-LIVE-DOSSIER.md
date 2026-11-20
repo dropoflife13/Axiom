@@ -1,8 +1,8 @@
 # Axiom Ablation v3 — Live Research Dossier
 
-**Generated At:** 2026-11-18T06:48:35.947Z  
+**Generated At:** 2026-11-20T06:40:56.817Z  
 **Protocol:** Ablation v3 (`K=10`, Temperature `0`, 120 held-out `V3-H-001`..`V3-H-120` × 8 conditions = 960 trials/model)  
-**Finalized Models (960/960):** 6 / 9  
+**Finalized Models (960/960):** 8 / 9  
 **Quarantined Self-Healing Candidates:** 6 (`6` ready for next-generation promotion)
 
 ---
@@ -17,9 +17,9 @@
 | glm5-v3 | 960/960 | V3-H-120 B | 34.9% | 37.8% | 65.7% | 80.6% | 83.9% | 89.3% | 53.7% | 89.8% |
 | gemini-3.1-flash-lite-v3 | 960/960 | V3-H-120 B | 46.8% | 46.6% | 59.8% | 86.0% | 89.2% | 84.3% | 60.5% | 90.3% |
 | gemini-3.5-flash-lite-v3 | 960/960 | V3-H-120 B | 33.0% | 32.0% | 62.2% | 74.6% | 74.5% | 78.0% | 55.0% | 93.8% |
-| kimi-v3 | 36/960 | V3-H-005 C0 | 0.0% | 0.0% | 0.0% | 16.0% | 0.0% | 0.0% | 18.8% | 25.0% |
-| minimax-v3 | 45/960 | V3-H-006 C0_clean | 20.0% | 27.5% | 61.7% | 84.2% | 67.5% | 85.0% | 49.7% | 80.0% |
-| super-vl-v3 | 687/960 | V3-H-086 C0_rand | 31.1% | 28.5% | 60.7% | 69.2% | 69.7% | 72.0% | 49.9% | 54.3% |
+| kimi-v3 | 960/960 | V3-H-120 B | 39.7% | 38.6% | 71.1% | 87.0% | 87.9% | 87.6% | 61.5% | 94.6% |
+| minimax-v3 | 750/960 | V3-H-094 C_ID | 25.0% | 28.8% | 52.3% | 79.4% | 79.4% | 82.4% | 54.0% | 90.3% |
+| super-vl-v3 | 960/960 | V3-H-120 B | 43.8% | 42.6% | 63.2% | 74.7% | 74.4% | 76.7% | 57.1% | 61.9% |
 
 ---
 
@@ -33,6 +33,8 @@
 | glm5-v3 | 960 | PASS | PASS | 54.88 [48.90, 60.76] | **PASS** |
 | qwen27b-v3 | 960 | PASS | PASS | 42.97 [36.71, 49.03] | **PASS** |
 | gemma4-31b-v3 | 960 | PASS | PASS | 54.96 [49.18, 60.61] | **PASS** |
+| super-vl-v3 | 960 | PASS | PASS | 18.10 [9.17, 26.99] | **PASS** |
+| kimi-v3 | 960 | PASS | PASS | 54.90 [49.97, 59.81] | **PASS** |
 
 ---
 
@@ -70,6 +72,16 @@
 | gemma4-31b-v3 | C0_clean_vs_C_ID | -2.07 | [-7.39, 3.07] | 4.54e-1 | 9.07e-1 |
 | gemma4-31b-v3 | C0_clean_vs_C0_rand | 23.99 | [17.36, 30.24] | 1.00e-5 | 5.00e-5 |
 | gemma4-31b-v3 | C_ID_vs_D_safe | 45.71 | [40.08, 51.28] | 1.00e-5 | 5.00e-5 |
+| super-vl-v3 | C_ID_vs_C | 13.50 | [9.64, 17.51] | 1.00e-5 | 5.00e-5 |
+| super-vl-v3 | C0_clean_vs_C0 | -0.37 | [-3.00, 2.31] | 7.92e-1 | 7.92e-1 |
+| super-vl-v3 | C0_clean_vs_C_ID | -2.36 | [-4.60, -0.17] | 4.00e-2 | 8.00e-2 |
+| super-vl-v3 | C0_clean_vs_C0_rand | 17.31 | [12.28, 22.39] | 1.00e-5 | 5.00e-5 |
+| super-vl-v3 | C_ID_vs_D_safe | 34.13 | [27.71, 40.60] | 1.00e-5 | 5.00e-5 |
+| kimi-v3 | C_ID_vs_C | 16.47 | [13.18, 19.83] | 1.00e-5 | 5.00e-5 |
+| kimi-v3 | C0_clean_vs_C0 | 0.93 | [-1.38, 3.50] | 4.94e-1 | 9.87e-1 |
+| kimi-v3 | C0_clean_vs_C_ID | 0.35 | [-0.58, 1.40] | 5.64e-1 | 9.87e-1 |
+| kimi-v3 | C0_clean_vs_C0_rand | 26.49 | [21.19, 31.68] | 1.00e-5 | 5.00e-5 |
+| kimi-v3 | C_ID_vs_D_safe | 48.96 | [44.33, 53.61] | 1.00e-5 | 5.00e-5 |
 
 ---
 
@@ -84,16 +96,16 @@
 | glm5-v3 | 38 | 218 | 31 | 15 | 0 | 19 |
 | gemini-3.1-flash-lite-v3 | 30 | 198 | 33 | 0 | 0 | 0 |
 | gemini-3.5-flash-lite-v3 | 24 | 214 | 24 | 0 | 0 | 17 |
-| kimi-v3 | 0 | 3 | 0 | 0 | 0 | 0 |
-| minimax-v3 | 0 | 23 | 0 | 0 | 0 | 0 |
-| super-vl-v3 | 4 | 224 | 55 | 0 | 0 | 2 |
+| kimi-v3 | 2 | 230 | 13 | 0 | 0 | 14 |
+| minimax-v3 | 0 | 255 | 18 | 0 | 0 | 2 |
+| super-vl-v3 | 4 | 237 | 59 | 0 | 0 | 2 |
 
 ### Quarantined Candidate Rules (`.axiom-state/quarantine/v3-candidates.json`)
 | Candidate ID | Fact | Trigger Flag | Observed | Linter | Tokens | Ready |
 |---|---|---|---:|:---:|:---:|:---:|
-| Q-F-05-missingCreatedAtColumn | F-05 | missingCreatedAtColumn | 395 | PASS | PASS | YES |
-| Q-F-26-hasUserMetadataLeak | F-26 | hasUserMetadataLeak | 36 | PASS | PASS | YES |
-| Q-F-18-hasSingularCompositeIndexName | F-18 | hasSingularCompositeIndexName | 10 | PASS | PASS | YES |
+| Q-F-05-missingCreatedAtColumn | F-05 | missingCreatedAtColumn | 499 | PASS | PASS | YES |
+| Q-F-26-hasUserMetadataLeak | F-26 | hasUserMetadataLeak | 39 | PASS | PASS | YES |
+| Q-F-18-hasSingularCompositeIndexName | F-18 | hasSingularCompositeIndexName | 11 | PASS | PASS | YES |
 | Q-F-01-hasDuplicatePrimaryKey | F-01 | hasDuplicatePrimaryKey | 6 | PASS | PASS | YES |
-| Q-F-19-hasRevokeWithoutPositiveGrant | F-19 | hasRevokeWithoutPositiveGrant | 3 | PASS | PASS | YES |
+| Q-F-19-hasRevokeWithoutPositiveGrant | F-19 | hasRevokeWithoutPositiveGrant | 4 | PASS | PASS | YES |
 | Q-F-10-missingDeletedAtOnMutable | F-10 | missingDeletedAtOnMutable | 3 | PASS | PASS | YES |
