@@ -37,12 +37,14 @@ All Ablation v3 runs enforce strict startup and resume hash verification against
 
 ---
 
-## 3. Pre-Registered Experimental Conditions ($K = 10$, Temperature $= 0$)
+## 3. Pre-Registered Experimental Conditions ($K = 10$, Requested `temperature = 0`)
+
+> **Decoding Disclosure:** Requested `temperature = 0` uniformly; provider-enforced sampling is disclosed for `Gemini 3.5 Flash-Lite` (API deprecates/ignores `temperature`, `top_p`, `top_k`) and `Kimi K3.1 Pro` (fixed `temperature = 1.0, top_p = 0.95` with always-on reasoning).
 
 Each held-out test task (`V3-H-001`..`V3-H-120`) is evaluated once per condition (960 independent single-shot generations per model; no retry or reflection loop):
 
 1. **`A` (Zero-Shot Baseline):** Task prompt only (`hint = undefined`).
-2. **`D_safe` (Neutral PostgreSQL Internals Control):** 8 purely descriptive PostgreSQL storage/MVCC/WAL internals notes (`D_SAFE_TIPS`, zero DDL keywords).
+2. **`D_safe` (Neutral PostgreSQL Internals Control):** 8 purely descriptive PostgreSQL storage/MVCC/WAL internals notes (`D_SAFE_TIPS`, zero DDL keywords; redesigned after v2's imperative placebo triggered schema-qualification syntax errors).
 3. **`C` (Distilled Retrieval, v2):** Top $K=10$ applicable distilled lessons retrieved from `.axiom-state/memory.json`.
 4. **`C0` (Verbatim Retrieval, Uncorrected v2 Statements):** Exact same Top $K=10$ fact IDs retrieved for `C`, mapped to original v2 statements in `fixtures/task-v2/facts.json`.
 5. **`C0_clean` (Verbatim Retrieval, Repaired v3 Statements):** Exact same Top $K=10$ fact IDs retrieved for `C`, mapped to repaired v3 statements in `fixtures/task-v3/facts.json`.

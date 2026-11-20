@@ -415,18 +415,35 @@ export class Decision1Client {
           : typeof item?.probability === 'number'
             ? item.probability
             : 0.5;
-      let val: boolean | string | number =
-        (item?.value as boolean | string | number) ??
-        (item?.answer as boolean | string | number) ??
-        (item?.choice as string) ??
-        (item?.expectedScore as number) ??
-        false;
-      if (q.type === 'bool' && typeof val !== 'boolean') {
-        if (typeof item?.probability === 'number') {
+      let val: boolean | string | number;
+      if (q.type === 'bool') {
+        if (typeof item?.value === 'boolean') {
+          val = item.value;
+        } else if (typeof item?.answer === 'boolean') {
+          val = item.answer;
+        } else if (typeof item?.noul === 'number') {
+          val = item.noul >= 0.5;
+        } else if (typeof item?.probability === 'number') {
           val = item.probability >= 0.5;
-        } else if (typeof val === 'string') {
-          val = val.toLowerCase() === 'yes' || val.toLowerCase() === 'true';
+        } else if (typeof item?.value === 'string') {
+          val = item.value.toLowerCase() === 'yes' || item.value.toLowerCase() === 'true';
+        } else if (typeof item?.answer === 'string') {
+          val = item.answer.toLowerCase() === 'yes' || item.answer.toLowerCase() === 'true';
+        } else {
+          val = false;
         }
+      } else if (q.type === 'score') {
+        val =
+          (typeof item?.score === 'number' ? item.score : undefined) ??
+          (typeof item?.expectedScore === 'number' ? item.expectedScore : undefined) ??
+          (typeof item?.value === 'number' ? item.value : undefined) ??
+          0;
+      } else {
+        val =
+          (item?.choice as string) ??
+          (item?.value as string) ??
+          (item?.answer as string) ??
+          '';
       }
       return {
         id: q.id,
@@ -439,11 +456,14 @@ export class Decision1Client {
     const usage = json.usageMetadata as
       | { promptTokenCount?: number; candidatesTokenCount?: number }
       | undefined;
+    const v1Usage = json.usage as
+      | { total_input_tokens?: number; total_output_tokens?: number }
+      | undefined;
     return {
       model: payload.model,
       answers,
-      promptTokens: usage?.promptTokenCount,
-      outputTokens: usage?.candidatesTokenCount ?? 0,
+      promptTokens: v1Usage?.total_input_tokens ?? usage?.promptTokenCount,
+      outputTokens: v1Usage?.total_output_tokens ?? usage?.candidatesTokenCount ?? 0,
     };
   }
 }

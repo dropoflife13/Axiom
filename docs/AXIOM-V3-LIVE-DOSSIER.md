@@ -1,7 +1,7 @@
 # Axiom Ablation v3 — Live Research Dossier
 
-**Generated At:** 2026-11-20T16:32:43.663Z  
-**Protocol:** Ablation v3 (`K=10`, Temperature `0`, 120 held-out `V3-H-001`..`V3-H-120` × 8 conditions = 960 trials/model)  
+**Generated At:** 2026-11-20T17:34:19.054Z  
+**Protocol:** Ablation v3 (`K=10`, 120 held-out `V3-H-001`..`V3-H-120` × 8 conditions = 960 trials/model; requested `temperature = 0` uniformly; provider-enforced sampling is disclosed for `Gemini 3.5 Flash-Lite` [API deprecates/ignores `temperature`, `top_p`, `top_k`] and `Kimi K3.1 Pro` [fixed `temperature = 1.0, top_p = 0.95` with always-on reasoning])  
 **Finalized Models (960/960):** 9 / 9  
 **Quarantined Self-Healing Candidates:** 6 (`6` ready for next-generation promotion)
 

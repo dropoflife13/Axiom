@@ -71,7 +71,7 @@ The Track 2 evaluation harness decouples generation, retrieval, execution, and a
 ```
 
 ### 2.1 Model Generation Executor
-The Executor (`src/executor.ts`) interfaces with model endpoints via OpenAI-compatible APIs (NVIDIA NIM and Google AI Studio) using greedy decoding (`temperature = 0`). It enforces strict model verification (`assert returnedModel === requestedModel`) on every API completion. Transient network errors (HTTP 429, 5xx) trigger exponential backoff retries (capped at 3 attempts); deterministic provider failures (`length` truncation, `content-filter`, or empty responses) are recorded losslessly without terminating the harness.
+The Executor (`src/executor.ts`) interfaces with model endpoints via OpenAI-compatible APIs (NVIDIA NIM, Groq, and Google AI Studio). Requested `temperature = 0` uniformly; provider-enforced sampling is disclosed for `Gemini 3.5 Flash-Lite` (API deprecates/ignores `temperature`, `top_p`, `top_k`) and `Kimi K3.1 Pro` (fixed `temperature = 1.0, top_p = 0.95` with always-on reasoning). It enforces strict model verification (`assert returnedModel === requestedModel`) on every API completion. Transient network errors (HTTP 429, 5xx) trigger exponential backoff retries (capped at 3 attempts); deterministic provider failures (`length` truncation, `content-filter`, or empty responses) are recorded losslessly without terminating the harness.
 
 ### 2.2 Failure-Prioritized Rule Retrieval Engine
 The Retrieval Engine (`src/memory.ts`) matches historical failure rules to active task prompts based on structured feature flags (`tenant`, `append_only`, `ingestion`). Lessons were harvested from offline training failures where an Advisor (`deepseek-ai/deepseek-v4.1-flash`) summarized failure traces into concise natural language rules ($\le 24$ words). Crucially, retrieval does not execute an LLM: it ranks candidate rules deterministically by:
@@ -354,8 +354,8 @@ Table A1 documents the complete campaign execution ledger across all completed, 
 
 1. Mishra, S., & Mishra, S. (2026). *When Does Memory Help? A Cost-Aware Evaluation of Long-Term Memory in Tool-Using LLM Agents*. arXiv preprint arXiv:2609.05441.
 2. Prokopiou, I., Aidinis, A., Kyrmpatsos, P.-C., & Vikatos, P. (2026). *What Drives Recovery in Agentic Text-to-Cypher? LAST-CQ: An LLM Agent Self-Refinement Framework*. Workshop on Reasoning and Learning with External Knowledge for LLMs (REALM @ EMNLP 2026). arXiv:2609.12746.
-3. Shen, M., Zha, K.-W., He, Z., & Wornell, G. W. (2026). *Decocted Experience Improves Test-Time Inference in LLM Agents*. Conference on Language Modeling (COLM 2026). arXiv:2604.04373.
+3. Shen, M., Zha, K.-W., He, Z., & Wornell, G. W. (2026). *Decocted Experience Improves Test-Time Inference in LLM Agents*. arXiv preprint arXiv:2604.04373.
 4. Shinn, N., Cassano, F., Gopinath, A., Narasimhan, K., & Yao, S. (2023). *Reflexion: Language Agents with Verbal Reinforcement Learning*. Advances in Neural Information Processing Systems (NeurIPS 2023), 36. arXiv:2303.11366.
-5. Vo, K. N. H., Chu, T. M., Dinh, A. T. D., Bui, T. V. H., & Quan, T. (2026). *Causal Episodic Memory for Feedback-Driven Agent Repair (MERIT)*. Workshop on Reasoning and Learning with External Knowledge for LLMs (REALM @ EMNLP 2026). arXiv:2608.05906.
-6. Zhang, D., Lin, Y., Wu, Z., Sun, Y., Li, B., Li, D., & Peng, H. (2026). *Useful Memories Become Faulty When Continuously Updated by LLMs*. NeurIPS 2026 Workshop. arXiv:2605.12978.
+5. Vo, K. N. H., Chu, T. M., Dinh, A. T. D., Bui, T. V. H., & Quan, T. (2026). *Causal Episodic Memory for Feedback-Driven Agent Repair (MERIT)*. arXiv preprint arXiv:2608.05906.
+6. Zhang, D., Lin, Y., Wu, Z., Sun, Y., Li, B., Li, D., & Peng, H. (2026). *Useful Memories Become Faulty When Continuously Updated by LLMs*. arXiv preprint arXiv:2605.12978.
 7. Zhao, W., Wang, Y., Zhang, Y., Deng, Y., Zhao, Y., Che, W., Qin, B., & Liu, T. (2026). *Large Language Model Agents Are Not Always Faithful Self-Evolvers*. International Conference on Machine Learning (ICML 2026). arXiv:2601.22436.
