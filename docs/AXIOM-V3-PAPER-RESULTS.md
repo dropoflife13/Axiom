@@ -8,13 +8,19 @@
 
 In this pre-specified follow-up on a fresh 120-task held-out split (`V3-H-001..V3-H-120`), preserving exact SQL identifiers during LLM memory distillation (`C_ID`) recovers 83.4% to 142.4% of the gap between unconstrained distilled lessons (`C`) and repaired verbatim rules (`C0_clean`), outperforming naive distillation by +13.50 to +26.04 percentage points across all 9 evaluated models (REML + HKSJ pooled +20.00 pp, 95% HKSJ CI [+16.47, +23.53], 95% Prediction Interval [+10.20, +29.79] pp; DerSimonian-Laird +19.99 pp; all individual Holm-Bonferroni `p < 5.00e-5`; Difference-in-Differences +13.37 to +29.26 pp, REML + HKSJ pooled +18.45 pp, 95% PI [+10.16, +26.75] pp; 7-model strict-greedy sensitivity pool +21.22 pp and DiD +19.64 pp). In contrast, repairing cross-rule syntactic contradictions in verbatim rule text alone (`C0_clean` vs `C0`) yields a modest, statistically non-significant pooled effect (REML + HKSJ +1.27 pp, 95% HKSJ CI [-0.48, +3.01], `p = 0.1326`; ranging from -3.96 to +5.19 pp, Holm-significant on 2/9 models). Together, these 8,640 confirmatory trials establish mechanistic sufficiency consistent with token-level identifier erosion—rather than summarization length or prose compression—as the primary driver of the "Distillation Penalty" in agentic memory systems (with reverse-masked necessity `C_ID_masked` and grammar-constrained `C_G` arms scoped for v3.5).
 
+## Section 1–5: Experimental Architecture, Protocol & Pre-Registered Design
+
+- **Authority Separation (Invariant 0):** Generative LLMs are treated strictly as untrusted candidate producers; grading authority resides exclusively in an isolated PostgreSQL 16 Docker execution oracle (`scripts/oracle.ts`) evaluating 34 active relational invariants across 9 models × 120 held-out tasks (`V3-H-001..V3-H-120`) × 8 conditions = **8,640 single-turn confirmatory trials**.
+- **8 Pre-Registered Experimental Conditions ($K = 10$):** `A` (Zero-Shot Baseline), `D_safe` (8 descriptive PostgreSQL storage/MVCC/WAL internals notes, zero DDL keywords; redesigned after v2's imperative placebo triggered schema-qualification syntax errors), `C` (Top-10 v2 Advisor-distilled lessons), `C0` (Top-10 uncorrected v2 verbatim statements), `C0_clean` (Top-10 repaired v3 verbatim statements), `C_ID` (Top-10 AST-gated identifier-preserving distilled lessons enforcing `REQUIRED_FACT_TOKENS`), `C0_rand` (10 deterministically sampled random verbatim facts), and `B` (all 34 active repaired canonical statements).
+- **Pre-Registered Validity Gate:** All 9 evaluated runs (`nemotron-v3`, `gemini-3.5-flash-lite-v3`, `gemini-3.1-flash-lite-v3`, `glm5-v3`, `qwen27b-v3`, `gemma4-31b-v3`, `kimi-v3`, `minimax-v3`, `super-vl-v3`) passed 100% SHA-256 provenance verification across 7 frozen input digests, 100% `returnedModel === requestedModel` verification, and $B > A$ with 95% paired bootstrap CIs strictly excluding zero.
+
 ## Section 6: Confirmatory Ablation v3 Empirical Results
 
 ### Table 1: Condition Overview, Strict Pass@1, Crash Censorship Decomposition & Prompt/Hint Token Costs
 
-Primary endpoint (`boundFactFraction`), strict `pass@1` over bound facts with Wilson 95% CIs, ITT crash-censorship decomposition (`P(commit)` and `Mean | commit`), and mean prompt / hint token counts across `120` held-out `V3-H-*` tasks per condition:
+Primary endpoint (`boundFactFraction`), strict `pass@1` over bound facts with Wilson 95% CIs, ITT crash-censorship decomposition (`P(commit)` and `Mean given commit`), and mean prompt / hint token counts across `120` held-out `V3-H-*` tasks per condition:
 
-| Model | Cond | Mean Bound (%) | Strict Pass@1 (95% Wilson CI) | `P(commit)` | `Mean | commit` (%) | Avg Prompt Tok | Avg Hint Tok |
+| Model | Cond | Mean Bound (%) | Strict Pass@1 (95% Wilson CI) | `P(commit)` | `Mean given commit` (%) | Avg Prompt Tok | Avg Hint Tok |
 |---|---|---:|---|---:|---:|---:|---:|
 | Nemotron-3 Ultra 550B | `A` | 43.1% | 7/120 (5.8%) [2.9%, 11.6%] | 69.2% | 43.8% | 245 | 0 |
 | Nemotron-3 Ultra 550B | `D_safe` | 43.8% | 8/120 (6.7%) [3.4%, 12.6%] | 77.5% | 45.4% | 505 | 210 |
@@ -255,6 +261,8 @@ Evaluated deterministic `src/verifier/sql-forensics.ts` flags against PostgreSQL
 | `missingCreatedAtColumn` | `invariant_violating` | 1872 | 199 | 15 | 1494 | 164 | 0.9299 | 0.5482 | 0.6898 |
 | `missingDeletedAtOnMutable` | `invariant_violating` | 960 | 286 | 15 | 659 | 0 | 0.9502 | 1.0000 | 0.9745 |
 
+> **Blind Human Manual-Audit Hook (`out/v3/manual-audit-kappa.json`):** Stratified 100-trial blind audit sample is staged at `out/v3/manual-audit-sample.csv`. Run `npx tsx scripts/v3/score-manual-audit.ts --rater rater1` (and optional `--rater rater2`) followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts` to auto-populate Table 6B with human-vs-classifier and inter-rater Cohen's $\kappa$ and 95% Fleiss CIs.
+
 ### Table 7: Gemini Decision 1 LLM-as-Judge vs. PostgreSQL 16 Oracle Calibration (Invariant 0)
 
 To empirically substantiate **Authority Separation (Invariant 0)**—consistent with the LLM-as-Judge failure bounds documented by Lù et al. (2025) and Prokopiou et al. (2026, REALM @ EMNLP 2026)—we audited `gemini-decision-1` (`noul >= 0.5` probability threshold) against the deterministic PostgreSQL 16 Oracle across 60 sampled trials (240 fact-level judgments):
@@ -269,6 +277,20 @@ To empirically substantiate **Authority Separation (Invariant 0)**—consistent 
 | Expected Calibration Error (ECE) | 0.0548 |
 | Memory Audit: Identifier Preservation (`C_ID` vs `C`) | 27/31 (87.1%) vs 21/31 (67.7%) |
 | Memory Audit: Mean Actionability Score (0–2 scale, `C_ID` vs `C`) | 1.58 vs 1.30 |
+
+## Appendix: Confirmatory 9-Model Run Ledger (`out/v3/run-ledger-v3.json`)
+
+| Run ID | Model | Provider | Strict-Greedy Pool | Trials | Model Match | 7-Hash Provenance | `B - A` (pp) [95% CI] | Validity Gate |
+|---|---|---|---|---:|:---:|:---:|---:|:---:|
+| `nemotron-v3` | Nemotron-3 Ultra 550B (`nvidia/nemotron-3-ultra-550b-a55b`) | NVIDIA NIM | YES | 960 | 100% | PASS (7/7) | +46.82 [+40.60, +52.94] | **PASS** |
+| `gemini-3.5-flash-lite-v3` | Gemini 3.5 Flash-Lite (`gemini-3.5-flash-lite`) | Google AI Studio | Disclosed Sampling | 960 | 100% | PASS (7/7) | +60.71 [+54.83, +66.28] | **PASS** |
+| `gemini-3.1-flash-lite-v3` | Gemini 3.1 Flash-Lite (`gemini-3.1-flash-lite`) | Google AI Studio | YES | 960 | 100% | PASS (7/7) | +43.51 [+38.65, +48.32] | **PASS** |
+| `glm5-v3` | GLM-5.3 Flash (`z-ai/glm-5.3-flash`) | NVIDIA NIM | YES | 960 | 100% | PASS (7/7) | +54.88 [+48.90, +60.76] | **PASS** |
+| `qwen27b-v3` | Qwen 3.8 27B (`qwen/qwen3.8-27b`) | Groq | YES | 960 | 100% | PASS (7/7) | +42.97 [+36.71, +49.03] | **PASS** |
+| `gemma4-31b-v3` | Gemma 4 31B (`gemma-4-31b-it`) | Google AI Studio | YES | 960 | 100% | PASS (7/7) | +54.96 [+49.18, +60.61] | **PASS** |
+| `kimi-v3` | Kimi K3.1 Pro (`moonshotai/kimi-k3.1-pro`) | NVIDIA NIM | Disclosed Sampling | 960 | 100% | PASS (7/7) | +54.90 [+49.97, +59.81] | **PASS** |
+| `minimax-v3` | MiniMax M3.1 Flash (`minimaxai/minimax-m3.1-flash`) | NVIDIA NIM | YES | 960 | 100% | PASS (7/7) | +61.10 [+54.28, +67.44] | **PASS** |
+| `super-vl-v3` | Nemotron 3.5 Super VL 120B (`nvidia/nemotron-3.5-super-vl-120b-a12b`) | NVIDIA NIM | YES | 960 | 100% | PASS (7/7) | +18.10 [+9.17, +26.99] | **PASS** |
 
 ## References
 

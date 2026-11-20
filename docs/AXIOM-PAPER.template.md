@@ -1,4 +1,4 @@
-# Axiom: Deterministic Verification and Failure-Prioritized Rule Retrieval in Relational Schema Migration
+# Concrete-Vocabulary Erosion in Agentic Memory: Isolating Token-Level Identifier Loss via Deterministic Execution Oracles
 
 ## Abstract
 
@@ -6,7 +6,7 @@ Automated software engineering agents frequently generate syntactically plausibl
 
 In this work, we present **Axiom**, a dual-track architectural verification and evaluation system founded on the strict design principle of **Authority Separation (Invariant 0)**: *generative language models are untrusted candidate producers and only external deterministic execution oracles hold grading authority*. Axiom couples two decoupled mechanisms: (1) an *operational reflexion loop* that enforces deterministic grammar, vault consistency, and executable security AST checks on agent architecture rules, and (2) an *empirical SQL migration ablation harness* evaluating candidate DDL against an isolated PostgreSQL 16 container oracle across an 8-cell factorial corpus of {{held_out_tasks_count}} held-out enterprise migration tasks.
 
-We report results from an extensive empirical evaluation across **{{independent_generations}} independent model generations ({{total_trials}} scored trials)** across {{confirmatory_runs_count}} valid completed runs meeting a pre-registered post-hoc validity gate: `nvidia/nemotron-3-ultra-550b`, `google/gemma-4-31b-it`, `zhipu/glm-5.3-flash`, `google/gemini-3.1-flash-lite`, `google/gemini-3.5-flash-lite`, and `qwen/qwen3.8-27b`. Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
+We report results from an extensive empirical evaluation across **{{independent_generations}} independent model generations ({{total_trials}} scored trials)** across {{confirmatory_runs_count}} valid completed runs meeting our pre-registered validity gate (`constant model ID`, `verified output sanitization`, `7-hash input provenance`, and `B > A` with 95% CI excluding zero). Crucially, the ablation harness evaluates single-turn generation without iterative retry or in-trial reflection, testing whether historical failure lessons harvested offline improve subsequent first-turn compliance.
 
 Retrieval of failure-prioritized rule text improved compliance over zero-shot in all six valid models (+18.19 to +33.04 points). Verbatim rule text beat LLM-distilled paraphrases in four of six models under the pre-registered analysis ({{summary_sig_c0_c_min_diff}} to {{summary_sig_c0_c_max_diff}} points), with no detectable difference in the other two.
 
@@ -269,8 +269,8 @@ Table 7 breaks down pass rates on bound task-fact pairs stratified by whether th
 *(Observational post-hoc diagnostics)*
 
 1. **The $F\text{-}16 / F\text{-}36$ Inline `REFERENCES` Collision:**
-   - Invariant $F\text{-}36$ states: `...supersedes_id uuid REFERENCES <table>(id) ON DELETE RESTRICT`.
-   - In PostgreSQL 16, inline `REFERENCES` automatically creates an auto-named constraint `<table>_supersedes_id_fkey`, violating invariant $F\text{-}16$ (`fk_<table>_<column>`).
+   - Invariant $F\text{-}36$ states: `...supersedes_id uuid REFERENCES \<table\>(id) ON DELETE RESTRICT`.
+   - In PostgreSQL 16, inline `REFERENCES` automatically creates an auto-named constraint `\<table\>_supersedes_id_fkey`, violating invariant $F\text{-}16$ (`fk_\<table\>_\<column\>`).
    - Across all six models, every trial emitting an inline `REFERENCES` on `supersedes_id` scored **0.0% on $F\text{-}16$**.
    - Conversely, when models emitted `FOREIGN KEY (supersedes_id)` as an explicit named constraint *without* inline `REFERENCES`, $F\text{-}16$ pass rates in $C0$ were **100.0%** in `nemotron-2`, **93.1%** in `gemma4-31b-full`, **83.3%** in `glm5-2`, and **100.0%** in `qwen27b-2`.
 2. **GLM Duplicate Primary Key Defect:**

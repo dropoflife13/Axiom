@@ -9,7 +9,7 @@ import {
   type ForensicTaskContext,
   type SqlForensicFlagName,
 } from '../../src/verifier/sql-forensics.js';
-import type { TaskV2Item } from '../../src/eval/ablation-v2.js';
+import type { TaskV2Item } from '../../src/eval/ablation.js';
 import type { TrialV3 } from '../../src/eval/ablation-v3.js';
 
 interface TrialWithRun {
