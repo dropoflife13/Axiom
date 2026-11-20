@@ -5,11 +5,29 @@ import { describe, expect, it } from 'vitest';
 import {
   computeCohensKappa,
   evaluateManualAuditKappa,
+  parseNumberedFlagSelection,
   saveRaterAuditCsv,
 } from '../scripts/v3/score-manual-audit.js';
 import type { SqlForensicFlagName } from '../src/verifier/sql-forensics.js';
 
 describe("Cohen's kappa & blind manual-audit evaluator (scripts/v3/score-manual-audit.ts)", () => {
+  it('parses single-prompt comma-separated defect numbers (1..13, 0 for none, q to quit)', () => {
+    const none = parseNumberedFlagSelection('0');
+    expect(none.action).toBe('select');
+    if (none.action === 'select') expect(none.flags.size).toBe(0);
+
+    const two = parseNumberedFlagSelection('2, 12');
+    expect(two.action).toBe('select');
+    if (two.action === 'select') {
+      expect([...two.flags]).toEqual(['hasExplicitSupersedesFk', 'missingCreatedAtColumn']);
+    }
+
+    const quit = parseNumberedFlagSelection('q');
+    expect(quit.action).toBe('quit');
+
+    const bad = parseNumberedFlagSelection('14');
+    expect(bad.action).toBe('invalid');
+  });
   it('returns exact kappa = 1.0 on perfect agreement (both balanced and constant degenerate prevalence)', () => {
     const ref = [true, true, false, false, true, false, true, false];
     const comp = [true, true, false, false, true, false, true, false];

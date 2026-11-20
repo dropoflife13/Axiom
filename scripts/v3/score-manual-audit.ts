@@ -419,6 +419,35 @@ function lookupFullSqlFromCheckpoint(
   }
 }
 
+export function parseNumberedFlagSelection(
+  input: string
+): { action: 'quit' } | { action: 'invalid'; message: string } | { action: 'select'; flags: Set<SqlForensicFlagName> } {
+  const trimmed = input.trim().toLowerCase();
+  if (trimmed === 'q' || trimmed === 'quit') {
+    return { action: 'quit' };
+  }
+  if (trimmed === '' || trimmed === '0' || trimmed === 'none' || trimmed === 'n') {
+    return { action: 'select', flags: new Set<SqlForensicFlagName>() };
+  }
+  const tokens = trimmed
+    .split(/[,\s;]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length > 0);
+  const chosen = new Set<SqlForensicFlagName>();
+  for (const tok of tokens) {
+    if (tok === '0') continue;
+    const num = Number(tok);
+    if (!Number.isInteger(num) || num < 1 || num > SQL_FORENSIC_FLAG_NAMES.length) {
+      return {
+        action: 'invalid',
+        message: `Invalid flag number "${tok}". Enter numbers 1..${SQL_FORENSIC_FLAG_NAMES.length} separated by commas, 0 for none, or q to quit.`,
+      };
+    }
+    chosen.add(SQL_FORENSIC_FLAG_NAMES[num - 1]);
+  }
+  return { action: 'select', flags: chosen };
+}
+
 async function runInteractiveRaterCli(root: string, raterName: string): Promise<void> {
   const sampleCsvPath = path.join(root, 'out', 'v3', 'manual-audit-sample.csv');
   if (!fs.existsSync(sampleCsvPath)) {
@@ -449,7 +478,7 @@ async function runInteractiveRaterCli(root: string, raterName: string): Promise<
 
   try {
     for (const row of unrated) {
-      const fullSql = lookupFullSqlFromCheckpoint(root, row);
+      const fullSql = lookupFullSqlFromCheckpoint(root, row).replace(/\r\n?/g, '\n');
       console.log('\n' + '='.repeat(88));
       console.log(
         `Sample #${row.sampleIndex}/${samples.length} | Task: ${row.taskId} | Condition: ${row.condition} | SQL SHA: ${row.sqlSha256}`
@@ -457,31 +486,28 @@ async function runInteractiveRaterCli(root: string, raterName: string): Promise<
       console.log('-'.repeat(88));
       console.log(fullSql);
       console.log('-'.repeat(88));
+      console.log('Forensic Flags:');
+      SQL_FORENSIC_FLAG_NAMES.forEach((flag, idx) => {
+        const desc = FORENSIC_FLAG_METADATA[flag]?.description ?? flag;
+        console.log(`  ${String(idx + 1).padStart(2, ' ')}. ${flag} — ${desc}`);
+      });
+      console.log('-'.repeat(88));
 
-      const quick = await ask(
-        'Press [Enter] to rate individual flags, [0] if ZERO forensic defects apply, or [q] to save & quit: '
-      );
-      if (quick === 'q') {
-        console.log(`Saved progress (${existing.size}/${samples.length}) to ${raterCsvPath}.`);
-        break;
-      }
-
-      const chosenFlags = new Set<SqlForensicFlagName>();
-      if (quick !== '0') {
-        for (const flag of SQL_FORENSIC_FLAG_NAMES) {
-          const desc = FORENSIC_FLAG_METADATA[flag]?.description ?? flag;
-          let ans = '';
-          while (ans !== 'y' && ans !== 'n' && ans !== 'q') {
-            ans = await ask(`  [${flag}] (${desc})? (y/n/q): `);
-          }
-          if (ans === 'q') {
-            console.log(`Saved progress (${existing.size}/${samples.length}) to ${raterCsvPath}.`);
-            return;
-          }
-          if (ans === 'y') {
-            chosenFlags.add(flag);
-          }
+      let chosenFlags: Set<SqlForensicFlagName> | null = null;
+      while (chosenFlags === null) {
+        const ans = await ask(
+          'Enter defect numbers separated by commas (e.g. "3" or "2,12"), [0] for none, or [q] to quit: '
+        );
+        const parsed = parseNumberedFlagSelection(ans);
+        if (parsed.action === 'quit') {
+          console.log(`Saved progress (${existing.size}/${samples.length}) to ${raterCsvPath}.`);
+          return;
         }
+        if (parsed.action === 'invalid') {
+          console.log(parsed.message);
+          continue;
+        }
+        chosenFlags = parsed.flags;
       }
 
       existing.set(row.sampleIndex, {
