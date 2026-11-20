@@ -1,8 +1,8 @@
 # Axiom Ablation v3 — Live Research Dossier
 
-**Generated At:** 2026-11-20T06:40:56.817Z  
+**Generated At:** 2026-11-20T16:32:43.663Z  
 **Protocol:** Ablation v3 (`K=10`, Temperature `0`, 120 held-out `V3-H-001`..`V3-H-120` × 8 conditions = 960 trials/model)  
-**Finalized Models (960/960):** 8 / 9  
+**Finalized Models (960/960):** 9 / 9  
 **Quarantined Self-Healing Candidates:** 6 (`6` ready for next-generation promotion)
 
 ---
@@ -18,7 +18,7 @@
 | gemini-3.1-flash-lite-v3 | 960/960 | V3-H-120 B | 46.8% | 46.6% | 59.8% | 86.0% | 89.2% | 84.3% | 60.5% | 90.3% |
 | gemini-3.5-flash-lite-v3 | 960/960 | V3-H-120 B | 33.0% | 32.0% | 62.2% | 74.6% | 74.5% | 78.0% | 55.0% | 93.8% |
 | kimi-v3 | 960/960 | V3-H-120 B | 39.7% | 38.6% | 71.1% | 87.0% | 87.9% | 87.6% | 61.5% | 94.6% |
-| minimax-v3 | 750/960 | V3-H-094 C_ID | 25.0% | 28.8% | 52.3% | 79.4% | 79.4% | 82.4% | 54.0% | 90.3% |
+| minimax-v3 | 960/960 | V3-H-120 B | 30.9% | 33.6% | 59.2% | 82.0% | 78.0% | 84.5% | 57.1% | 92.0% |
 | super-vl-v3 | 960/960 | V3-H-120 B | 43.8% | 42.6% | 63.2% | 74.7% | 74.4% | 76.7% | 57.1% | 61.9% |
 
 ---
@@ -35,6 +35,7 @@
 | gemma4-31b-v3 | 960 | PASS | PASS | 54.96 [49.18, 60.61] | **PASS** |
 | super-vl-v3 | 960 | PASS | PASS | 18.10 [9.17, 26.99] | **PASS** |
 | kimi-v3 | 960 | PASS | PASS | 54.90 [49.97, 59.81] | **PASS** |
+| minimax-v3 | 960 | PASS | PASS | 61.10 [54.28, 67.44] | **PASS** |
 
 ---
 
@@ -82,6 +83,11 @@
 | kimi-v3 | C0_clean_vs_C_ID | 0.35 | [-0.58, 1.40] | 5.64e-1 | 9.87e-1 |
 | kimi-v3 | C0_clean_vs_C0_rand | 26.49 | [21.19, 31.68] | 1.00e-5 | 5.00e-5 |
 | kimi-v3 | C_ID_vs_D_safe | 48.96 | [44.33, 53.61] | 1.00e-5 | 5.00e-5 |
+| minimax-v3 | C_ID_vs_C | 25.31 | [18.39, 32.28] | 1.00e-5 | 5.00e-5 |
+| minimax-v3 | C0_clean_vs_C0 | -3.96 | [-11.78, 3.92] | 3.24e-1 | 3.24e-1 |
+| minimax-v3 | C0_clean_vs_C_ID | -6.49 | [-13.03, -0.21] | 4.96e-2 | 9.92e-2 |
+| minimax-v3 | C0_clean_vs_C0_rand | 20.96 | [12.74, 29.03] | 1.00e-5 | 5.00e-5 |
+| minimax-v3 | C_ID_vs_D_safe | 50.89 | [44.31, 57.15] | 1.00e-5 | 5.00e-5 |
 
 ---
 

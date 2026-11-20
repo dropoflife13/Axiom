@@ -134,5 +134,22 @@
     "passed": true,
     "checkpointSha256": "ddbcca0bcfa71f2f82f533543657bae53d5b28c7274a70e5e0cac7d397e9d950",
     "analyzedAt": "2026-11-20T06:38:47.115Z"
+  },
+  "minimax-v3": {
+    "runId": "minimax-v3",
+    "totalTrials": 960,
+    "modelMatchPassed": true,
+    "modelMismatchCount": 0,
+    "provenanceVerified": true,
+    "missingProvenanceHashes": [],
+    "bVsAPositiveWithCiExcludingZero": true,
+    "bVsAMeanDiffPts": 61.097166666666645,
+    "bVsACi95Pts": [
+      54.277750000000005,
+      67.44466666666666
+    ],
+    "passed": true,
+    "checkpointSha256": "a07fdbce176aa7be4ca687fd877a66dcadef36fb40d0c05be560b0ee72eccc2b",
+    "analyzedAt": "2026-11-20T16:29:32.992Z"
   }
 }

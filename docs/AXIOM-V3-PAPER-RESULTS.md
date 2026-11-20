@@ -1,10 +1,10 @@
 # Ablation v3 Confirmatory Empirical Results & Paper Tables
 
-> Pre-specified follow-up on a fresh 120-task held-out split (`V3-H-001..V3-H-120`). Auto-compiled from 8 finalized runs (7,680 trials, 8/8 Validity Gate PASS) via `scripts/v3/make-paper-tables-v3.ts`.
+> Pre-specified follow-up on a fresh 120-task held-out split (`V3-H-001..V3-H-120`). Auto-compiled from 9 finalized runs (8,640 trials, 9/9 Validity Gate PASS) via `scripts/v3/make-paper-tables-v3.ts`.
 
 ## Abstract
 
-In this pre-specified follow-up on a fresh 120-task held-out split, preserving exact SQL identifiers during LLM memory distillation (`C_ID`) recovers 83.4% to 142.4% of the gap between unconstrained distilled lessons (`C`) and repaired verbatim rules (`C0_clean`), outperforming naive distillation by +13.50 to +26.04 percentage points across all 8 evaluated models (pooled random-effects meta-analysis +19.50 pp, 95% CI [+16.43, +22.57]; all Holm-Bonferroni `p < 5.00e-5`; Difference-in-Differences +13.37 to +24.25 pp). In contrast, repairing cross-rule syntactic contradictions in verbatim rule text alone (`C0_clean` vs `C0`) yields a modest pooled effect (+1.46 pp, 95% CI [-0.01, +2.92]; ranging from -1.58 to +5.19 pp, Holm-significant on 2/8 models). Together, these 7,680 confirmatory trials provide a mechanistic sufficiency test consistent with token-level identifier erosion—rather than summarization length or prose compression—as the primary driver of the "Distillation Penalty" in agentic memory systems.
+In this pre-specified follow-up on a fresh 120-task held-out split, preserving exact SQL identifiers during LLM memory distillation (`C_ID`) recovers 83.4% to 142.4% of the gap between unconstrained distilled lessons (`C`) and repaired verbatim rules (`C0_clean`), outperforming naive distillation by +13.50 to +26.04 percentage points across all 9 evaluated models (pooled random-effects meta-analysis +19.99 pp, 95% CI [+17.01, +22.98]; all Holm-Bonferroni `p < 5.00e-5`; Difference-in-Differences +13.37 to +29.26 pp). In contrast, repairing cross-rule syntactic contradictions in verbatim rule text alone (`C0_clean` vs `C0`) yields a modest pooled effect (+1.27 pp, 95% CI [-0.24, +2.77]; ranging from -3.96 to +5.19 pp, Holm-significant on 2/9 models). Together, these 8,640 confirmatory trials provide a mechanistic sufficiency test consistent with token-level identifier erosion—rather than summarization length or prose compression—as the primary driver of the "Distillation Penalty" in agentic memory systems.
 
 ## Section 6: Confirmatory Ablation v3 Empirical Results
 
@@ -70,6 +70,14 @@ Primary endpoint (`boundFactFraction`), strict `pass@1` over bound facts with Wi
 | Kimi K3.1 Pro | `C_ID` | 87.6% | 79/120 (65.8%) [57.0%, 73.7%] | 100.0% | 87.6% | 483 | 226 |
 | Kimi K3.1 Pro | `C0_rand` | 61.5% | 23/120 (19.2%) [13.1%, 27.1%] | 100.0% | 61.5% | 542 | 272 |
 | Kimi K3.1 Pro | `B` | 94.6% | 112/120 (93.3%) [87.4%, 96.6%] | 99.2% | 95.4% | 1133 | 886 |
+| MiniMax M3.1 Flash | `A` | 30.9% | 0/120 (0.0%) [0.0%, 3.1%] | 64.2% | 41.2% | 403 | 0 |
+| MiniMax M3.1 Flash | `D_safe` | 33.6% | 1/120 (0.8%) [0.1%, 4.6%] | 64.2% | 39.6% | 641 | 210 |
+| MiniMax M3.1 Flash | `C` | 59.2% | 35/120 (29.2%) [21.8%, 37.8%] | 70.8% | 73.2% | 642 | 236 |
+| MiniMax M3.1 Flash | `C0` | 82.0% | 65/120 (54.2%) [45.3%, 62.8%] | 75.8% | 87.4% | 673 | 247 |
+| MiniMax M3.1 Flash | `C0_clean` | 78.0% | 68/120 (56.7%) [47.7%, 65.2%] | 76.7% | 89.4% | 728 | 304 |
+| MiniMax M3.1 Flash | `C_ID` | 84.5% | 78/120 (65.0%) [56.1%, 72.9%] | 85.0% | 91.8% | 641 | 226 |
+| MiniMax M3.1 Flash | `C0_rand` | 57.1% | 22/120 (18.3%) [12.4%, 26.2%] | 78.3% | 60.2% | 696 | 272 |
+| MiniMax M3.1 Flash | `B` | 92.0% | 104/120 (86.7%) [79.4%, 91.6%] | 91.7% | 98.0% | 1289 | 886 |
 | Nemotron 3.5 Super VL 120B | `A` | 43.8% | 19/120 (15.8%) [10.4%, 23.4%] | 50.8% | 62.3% | 245 | 0 |
 | Nemotron 3.5 Super VL 120B | `D_safe` | 42.6% | 19/120 (15.8%) [10.4%, 23.4%] | 54.2% | 59.8% | 505 | 210 |
 | Nemotron 3.5 Super VL 120B | `C` | 63.2% | 28/120 (23.3%) [16.7%, 31.7%] | 57.5% | 72.7% | 520 | 236 |
@@ -81,7 +89,7 @@ Primary endpoint (`boundFactFraction`), strict `pass@1` over bound facts with Wi
 
 ### 6.1 Universal Identifier-Preservation Lift (`C_ID` vs `C`)
 
-Enforcing `REQUIRED_FACT_TOKENS` during lesson distillation (`C_ID`) provides a mechanistic sufficiency test yielding +13.50 to +26.04 pp over unconstrained distillation (`C`) across all 8 models (all Holm `p < 5.00e-5`; random-effects pooled +19.50 pp, $I^2 = 72.8\%$), at near-identical prompt length (`D_safe / C_ID` prompt token ratio mean `0.9662`; `C` vs `C_ID` hint token Jaccard `0.5153`, Levenshtein `94.5`).
+Enforcing `REQUIRED_FACT_TOKENS` during lesson distillation (`C_ID`) provides a mechanistic sufficiency test yielding +13.50 to +26.04 pp over unconstrained distillation (`C`) across all 9 models (all Holm `p < 5.00e-5`; random-effects pooled +19.99 pp, $I^2 = 72.2\%$), at near-identical prompt length (`D_safe / C_ID` prompt token ratio mean `0.9662`; `C` vs `C_ID` hint token Jaccard `0.5153`, Levenshtein `94.5`).
 
 #### Table 2: Primary Holm-Bonferroni Family Contrasts (pp, Unadjusted 95% Bootstrap CI, Holm `p`, & REML/CR2 `p`)
 
@@ -94,6 +102,7 @@ Enforcing `REQUIRED_FACT_TOKENS` during lesson distillation (`C_ID`) provides a 
 | Qwen 3.8 27B | +18.57 [+13.89, +23.03] (Holm < 5.00e-5, CR2 < 1.00e-4) | +5.19 [+0.67, +9.97] (Holm 0.0274, CR2 0.2614) | -5.53 [-9.76, -1.06] (Holm 0.0241, CR2 0.0005) | +23.85 [+18.58, +28.92] (Holm < 5.00e-5, CR2 < 1.00e-4) | +42.28 [+36.40, +47.83] (Holm < 5.00e-5, CR2 < 1.00e-4) |
 | Gemma 4 31B | +26.04 [+19.99, +32.14] (Holm < 5.00e-5, CR2 < 1.00e-4) | +1.79 [-3.97, +7.68] (Holm 0.9071, CR2 0.5903) | -2.07 [-7.39, +3.07] (Holm 0.9071, CR2 0.5007) | +23.99 [+17.36, +30.24] (Holm < 5.00e-5, CR2 < 1.00e-4) | +45.71 [+40.08, +51.28] (Holm < 5.00e-5, CR2 < 1.00e-4) |
 | Kimi K3.1 Pro | +16.47 [+13.18, +19.83] (Holm < 5.00e-5, CR2 < 1.00e-4) | +0.93 [-1.38, +3.50] (Holm 0.9871, CR2 0.5317) | +0.35 [-0.58, +1.40] (Holm 0.9871, CR2 0.7297) | +26.49 [+21.19, +31.68] (Holm < 5.00e-5, CR2 < 1.00e-4) | +48.96 [+44.33, +53.61] (Holm < 5.00e-5, CR2 < 1.00e-4) |
+| MiniMax M3.1 Flash | +25.31 [+18.39, +32.28] (Holm < 5.00e-5, CR2 < 1.00e-4) | -3.96 [-11.78, +3.92] (Holm 0.3238, CR2 0.4404) | -6.49 [-13.03, -0.21] (Holm 0.0992, CR2 0.0715) | +20.96 [+12.74, +29.03] (Holm < 5.00e-5, CR2 < 1.00e-4) | +50.89 [+44.31, +57.15] (Holm < 5.00e-5, CR2 < 1.00e-4) |
 | Nemotron 3.5 Super VL 120B | +13.50 [+9.64, +17.51] (Holm < 5.00e-5, CR2 < 1.00e-4) | -0.37 [-3.00, +2.31] (Holm 0.7918, CR2 0.9563) | -2.36 [-4.60, -0.17] (Holm 0.0800, CR2 0.0013) | +17.31 [+12.28, +22.39] (Holm < 5.00e-5, CR2 < 1.00e-4) | +34.13 [+27.71, +40.60] (Holm < 5.00e-5, CR2 < 1.00e-4) |
 
 > *Note:* 95% paired bootstrap confidence intervals are unadjusted marginal intervals; `Holm p` values are Holm-Bonferroni adjusted across the 5-contrast primary family (`100,000` add-one sign-flip permutations, resolution floor `< 1.00e-5` raw / `< 5.00e-5` Holm). `CR2 p` denotes task-clustered (`df = 119`) sandwich $p$-values from the fact-generalizing crossed REML mixed model.
@@ -102,18 +111,18 @@ Enforcing `REQUIRED_FACT_TOKENS` during lesson distillation (`C_ID`) provides a 
 
 | Contrast | Models ($k$) | Pooled Mean (pp) | 95% Meta CI (pp) | Pooled $p$ | $Q$ | $I^2$ (%) | $\tau^2$ |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `C_ID_vs_C` | 8 | +19.50 | [16.43, 22.57] | < 1.00e-4 | 25.75 | 72.8% | 14.03 |
-| `C0_clean_vs_C0` | 8 | +1.46 | [-0.01, 2.92] | 0.0518 | 10.12 | 30.8% | 1.29 |
-| `C0_clean_vs_C_ID` | 8 | -1.40 | [-3.75, 0.94] | 0.2413 | 37.44 | 81.3% | 8.05 |
-| `C0_clean_vs_C0_rand` | 8 | +24.87 | [21.44, 28.30] | < 1.00e-4 | 20.91 | 66.5% | 16.08 |
-| `C_ID_vs_D_safe` | 8 | +43.67 | [39.70, 47.64] | < 1.00e-4 | 29.26 | 76.1% | 24.79 |
-| `D_safe_vs_A` | 8 | +0.31 | [-1.00, 1.61] | 0.6437 | 8.30 | 15.7% | 0.56 |
-| `C_vs_C0_rand` | 8 | +7.31 | [3.72, 10.89] | < 1.00e-4 | 22.03 | 68.2% | 18.15 |
-| `DiD_C_ID_vs_C_minus_C0_clean_vs_C0` | 8 | +17.73 | [15.08, 20.39] | < 1.00e-4 | 13.03 | 46.3% | 6.49 |
+| `C_ID_vs_C` | 9 | +19.99 | [17.01, 22.98] | < 1.00e-4 | 28.75 | 72.2% | 14.61 |
+| `C0_clean_vs_C0` | 9 | +1.27 | [-0.24, 2.77] | 0.0993 | 12.00 | 33.3% | 1.60 |
+| `C0_clean_vs_C_ID` | 9 | -1.79 | [-4.09, 0.52] | 0.1292 | 41.35 | 80.7% | 8.52 |
+| `C0_clean_vs_C0_rand` | 9 | +24.53 | [21.34, 27.72] | < 1.00e-4 | 21.65 | 63.0% | 14.70 |
+| `C_ID_vs_D_safe` | 9 | +44.41 | [40.63, 48.19] | < 1.00e-4 | 32.93 | 75.7% | 25.13 |
+| `D_safe_vs_A` | 9 | +0.48 | [-0.78, 1.73] | 0.4585 | 9.38 | 14.7% | 0.54 |
+| `C_vs_C0_rand` | 9 | +6.82 | [3.44, 10.21] | < 1.00e-4 | 23.87 | 66.5% | 17.60 |
+| `DiD_C_ID_vs_C_minus_C0_clean_vs_C0` | 9 | +18.46 | [15.56, 21.37] | < 1.00e-4 | 17.83 | 55.1% | 10.14 |
 
 ### 6.2 Rule-Text Repair Alone (`C0_clean` vs `C0`) & Exposure Stratification
 
-Repairing statement-level contradictions in verbatim Oracle text (`C0_clean` vs `C0`) yields a pooled estimate of +1.46 pp (95% CI [-0.01, 2.92]; individual models -1.58 to +5.19 pp), reaching Holm-adjusted significance on Gemini 3.1 Flash-Lite (+3.21 pp, `Holm p = 1.32e-3`) and Qwen 3.8 27B (+5.19 pp, `Holm p = 2.74e-2`).
+Repairing statement-level contradictions in verbatim Oracle text (`C0_clean` vs `C0`) yields a pooled estimate of +1.27 pp (95% CI [-0.24, 2.77]; individual models -3.96 to +5.19 pp), reaching Holm-adjusted significance on Gemini 3.1 Flash-Lite (+3.21 pp, `Holm p = 1.32e-3`) and Qwen 3.8 27B (+5.19 pp, `Holm p = 2.74e-2`).
 
 #### Table 3: Exposure-Stratified `C0_clean` vs `C0` (`{F-01, F-18, F-19, F-36}`)
 
@@ -126,11 +135,12 @@ Repairing statement-level contradictions in verbatim Oracle text (`C0_clean` vs 
 | Qwen 3.8 27B | +5.19 (Holm 0.0274) | 120 | +5.19 [+0.67, +9.97] | 0 | 0.00 [0.00, 0.00] |
 | Gemma 4 31B | +1.79 (Holm 0.9071) | 120 | +1.79 [-3.97, +7.68] | 0 | 0.00 [0.00, 0.00] |
 | Kimi K3.1 Pro | +0.93 (Holm 0.9871) | 120 | +0.93 [-1.38, +3.50] | 0 | 0.00 [0.00, 0.00] |
+| MiniMax M3.1 Flash | -3.96 (Holm 0.3238) | 120 | -3.96 [-11.78, +3.92] | 0 | 0.00 [0.00, 0.00] |
 | Nemotron 3.5 Super VL 120B | -0.37 (Holm 0.7918) | 120 | -0.37 [-3.00, +2.31] | 0 | 0.00 [0.00, 0.00] |
 
 ### 6.3 Feature-Aware Retrieval vs. Random-K (`C0_clean` vs `C0_rand`), Targeting Erasure (`C` vs `C0_rand`), & Placebo TOST (`D_safe` vs `A`)
 
-Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) score 53.2%–61.5%, trailing feature-matched Top-10 retrieval (`C0_clean`) by +17.31 to +30.75 pp across all 8 models (all `Holm p < 5.00e-5`). Crucially, comparing unconstrained distillation (`C`) against `C0_rand` shows that identifier erosion completely erases the benefit of failure-prioritized retrieval on Gemini 3.1 Flash-Lite (59.8% vs 60.5%) and Gemma 4 31B (59.3% vs 59.3%).
+Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) score 53.2%–61.5%, trailing feature-matched Top-10 retrieval (`C0_clean`) by +17.31 to +30.75 pp across all 9 models (all `Holm p < 5.00e-5`). Crucially, comparing unconstrained distillation (`C`) against `C0_rand` shows that identifier erosion completely erases the benefit of failure-prioritized retrieval on Gemini 3.1 Flash-Lite (59.8% vs 60.5%) and Gemma 4 31B (59.3% vs 59.3%).
 
 | Model | `D_safe - A` TOST (90% CI, `p`, Eq `±3.0 pp`) | `C - C0_rand` Targeting Erasure (pp) [95% CI] | `C_ID - D_safe` (pp) |
 |---|---|---:|---:|
@@ -141,11 +151,12 @@ Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) scor
 | Qwen 3.8 27B | +4.39 [+0.73, +8.05], p=0.7347, NO | +10.81 [+5.75, +15.71] (p=6.00e-5) | +42.28 (Holm < 5.00e-5) |
 | Gemma 4 31B | +1.32 [-1.87, +4.51], p=0.1919, NO | +0.01 [-6.90, +6.79] (p=0.9964) | +45.71 (Holm < 5.00e-5) |
 | Kimi K3.1 Pro | -1.08 [-3.29, +1.12], p=0.0758, NO | +9.67 [+4.42, +14.92] (p=0.0003) | +48.96 (Holm < 5.00e-5) |
+| MiniMax M3.1 Flash | +2.71 [-1.11, +6.53], p=0.4497, NO | +2.14 [-5.40, +9.47] (p=0.5769) | +50.89 (Holm < 5.00e-5) |
 | Nemotron 3.5 Super VL 120B | -1.21 [-4.16, +1.75], p=0.1584, NO | +6.17 [+0.11, +12.01] (p=0.0425) | +34.13 (Holm < 5.00e-5) |
 
 ### 6.4 Distilled vs. Verbatim Equivalence (`C0_clean` vs `C_ID`, TOST `±3.0 pp`)
 
-`C_ID` numerically outperforms verbatim `C0_clean` on 6 of 8 models—reaching Holm-adjusted significance in favor of `C_ID` on Qwen 3.8 27B (`C0_clean - C_ID = -5.53 pp, Holm p = 0.0241`) and unadjusted 95% CI exclusion of zero on GLM-5.3 Flash (`-5.40 pp, 95% CI [-10.62, -0.47] pp, Holm p = 0.0755`), while `C0_clean` leads on Gemini 3.1 Flash-Lite (`+4.87 pp, Holm p < 5.00e-5`). Formal TOST (`±3.0 pp`) results are reported below rather than inferring equivalence from non-significance alone:
+`C_ID` numerically outperforms verbatim `C0_clean` on 7 of 9 models—reaching Holm-adjusted significance in favor of `C_ID` on Qwen 3.8 27B (`C0_clean - C_ID = -5.53 pp, Holm p = 0.0241`) and unadjusted 95% CI exclusion of zero on GLM-5.3 Flash (`-5.40 pp, 95% CI [-10.62, -0.47] pp, Holm p = 0.0755`), while `C0_clean` leads on Gemini 3.1 Flash-Lite (`+4.87 pp, Holm p < 5.00e-5`). Formal TOST (`±3.0 pp`) results are reported below rather than inferring equivalence from non-significance alone:
 
 | Model | `C0_clean - C_ID` (pp) | 90% CI (pp) | TOST `p` (`±3.0 pp`) | Equivalent at `α=0.05` |
 |---|---:|---:|---:|:---:|
@@ -156,6 +167,7 @@ Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) scor
 | Qwen 3.8 27B | -5.53 | [-9.19, -1.87] | 0.8729 | NO |
 | Gemma 4 31B | -2.07 | [-6.54, +2.41] | 0.3655 | NO |
 | Kimi K3.1 Pro | +0.35 | [-0.49, +1.18] | 0.0000 | **YES** |
+| MiniMax M3.1 Flash | -6.49 | [-11.92, -1.06] | 0.8553 | NO |
 | Nemotron 3.5 Super VL 120B | -2.36 | [-4.22, -0.50] | 0.2854 | NO |
 
 ### 6.5 Difference-in-Differences (`DiD`), Distillation Gap Recovery (`DGRR` with 95% CI), and Mixed-Model Sensitivity
@@ -169,13 +181,14 @@ Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) scor
 | Qwen 3.8 27B | +13.37 [+6.58, +19.92] | 0.0001 | 142.4% [107.1%, 200.0%] | 130.4% [96.5%, 185.3%] | 21.92 (REML 0.0072, CR2 < 1.00e-4) | -9.95 |
 | Gemma 4 31B | +24.25 [+16.43, +32.10] | < 1.00e-5 | 108.6% [88.3%, 137.6%] | 97.3% [78.7%, 118.8%] | 31.35 (REML < 1.00e-4, CR2 < 1.00e-4) | -4.51 |
 | Kimi K3.1 Pro | +15.54 [+11.90, +19.03] | < 1.00e-5 | 97.9% [91.3%, 103.5%] | 101.6% [97.2%, 107.2%] | 18.44 (REML 0.0126, CR2 < 1.00e-4) | 100.11 |
+| MiniMax M3.1 Flash | +29.26 [+18.74, +39.99] | < 1.00e-5 | 134.5% [101.0%, 204.6%] | 120.7% [96.1%, 162.0%] | 29.05 (REML < 1.00e-4, CR2 < 1.00e-4) | 101.43 |
 | Nemotron 3.5 Super VL 120B | +13.87 [+9.57, +18.33] | < 1.00e-5 | 121.2% [101.3%, 150.8%] | 105.1% [80.7%, 141.4%] | 15.82 (REML 0.0142, CR2 < 1.00e-4) | 40.90 |
 
 ## Section 7: Discussion
 
 **Consistent with token-level identifier erosion, not distillation itself:** Enforcing an AST/token gate (`REQUIRED_FACT_TOKENS`) during distillation serves as a mechanistic sufficiency test—distilled memory (`C_ID`) matches or exceeds verbatim canonical specifications (`C0_clean`) at lower token cost.
 
-**Reframing v2 Unconditional Nulls on GLM-5.3 and Gemini 3.5 Flash-Lite:** Ablation v2 previously hypothesized that statement-level rule contradictions alone explained the unconditional nulls on GLM-5.3 Flash and Gemini 3.5 Flash-Lite. This pre-specified follow-up on a fresh 120-task held-out split falsifies that hypothesis as the primary cause: repairing rule text (`C0_clean` vs `C0`) yields only +3.33 pp (`Holm p = 0.322`) on GLM-5.3 and -0.04 pp (`Holm p = 0.988`) on Gemini 3.5 Flash-Lite, whereas locking exact SQL identifiers (`C_ID` vs `C`) yields +23.61 pp and +15.79 pp (`Holm p < 5.00e-5`). Meanwhile, v3 eliminated `D_safe` placebo schema-qualification crashes (`hasPublicAuthJwt` count in `D_safe` = `0`, and across all `7680` trials = `0`).
+**Reframing v2 Unconditional Nulls on GLM-5.3 and Gemini 3.5 Flash-Lite:** Ablation v2 previously hypothesized that statement-level rule contradictions alone explained the unconditional nulls on GLM-5.3 Flash and Gemini 3.5 Flash-Lite. This pre-specified follow-up on a fresh 120-task held-out split falsifies that hypothesis as the primary cause: repairing rule text (`C0_clean` vs `C0`) yields only +3.33 pp (`Holm p = 0.322`) on GLM-5.3 and -0.04 pp (`Holm p = 0.988`) on Gemini 3.5 Flash-Lite, whereas locking exact SQL identifiers (`C_ID` vs `C`) yields +23.61 pp and +15.79 pp (`Holm p < 5.00e-5`). Meanwhile, v3 eliminated `D_safe` placebo schema-qualification crashes (`hasPublicAuthJwt` count in `D_safe` = `0`, and across all `8640` trials = `0`).
 
 ## Section 8: Failure-Mode Attribution & V4 Preview — Prerequisite-Aware Retrieval
 
@@ -190,11 +203,12 @@ Length-matched random-10 Oracle facts (`C0_rand`, bound-fact overlap 12.1%) scor
 | Qwen 3.8 27B | 33 | 0.0% / 15.2% / 6.1% | 0 | 0.0% / 0.0% / 0.0% | 0.0% / 0.0% / 0.0% |
 | Gemma 4 31B | 33 | 0.0% / 24.2% / 9.1% | 0 | 0.0% / 0.0% / 0.0% | 0.0% / 0.0% / 0.0% |
 | Kimi K3.1 Pro | 33 | 21.2% / 24.2% / 24.2% | 0 | 0.0% / 0.0% / 0.0% | 0.0% / 0.0% / 0.0% |
+| MiniMax M3.1 Flash | 33 | 6.1% / 27.3% / 21.2% | 0 | 0.0% / 0.0% / 0.0% | 0.0% / 0.0% / 0.0% |
 | Nemotron 3.5 Super VL 120B | 33 | 0.0% / 27.3% / 27.3% | 0 | 0.0% / 0.0% / 0.0% | 0.0% / 0.0% / 0.0% |
 
 ### Table 5: Quarantined `v4-only` Self-Healing Rule Candidates
 
-Across all 1,920 `C0_clean` and `C_ID` trials, `Q-F-05-missingCreatedAtColumn` accounts for **499** observations (26.0%), whereas all other 5 residual defect candidates combined total **63** observations.
+Across all 2,160 `C0_clean` and `C_ID` trials, `Q-F-05-missingCreatedAtColumn` accounts for **499** observations (23.1%), whereas all other 5 residual defect candidates combined total **63** observations.
 
 | Candidate ID | Scope | Fact ID | Trigger Flag | Observed Count | Linter & Token Gate |
 |---|---|---|---:|---:|:---:|
@@ -242,4 +256,4 @@ To empirically substantiate **Authority Separation (Invariant 0)**, we audited `
 | F-36 / F-16 Collision FP Rate | 0.0% (0/23) |
 | Expected Calibration Error (ECE) | 0.4901 |
 
-*Ledger Verification: 8/8 finalized runs passed all confirmatory validity gates.*
+*Ledger Verification: 9/9 finalized runs passed all confirmatory validity gates.*
