@@ -1,0 +1,667 @@
+{
+  "generatedAt": "2026-11-21T13:37:17.827Z",
+  "auditMode": "llm-assisted-with-human-spot-check",
+  "llmModel": "gemini-3.1-flash-lite",
+  "sampleCount": 100,
+  "llmRatedCount": 100,
+  "humanRatedCount": 0,
+  "llmVsClassifier": {
+    "ratedSampleCount": 100,
+    "overallMicro": {
+      "kappa": 0.9108948216182868,
+      "se": 0.022065086692910497,
+      "ci95": [
+        0.8676472517001823,
+        0.9541423915363914
+      ],
+      "percentAgreement": 0.9876923076923076,
+      "expectedAgreement": 0.8618745562130177,
+      "prevalenceIndex": 0.8507692307692307,
+      "biasIndex": 0.007692307692307693,
+      "pabak": 0.9753846153846153,
+      "precision": 0.967391304347826,
+      "recall": 0.8725490196078431,
+      "f1": 0.9175257731958762,
+      "confusion": {
+        "tp": 89,
+        "fp": 3,
+        "fn": 13,
+        "tn": 1195,
+        "n": 1300
+      }
+    },
+    "byFlag": {
+      "hasInlineSupersedesFk": {
+        "kappa": 0.8230088495575221,
+        "se": 0.12193782477814544,
+        "ci95": [
+          0.5840107129923571,
+          1
+        ],
+        "percentAgreement": 0.98,
+        "expectedAgreement": 0.8869999999999999,
+        "prevalenceIndex": 0.88,
+        "biasIndex": 0.02,
+        "pabak": 0.96,
+        "precision": 1,
+        "recall": 0.7142857142857143,
+        "f1": 0.8333333333333333,
+        "confusion": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 2,
+          "tn": 93,
+          "n": 100
+        }
+      },
+      "hasExplicitSupersedesFk": {
+        "kappa": 0.9759615384615384,
+        "se": 0.023911055769172563,
+        "ci95": [
+          0.9290958691539603,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.584,
+        "prevalenceIndex": 0.41,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.9666666666666667,
+        "recall": 1,
+        "f1": 0.983050847457627,
+        "confusion": {
+          "tp": 29,
+          "fp": 1,
+          "fn": 0,
+          "tn": 70,
+          "n": 100
+        }
+      },
+      "hasDuplicatePrimaryKey": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.9607999999999999,
+        "prevalenceIndex": 0.96,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 98,
+          "n": 100
+        }
+      },
+      "hasPublicAuthJwt": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 1,
+        "prevalenceIndex": 1,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 100,
+          "n": 100
+        }
+      },
+      "hasPublicConstraintQualifier": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 1,
+        "prevalenceIndex": 1,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 100,
+          "n": 100
+        }
+      },
+      "omittedSupersedesId": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7047999999999999,
+        "prevalenceIndex": 0.64,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 18,
+          "fp": 0,
+          "fn": 0,
+          "tn": 82,
+          "n": 100
+        }
+      },
+      "inventedLineageCol": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.9232,
+        "prevalenceIndex": 0.92,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 96,
+          "n": 100
+        }
+      },
+      "hasHallucinatedLineageCol": {
+        "kappa": 0.8520710059171599,
+        "se": 0.14556813159491602,
+        "ci95": [
+          0.5667574679911245,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.9323999999999999,
+        "prevalenceIndex": 0.93,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.75,
+        "recall": 1,
+        "f1": 0.8571428571428571,
+        "confusion": {
+          "tp": 3,
+          "fp": 1,
+          "fn": 0,
+          "tn": 96,
+          "n": 100
+        }
+      },
+      "hasUserMetadataLeak": {
+        "kappa": 0.7950819672131144,
+        "se": 0.1995641281618721,
+        "ci95": [
+          0.4039362760158451,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.9512,
+        "prevalenceIndex": 0.95,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "f1": 0.8,
+        "confusion": {
+          "tp": 2,
+          "fp": 1,
+          "fn": 0,
+          "tn": 97,
+          "n": 100
+        }
+      },
+      "hasSingularCompositeIndexName": {
+        "kappa": 0,
+        "se": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.99,
+        "prevalenceIndex": 0.99,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": null,
+        "recall": 0,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "tn": 99,
+          "n": 100
+        }
+      },
+      "hasRevokeWithoutPositiveGrant": {
+        "kappa": 0,
+        "se": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "percentAgreement": 0.9,
+        "expectedAgreement": 0.9,
+        "prevalenceIndex": 0.9,
+        "biasIndex": 0.1,
+        "pabak": 0.8,
+        "precision": null,
+        "recall": 0,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 10,
+          "tn": 90,
+          "n": 100
+        }
+      },
+      "missingCreatedAtColumn": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7738,
+        "prevalenceIndex": 0.74,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 0,
+          "tn": 87,
+          "n": 100
+        }
+      },
+      "missingDeletedAtOnMutable": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7738,
+        "prevalenceIndex": 0.74,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 0,
+          "tn": 87,
+          "n": 100
+        }
+      }
+    }
+  },
+  "humanVsClassifier": null,
+  "humanVsLlm": null,
+  "rater1RatedCount": 100,
+  "rater2RatedCount": 0,
+  "rater1VsClassifier": {
+    "ratedSampleCount": 100,
+    "overallMicro": {
+      "kappa": 0.9108948216182868,
+      "se": 0.022065086692910497,
+      "ci95": [
+        0.8676472517001823,
+        0.9541423915363914
+      ],
+      "percentAgreement": 0.9876923076923076,
+      "expectedAgreement": 0.8618745562130177,
+      "prevalenceIndex": 0.8507692307692307,
+      "biasIndex": 0.007692307692307693,
+      "pabak": 0.9753846153846153,
+      "precision": 0.967391304347826,
+      "recall": 0.8725490196078431,
+      "f1": 0.9175257731958762,
+      "confusion": {
+        "tp": 89,
+        "fp": 3,
+        "fn": 13,
+        "tn": 1195,
+        "n": 1300
+      }
+    },
+    "byFlag": {
+      "hasInlineSupersedesFk": {
+        "kappa": 0.8230088495575221,
+        "se": 0.12193782477814544,
+        "ci95": [
+          0.5840107129923571,
+          1
+        ],
+        "percentAgreement": 0.98,
+        "expectedAgreement": 0.8869999999999999,
+        "prevalenceIndex": 0.88,
+        "biasIndex": 0.02,
+        "pabak": 0.96,
+        "precision": 1,
+        "recall": 0.7142857142857143,
+        "f1": 0.8333333333333333,
+        "confusion": {
+          "tp": 5,
+          "fp": 0,
+          "fn": 2,
+          "tn": 93,
+          "n": 100
+        }
+      },
+      "hasExplicitSupersedesFk": {
+        "kappa": 0.9759615384615384,
+        "se": 0.023911055769172563,
+        "ci95": [
+          0.9290958691539603,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.584,
+        "prevalenceIndex": 0.41,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.9666666666666667,
+        "recall": 1,
+        "f1": 0.983050847457627,
+        "confusion": {
+          "tp": 29,
+          "fp": 1,
+          "fn": 0,
+          "tn": 70,
+          "n": 100
+        }
+      },
+      "hasDuplicatePrimaryKey": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.9607999999999999,
+        "prevalenceIndex": 0.96,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 2,
+          "fp": 0,
+          "fn": 0,
+          "tn": 98,
+          "n": 100
+        }
+      },
+      "hasPublicAuthJwt": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 1,
+        "prevalenceIndex": 1,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 100,
+          "n": 100
+        }
+      },
+      "hasPublicConstraintQualifier": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 1,
+        "prevalenceIndex": 1,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": null,
+        "recall": null,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 0,
+          "tn": 100,
+          "n": 100
+        }
+      },
+      "omittedSupersedesId": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7047999999999999,
+        "prevalenceIndex": 0.64,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 18,
+          "fp": 0,
+          "fn": 0,
+          "tn": 82,
+          "n": 100
+        }
+      },
+      "inventedLineageCol": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.9232,
+        "prevalenceIndex": 0.92,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 4,
+          "fp": 0,
+          "fn": 0,
+          "tn": 96,
+          "n": 100
+        }
+      },
+      "hasHallucinatedLineageCol": {
+        "kappa": 0.8520710059171599,
+        "se": 0.14556813159491602,
+        "ci95": [
+          0.5667574679911245,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.9323999999999999,
+        "prevalenceIndex": 0.93,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.75,
+        "recall": 1,
+        "f1": 0.8571428571428571,
+        "confusion": {
+          "tp": 3,
+          "fp": 1,
+          "fn": 0,
+          "tn": 96,
+          "n": 100
+        }
+      },
+      "hasUserMetadataLeak": {
+        "kappa": 0.7950819672131144,
+        "se": 0.1995641281618721,
+        "ci95": [
+          0.4039362760158451,
+          1
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.9512,
+        "prevalenceIndex": 0.95,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": 0.6666666666666666,
+        "recall": 1,
+        "f1": 0.8,
+        "confusion": {
+          "tp": 2,
+          "fp": 1,
+          "fn": 0,
+          "tn": 97,
+          "n": 100
+        }
+      },
+      "hasSingularCompositeIndexName": {
+        "kappa": 0,
+        "se": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "percentAgreement": 0.99,
+        "expectedAgreement": 0.99,
+        "prevalenceIndex": 0.99,
+        "biasIndex": 0.01,
+        "pabak": 0.98,
+        "precision": null,
+        "recall": 0,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 1,
+          "tn": 99,
+          "n": 100
+        }
+      },
+      "hasRevokeWithoutPositiveGrant": {
+        "kappa": 0,
+        "se": 0,
+        "ci95": [
+          0,
+          0
+        ],
+        "percentAgreement": 0.9,
+        "expectedAgreement": 0.9,
+        "prevalenceIndex": 0.9,
+        "biasIndex": 0.1,
+        "pabak": 0.8,
+        "precision": null,
+        "recall": 0,
+        "f1": null,
+        "confusion": {
+          "tp": 0,
+          "fp": 0,
+          "fn": 10,
+          "tn": 90,
+          "n": 100
+        }
+      },
+      "missingCreatedAtColumn": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7738,
+        "prevalenceIndex": 0.74,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 0,
+          "tn": 87,
+          "n": 100
+        }
+      },
+      "missingDeletedAtOnMutable": {
+        "kappa": 1,
+        "se": 0,
+        "ci95": [
+          1,
+          1
+        ],
+        "percentAgreement": 1,
+        "expectedAgreement": 0.7738,
+        "prevalenceIndex": 0.74,
+        "biasIndex": 0,
+        "pabak": 1,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1,
+        "confusion": {
+          "tp": 13,
+          "fp": 0,
+          "fn": 0,
+          "tn": 87,
+          "n": 100
+        }
+      }
+    }
+  },
+  "rater1VsRater2": null
+}

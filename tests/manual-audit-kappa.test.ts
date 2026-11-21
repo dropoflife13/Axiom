@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest';
 import {
   computeCohensKappa,
   evaluateManualAuditKappa,
+  parseLlmFlagResponse,
   parseNumberedFlagSelection,
   saveRaterAuditCsv,
+  selectStratifiedSubset,
 } from '../scripts/v3/score-manual-audit.js';
 import type { SqlForensicFlagName } from '../src/verifier/sql-forensics.js';
 
@@ -172,15 +174,55 @@ describe("Cohen's kappa & blind manual-audit evaluator (scripts/v3/score-manual-
         },
       ]);
 
-      const report = evaluateManualAuditKappa(sampleCsv, rater1Csv, rater2Csv);
+      const report = evaluateManualAuditKappa(sampleCsv, rater1Csv, rater2Csv, {
+        llmModel: 'gemini-3.1-flash-lite',
+      });
+      expect(report.auditMode).toBe('llm-assisted-with-human-spot-check');
+      expect(report.llmModel).toBe('gemini-3.1-flash-lite');
       expect(report.sampleCount).toBe(3);
-      expect(report.rater1RatedCount).toBe(3);
-      expect(report.rater2RatedCount).toBe(3);
+      expect(report.llmRatedCount).toBe(3);
+      expect(report.humanRatedCount).toBe(3);
+      expect(report.llmVsClassifier?.ratedSampleCount).toBe(3);
+      expect(report.llmVsClassifier?.overallMicro.kappa).toBeCloseTo(1.0, 10);
+      expect(report.humanVsClassifier?.ratedSampleCount).toBe(3);
+      expect(report.humanVsClassifier?.overallMicro.kappa).toBeCloseTo(1.0, 10);
+      expect(report.humanVsLlm?.ratedSampleCount).toBe(3);
+      expect(report.humanVsLlm?.overallMicro.kappa).toBeCloseTo(1.0, 10);
       expect(report.rater1VsClassifier?.overallMicro.kappa).toBeCloseTo(1.0, 10);
       expect(report.rater1VsRater2?.overallMicro.kappa).toBeCloseTo(1.0, 10);
-      expect(report.rater1VsClassifier?.byFlag.hasInlineSupersedesFk.kappa).toBeCloseTo(1.0, 10);
+      expect(report.llmVsClassifier?.byFlag.hasInlineSupersedesFk.kappa).toBeCloseTo(1.0, 10);
     } finally {
       fs.rmSync(tmpDir, { recursive: true, force: true });
     }
+  });
+
+  it('selects a deterministic stratified subset across 4 equal strata for --limit 20', () => {
+    const samples = Array.from({ length: 100 }, (_, i) => i + 1);
+    const subset = selectStratifiedSubset(samples, 20);
+    expect(subset).toHaveLength(20);
+    expect(subset.filter((x) => x <= 25)).toHaveLength(5);
+    expect(subset.filter((x) => x > 25 && x <= 50)).toHaveLength(5);
+    expect(subset.filter((x) => x > 50 && x <= 75)).toHaveLength(5);
+    expect(subset.filter((x) => x > 75)).toHaveLength(5);
+    expect(selectStratifiedSubset(samples)).toHaveLength(100);
+  });
+
+  it('parses LLM blind-audit outputs across plain numbers, zero, think tags, and JSON', () => {
+    expect([...(parseLlmFlagResponse('0') ?? [])]).toEqual([]);
+    expect([...(parseLlmFlagResponse('2, 12') ?? [])]).toEqual([
+      'hasExplicitSupersedesFk',
+      'missingCreatedAtColumn',
+    ]);
+    expect([...(parseLlmFlagResponse('<think>checking</think>\n1, 6, 7, 8') ?? [])]).toEqual([
+      'hasInlineSupersedesFk',
+      'omittedSupersedesId',
+      'inventedLineageCol',
+      'hasHallucinatedLineageCol',
+    ]);
+    expect([...(parseLlmFlagResponse('{"flags": [3, 9]}') ?? [])]).toEqual([
+      'hasDuplicatePrimaryKey',
+      'hasUserMetadataLeak',
+    ]);
+    expect(parseLlmFlagResponse('not a valid flag response')).toBeNull();
   });
 });

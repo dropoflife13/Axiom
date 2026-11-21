@@ -901,30 +901,69 @@ export function generatePaperResultsMarkdown(root = path.resolve('.')): string {
   }
   lines.push('');
 
-  // Blind human manual-audit Cohen's kappa ingestion hook
+  // LLM-Assisted Forensic Validation with Human Spot-Check Cohen's kappa ingestion hook
   const manualKappaPath = path.join(outDir, 'manual-audit-kappa.json');
   if (fs.existsSync(manualKappaPath)) {
     const kappaRep = JSON.parse(fs.readFileSync(manualKappaPath, 'utf8')) as ManualAuditKappaReport;
-    if (kappaRep.rater1VsClassifier) {
-      const ov = kappaRep.rater1VsClassifier.overallMicro;
-      lines.push('### Table 6B: Blind Human Manual-Audit Inter-Rater Reliability & Classifier Validity (`Cohen\'s κ`)');
-      lines.push('');
-      lines.push('| Comparison | Rated Samples | Micro Cohen\'s $\\kappa$ [95% CI] | % Agreement | PABAK | Precision | Recall | F1 |');
-      lines.push('|---|---:|---:|---:|---:|---:|---:|---:|');
+    const llmVsCls = kappaRep.llmVsClassifier ?? kappaRep.rater1VsClassifier;
+    const humanVsCls = kappaRep.humanVsClassifier ?? null;
+    const humanVsLlm = kappaRep.humanVsLlm ?? kappaRep.rater1VsRater2 ?? null;
+    if (llmVsCls || humanVsCls || humanVsLlm) {
+      const llmLabel = kappaRep.llmModel ? `\`${kappaRep.llmModel}\`` : 'Gemini LLM Rater';
       lines.push(
-        `| Rater 1 vs. \`sql-forensics.ts\` | ${kappaRep.rater1RatedCount}/${kappaRep.sampleCount} | ${ov.kappa.toFixed(4)} [${ov.ci95[0].toFixed(4)}, ${ov.ci95[1].toFixed(4)}] | ${pct(ov.percentAgreement)} | ${ov.pabak.toFixed(4)} | ${ov.precision !== null ? ov.precision.toFixed(4) : 'N/A'} | ${ov.recall !== null ? ov.recall.toFixed(4) : 'N/A'} | ${ov.f1 !== null ? ov.f1.toFixed(4) : 'N/A'} |`
+        "### Table 6B: LLM-Assisted Forensic Validation with Human Spot-Check (`Cohen's κ`)"
       );
-      if (kappaRep.rater1VsRater2) {
-        const irr = kappaRep.rater1VsRater2.overallMicro;
+      lines.push('');
+      lines.push(
+        `Transparent **Solo-Dev LLM-Assisted Forensic Validation with Human Spot-Check** (not two-human double-blind): an automated blind LLM auditor (${llmLabel}, SQL-only with zero \`sql-forensics.ts\` or PostgreSQL 16 Oracle hints) rated ${kappaRep.llmRatedCount ?? kappaRep.rater1RatedCount}/${kappaRep.sampleCount} stratified samples (\`out/v3/manual-audit-llm-rater.csv\`), paired with an independent solo-developer human spot-check (\`out/v3/manual-audit-human.csv\`, ${kappaRep.humanRatedCount ?? 0}/${kappaRep.sampleCount} rated).`
+      );
+      lines.push('');
+      lines.push(
+        "| Comparison | Rated Samples | Micro Cohen's $\\kappa$ [95% CI] | % Agreement | PABAK | Precision | Recall | F1 |"
+      );
+      lines.push('|---|---:|---:|---:|---:|---:|---:|---:|');
+      const pushKappaRow = (
+        label: string,
+        ratedCount: number,
+        summary: NonNullable<typeof llmVsCls>
+      ) => {
+        const m = summary.overallMicro;
         lines.push(
-          `| Rater 1 vs. Rater 2 (IRR) | ${kappaRep.rater2RatedCount}/${kappaRep.sampleCount} | ${irr.kappa.toFixed(4)} [${irr.ci95[0].toFixed(4)}, ${irr.ci95[1].toFixed(4)}] | ${pct(irr.percentAgreement)} | ${irr.pabak.toFixed(4)} | ${irr.precision !== null ? irr.precision.toFixed(4) : 'N/A'} | ${irr.recall !== null ? irr.recall.toFixed(4) : 'N/A'} | ${irr.f1 !== null ? irr.f1.toFixed(4) : 'N/A'} |`
+          `| ${label} | ${ratedCount}/${kappaRep.sampleCount} | ${m.kappa.toFixed(4)} [${m.ci95[0].toFixed(4)}, ${m.ci95[1].toFixed(4)}] | ${pct(m.percentAgreement)} | ${m.pabak.toFixed(4)} | ${m.precision !== null ? m.precision.toFixed(4) : 'N/A'} | ${m.recall !== null ? m.recall.toFixed(4) : 'N/A'} | ${m.f1 !== null ? m.f1.toFixed(4) : 'N/A'} |`
+        );
+      };
+      if (llmVsCls) {
+        pushKappaRow(
+          `LLM Rater (${llmLabel}) vs. \`sql-forensics.ts\``,
+          llmVsCls.ratedSampleCount ?? kappaRep.llmRatedCount ?? kappaRep.rater1RatedCount,
+          llmVsCls
+        );
+      }
+      if (humanVsCls) {
+        pushKappaRow(
+          'Human Spot-Check vs. `sql-forensics.ts`',
+          humanVsCls.ratedSampleCount ?? kappaRep.humanRatedCount,
+          humanVsCls
+        );
+      }
+      if (humanVsLlm) {
+        pushKappaRow(
+          `Human Spot-Check vs. LLM Rater (${llmLabel})`,
+          humanVsLlm.ratedSampleCount ?? kappaRep.humanRatedCount,
+          humanVsLlm
         );
       }
       lines.push('');
+      if (!humanVsCls) {
+        lines.push(
+          '> **Pending Human Spot-Check ($n = 20$):** Run `npx tsx scripts/v3/score-manual-audit.ts --rater human --limit 20`, followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts`, to append the Human Spot-Check vs. `sql-forensics.ts` and Human Spot-Check vs. LLM Rater rows above.'
+        );
+        lines.push('');
+      }
     }
   } else {
     lines.push(
-      '> **Blind Human Manual-Audit Hook (`out/v3/manual-audit-kappa.json`):** Stratified 100-trial blind audit sample is staged at `out/v3/manual-audit-sample.csv`. Run `npx tsx scripts/v3/score-manual-audit.ts --rater rater1` (and optional `--rater rater2`) followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts` to auto-populate Table 6B with human-vs-classifier and inter-rater Cohen\'s $\\kappa$ and 95% Fleiss CIs.'
+      "> **LLM-Assisted Forensic Validation with Human Spot-Check Hook (`out/v3/manual-audit-kappa.json`):** Stratified 100-trial blind audit sample is staged at `out/v3/manual-audit-sample.csv`. Run `npx tsx scripts/v3/score-manual-audit.ts --auto-llm` and `npx tsx scripts/v3/score-manual-audit.ts --rater human --limit 20`, followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts`, to auto-populate Table 6B with Cohen's $\\kappa$ and 95% Fleiss CIs."
     );
     lines.push('');
   }

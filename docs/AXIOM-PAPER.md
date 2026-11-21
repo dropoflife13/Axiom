@@ -261,7 +261,15 @@ Evaluated deterministic `src/verifier/sql-forensics.ts` flags against PostgreSQL
 | `missingCreatedAtColumn` | `invariant_violating` | 1872 | 199 | 15 | 1494 | 164 | 0.9299 | 0.5482 | 0.6898 |
 | `missingDeletedAtOnMutable` | `invariant_violating` | 960 | 286 | 15 | 659 | 0 | 0.9502 | 1.0000 | 0.9745 |
 
-> **Blind Human Manual-Audit Hook (`out/v3/manual-audit-kappa.json`):** Stratified 100-trial blind audit sample is staged at `out/v3/manual-audit-sample.csv`. Run `npx tsx scripts/v3/score-manual-audit.ts --rater rater1` (and optional `--rater rater2`) followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts` to auto-populate Table 6B with human-vs-classifier and inter-rater Cohen's $\kappa$ and 95% Fleiss CIs.
+### Table 6B: LLM-Assisted Forensic Validation with Human Spot-Check (`Cohen's κ`)
+
+Transparent **Solo-Dev LLM-Assisted Forensic Validation with Human Spot-Check** (not two-human double-blind): an automated blind LLM auditor (`gemini-3.1-flash-lite`, SQL-only with zero `sql-forensics.ts` or PostgreSQL 16 Oracle hints) rated 100/100 stratified samples (`out/v3/manual-audit-llm-rater.csv`), paired with an independent solo-developer human spot-check (`out/v3/manual-audit-human.csv`, 0/100 rated).
+
+| Comparison | Rated Samples | Micro Cohen's $\kappa$ [95% CI] | % Agreement | PABAK | Precision | Recall | F1 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| LLM Rater (`gemini-3.1-flash-lite`) vs. `sql-forensics.ts` | 100/100 | 0.9109 [0.8676, 0.9541] | 98.8% | 0.9754 | 0.9674 | 0.8725 | 0.9175 |
+
+> **Pending Human Spot-Check ($n = 20$):** Run `npx tsx scripts/v3/score-manual-audit.ts --rater human --limit 20`, followed by `npx tsx scripts/v3/score-manual-audit.ts --compute-kappa` and `npx tsx scripts/v3/make-paper-tables-v3.ts`, to append the Human Spot-Check vs. `sql-forensics.ts` and Human Spot-Check vs. LLM Rater rows above.
 
 ### Table 7: Gemini Decision 1 LLM-as-Judge vs. PostgreSQL 16 Oracle Calibration (Invariant 0)
 
