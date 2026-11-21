@@ -157,16 +157,17 @@ export const POLICY_ABAC_CANONICAL_RULES: readonly CanonicalRule[] = Object.free
 
 /**
  * Default acyclic prerequisite dependency graph linking specialized authorization rules
- * to foundational tenant-isolation (`P-01`), suspended-account forbid (`P-02`), and MFA (`P-04`) invariants.
+ * to the two universal foundational invariants: tenant isolation (`P-01`) and
+ * explicit suspended-account forbid (`P-02`).
  */
 export const DEFAULT_POLICY_ABAC_PREREQUISITE_GRAPH: PrerequisiteGraph = Object.freeze({
   'P-04': Object.freeze(['P-01', 'P-02']),
   'P-05': Object.freeze(['P-01', 'P-02']),
-  'P-06': Object.freeze(['P-01', 'P-02', 'P-04', 'P-05']),
+  'P-06': Object.freeze(['P-01', 'P-02']),
   'P-09': Object.freeze(['P-01', 'P-02']),
-  'P-10': Object.freeze(['P-01', 'P-02', 'P-04']),
-  'P-11': Object.freeze(['P-01', 'P-02', 'P-04']),
-  'P-12': Object.freeze(['P-01', 'P-02', 'P-04']),
+  'P-10': Object.freeze(['P-01', 'P-02']),
+  'P-11': Object.freeze(['P-01', 'P-02']),
+  'P-12': Object.freeze(['P-01', 'P-02']),
 });
 
 // ---------------------------------------------------------------------------
