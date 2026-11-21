@@ -1,0 +1,1284 @@
+{
+  "version": "4.0.0-abac",
+  "domain": "policy-abac",
+  "tasks": [
+    {
+      "id": "ABAC-001",
+      "cohortId": "BANKING_PAYOUT_CORE",
+      "domain": "banking",
+      "title": "Standard multi-tenant payout approval with MFA and four-eyes separation of duties",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"approve_payout\" on Resource::\"LedgerEntry\" enforcing tenant isolation, suspended-account forbid, MFA verification, separation of duties, and payout approval limits.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-05", "P-06"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-05", "P-06"],
+      "testVectors": [
+        {
+          "id": "V-001-ALLOW",
+          "factId": "P-06",
+          "description": "Legitimate finance_approver approving peer ledger payout within limit",
+          "principal": { "id": "usr_approver_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_101", "tenant_id": "t_bank_a", "created_by": "usr_maker_1", "amount_cents": 250000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-001-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant payout approval must be denied",
+          "principal": { "id": "usr_approver_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_102", "tenant_id": "t_bank_b", "created_by": "usr_maker_2", "amount_cents": 250000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-001-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended principal must be explicitly forbidden",
+          "principal": { "id": "usr_approver_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_101", "tenant_id": "t_bank_a", "created_by": "usr_maker_1", "amount_cents": 250000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-001-DENY-MFA",
+          "factId": "P-04",
+          "description": "Unverified MFA session must be denied",
+          "principal": { "id": "usr_approver_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_101", "tenant_id": "t_bank_a", "created_by": "usr_maker_1", "amount_cents": 250000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-001-DENY-SOD",
+          "factId": "P-05",
+          "description": "Self-approval violating separation of duties must be denied",
+          "principal": { "id": "usr_maker_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_101", "tenant_id": "t_bank_a", "created_by": "usr_maker_1", "amount_cents": 250000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-001-DENY-AMOUNT",
+          "factId": "P-06",
+          "description": "Payout exceeding 10000000 cents cap must be denied",
+          "principal": { "id": "usr_approver_1", "tenant_id": "t_bank_a", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_103", "tenant_id": "t_bank_a", "created_by": "usr_maker_1", "amount_cents": 15000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 120, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-002",
+      "cohortId": "BANKING_PAYOUT_CORE",
+      "domain": "banking",
+      "title": "Treasury wire payout approval with locked-ledger protection",
+      "prompt": "Write Cedar-style ABAC policies for treasury wire Action::\"approve_payout\" on Resource::\"LedgerEntry\" enforcing tenant isolation, suspended-account forbid, locked-resource guard, MFA, separation of duties, and payout role/limit.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06"],
+      "testVectors": [
+        {
+          "id": "V-002-ALLOW",
+          "factId": "P-06",
+          "description": "Valid unlocked treasury payout approval",
+          "principal": { "id": "usr_treasury_2", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_201", "tenant_id": "t_treasury", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-002-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant treasury wire approval denied",
+          "principal": { "id": "usr_treasury_2", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_202", "tenant_id": "t_other", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-002-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended treasury approver forbidden",
+          "principal": { "id": "usr_treasury_2", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_201", "tenant_id": "t_treasury", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-002-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Locked ledger entry cannot be approved",
+          "principal": { "id": "usr_treasury_2", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_203", "tenant_id": "t_treasury", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": true },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-002-DENY-MFA",
+          "factId": "P-04",
+          "description": "Missing MFA denied",
+          "principal": { "id": "usr_treasury_2", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_201", "tenant_id": "t_treasury", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-002-DENY-SOD",
+          "factId": "P-05",
+          "description": "Maker cannot approve own wire",
+          "principal": { "id": "usr_ops_9", "tenant_id": "t_treasury", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_201", "tenant_id": "t_treasury", "created_by": "usr_ops_9", "amount_cents": 5000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-003",
+      "cohortId": "BANKING_PAYOUT_CORE",
+      "domain": "banking",
+      "title": "ACH settlement payout approval with fresh session requirement",
+      "prompt": "Write Cedar-style ABAC policies for ACH settlement Action::\"approve_payout\" on Resource::\"LedgerEntry\" requiring tenant isolation, suspended-account forbid, MFA, separation of duties, payout role/cap, and fresh session <= 900s.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-05", "P-06", "P-07"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-05", "P-06", "P-07"],
+      "testVectors": [
+        {
+          "id": "V-003-ALLOW",
+          "factId": "P-06",
+          "description": "Valid fresh-session ACH payout approval",
+          "principal": { "id": "usr_ach_1", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_301", "tenant_id": "t_ach", "created_by": "usr_ach_maker", "amount_cents": 10000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 900, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-003-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant ACH approval denied",
+          "principal": { "id": "usr_ach_1", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_302", "tenant_id": "t_foreign", "created_by": "usr_ach_maker", "amount_cents": 1000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 200, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-003-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended ACH approver denied",
+          "principal": { "id": "usr_ach_1", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_301", "tenant_id": "t_ach", "created_by": "usr_ach_maker", "amount_cents": 1000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 200, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-003-DENY-MFA",
+          "factId": "P-04",
+          "description": "Unverified MFA denied",
+          "principal": { "id": "usr_ach_1", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_301", "tenant_id": "t_ach", "created_by": "usr_ach_maker", "amount_cents": 1000000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 200, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-003-DENY-SOD",
+          "factId": "P-05",
+          "description": "Self-approval denied",
+          "principal": { "id": "usr_ach_maker", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_301", "tenant_id": "t_ach", "created_by": "usr_ach_maker", "amount_cents": 1000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 200, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-003-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale session (> 900 seconds) denied",
+          "principal": { "id": "usr_ach_1", "tenant_id": "t_ach", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_301", "tenant_id": "t_ach", "created_by": "usr_ach_maker", "amount_cents": 1000000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 1200, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-004",
+      "cohortId": "BANKING_PAYOUT_STRICT",
+      "domain": "banking",
+      "title": "High-assurance institutional payout with network trust and risk-score ceiling",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"approve_payout\" on Resource::\"LedgerEntry\" enforcing tenant isolation, suspended-account forbid, locked guard, MFA, separation of duties, payout role/cap, fresh session, and trusted network/risk score.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06", "P-07", "P-08"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06", "P-07", "P-08"],
+      "testVectors": [
+        {
+          "id": "V-004-ALLOW",
+          "factId": "P-06",
+          "description": "All 8 banking security invariants satisfied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 9500000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-004-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant institutional payout denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_402", "tenant_id": "t_other", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended approver denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Locked ledger denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_403", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": true },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-SOD",
+          "factId": "P-05",
+          "description": "Self-approval denied",
+          "principal": { "id": "usr_inst_maker", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Expired session window denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 901, "ip_trusted": true, "risk_score": 25 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-004-DENY-RISK",
+          "factId": "P-08",
+          "description": "Untrusted IP or elevated risk score denied",
+          "principal": { "id": "usr_inst_1", "tenant_id": "t_inst", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_401", "tenant_id": "t_inst", "created_by": "usr_inst_maker", "amount_cents": 100000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": false, "risk_score": 70 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-005",
+      "cohortId": "BANKING_PAYOUT_STRICT",
+      "domain": "banking",
+      "title": "Merchant settlement payout with wrong-role enforcement",
+      "prompt": "Write Cedar-style ABAC policies for merchant settlement Action::\"approve_payout\" on Resource::\"LedgerEntry\" enforcing tenant isolation, suspended-account forbid, MFA, separation of duties, finance_approver role, and risk score.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-05", "P-06", "P-08"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-05", "P-06", "P-08"],
+      "testVectors": [
+        {
+          "id": "V-005-ALLOW",
+          "factId": "P-06",
+          "description": "Valid merchant payout approval",
+          "principal": { "id": "usr_merch_app", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 30 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-005-DENY-ROLE",
+          "factId": "P-06",
+          "description": "Non-finance_approver role must be denied",
+          "principal": { "id": "usr_support", "tenant_id": "t_merch", "role": "support_agent", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-005-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "usr_merch_app", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_502", "tenant_id": "t_rival", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-005-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended principal denied",
+          "principal": { "id": "usr_merch_app", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-005-DENY-MFA",
+          "factId": "P-04",
+          "description": "Missing MFA denied",
+          "principal": { "id": "usr_merch_app", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-005-DENY-SOD",
+          "factId": "P-05",
+          "description": "Self-approval denied",
+          "principal": { "id": "usr_merch_mk", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-005-DENY-RISK",
+          "factId": "P-08",
+          "description": "High risk score (> 30) denied",
+          "principal": { "id": "usr_merch_app", "tenant_id": "t_merch", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_501", "tenant_id": "t_merch", "created_by": "usr_merch_mk", "amount_cents": 50000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 45 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-006",
+      "cohortId": "BANKING_CHANGE_CONTROL",
+      "domain": "banking",
+      "title": "Financial ledger adjustment change-request approval with separation of duties",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"approve_payout\" on Resource::\"LedgerEntry\" enforcing tenant isolation, suspended-account forbid, locked guard, MFA, and four-eyes separation of duties.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-04", "P-05", "P-06"],
+      "testVectors": [
+        {
+          "id": "V-006-ALLOW",
+          "factId": "P-06",
+          "description": "Valid ledger payout adjustment approval",
+          "principal": { "id": "usr_fin_lead", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_601", "tenant_id": "t_clear", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-006-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "usr_fin_lead", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_602", "tenant_id": "t_other", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-006-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended approver denied",
+          "principal": { "id": "usr_fin_lead", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": true },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_601", "tenant_id": "t_clear", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-006-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Locked ledger denied",
+          "principal": { "id": "usr_fin_lead", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_603", "tenant_id": "t_clear", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": true },
+          "context": { "mfa_verified": true, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-006-DENY-MFA",
+          "factId": "P-04",
+          "description": "Missing MFA denied",
+          "principal": { "id": "usr_fin_lead", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_601", "tenant_id": "t_clear", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-006-DENY-SOD",
+          "factId": "P-05",
+          "description": "Self-approval denied",
+          "principal": { "id": "usr_fin_analyst", "tenant_id": "t_clear", "role": "finance_approver", "is_suspended": false },
+          "action": "Action::\"approve_payout\"",
+          "resource": { "type": "Resource::\"LedgerEntry\"", "id": "led_601", "tenant_id": "t_clear", "created_by": "usr_fin_analyst", "amount_cents": 750000, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 400, "ip_trusted": true, "risk_score": 8 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-007",
+      "cohortId": "HEALTHCARE_PHI_CORE",
+      "domain": "healthcare",
+      "title": "Clinician PHI patient-record read with consent and tenant boundary",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"read_patient_record\" on Resource::\"PatientRecord\" enforcing tenant isolation, suspended-account forbid, clinician role, and consent_granted == true.",
+      "boundFacts": ["P-01", "P-02", "P-09"],
+      "applicableFacts": ["P-01", "P-02", "P-09"],
+      "testVectors": [
+        {
+          "id": "V-007-ALLOW",
+          "factId": "P-09",
+          "description": "Same-clinic clinician reading consented patient record",
+          "principal": { "id": "doc_1", "tenant_id": "hosp_north", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_701", "tenant_id": "hosp_north", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-007-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-hospital PHI access denied",
+          "principal": { "id": "doc_1", "tenant_id": "hosp_north", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_702", "tenant_id": "hosp_south", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-007-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended clinician forbidden",
+          "principal": { "id": "doc_1", "tenant_id": "hosp_north", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_701", "tenant_id": "hosp_north", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-007-DENY-CONSENT",
+          "factId": "P-09",
+          "description": "Patient record without consent denied",
+          "principal": { "id": "doc_1", "tenant_id": "hosp_north", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_703", "tenant_id": "hosp_north", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-008",
+      "cohortId": "HEALTHCARE_PHI_CORE",
+      "domain": "healthcare",
+      "title": "Clinician PHI access with locked-chart guard",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"read_patient_record\" on Resource::\"PatientRecord\" enforcing tenant isolation, suspended-account forbid, locked-record guard, clinician role, and consent.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-09"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-09"],
+      "testVectors": [
+        {
+          "id": "V-008-ALLOW",
+          "factId": "P-09",
+          "description": "Valid unlocked consented patient record read",
+          "principal": { "id": "doc_8", "tenant_id": "hosp_west", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_801", "tenant_id": "hosp_west", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-008-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-hospital read denied",
+          "principal": { "id": "doc_8", "tenant_id": "hosp_west", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_802", "tenant_id": "hosp_east", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-008-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended clinician denied",
+          "principal": { "id": "doc_8", "tenant_id": "hosp_west", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_801", "tenant_id": "hosp_west", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-008-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Sealed/locked chart denied",
+          "principal": { "id": "doc_8", "tenant_id": "hosp_west", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_803", "tenant_id": "hosp_west", "consent_granted": true, "is_locked": true },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-008-DENY-ROLE",
+          "factId": "P-09",
+          "description": "Billing clerk denied PHI clinical record read",
+          "principal": { "id": "bill_1", "tenant_id": "hosp_west", "role": "billing_clerk", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_801", "tenant_id": "hosp_west", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-009",
+      "cohortId": "HEALTHCARE_PHI_CORE",
+      "domain": "healthcare",
+      "title": "Remote telehealth PHI access with trusted-network guard",
+      "prompt": "Write Cedar-style ABAC policies for telehealth Action::\"read_patient_record\" on Resource::\"PatientRecord\" requiring tenant isolation, suspended-account forbid, network trust/risk score, clinician role, and patient consent.",
+      "boundFacts": ["P-01", "P-02", "P-08", "P-09"],
+      "applicableFacts": ["P-01", "P-02", "P-08", "P-09"],
+      "testVectors": [
+        {
+          "id": "V-009-ALLOW",
+          "factId": "P-09",
+          "description": "Trusted-VPN clinician telehealth read allowed",
+          "principal": { "id": "doc_9", "tenant_id": "hosp_tele", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_901", "tenant_id": "hosp_tele", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 12, "break_glass_ticket": "" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-009-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant telehealth read denied",
+          "principal": { "id": "doc_9", "tenant_id": "hosp_tele", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_902", "tenant_id": "hosp_other", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 12, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-009-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended clinician denied",
+          "principal": { "id": "doc_9", "tenant_id": "hosp_tele", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_901", "tenant_id": "hosp_tele", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 12, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-009-DENY-NETWORK",
+          "factId": "P-08",
+          "description": "Untrusted public Wi-Fi denied",
+          "principal": { "id": "doc_9", "tenant_id": "hosp_tele", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_901", "tenant_id": "hosp_tele", "consent_granted": true, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": false, "risk_score": 12, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-009-DENY-CONSENT",
+          "factId": "P-09",
+          "description": "No consent denied",
+          "principal": { "id": "doc_9", "tenant_id": "hosp_tele", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"read_patient_record\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_903", "tenant_id": "hosp_tele", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 12, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-010",
+      "cohortId": "HEALTHCARE_BREAK_GLASS",
+      "domain": "healthcare",
+      "title": "Emergency break-glass PHI override with ticket and MFA",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"break_glass_read\" on Resource::\"PatientRecord\" enforcing tenant isolation, suspended-account forbid, MFA verification, and non-empty break_glass_ticket.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-10"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-10"],
+      "testVectors": [
+        {
+          "id": "V-010-ALLOW",
+          "factId": "P-10",
+          "description": "Emergency break-glass with valid incident ticket and MFA allowed",
+          "principal": { "id": "er_doc_1", "tenant_id": "hosp_er", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1001", "tenant_id": "hosp_er", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 15, "break_glass_ticket": "INC-2026-991" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-010-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-hospital break-glass denied",
+          "principal": { "id": "er_doc_1", "tenant_id": "hosp_er", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1002", "tenant_id": "hosp_other", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 15, "break_glass_ticket": "INC-2026-991" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-010-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended ER doctor denied even with ticket",
+          "principal": { "id": "er_doc_1", "tenant_id": "hosp_er", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1001", "tenant_id": "hosp_er", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 15, "break_glass_ticket": "INC-2026-991" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-010-DENY-MFA",
+          "factId": "P-04",
+          "description": "Break-glass without MFA denied",
+          "principal": { "id": "er_doc_1", "tenant_id": "hosp_er", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1001", "tenant_id": "hosp_er", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": false, "ip_trusted": true, "risk_score": 15, "break_glass_ticket": "INC-2026-991" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-010-DENY-TICKET",
+          "factId": "P-10",
+          "description": "Break-glass with empty ticket string denied",
+          "principal": { "id": "er_doc_1", "tenant_id": "hosp_er", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1001", "tenant_id": "hosp_er", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 15, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-011",
+      "cohortId": "HEALTHCARE_BREAK_GLASS",
+      "domain": "healthcare",
+      "title": "Trauma unit break-glass override with trusted network check",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"break_glass_read\" on Resource::\"PatientRecord\" requiring tenant isolation, suspended-account forbid, MFA, trusted network/risk score, and non-empty break_glass_ticket.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-08", "P-10"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-08", "P-10"],
+      "testVectors": [
+        {
+          "id": "V-011-ALLOW",
+          "factId": "P-10",
+          "description": "Valid trauma break-glass on hospital network",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1101", "tenant_id": "hosp_trauma", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "TRM-5501" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-011-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1102", "tenant_id": "hosp_other", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "TRM-5501" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-011-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended doctor denied",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1101", "tenant_id": "hosp_trauma", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "TRM-5501" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-011-DENY-MFA",
+          "factId": "P-04",
+          "description": "Missing MFA denied",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1101", "tenant_id": "hosp_trauma", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": false, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "TRM-5501" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-011-DENY-NETWORK",
+          "factId": "P-08",
+          "description": "Untrusted IP denied",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1101", "tenant_id": "hosp_trauma", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": false, "risk_score": 10, "break_glass_ticket": "TRM-5501" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-011-DENY-TICKET",
+          "factId": "P-10",
+          "description": "Empty break-glass ticket denied",
+          "principal": { "id": "er_doc_11", "tenant_id": "hosp_trauma", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1101", "tenant_id": "hosp_trauma", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "ip_trusted": true, "risk_score": 10, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-012",
+      "cohortId": "HEALTHCARE_BREAK_GLASS",
+      "domain": "healthcare",
+      "title": "ICU break-glass emergency override with fresh session",
+      "prompt": "Write Cedar-style ABAC policies for ICU Action::\"break_glass_read\" on Resource::\"PatientRecord\" enforcing tenant isolation, suspended-account forbid, MFA, fresh session, and emergency ticket.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-07", "P-10"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-07", "P-10"],
+      "testVectors": [
+        {
+          "id": "V-012-ALLOW",
+          "factId": "P-10",
+          "description": "Valid ICU emergency break-glass read",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1201", "tenant_id": "hosp_icu", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 180, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "ICU-8812" },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-012-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1202", "tenant_id": "hosp_other", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 180, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "ICU-8812" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-012-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended clinician denied",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": true },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1201", "tenant_id": "hosp_icu", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 180, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "ICU-8812" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-012-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1201", "tenant_id": "hosp_icu", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 180, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "ICU-8812" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-012-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale session denied",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1201", "tenant_id": "hosp_icu", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 3600, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "ICU-8812" },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-012-DENY-TICKET",
+          "factId": "P-10",
+          "description": "Missing break-glass ticket denied",
+          "principal": { "id": "icu_doc_1", "tenant_id": "hosp_icu", "role": "clinician", "is_suspended": false },
+          "action": "Action::\"break_glass_read\"",
+          "resource": { "type": "Resource::\"PatientRecord\"", "id": "pat_1201", "tenant_id": "hosp_icu", "consent_granted": false, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 180, "ip_trusted": true, "risk_score": 5, "break_glass_ticket": "" },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-013",
+      "cohortId": "ADMIN_AUDIT_EXPORT",
+      "domain": "admin",
+      "title": "Security auditor log export with clearance level and MFA",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"export_audit_log\" on Resource::\"AuditLog\" enforcing tenant isolation, suspended-account forbid, MFA, security_auditor role, and clearance_level >= min_clearance.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-11"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-11"],
+      "testVectors": [
+        {
+          "id": "V-013-ALLOW",
+          "factId": "P-11",
+          "description": "Cleared security_auditor exporting same-tenant audit log with MFA",
+          "principal": { "id": "aud_1", "tenant_id": "t_sec", "role": "security_auditor", "is_suspended": false, "clearance_level": 4 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1301", "tenant_id": "t_sec", "min_clearance": 3, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 240, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-013-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant audit export denied",
+          "principal": { "id": "aud_1", "tenant_id": "t_sec", "role": "security_auditor", "is_suspended": false, "clearance_level": 4 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1302", "tenant_id": "t_other", "min_clearance": 3, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 240, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-013-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended auditor denied",
+          "principal": { "id": "aud_1", "tenant_id": "t_sec", "role": "security_auditor", "is_suspended": true, "clearance_level": 4 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1301", "tenant_id": "t_sec", "min_clearance": 3, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 240, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-013-DENY-MFA",
+          "factId": "P-04",
+          "description": "Audit export without MFA denied",
+          "principal": { "id": "aud_1", "tenant_id": "t_sec", "role": "security_auditor", "is_suspended": false, "clearance_level": 4 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1301", "tenant_id": "t_sec", "min_clearance": 3, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 240, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-013-DENY-CLEARANCE",
+          "factId": "P-11",
+          "description": "Insufficient clearance level denied",
+          "principal": { "id": "aud_2", "tenant_id": "t_sec", "role": "security_auditor", "is_suspended": false, "clearance_level": 2 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1301", "tenant_id": "t_sec", "min_clearance": 3, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 240, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-014",
+      "cohortId": "ADMIN_AUDIT_EXPORT",
+      "domain": "admin",
+      "title": "Regulated compliance audit export with trusted-network enforcement",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"export_audit_log\" on Resource::\"AuditLog\" requiring tenant isolation, suspended-account forbid, MFA, trusted network/risk score, security_auditor role, and clearance level.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-08", "P-11"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-08", "P-11"],
+      "testVectors": [
+        {
+          "id": "V-014-ALLOW",
+          "factId": "P-11",
+          "description": "Valid compliance audit export from corporate VPN",
+          "principal": { "id": "aud_14", "tenant_id": "t_reg", "role": "security_auditor", "is_suspended": false, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1401", "tenant_id": "t_reg", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-014-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "aud_14", "tenant_id": "t_reg", "role": "security_auditor", "is_suspended": false, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1402", "tenant_id": "t_other", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-014-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended auditor denied",
+          "principal": { "id": "aud_14", "tenant_id": "t_reg", "role": "security_auditor", "is_suspended": true, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1401", "tenant_id": "t_reg", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-014-DENY-MFA",
+          "factId": "P-04",
+          "description": "Missing MFA denied",
+          "principal": { "id": "aud_14", "tenant_id": "t_reg", "role": "security_auditor", "is_suspended": false, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1401", "tenant_id": "t_reg", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-014-DENY-NETWORK",
+          "factId": "P-08",
+          "description": "Risk score above 30 denied",
+          "principal": { "id": "aud_14", "tenant_id": "t_reg", "role": "security_auditor", "is_suspended": false, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1401", "tenant_id": "t_reg", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 65 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-014-DENY-ROLE",
+          "factId": "P-11",
+          "description": "Developer role cannot export audit logs",
+          "principal": { "id": "dev_14", "tenant_id": "t_reg", "role": "developer", "is_suspended": false, "clearance_level": 5 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1401", "tenant_id": "t_reg", "min_clearance": 5, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 300, "ip_trusted": true, "risk_score": 15 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-015",
+      "cohortId": "ADMIN_AUDIT_EXPORT",
+      "domain": "admin",
+      "title": "Forensic audit export with fresh session window",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"export_audit_log\" on Resource::\"AuditLog\" enforcing tenant isolation, suspended-account forbid, MFA, fresh session <= 900s, security_auditor role, and clearance.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-07", "P-11"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-07", "P-11"],
+      "testVectors": [
+        {
+          "id": "V-015-ALLOW",
+          "factId": "P-11",
+          "description": "Fresh-session security_auditor export allowed",
+          "principal": { "id": "aud_15", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": false, "clearance_level": 3 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1501", "tenant_id": "t_for", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 450, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-015-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "aud_15", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": false, "clearance_level": 3 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1502", "tenant_id": "t_other", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 450, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-015-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended auditor denied",
+          "principal": { "id": "aud_15", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": true, "clearance_level": 3 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1501", "tenant_id": "t_for", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 450, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-015-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "aud_15", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": false, "clearance_level": 3 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1501", "tenant_id": "t_for", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 450, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-015-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale session denied",
+          "principal": { "id": "aud_15", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": false, "clearance_level": 3 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1501", "tenant_id": "t_for", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 1500, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-015-DENY-CLEARANCE",
+          "factId": "P-11",
+          "description": "Insufficient clearance denied",
+          "principal": { "id": "aud_low", "tenant_id": "t_for", "role": "security_auditor", "is_suspended": false, "clearance_level": 1 },
+          "action": "Action::\"export_audit_log\"",
+          "resource": { "type": "Resource::\"AuditLog\"", "id": "log_1501", "tenant_id": "t_for", "min_clearance": 2, "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 450, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-016",
+      "cohortId": "ADMIN_KMS_ROTATION",
+      "domain": "admin",
+      "title": "Tenant admin KMS key rotation forbidding service accounts",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"rotate_kms_key\" on Resource::\"KmsKey\" enforcing tenant isolation, suspended-account forbid, MFA, fresh session, tenant_admin role, and explicit forbid for service accounts.",
+      "boundFacts": ["P-01", "P-02", "P-04", "P-07", "P-12"],
+      "applicableFacts": ["P-01", "P-02", "P-04", "P-07", "P-12"],
+      "testVectors": [
+        {
+          "id": "V-016-ALLOW",
+          "factId": "P-12",
+          "description": "Human tenant_admin rotating same-tenant KMS key with fresh MFA session",
+          "principal": { "id": "adm_16", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1601", "tenant_id": "t_kms", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-016-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant KMS key rotation denied",
+          "principal": { "id": "adm_16", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1602", "tenant_id": "t_other", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-016-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended admin denied",
+          "principal": { "id": "adm_16", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": true, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1601", "tenant_id": "t_kms", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-016-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "adm_16", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1601", "tenant_id": "t_kms", "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-016-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale admin session denied",
+          "principal": { "id": "adm_16", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1601", "tenant_id": "t_kms", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 1200, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-016-DENY-SVC",
+          "factId": "P-12",
+          "description": "Service account explicitly forbidden from rotating KMS keys",
+          "principal": { "id": "svc_ci_1", "tenant_id": "t_kms", "role": "tenant_admin", "is_suspended": false, "is_service_account": true },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1601", "tenant_id": "t_kms", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 100, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-017",
+      "cohortId": "ADMIN_KMS_ROTATION",
+      "domain": "admin",
+      "title": "HSM-backed KMS key rotation with locked-key guard",
+      "prompt": "Write Cedar-style ABAC policies for Action::\"rotate_kms_key\" on Resource::\"KmsKey\" enforcing tenant isolation, suspended-account forbid, locked-key guard, MFA, fresh session, tenant_admin role, and service-account forbid.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-04", "P-07", "P-12"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-04", "P-07", "P-12"],
+      "testVectors": [
+        {
+          "id": "V-017-ALLOW",
+          "factId": "P-12",
+          "description": "Valid unlocked KMS key rotation",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1701", "tenant_id": "t_hsm", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-017-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1702", "tenant_id": "t_other", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-017-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended admin denied",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": true, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1701", "tenant_id": "t_hsm", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-017-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Locked KMS key cannot be rotated",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1703", "tenant_id": "t_hsm", "is_locked": true },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-017-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1701", "tenant_id": "t_hsm", "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-017-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale session denied",
+          "principal": { "id": "adm_17", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1701", "tenant_id": "t_hsm", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 950, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-017-DENY-SVC",
+          "factId": "P-12",
+          "description": "Service account forbidden",
+          "principal": { "id": "svc_hsm", "tenant_id": "t_hsm", "role": "tenant_admin", "is_suspended": false, "is_service_account": true },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1701", "tenant_id": "t_hsm", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 60, "ip_trusted": true, "risk_score": 10 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    },
+    {
+      "id": "ABAC-018",
+      "cohortId": "ADMIN_KMS_ROTATION",
+      "domain": "admin",
+      "title": "Sovereign cloud KMS rotation with full network, session, lock, and non-bot guards",
+      "prompt": "Write Cedar-style ABAC policies for sovereign cloud Action::\"rotate_kms_key\" on Resource::\"KmsKey\" enforcing tenant isolation, suspended-account forbid, locked-key guard, MFA, fresh session, trusted network/risk score, tenant_admin role, and service-account forbid.",
+      "boundFacts": ["P-01", "P-02", "P-03", "P-04", "P-07", "P-08", "P-12"],
+      "applicableFacts": ["P-01", "P-02", "P-03", "P-04", "P-07", "P-08", "P-12"],
+      "testVectors": [
+        {
+          "id": "V-018-ALLOW",
+          "factId": "P-12",
+          "description": "Valid sovereign KMS rotation",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "ALLOW"
+        },
+        {
+          "id": "V-018-DENY-TENANT",
+          "factId": "P-01",
+          "description": "Cross-tenant denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1802", "tenant_id": "t_other", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-SUSPENDED",
+          "factId": "P-02",
+          "description": "Suspended admin denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": true, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-LOCKED",
+          "factId": "P-03",
+          "description": "Locked KMS key denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1803", "tenant_id": "t_sov", "is_locked": true },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-MFA",
+          "factId": "P-04",
+          "description": "No MFA denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": false, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-SESSION",
+          "factId": "P-07",
+          "description": "Stale session denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 1800, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-NETWORK",
+          "factId": "P-08",
+          "description": "Untrusted IP denied",
+          "principal": { "id": "adm_18", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": false },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": false, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        },
+        {
+          "id": "V-018-DENY-SVC",
+          "factId": "P-12",
+          "description": "Service account forbidden",
+          "principal": { "id": "svc_sov", "tenant_id": "t_sov", "role": "tenant_admin", "is_suspended": false, "is_service_account": true },
+          "action": "Action::\"rotate_kms_key\"",
+          "resource": { "type": "Resource::\"KmsKey\"", "id": "key_1801", "tenant_id": "t_sov", "is_locked": false },
+          "context": { "mfa_verified": true, "session_age_seconds": 30, "ip_trusted": true, "risk_score": 5 },
+          "expectedDecision": "DENY"
+        }
+      ]
+    }
+  ]
+}

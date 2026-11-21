@@ -113,6 +113,12 @@ function extractFromText(
     }
   }
 
+  // 1b. Namespaced entity literals (e.g., Action::"approve_payout", Resource::"LedgerEntry")
+  const namespacedLiteralRe = /\b[A-Z][a-zA-Z0-9_]*::"[^"\r\n]+"/g;
+  for (const m of text.matchAll(namespacedLiteralRe)) {
+    addUnique(out, seenLower, m[0]);
+  }
+
   // 2. Dotted function calls & standalone function calls: auth.jwt(), gen_random_uuid(), now()
   const fnCallRe = /(?:\b[a-zA-Z_][a-zA-Z0-9_]*\.)?\b[a-zA-Z_][a-zA-Z0-9_]*\(\)/g;
   for (const m of text.matchAll(fnCallRe)) {
