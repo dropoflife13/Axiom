@@ -34,8 +34,15 @@ import {
 
 dotenv.config();
 
-export type PilotArm = 'A' | 'C' | 'C_ID_auto' | 'C_ID_prereq';
+export type PilotArm = 'A' | 'C' | 'C_ID_auto' | 'C_ID_prereq' | 'C_ID_hope';
 export const PILOT_ARMS: readonly PilotArm[] = ['A', 'C', 'C_ID_auto', 'C_ID_prereq'];
+export const ALL_PILOT_ARMS: readonly PilotArm[] = [
+  'A',
+  'C',
+  'C_ID_auto',
+  'C_ID_prereq',
+  'C_ID_hope',
+];
 
 export interface PilotTrialRecord {
   readonly key: string;
@@ -100,7 +107,8 @@ export interface PilotSummaryReport {
   readonly topK: number;
   readonly temperature: number;
   readonly totalTrials: number;
-  readonly arms: Record<PilotArm, ArmSummaryStats>;
+  readonly arms: Partial<Record<PilotArm, ArmSummaryStats>> &
+    Record<'A' | 'C' | 'C_ID_auto' | 'C_ID_prereq', ArmSummaryStats>;
   readonly contrastsPp: {
     readonly C_ID_auto_minus_C_task: number;
     readonly C_ID_auto_minus_C_fact: number;
@@ -110,6 +118,14 @@ export interface PilotSummaryReport {
     readonly C_ID_prereq_minus_C_fact: number;
     readonly C_ID_prereq_minus_A_task: number;
     readonly C_ID_prereq_minus_A_fact: number;
+    readonly C_ID_hope_minus_C_task?: number;
+    readonly C_ID_hope_minus_C_fact?: number;
+    readonly C_ID_hope_minus_C_ID_auto_task?: number;
+    readonly C_ID_hope_minus_C_ID_auto_fact?: number;
+    readonly C_ID_hope_minus_C_ID_prereq_task?: number;
+    readonly C_ID_hope_minus_C_ID_prereq_fact?: number;
+    readonly C_ID_hope_minus_A_task?: number;
+    readonly C_ID_hope_minus_A_fact?: number;
   };
   readonly generatedAt: string;
 }
@@ -246,7 +262,7 @@ export function stripPolicyFences(raw: string): string {
     .trim();
 }
 
-async function generatePolicyViaLlm(
+export async function generatePolicyViaLlm(
   model: string,
   systemPrompt: string,
   userPrompt: string,
@@ -340,9 +356,12 @@ export function summarizePilotCheckpoint(
   checkpoint: PilotCheckpointFile
 ): PilotSummaryReport {
   const trialsList = Object.values(checkpoint.trials);
+  const presentArms = ALL_PILOT_ARMS.filter(
+    (arm) => PILOT_ARMS.includes(arm) || trialsList.some((t) => t.arm === arm)
+  );
 
   const armStats = {} as Record<PilotArm, ArmSummaryStats>;
-  for (const arm of PILOT_ARMS) {
+  for (const arm of presentArms) {
     const subset = trialsList.filter((t) => t.arm === arm);
     const totalTasks = subset.length;
     const fullTaskPassCount = subset.filter((t) => t.fullTaskPass).length;
@@ -377,6 +396,7 @@ export function summarizePilotCheckpoint(
   }
 
   const pp = (a: number, b: number) => Number(((a - b) * 100).toFixed(2));
+  const hopeStats = armStats.C_ID_hope;
 
   return {
     schemaVersion: '4.0.0-policy-pilot-summary',
@@ -419,6 +439,42 @@ export function summarizePilotCheckpoint(
         armStats.C_ID_prereq.meanFactPassRate,
         armStats.A.meanFactPassRate
       ),
+      ...(hopeStats
+        ? {
+            C_ID_hope_minus_C_task: pp(
+              hopeStats.fullTaskPassRate,
+              armStats.C.fullTaskPassRate
+            ),
+            C_ID_hope_minus_C_fact: pp(
+              hopeStats.meanFactPassRate,
+              armStats.C.meanFactPassRate
+            ),
+            C_ID_hope_minus_C_ID_auto_task: pp(
+              hopeStats.fullTaskPassRate,
+              armStats.C_ID_auto.fullTaskPassRate
+            ),
+            C_ID_hope_minus_C_ID_auto_fact: pp(
+              hopeStats.meanFactPassRate,
+              armStats.C_ID_auto.meanFactPassRate
+            ),
+            C_ID_hope_minus_C_ID_prereq_task: pp(
+              hopeStats.fullTaskPassRate,
+              armStats.C_ID_prereq.fullTaskPassRate
+            ),
+            C_ID_hope_minus_C_ID_prereq_fact: pp(
+              hopeStats.meanFactPassRate,
+              armStats.C_ID_prereq.meanFactPassRate
+            ),
+            C_ID_hope_minus_A_task: pp(
+              hopeStats.fullTaskPassRate,
+              armStats.A.fullTaskPassRate
+            ),
+            C_ID_hope_minus_A_fact: pp(
+              hopeStats.meanFactPassRate,
+              armStats.A.meanFactPassRate
+            ),
+          }
+        : {}),
     },
     generatedAt: new Date().toISOString(),
   };
@@ -427,21 +483,23 @@ export function summarizePilotCheckpoint(
 export function formatSummaryMarkdown(summary: PilotSummaryReport): string {
   const fmtPct = (v: number) => `${(v * 100).toFixed(1)}%`;
   const fmtSigned = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(1)} pp`;
+  const activeArms = ALL_PILOT_ARMS.filter((arm) => Boolean(summary.arms[arm]));
+  const armCount = activeArms.length;
 
   const lines: string[] = [
     `# Axiom-HOPE v4 Policy-as-Code ABAC Pilot Summary — \`${summary.model}\``,
     '',
-    `- **Cartridge:** \`policy-abac-v4\` (18 held-out tasks × 4 arms = ${summary.totalTrials} trials)`,
+    `- **Cartridge:** \`policy-abac-v4\` (18 held-out tasks × ${armCount} arms = ${summary.totalTrials} trials)`,
     `- **Retrieval Budget:** \`K = ${summary.topK}\`, \`temperature = ${summary.temperature}\``,
     '',
-    '## 1. 4-Arm Performance Table',
+    `## 1. ${armCount}-Arm Performance Table`,
     '',
     '| Arm | Full-Task Pass | Mean Fact Pass | Committed | P-01 Retrieved | P-02 Retrieved |',
     '| :--- | :---: | :---: | :---: | :---: | :---: |',
   ];
 
-  for (const arm of PILOT_ARMS) {
-    const s = summary.arms[arm];
+  for (const arm of activeArms) {
+    const s = summary.arms[arm]!;
     lines.push(
       `| \`${arm}\` | ${s.fullTaskPassCount}/${s.totalTasks} (${fmtPct(s.fullTaskPassRate)}) | ${fmtPct(s.meanFactPassRate)} | ${s.committedCount}/${s.totalTasks} (${fmtPct(s.committedRate)}) | ${s.p01RetrievedCount}/${s.totalTasks} | ${s.p02RetrievedCount}/${s.totalTasks} |`
     );
@@ -455,21 +513,34 @@ export function formatSummaryMarkdown(summary: PilotSummaryReport): string {
     '| Contrast | Effect Isolated | Full-Task Delta | Mean Fact Delta |',
     '| :--- | :--- | :---: | :---: |',
     `| \`C_ID_auto - C\` | Automated Lexical Identifier Lock | ${fmtSigned(c.C_ID_auto_minus_C_task)} | ${fmtSigned(c.C_ID_auto_minus_C_fact)} |`,
-    `| \`C_ID_prereq - C_ID_auto\` | Prerequisite-Aware Retrieval (same K=${summary.topK}) | ${fmtSigned(c.C_ID_prereq_minus_C_ID_auto_task)} | ${fmtSigned(c.C_ID_prereq_minus_C_ID_auto_fact)} |`,
-    `| \`C_ID_prereq - C\` | Combined HOPE Symbolic Governance | ${fmtSigned(c.C_ID_prereq_minus_C_task)} | ${fmtSigned(c.C_ID_prereq_minus_C_fact)} |`,
-    `| \`C_ID_prereq - A\` | Gain over Zero-Shot Baseline | ${fmtSigned(c.C_ID_prereq_minus_A_task)} | ${fmtSigned(c.C_ID_prereq_minus_A_fact)} |`,
+    `| \`C_ID_prereq - C_ID_auto\` | Naive Static Prerequisite Injection (same K=${summary.topK}) | ${fmtSigned(c.C_ID_prereq_minus_C_ID_auto_task)} | ${fmtSigned(c.C_ID_prereq_minus_C_ID_auto_fact)} |`,
+    `| \`C_ID_prereq - C\` | Static Prereq + Lexical Lock vs. Unconstrained \`C\` | ${fmtSigned(c.C_ID_prereq_minus_C_task)} | ${fmtSigned(c.C_ID_prereq_minus_C_fact)} |`,
+    `| \`C_ID_prereq - A\` | Static Prereq vs. Zero-Shot Baseline | ${fmtSigned(c.C_ID_prereq_minus_A_task)} | ${fmtSigned(c.C_ID_prereq_minus_A_fact)} |`
+  );
+
+  if (summary.arms.C_ID_hope && c.C_ID_hope_minus_C_task !== undefined) {
+    lines.push(
+      `| \`C_ID_hope - C\` | **Closed-Loop 3-Clock Axiom-HOPE vs. Unconstrained \`C\`** | **${fmtSigned(c.C_ID_hope_minus_C_task)}** | **${fmtSigned(c.C_ID_hope_minus_C_fact!)}** |`,
+      `| \`C_ID_hope - C_ID_auto\` | **Slow-Clock Promoted Graph/Rule Governance vs. \`C_ID_auto\`** | **${fmtSigned(c.C_ID_hope_minus_C_ID_auto_task!)}** | **${fmtSigned(c.C_ID_hope_minus_C_ID_auto_fact!)}** |`,
+      `| \`C_ID_hope - C_ID_prereq\` | **Closed-Loop Canary-Gated HOPE vs. Naive Static Prereq** | **${fmtSigned(c.C_ID_hope_minus_C_ID_prereq_task!)}** | **${fmtSigned(c.C_ID_hope_minus_C_ID_prereq_fact!)}** |`,
+      `| \`C_ID_hope - A\` | **Closed-Loop Axiom-HOPE vs. Zero-Shot \`A\`** | **${fmtSigned(c.C_ID_hope_minus_A_task!)}** | **${fmtSigned(c.C_ID_hope_minus_A_fact!)}** |`
+    );
+  }
+
+  lines.push(
     '',
     '## 3. Forensic Defect Counts (out of 18 tasks per arm)',
     '',
-    '| Forensic Flag | `A` | `C` | `C_ID_auto` | `C_ID_prereq` |',
-    '| :--- | :---: | :---: | :---: | :---: |'
+    `| Forensic Flag | ${activeArms.map((a) => `\`${a}\``).join(' | ')} |`,
+    `| :--- | ${activeArms.map(() => ':---:').join(' | ')} |`
   );
 
   const flagNames = Object.keys(summary.arms.A.forensicDefectCounts).sort();
   for (const flag of flagNames) {
-    lines.push(
-      `| \`${flag}\` | ${summary.arms.A.forensicDefectCounts[flag] ?? 0} | ${summary.arms.C.forensicDefectCounts[flag] ?? 0} | ${summary.arms.C_ID_auto.forensicDefectCounts[flag] ?? 0} | ${summary.arms.C_ID_prereq.forensicDefectCounts[flag] ?? 0} |`
+    const counts = activeArms.map(
+      (a) => `${summary.arms[a]?.forensicDefectCounts[flag] ?? 0}`
     );
+    lines.push(`| \`${flag}\` | ${counts.join(' | ')} |`);
   }
 
   return `${lines.join('\n')}\n`;

@@ -4,7 +4,7 @@
   "modelSlug": "gemini-3-1-flash-lite",
   "topK": 4,
   "temperature": 0,
-  "totalTrials": 72,
+  "totalTrials": 90,
   "arms": {
     "A": {
       "arm": "A",
@@ -97,6 +97,29 @@
         "missingNetworkRiskGuard": 4,
         "missingServiceAccountForbid": 0
       }
+    },
+    "C_ID_hope": {
+      "arm": "C_ID_hope",
+      "totalTasks": 18,
+      "fullTaskPassCount": 13,
+      "fullTaskPassRate": 0.7222222222222222,
+      "meanFactPassRate": 0.9554894179894179,
+      "committedCount": 18,
+      "committedRate": 1,
+      "p01RetrievedCount": 1,
+      "p02RetrievedCount": 18,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingTenantIsolation": 3,
+        "missingForbidSuspended": 0,
+        "paraphrasedMfaClaim": 0,
+        "missingMfaRequirement": 0,
+        "missingSeparationOfDuties": 0,
+        "missingLockedResourceGuard": 0,
+        "missingSessionFreshnessGuard": 4,
+        "missingNetworkRiskGuard": 2,
+        "missingServiceAccountForbid": 0
+      }
     }
   },
   "contrastsPp": {
@@ -107,7 +130,15 @@
     "C_ID_prereq_minus_C_task": 44.44,
     "C_ID_prereq_minus_C_fact": 15.42,
     "C_ID_prereq_minus_A_task": 55.56,
-    "C_ID_prereq_minus_A_fact": 35.01
+    "C_ID_prereq_minus_A_fact": 35.01,
+    "C_ID_hope_minus_C_task": 61.11,
+    "C_ID_hope_minus_C_fact": 18.75,
+    "C_ID_hope_minus_C_ID_auto_task": 5.56,
+    "C_ID_hope_minus_C_ID_auto_fact": 4.4,
+    "C_ID_hope_minus_C_ID_prereq_task": 16.67,
+    "C_ID_hope_minus_C_ID_prereq_fact": 3.33,
+    "C_ID_hope_minus_A_task": 72.22,
+    "C_ID_hope_minus_A_fact": 38.34
   },
-  "generatedAt": "2026-11-21T16:36:02.937Z"
+  "generatedAt": "2026-11-21T16:51:01.228Z"
 }

@@ -1,0 +1,600 @@
+{
+  "schemaVersion": "4.0.0-hope-governance-receipt",
+  "cartridgeId": "policy-abac-v4",
+  "model": "gemini-3.1-flash-lite",
+  "topK": 4,
+  "temperature": 0,
+  "sourceCheckpointPath": ".axiom-state/runs-v4/policy-abac-gemini-3-1-flash-lite/checkpoint.json",
+  "initialSnapshotSha256": "79e805a9041663c17593900c231e2e46c1fcb7a8bcae577fa74cd642cd09ef69",
+  "finalSnapshotSha256": "3d4dc52fd48d6f1908fb846217831a395e5cb9fe52cef1bc1aad070fb3f3b738",
+  "promotedPrerequisiteGraph": {
+    "P-06": [
+      "P-02"
+    ]
+  },
+  "updatedRuleStatements": {
+    "P-06": "Only a principal.role == \"finance_approver\" may perform Action::\"approve_payout\" on Resource::\"LedgerEntry\" if resource.amount_cents <= 10000000, ensuring all approve_payout requests remain within the authorized amount_cents limit. Combine all required conditions with && inside a single permit statement (never split conditions across separate permit blocks)."
+  },
+  "fastClockTraceCount": 18,
+  "canaryCohortTaskIds": [
+    "ABAC-001",
+    "ABAC-003",
+    "ABAC-006",
+    "ABAC-007",
+    "ABAC-008",
+    "ABAC-009",
+    "ABAC-010",
+    "ABAC-011",
+    "ABAC-013",
+    "ABAC-014",
+    "ABAC-015",
+    "ABAC-016"
+  ],
+  "candidateDecisions": [
+    {
+      "candidateId": "Q-STATIC-P-01",
+      "factId": "P-01",
+      "triggerFlag": "staticPrerequisitePrior",
+      "origin": "naive-static-baseline",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "P-04",
+          "to": "P-01"
+        },
+        {
+          "from": "P-04",
+          "to": "P-02"
+        },
+        {
+          "from": "P-05",
+          "to": "P-01"
+        },
+        {
+          "from": "P-05",
+          "to": "P-02"
+        },
+        {
+          "from": "P-06",
+          "to": "P-01"
+        },
+        {
+          "from": "P-06",
+          "to": "P-02"
+        },
+        {
+          "from": "P-09",
+          "to": "P-01"
+        },
+        {
+          "from": "P-09",
+          "to": "P-02"
+        },
+        {
+          "from": "P-10",
+          "to": "P-01"
+        },
+        {
+          "from": "P-10",
+          "to": "P-02"
+        },
+        {
+          "from": "P-11",
+          "to": "P-01"
+        },
+        {
+          "from": "P-11",
+          "to": "P-02"
+        },
+        {
+          "from": "P-12",
+          "to": "P-01"
+        },
+        {
+          "from": "P-12",
+          "to": "P-02"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "fb91f3d4a1394ec3275ae8c85ac9a20a87f3e2829a3227a1765dda8eb4b71eb8"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:33.214Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "permit",
+            "principal.tenant_id",
+            "tenant_id",
+            "resource.tenant_id"
+          ],
+          "retainedTokens": [
+            "permit",
+            "principal.tenant_id",
+            "tenant_id",
+            "resource.tenant_id"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 1,
+          "targetTotal": 6,
+          "targetCohortDelta": 0.13194444444444434,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 9,
+          "canaryTotal": 12,
+          "canaryRegressions": 3,
+          "regressedCanaryTaskIds": [
+            "ABAC-001",
+            "ABAC-014",
+            "ABAC-016"
+          ],
+          "reason": "Canary Replay Gate failed: 3 canary regression(s) detected [ABAC-001, ABAC-014, ABAC-016] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-P-06-P-02",
+      "factId": "P-02",
+      "triggerFlag": "missingForbidSuspended",
+      "origin": "empirical-single-task",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "P-06",
+          "to": "P-02"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:33.217Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "forbid",
+            "principal.is_suspended",
+            "is_suspended"
+          ],
+          "retainedTokens": [
+            "forbid",
+            "principal.is_suspended",
+            "is_suspended"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 1,
+          "targetCohortDelta": 0.125,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 12,
+          "canaryTotal": 12,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-P-06-P-02",
+        "factId": "P-02",
+        "approvedAt": "2026-11-21T16:46:33.217Z",
+        "beforeSha256": "79e805a9041663c17593900c231e2e46c1fcb7a8bcae577fa74cd642cd09ef69",
+        "afterSha256": "dd861453c5549470a599681aa7620e322d81a2922e6f6d1aec0f29c92d149357",
+        "updatedRuleIds": [],
+        "addedPrerequisiteEdges": [
+          {
+            "from": "P-06",
+            "to": "P-02"
+          }
+        ],
+        "evidenceHashes": [
+          "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-21T16:46:33.217Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "forbid",
+              "principal.is_suspended",
+              "is_suspended"
+            ],
+            "retainedTokens": [
+              "forbid",
+              "principal.is_suspended",
+              "is_suspended"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 0,
+            "targetTotal": 1,
+            "targetCohortDelta": 0.125,
+            "canaryBeforePassCount": 12,
+            "canaryAfterPassCount": 12,
+            "canaryTotal": 12,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    },
+    {
+      "candidateId": "Q-P-12-P-07",
+      "factId": "P-12",
+      "triggerFlag": "missingSessionFreshnessGuard",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "P-12",
+          "to": "P-02"
+        },
+        {
+          "from": "P-12",
+          "to": "P-07"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "0a10f354f0a02e5b1416a047db98ee0e2d47247c6ed71e744a0e09ce394859f4",
+        "817412cf14578b60debd2579b28cfa0a53b8485f47a8e24af778b0f2c16d074d"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:36.068Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "forbid",
+            "rotate_kms_key",
+            "KmsKey",
+            "tenant_admin",
+            "Action::\"rotate_kms_key\"",
+            "Resource::\"KmsKey\"",
+            "principal.role",
+            "principal.is_service_account",
+            "is_service_account"
+          ],
+          "retainedTokens": [
+            "forbid",
+            "rotate_kms_key",
+            "KmsKey",
+            "tenant_admin",
+            "Action::\"rotate_kms_key\"",
+            "Resource::\"KmsKey\"",
+            "principal.role",
+            "principal.is_service_account",
+            "is_service_account"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 1,
+          "targetTotal": 2,
+          "targetCohortDelta": 0.08333333333333337,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 11,
+          "canaryTotal": 12,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "ABAC-010"
+          ],
+          "reason": "Canary Replay Gate failed: 1 canary regression(s) detected [ABAC-010] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-P-06-CONJUNCT",
+      "factId": "P-06",
+      "triggerFlag": "splitPermitDisjunction",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "fb91f3d4a1394ec3275ae8c85ac9a20a87f3e2829a3227a1765dda8eb4b71eb8",
+        "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed",
+        "c633ee263c638ad1b8043462bde16456a8b69aa4c28d453cbad7c4d3f7fcc908"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:57.281Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "approve_payout",
+            "LedgerEntry",
+            "finance_approver",
+            "Action::\"approve_payout\"",
+            "Resource::\"LedgerEntry\"",
+            "principal.role",
+            "resource.amount_cents",
+            "amount_cents",
+            "<= 10000000"
+          ],
+          "retainedTokens": [
+            "approve_payout",
+            "LedgerEntry",
+            "finance_approver",
+            "Action::\"approve_payout\"",
+            "Resource::\"LedgerEntry\"",
+            "principal.role",
+            "resource.amount_cents",
+            "amount_cents",
+            "<= 10000000"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 1,
+          "targetTotal": 3,
+          "targetCohortDelta": 0.22222222222222232,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 12,
+          "canaryTotal": 12,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-P-06-CONJUNCT",
+        "factId": "P-06",
+        "approvedAt": "2026-11-21T16:46:57.281Z",
+        "beforeSha256": "dd861453c5549470a599681aa7620e322d81a2922e6f6d1aec0f29c92d149357",
+        "afterSha256": "3d4dc52fd48d6f1908fb846217831a395e5cb9fe52cef1bc1aad070fb3f3b738",
+        "updatedRuleIds": [
+          "P-06"
+        ],
+        "addedPrerequisiteEdges": [],
+        "evidenceHashes": [
+          "fb91f3d4a1394ec3275ae8c85ac9a20a87f3e2829a3227a1765dda8eb4b71eb8",
+          "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed",
+          "c633ee263c638ad1b8043462bde16456a8b69aa4c28d453cbad7c4d3f7fcc908"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-21T16:46:57.281Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "approve_payout",
+              "LedgerEntry",
+              "finance_approver",
+              "Action::\"approve_payout\"",
+              "Resource::\"LedgerEntry\"",
+              "principal.role",
+              "resource.amount_cents",
+              "amount_cents",
+              "<= 10000000"
+            ],
+            "retainedTokens": [
+              "approve_payout",
+              "LedgerEntry",
+              "finance_approver",
+              "Action::\"approve_payout\"",
+              "Resource::\"LedgerEntry\"",
+              "principal.role",
+              "resource.amount_cents",
+              "amount_cents",
+              "<= 10000000"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 1,
+            "targetTotal": 3,
+            "targetCohortDelta": 0.22222222222222232,
+            "canaryBeforePassCount": 12,
+            "canaryAfterPassCount": 12,
+            "canaryTotal": 12,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    }
+  ],
+  "promotionReceipts": [
+    {
+      "candidateId": "Q-P-06-P-02",
+      "factId": "P-02",
+      "approvedAt": "2026-11-21T16:46:33.217Z",
+      "beforeSha256": "79e805a9041663c17593900c231e2e46c1fcb7a8bcae577fa74cd642cd09ef69",
+      "afterSha256": "dd861453c5549470a599681aa7620e322d81a2922e6f6d1aec0f29c92d149357",
+      "updatedRuleIds": [],
+      "addedPrerequisiteEdges": [
+        {
+          "from": "P-06",
+          "to": "P-02"
+        }
+      ],
+      "evidenceHashes": [
+        "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:33.217Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "forbid",
+            "principal.is_suspended",
+            "is_suspended"
+          ],
+          "retainedTokens": [
+            "forbid",
+            "principal.is_suspended",
+            "is_suspended"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 1,
+          "targetCohortDelta": 0.125,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 12,
+          "canaryTotal": 12,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    },
+    {
+      "candidateId": "Q-P-06-CONJUNCT",
+      "factId": "P-06",
+      "approvedAt": "2026-11-21T16:46:57.281Z",
+      "beforeSha256": "dd861453c5549470a599681aa7620e322d81a2922e6f6d1aec0f29c92d149357",
+      "afterSha256": "3d4dc52fd48d6f1908fb846217831a395e5cb9fe52cef1bc1aad070fb3f3b738",
+      "updatedRuleIds": [
+        "P-06"
+      ],
+      "addedPrerequisiteEdges": [],
+      "evidenceHashes": [
+        "fb91f3d4a1394ec3275ae8c85ac9a20a87f3e2829a3227a1765dda8eb4b71eb8",
+        "46074105c1b4caa01a98040477e21ad6d91173490b857aeb38aadd9cc67e01ed",
+        "c633ee263c638ad1b8043462bde16456a8b69aa4c28d453cbad7c4d3f7fcc908"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-21T16:46:57.281Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "approve_payout",
+            "LedgerEntry",
+            "finance_approver",
+            "Action::\"approve_payout\"",
+            "Resource::\"LedgerEntry\"",
+            "principal.role",
+            "resource.amount_cents",
+            "amount_cents",
+            "<= 10000000"
+          ],
+          "retainedTokens": [
+            "approve_payout",
+            "LedgerEntry",
+            "finance_approver",
+            "Action::\"approve_payout\"",
+            "Resource::\"LedgerEntry\"",
+            "principal.role",
+            "resource.amount_cents",
+            "amount_cents",
+            "<= 10000000"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 1,
+          "targetTotal": 3,
+          "targetCohortDelta": 0.22222222222222232,
+          "canaryBeforePassCount": 12,
+          "canaryAfterPassCount": 12,
+          "canaryTotal": 12,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    }
+  ],
+  "generatedAt": "2026-11-21T16:47:16.355Z"
+}
