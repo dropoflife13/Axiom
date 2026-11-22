@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import HealingLoopHero, { STAGES, hex, type LiveRun, type SnapshotMeta } from '@/components/HealingLoopHero';
 import { AxiomLogo } from '@/components/AxiomLogo';
 import { ResearchCanvas } from '@/components/analysis/ResearchCanvas';
+import { AxiomHopeV4View } from '@/components/hope/AxiomHopeV4View';
 import { AnatomySection } from '@/components/anatomy/AnatomySection';
 import { AxiomAutonomousKernel } from '@/components/cortex/AxiomAutonomousKernel';
 import { AxiomFAQSection } from '@/components/faq/AxiomFAQSection';
@@ -101,7 +102,7 @@ export default function Page() {
 
   const [activeRunId, setActiveRunId] = useState<string>(DEFAULT_RUN_ID);
 
-  const [viewMode, setViewMode] = useState<'engine' | 'research'>('engine');
+  const [viewMode, setViewMode] = useState<'engine' | 'research' | 'hope'>('engine');
   const [activeResearchSection, setActiveResearchSection] = useState<string>('theories');
   const [intelOpen, setIntelOpen] = useState(true);
   const [pendingRunId, setPendingRunId] = useState<string | null>(null);
@@ -157,7 +158,7 @@ export default function Page() {
     }
   }, [dropdownOpen]);
 
-  const handleSelectRun = useCallback((runId: string, targetViewMode?: 'engine' | 'research') => {
+  const handleSelectRun = useCallback((runId: string, targetViewMode?: 'engine' | 'research' | 'hope') => {
     setActiveRunId(runId);
     if (targetViewMode) {
       setViewMode(targetViewMode);
@@ -199,6 +200,8 @@ export default function Page() {
   const handleSelectSection = useCallback((sec: string) => {
     if (sec === 'engine') {
       setViewMode('engine');
+    } else if (sec === 'hope' || sec === 'v4') {
+      setViewMode('hope');
     } else {
       setActiveResearchSection(sec);
     }
@@ -217,6 +220,8 @@ export default function Page() {
     if (w) {
       if (w === 'engine' || w === 'live') {
         setViewMode('engine');
+      } else if (w === 'hope' || w === 'v4' || w === 'axiom-hope') {
+        setViewMode('hope');
       } else {
         setViewMode('research');
         if (w !== 'research') {
@@ -725,11 +730,12 @@ export default function Page() {
             </div>
           </div>
 
-          {/* Right: Engine / Research View Switcher Tabs */}
-          <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Right: Primary View Switcher (Engine / Research / Axiom-HOPE v4) */}
+          <nav aria-label="Primary dashboard views" className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               <div className="flex items-center gap-1 p-0.5 sm:p-1 rounded-lg bg-zinc-900/90 border border-zinc-800/90 shadow-inner">
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'engine'}
                   onClick={() => {
                     setViewMode('engine');
                     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
@@ -745,6 +751,7 @@ export default function Page() {
                 </button>
                 <button
                   type="button"
+                  aria-pressed={viewMode === 'research'}
                   onClick={() => {
                     setViewMode('research');
                     if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
@@ -758,8 +765,24 @@ export default function Page() {
                   <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'research' ? 'bg-amber-400 animate-pulse' : 'bg-zinc-600'}`} />
                   <span>RESEARCH FINDINGS</span>
                 </button>
+                <button
+                  type="button"
+                  aria-pressed={viewMode === 'hope'}
+                  onClick={() => {
+                    setViewMode('hope');
+                    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+                  }}
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded text-[10.5px] font-mono tracking-wider transition-colors uppercase cursor-pointer ${
+                    viewMode === 'hope'
+                      ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/45 font-semibold'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/70 border border-transparent'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${viewMode === 'hope' ? 'bg-emerald-400' : 'bg-zinc-600'}`} />
+                  <span>HOPE v4</span>
+                </button>
               </div>
-            </div>
+            </nav>
           </header>
 
         {/* Dynamic Center Canvas: Switches between Live Engine (with Anatomy & FAQ) and Dedicated Research Windows */}
@@ -823,11 +846,11 @@ export default function Page() {
           {/* Dedicated Research Windows Canvas (Theories, Telemetry, Convergence, Taxonomy, Facts, Trace, Architecture, Questions) */}
           <div
             className={`w-full flex-1 flex flex-col transition-opacity duration-200 ease-out ${
-              viewMode !== 'engine'
+              viewMode === 'research'
                 ? 'opacity-100 relative z-10 block'
                 : 'opacity-0 pointer-events-none hidden z-0'
             }`}
-            aria-hidden={viewMode === 'engine'}
+            aria-hidden={viewMode !== 'research'}
           >
             <ResearchCanvas
               runId={displayRunId}
@@ -841,6 +864,23 @@ export default function Page() {
               totalTrials={totalTrials}
               activeSection={activeResearchSection}
               onSelectSection={handleSelectSection}
+            />
+          </div>
+
+          {/* Dedicated Axiom-HOPE (v4) Governance Canvas */}
+          <div
+            className={`w-full flex-1 flex flex-col transition-opacity duration-200 ease-out ${
+              viewMode === 'hope'
+                ? 'opacity-100 relative z-10 block'
+                : 'opacity-0 pointer-events-none hidden z-0'
+            }`}
+            aria-hidden={viewMode !== 'hope'}
+          >
+            <AxiomHopeV4View
+              onOpenV3Research={() => {
+                setViewMode('research');
+                if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'instant' });
+              }}
             />
           </div>
         </div>
