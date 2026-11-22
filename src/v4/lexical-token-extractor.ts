@@ -112,11 +112,37 @@ function extractFromText(
       addUnique(out, seenLower, inner);
     }
   }
+  const backtickQuoted = /`([^`\r\n]+)`/g;
+  for (const m of text.matchAll(backtickQuoted)) {
+    const inner = m[1].trim();
+    if (inner.length > 0 && !ENGLISH_STOP_WORDS.has(inner.toLowerCase())) {
+      addUnique(out, seenLower, inner);
+    }
+  }
 
   // 1b. Namespaced entity literals (e.g., Action::"approve_payout", Resource::"LedgerEntry")
   const namespacedLiteralRe = /\b[A-Z][a-zA-Z0-9_]*::"[^"\r\n]+"/g;
   for (const m of text.matchAll(namespacedLiteralRe)) {
     addUnique(out, seenLower, m[0]);
+  }
+
+  // 1c. HTTP headers and directives (e.g., x-idempotency-key, Cache-Control: no-store)
+  const customHttpHeaderRe = /\bx-[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/gi;
+  for (const m of text.matchAll(customHttpHeaderRe)) {
+    addUnique(out, seenLower, m[0]);
+  }
+  const standardHttpHeaderRe =
+    /\b([A-Z][a-z]+(?:-[A-Z][a-z]+)+)(?:\s*:\s*([a-zA-Z0-9_-]+(?:\/[a-zA-Z0-9.+-]+)?))?(?![a-zA-Z0-9_-])/g;
+  for (const m of text.matchAll(standardHttpHeaderRe)) {
+    const headerName = m[1];
+    const directive = m[2];
+    if (directive) {
+      addUnique(out, seenLower, `${headerName}: ${directive}`);
+      addUnique(out, seenLower, headerName);
+      addUnique(out, seenLower, directive);
+    } else {
+      addUnique(out, seenLower, headerName);
+    }
   }
 
   // 2. Dotted function calls & standalone function calls: auth.jwt(), gen_random_uuid(), now()
@@ -140,17 +166,20 @@ function extractFromText(
     }
   }
 
-  // 4. Dotted schema/record/property references: NEW.received_at, app_metadata.tenant_id, user_metadata.tenant_id
-  const dottedRefRe = /\b([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)\b/g;
+  // 4. Dotted schema/record/property references (2+ segments):
+  //    NEW.received_at, app_metadata.tenant_id, session.tenantId, process.env.PRIVATE_KEY
+  const dottedRefRe = /\b[a-zA-Z_][a-zA-Z0-9_]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)+\b/g;
   for (const m of text.matchAll(dottedRefRe)) {
     const full = m[0];
-    const lhs = m[1];
-    const rhs = m[2];
-    // Avoid English abbreviations like "e.g."
-    if (lhs.length <= 1 && rhs.length <= 1) continue;
+    const segments = full.split('.');
+    // Avoid English abbreviations like "e.g." or "i.e."
+    if (segments.every((seg) => seg.length <= 1)) continue;
     addUnique(out, seenLower, full);
-    if (lhs.includes('_')) addUnique(out, seenLower, lhs);
-    if (rhs.includes('_')) addUnique(out, seenLower, rhs);
+    for (const seg of segments) {
+      if (seg.includes('_')) {
+        addUnique(out, seenLower, seg);
+      }
+    }
   }
 
   // 5. Key-value option assignments, nullity predicates, ordering clauses, and numeric bounds
@@ -174,13 +203,27 @@ function extractFromText(
     addUnique(out, seenLower, m[0].replace(/\s+/g, ' '));
   }
 
-  // 6. snake_case identifiers (columns, roles, naming conventions, prefixes)
+  // 6. snake_case, camelCase, and SCREAMING_SNAKE_CASE identifiers
+  //    (columns, roles, TypeScript APIs/properties, security constants)
   const snakeCaseRe = /\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g;
   for (const m of text.matchAll(snakeCaseRe)) {
     const tok = m[0];
     if (!ENGLISH_STOP_WORDS.has(tok.toLowerCase())) {
       addUnique(out, seenLower, tok);
     }
+  }
+
+  const camelCaseRe = /\b[a-z][a-z0-9]*[A-Z][a-zA-Z0-9]*\b/g;
+  for (const m of text.matchAll(camelCaseRe)) {
+    const tok = m[0];
+    if (!ENGLISH_STOP_WORDS.has(tok.toLowerCase())) {
+      addUnique(out, seenLower, tok);
+    }
+  }
+
+  const screamingSnakeRe = /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g;
+  for (const m of text.matchAll(screamingSnakeRe)) {
+    addUnique(out, seenLower, m[0]);
   }
 
   // 7. Multi-word uppercase SQL / policy clauses
