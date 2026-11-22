@@ -1,0 +1,625 @@
+{
+  "schemaVersion": "4.0.0-policy-cross-model-summary",
+  "generatedAt": "2026-11-22T10:57:57.315Z",
+  "models": [
+    {
+      "modelId": "gemini-3.1-flash-lite",
+      "provider": "Google AI Studio",
+      "status": "complete-5-arm",
+      "completedTrials": 90,
+      "summary": {
+        "schemaVersion": "4.0.0-policy-pilot-summary",
+        "model": "gemini-3.1-flash-lite",
+        "modelSlug": "gemini-3-1-flash-lite",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 90,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.5720899470899469,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 7,
+              "missingMfaRequirement": 11,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 2,
+            "fullTaskPassRate": 0.1111111111111111,
+            "meanFactPassRate": 0.7679894179894182,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 7,
+              "missingMfaRequirement": 7,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 12,
+            "fullTaskPassRate": 0.6666666666666666,
+            "meanFactPassRate": 0.9115079365079366,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 1,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 2,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 10,
+            "fullTaskPassRate": 0.5555555555555556,
+            "meanFactPassRate": 0.9221560846560847,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 2,
+              "missingMfaRequirement": 2,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 3,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 13,
+            "fullTaskPassRate": 0.7222222222222222,
+            "meanFactPassRate": 0.9554894179894179,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 2,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 55.56,
+          "C_ID_auto_minus_C_fact": 14.35,
+          "C_ID_prereq_minus_C_ID_auto_task": -11.11,
+          "C_ID_prereq_minus_C_ID_auto_fact": 1.06,
+          "C_ID_prereq_minus_C_task": 44.44,
+          "C_ID_prereq_minus_C_fact": 15.42,
+          "C_ID_prereq_minus_A_task": 55.56,
+          "C_ID_prereq_minus_A_fact": 35.01,
+          "C_ID_hope_minus_C_task": 61.11,
+          "C_ID_hope_minus_C_fact": 18.75,
+          "C_ID_hope_minus_C_ID_auto_task": 5.56,
+          "C_ID_hope_minus_C_ID_auto_fact": 4.4,
+          "C_ID_hope_minus_C_ID_prereq_task": 16.67,
+          "C_ID_hope_minus_C_ID_prereq_fact": 3.33,
+          "C_ID_hope_minus_A_task": 72.22,
+          "C_ID_hope_minus_A_fact": 38.34
+        },
+        "generatedAt": "2026-11-22T10:57:57.286Z"
+      },
+      "promotedPrerequisiteGraph": {
+        "P-06": [
+          "P-02"
+        ]
+      },
+      "updatedRuleIds": [
+        "P-06"
+      ],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-P-01",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.13194444444444434,
+          "canaryRegressions": 3,
+          "regressedCanaryTaskIds": [
+            "ABAC-001",
+            "ABAC-014",
+            "ABAC-016"
+          ]
+        },
+        {
+          "candidateId": "Q-P-06-P-02",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.125,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-12-P-07",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.08333333333333337,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "ABAC-010"
+          ]
+        },
+        {
+          "candidateId": "Q-P-06-CONJUNCT",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.22222222222222232,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    },
+    {
+      "modelId": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "status": "complete-5-arm",
+      "completedTrials": 90,
+      "summary": {
+        "schemaVersion": "4.0.0-policy-pilot-summary",
+        "model": "gemma-4-31b-it",
+        "modelSlug": "gemma-4-31b-it",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 90,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6193121693121691,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 14,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 3,
+              "missingSessionFreshnessGuard": 7,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6035714285714283,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 3,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 6,
+              "missingSessionFreshnessGuard": 7,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 2
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 11,
+            "fullTaskPassRate": 0.6111111111111112,
+            "meanFactPassRate": 0.9281746031746033,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 2,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 2,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 7,
+            "fullTaskPassRate": 0.3888888888888889,
+            "meanFactPassRate": 0.8499338624338626,
+            "committedCount": 17,
+            "committedRate": 0.9444444444444444,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 1,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 5,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 6,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 11,
+            "fullTaskPassRate": 0.6111111111111112,
+            "meanFactPassRate": 0.9351190476190477,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 2,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 61.11,
+          "C_ID_auto_minus_C_fact": 32.46,
+          "C_ID_prereq_minus_C_ID_auto_task": -22.22,
+          "C_ID_prereq_minus_C_ID_auto_fact": -7.82,
+          "C_ID_prereq_minus_C_task": 38.89,
+          "C_ID_prereq_minus_C_fact": 24.64,
+          "C_ID_prereq_minus_A_task": 38.89,
+          "C_ID_prereq_minus_A_fact": 23.06,
+          "C_ID_hope_minus_C_task": 61.11,
+          "C_ID_hope_minus_C_fact": 33.15,
+          "C_ID_hope_minus_C_ID_auto_task": 0,
+          "C_ID_hope_minus_C_ID_auto_fact": 0.69,
+          "C_ID_hope_minus_C_ID_prereq_task": 22.22,
+          "C_ID_hope_minus_C_ID_prereq_fact": 8.52,
+          "C_ID_hope_minus_A_task": 61.11,
+          "C_ID_hope_minus_A_fact": 31.58
+        },
+        "generatedAt": "2026-11-22T10:57:57.297Z"
+      },
+      "promotedPrerequisiteGraph": {
+        "P-06": [
+          "P-02"
+        ]
+      },
+      "updatedRuleIds": [],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-P-01",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.0964285714285714,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "ABAC-002",
+            "ABAC-003",
+            "ABAC-014",
+            "ABAC-016"
+          ]
+        },
+        {
+          "candidateId": "Q-P-06-P-02",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.125,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-06-P-01",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 2,
+          "regressedCanaryTaskIds": [
+            "ABAC-002",
+            "ABAC-003"
+          ]
+        },
+        {
+          "candidateId": "Q-P-12-P-07",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-06-CONJUNCT",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-12-FRESH",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    },
+    {
+      "modelId": "qwen/qwen3.8-27b",
+      "provider": "Groq",
+      "status": "complete-5-arm",
+      "completedTrials": 90,
+      "summary": {
+        "schemaVersion": "4.0.0-policy-pilot-summary",
+        "model": "qwen/qwen3.8-27b",
+        "modelSlug": "qwen-qwen3-8-27b",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 90,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.3040343915343915,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 4,
+              "missingMfaRequirement": 5,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 5,
+              "missingSessionFreshnessGuard": 2,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 2
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6031084656084655,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 3,
+              "missingMfaRequirement": 3,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 6,
+              "missingSessionFreshnessGuard": 2,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 13,
+            "fullTaskPassRate": 0.7222222222222222,
+            "meanFactPassRate": 0.9485449735449735,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 1,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 3,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 9,
+            "fullTaskPassRate": 0.5,
+            "meanFactPassRate": 0.9128968253968254,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 4,
+              "missingMfaRequirement": 4,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 14,
+            "fullTaskPassRate": 0.7777777777777778,
+            "meanFactPassRate": 0.9647486772486773,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 1,
+              "missingNetworkRiskGuard": 3,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 72.22,
+          "C_ID_auto_minus_C_fact": 34.54,
+          "C_ID_prereq_minus_C_ID_auto_task": -22.22,
+          "C_ID_prereq_minus_C_ID_auto_fact": -3.56,
+          "C_ID_prereq_minus_C_task": 50,
+          "C_ID_prereq_minus_C_fact": 30.98,
+          "C_ID_prereq_minus_A_task": 50,
+          "C_ID_prereq_minus_A_fact": 60.89,
+          "C_ID_hope_minus_C_task": 77.78,
+          "C_ID_hope_minus_C_fact": 36.16,
+          "C_ID_hope_minus_C_ID_auto_task": 5.56,
+          "C_ID_hope_minus_C_ID_auto_fact": 1.62,
+          "C_ID_hope_minus_C_ID_prereq_task": 27.78,
+          "C_ID_hope_minus_C_ID_prereq_fact": 5.19,
+          "C_ID_hope_minus_A_task": 77.78,
+          "C_ID_hope_minus_A_fact": 66.07
+        },
+        "generatedAt": "2026-11-22T10:57:57.308Z"
+      },
+      "promotedPrerequisiteGraph": {
+        "P-06": [
+          "P-02"
+        ],
+        "P-12": [
+          "P-02",
+          "P-07"
+        ]
+      },
+      "updatedRuleIds": [],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-P-01",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.025,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "ABAC-001",
+            "ABAC-006",
+            "ABAC-014",
+            "ABAC-016"
+          ]
+        },
+        {
+          "candidateId": "Q-P-06-P-02",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.125,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-12-P-07",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.08333333333333337,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-06-CONJUNCT",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-P-12-FRESH",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    }
+  ]
+}

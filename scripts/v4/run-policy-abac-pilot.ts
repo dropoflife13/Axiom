@@ -14,7 +14,12 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import dotenv from 'dotenv';
-import { resolveEndpoint, sanitizeReasoningTags } from '../../src/executor.js';
+import {
+  getModelProfile,
+  normalizeModelName,
+  resolveEndpoint,
+  sanitizeReasoningTags,
+} from '../../src/executor.js';
 import {
   DEFAULT_POLICY_ABAC_PREREQUISITE_GRAPH,
   PolicyAbacCartridge,
@@ -262,18 +267,58 @@ export function stripPolicyFences(raw: string): string {
     .trim();
 }
 
+export type PolicyProviderOverride = 'gemini' | 'groq';
+
+export function resolvePolicyProviderEndpoint(
+  model: string,
+  providerOverride?: PolicyProviderOverride
+): { provider: string; apiKey: string; baseUrl: string; chatUrl: string } {
+  if (providerOverride === 'gemini') {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_key_here') {
+      throw new Error('GEMINI_API_KEY is not set in .env.');
+    }
+    const baseUrl =
+      process.env.GEMINI_BASE_URL ||
+      'https://generativelanguage.googleapis.com/v1beta/openai/';
+    return {
+      provider: 'gemini',
+      apiKey,
+      baseUrl,
+      chatUrl: `${baseUrl.replace(/\/+$/, '')}/chat/completions`,
+    };
+  }
+  if (providerOverride === 'groq') {
+    const apiKey = process.env.GROQ_API_KEY;
+    if (!apiKey || apiKey === 'your_key_here') {
+      throw new Error('GROQ_API_KEY is not set in .env.');
+    }
+    const baseUrl = process.env.GROQ_BASE_URL || 'https://api.groq.com/openai/v1';
+    return {
+      provider: 'groq',
+      apiKey,
+      baseUrl,
+      chatUrl: `${baseUrl.replace(/\/+$/, '')}/chat/completions`,
+    };
+  }
+  return resolveEndpoint(model);
+}
+
 export async function generatePolicyViaLlm(
   model: string,
   systemPrompt: string,
   userPrompt: string,
-  temperature = 0
+  temperature = 0,
+  providerOverride?: PolicyProviderOverride
 ): Promise<{
   policyText: string;
   returnedModel: string;
   finishReason: string;
   latencyMs: number;
 }> {
-  const endpoint = resolveEndpoint(model);
+  const endpoint = resolvePolicyProviderEndpoint(model, providerOverride);
+  const effectiveModel = normalizeModelName(model);
+  const profile = getModelProfile(model);
   const MAX_RETRIES = 4;
   let rateLimitAttempts = 0;
 
@@ -287,26 +332,41 @@ export async function generatePolicyViaLlm(
           Authorization: `Bearer ${endpoint.apiKey}`,
         },
         body: JSON.stringify({
-          model,
+          model: effectiveModel,
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt },
           ],
           temperature,
-          max_tokens: 4096,
+          max_tokens: profile.maxTokens,
+          ...profile.extraRequestBody,
         }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(Math.max(90_000, profile.timeoutMs)),
       });
 
       if (response.status === 429 || response.status === 503) {
+        const errBody = await response.text().catch(() => '');
+        const retryAfterRaw = response.headers.get('retry-after');
+        const retryAfter = retryAfterRaw ? parseFloat(retryAfterRaw) : 5;
+        const isDailyQuota =
+          /tokens per day|requests per day|daily.*limit|quota exceeded/i.test(errBody) ||
+          (!Number.isNaN(retryAfter) && retryAfter > 180);
+        if (isDailyQuota) {
+          throw new Error(
+            `[RATE_LIMIT_QUOTA] ${endpoint.provider.toUpperCase()} HTTP ${response.status} (retry-after=${retryAfterRaw ?? 'n/a'}): ${errBody.slice(0, 300)}`
+          );
+        }
+
         rateLimitAttempts++;
         if (rateLimitAttempts > 20) {
-          throw new Error(`Exceeded rate-limit retries (HTTP ${response.status}).`);
+          throw new Error(
+            `[RATE_LIMIT_EXHAUSTED] Exceeded rate-limit retries (HTTP ${response.status}): ${errBody.slice(0, 200)}`
+          );
         }
-        const retryAfter = parseInt(response.headers.get('retry-after') || '4', 10);
-        const delayMs = Math.min((retryAfter + rateLimitAttempts * 2) * 1000, 35_000);
+        const baseDelay = !Number.isNaN(retryAfter) && retryAfter > 0 ? retryAfter : 5;
+        const delayMs = Math.min((baseDelay + rateLimitAttempts * 2) * 1000, 45_000);
         console.warn(
-          `[v4-pilot] HTTP ${response.status}; waiting ${(delayMs / 1000).toFixed(1)}s before retry...`
+          `[v4-pilot] ${endpoint.provider} HTTP ${response.status}; waiting ${(delayMs / 1000).toFixed(1)}s before retry (${rateLimitAttempts}/20)...`
         );
         await sleep(delayMs);
         attempt--;
@@ -316,9 +376,11 @@ export async function generatePolicyViaLlm(
       if (!response.ok) {
         const errText = await response.text();
         if (response.status < 500) {
-          throw new Error(`Non-retryable executor HTTP ${response.status}: ${errText}`);
+          throw new Error(
+            `[NON_RETRYABLE] ${endpoint.provider.toUpperCase()} executor HTTP ${response.status}: ${errText}`
+          );
         }
-        throw new Error(`Executor 5xx HTTP ${response.status}: ${errText}`);
+        throw new Error(`${endpoint.provider.toUpperCase()} executor 5xx HTTP ${response.status}: ${errText}`);
       }
 
       const data = (await response.json()) as {
@@ -333,17 +395,23 @@ export async function generatePolicyViaLlm(
       const policyText = stripPolicyFences(rawContent);
       return {
         policyText,
-        returnedModel: data.model ?? model,
+        returnedModel: data.model ?? effectiveModel,
         finishReason: choice?.finish_reason ?? 'unknown',
         latencyMs: Date.now() - t0,
       };
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (
+        msg.includes('[RATE_LIMIT_QUOTA]') ||
+        msg.includes('[RATE_LIMIT_EXHAUSTED]') ||
+        msg.includes('[NON_RETRYABLE]')
+      ) {
+        throw err;
+      }
       if (attempt >= MAX_RETRIES) throw err;
       const backoffMs = Math.pow(2, attempt) * 1000;
       console.warn(
-        `[v4-pilot] Attempt ${attempt}/${MAX_RETRIES} failed: ${
-          err instanceof Error ? err.message : String(err)
-        }. Retrying in ${backoffMs}ms...`
+        `[v4-pilot] Attempt ${attempt}/${MAX_RETRIES} failed: ${msg}. Retrying in ${backoffMs}ms...`
       );
       await sleep(backoffMs);
     }
@@ -548,12 +616,14 @@ export function formatSummaryMarkdown(summary: PilotSummaryReport): string {
 
 export async function runPolicyAbacPilot(options: {
   model?: string;
+  provider?: PolicyProviderOverride;
   topK?: number;
   delayMs?: number;
   vaultCPath?: string;
   vaultCidAutoPath?: string;
 } = {}): Promise<PilotSummaryReport> {
   const model = options.model ?? 'gemini-3.1-flash-lite';
+  const provider = options.provider;
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 350;
   const modelSlug = slugifyModel(model);
@@ -694,7 +764,7 @@ export async function runPolicyAbacPilot(options: {
       const systemPrompt = buildBasePolicySystemPrompt(lessonsBlock);
       const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
 
-      const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0);
+      const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
       const evaluation = cartridge.evaluate(task, gen.policyText);
       const forensicFlags = cartridge.classifyForensics(task, gen.policyText);
       const boundCount = evaluation.boundFacts.length;
@@ -759,10 +829,17 @@ export async function runPolicyAbacPilot(options: {
 
 function parseCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
+  const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
   const delayIdx = argv.indexOf('--delay-ms');
+  const rawProvider =
+    providerIdx >= 0 && argv[providerIdx + 1] ? argv[providerIdx + 1].toLowerCase() : undefined;
+  if (rawProvider !== undefined && rawProvider !== 'gemini' && rawProvider !== 'groq') {
+    throw new Error(`Invalid --provider "${rawProvider}". Expected "gemini" or "groq".`);
+  }
   return {
     model: modelIdx >= 0 && argv[modelIdx + 1] ? argv[modelIdx + 1] : 'gemini-3.1-flash-lite',
+    provider: rawProvider as PolicyProviderOverride | undefined,
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 350,
   };

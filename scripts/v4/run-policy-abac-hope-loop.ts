@@ -39,6 +39,7 @@ import {
   summarizePilotCheckpoint,
   type PilotCheckpointFile,
   type PilotTrialRecord,
+  type PolicyProviderOverride,
 } from './run-policy-abac-pilot.js';
 
 dotenv.config();
@@ -132,6 +133,7 @@ function buildLessonsMapForSnapshot(
 
 export async function runPolicyAbacHopeLoop(options: {
   model?: string;
+  provider?: PolicyProviderOverride;
   topK?: number;
   delayMs?: number;
   forceHopeArm?: boolean;
@@ -140,6 +142,7 @@ export async function runPolicyAbacHopeLoop(options: {
   summary: ReturnType<typeof summarizePilotCheckpoint>;
 }> {
   const model = options.model ?? 'gemini-3.1-flash-lite';
+  const provider = options.provider;
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 350;
   const forceHopeArm = options.forceHopeArm ?? false;
@@ -154,7 +157,8 @@ export async function runPolicyAbacHopeLoop(options: {
     `policy-abac-hope-quarantine-${modelSlug}.json`
   );
   const outDir = path.resolve('out', 'v4');
-  const receiptOutPath = path.join(outDir, 'policy-abac-hope-receipt.json');
+  const receiptOutPath = path.join(outDir, `policy-abac-${modelSlug}-hope-receipt.json`);
+  const legacyGeminiReceiptPath = path.join(outDir, 'policy-abac-hope-receipt.json');
   const summaryJsonPath = path.join(outDir, `policy-abac-${modelSlug}-summary.json`);
   const summaryMdPath = path.join(outDir, `policy-abac-${modelSlug}-summary.md`);
 
@@ -282,15 +286,18 @@ export async function runPolicyAbacHopeLoop(options: {
       staticEdges.push({ from, to });
     }
   }
-  const abac002Auto = checkpoint.trials['ABAC-002::C_ID_auto'];
+  const staticEvidenceHashes =
+    failingAutoTasks.length > 0
+      ? failingAutoTasks.map((t) => checkpoint.trials[`${t.id}::C_ID_auto`].artifactSha256)
+      : [checkpoint.trials['ABAC-001::C_ID_auto'].artifactSha256];
   engine.quarantineVault.stageCandidate({
     candidateId: 'Q-STATIC-P-01',
     factId: 'P-01',
     triggerFlag: 'staticPrerequisitePrior',
     proposedRuleText: canonicalById.get('P-01')!.statement,
     proposedPrerequisiteEdges: staticEdges,
-    evidenceHashes: [abac002Auto.artifactSha256],
-    observedCount: 1,
+    evidenceHashes: staticEvidenceHashes,
+    observedCount: failingAutoTasks.length,
     cartridgeId: cartridge.id,
   });
   candidateMeta.set('Q-STATIC-P-01', {
@@ -299,31 +306,56 @@ export async function runPolicyAbacHopeLoop(options: {
     proposedRuleTextChanged: false,
   });
 
-  // 2c. Stage empirically triggered P-06 -> P-02 rescue candidate (from ABAC-004 missingForbidSuspended
-  //     + universal 18/18 zero-shot P-02 failure in Arm A)
-  const abac004Auto = checkpoint.trials['ABAC-004::C_ID_auto'];
-  if (abac004Auto && abac004Auto.failedFacts.includes('P-02')) {
+  // 2c. Stage empirically triggered P-06 -> P-02 rescue candidate whenever banking tasks fail P-02
+  const bankingP02Fails = tasks
+    .filter((t) => t.domain === 'banking')
+    .map((t) => checkpoint.trials[`${t.id}::C_ID_auto`])
+    .filter((tr) => tr && (tr.failedFacts.includes('P-02') || tr.forensicFlags.missingForbidSuspended));
+  if (bankingP02Fails.length >= 1) {
     engine.quarantineVault.stageCandidate({
       candidateId: 'Q-P-06-P-02',
       factId: 'P-02',
       triggerFlag: 'missingForbidSuspended',
       proposedRuleText: canonicalById.get('P-02')!.statement,
       proposedPrerequisiteEdges: [{ from: 'P-06', to: 'P-02' }],
-      evidenceHashes: [abac004Auto.artifactSha256],
-      observedCount: 1,
+      evidenceHashes: bankingP02Fails.map((t) => t.artifactSha256),
+      observedCount: bankingP02Fails.length,
       cartridgeId: cartridge.id,
     });
     candidateMeta.set('Q-P-06-P-02', {
-      origin: 'empirical-single-task',
-      targetTaskIds: ['ABAC-004'],
+      origin: bankingP02Fails.length >= 2 ? 'fast-clock-cluster' : 'empirical-single-task',
+      targetTaskIds: bankingP02Fails.map((t) => t.taskId),
       proposedRuleTextChanged: false,
     });
   }
 
-  // 2d. Stage lexical-locked rule-text refinement for P-06 (from recurring banking failures
-  //     ABAC-002, ABAC-004, ABAC-005 where ABAC-002 emitted split OR-ed permit blocks)
-  const bankingFailTrials = ['ABAC-002', 'ABAC-004', 'ABAC-005']
-    .map((id) => checkpoint.trials[`${id}::C_ID_auto`])
+  // 2c-bis. Stage banking P-06 -> P-01 if >=2 banking tasks fail tenant isolation
+  const bankingP01Fails = tasks
+    .filter((t) => t.domain === 'banking')
+    .map((t) => checkpoint.trials[`${t.id}::C_ID_auto`])
+    .filter((tr) => tr && (tr.failedFacts.includes('P-01') || tr.forensicFlags.missingTenantIsolation));
+  if (bankingP01Fails.length >= 2) {
+    engine.quarantineVault.stageCandidate({
+      candidateId: 'Q-P-06-P-01',
+      factId: 'P-01',
+      triggerFlag: 'missingTenantIsolation',
+      proposedRuleText: canonicalById.get('P-01')!.statement,
+      proposedPrerequisiteEdges: [{ from: 'P-06', to: 'P-01' }],
+      evidenceHashes: bankingP01Fails.map((t) => t.artifactSha256),
+      observedCount: bankingP01Fails.length,
+      cartridgeId: cartridge.id,
+    });
+    candidateMeta.set('Q-P-06-P-01', {
+      origin: 'fast-clock-cluster',
+      targetTaskIds: bankingP01Fails.map((t) => t.taskId),
+      proposedRuleTextChanged: false,
+    });
+  }
+
+  // 2d. Stage lexical-locked rule-text refinement for P-06 if >=2 banking tasks fail in C_ID_auto
+  const bankingFailTrials = tasks
+    .filter((t) => t.domain === 'banking')
+    .map((t) => checkpoint.trials[`${t.id}::C_ID_auto`])
     .filter((t): t is PilotTrialRecord => Boolean(t && !t.fullTaskPass));
 
   if (bankingFailTrials.length >= 2) {
@@ -342,6 +374,31 @@ export async function runPolicyAbacHopeLoop(options: {
     candidateMeta.set('Q-P-06-CONJUNCT', {
       origin: 'fast-clock-cluster',
       targetTaskIds: bankingFailTrials.map((t) => t.taskId),
+      proposedRuleTextChanged: true,
+    });
+  }
+
+  // 2e. Stage lexical-locked P-12 single-permit conjunction refinement if >=2 KMS admin tasks fail
+  const kmsFailTrials = tasks
+    .filter((t) => t.boundFacts.includes('P-12'))
+    .map((t) => checkpoint.trials[`${t.id}::C_ID_auto`])
+    .filter((t): t is PilotTrialRecord => Boolean(t && !t.fullTaskPass));
+  if (kmsFailTrials.length >= 2) {
+    const baseP12 = cidAutoById.get('P-12') ?? canonicalById.get('P-12')!.statement;
+    const refinedP12 = `${baseP12} Enforce all conditions with && in one permit statement and use context.session_age_seconds <= 900 when fresh session is required.`;
+    engine.quarantineVault.stageCandidate({
+      candidateId: 'Q-P-12-FRESH',
+      factId: 'P-12',
+      triggerFlag: 'missingSessionFreshnessGuard',
+      proposedRuleText: refinedP12,
+      proposedPrerequisiteEdges: [],
+      evidenceHashes: kmsFailTrials.map((t) => t.artifactSha256),
+      observedCount: kmsFailTrials.length,
+      cartridgeId: cartridge.id,
+    });
+    candidateMeta.set('Q-P-12-FRESH', {
+      origin: 'fast-clock-cluster',
+      targetTaskIds: kmsFailTrials.map((t) => t.taskId),
       proposedRuleTextChanged: true,
     });
   }
@@ -419,7 +476,7 @@ export async function runPolicyAbacHopeLoop(options: {
     let cached = replayCache[key];
     if (!cached) {
       const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
-      const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0);
+      const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
       const evaluation = cartridge.evaluate(task, gen.policyText);
       const forensicFlags = cartridge.classifyForensics(task, gen.policyText);
       const boundCount = evaluation.boundFacts.length;
@@ -467,8 +524,10 @@ export async function runPolicyAbacHopeLoop(options: {
   const evaluationOrder = [
     'Q-STATIC-P-01',
     'Q-P-06-P-02',
+    'Q-P-06-P-01',
     'Q-P-12-P-07',
     'Q-P-06-CONJUNCT',
+    'Q-P-12-FRESH',
   ].filter((id) => Boolean(engine.quarantineVault.getCandidate(id)));
 
   const candidateDecisions: CandidateDecisionRecord[] = [];
@@ -569,6 +628,9 @@ export async function runPolicyAbacHopeLoop(options: {
   };
 
   fs.writeFileSync(receiptOutPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
+  if (modelSlug === 'gemini-3-1-flash-lite') {
+    fs.writeFileSync(legacyGeminiReceiptPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
+  }
   console.log(`\n[HOPE] Wrote Slow Clock governance receipt to ${receiptOutPath}`);
 
   // =========================================================================
@@ -603,7 +665,7 @@ export async function runPolicyAbacHopeLoop(options: {
     const systemPrompt = buildBasePolicySystemPrompt(lessonsBlock);
     const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
 
-    const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0);
+    const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
     const evaluation = cartridge.evaluate(task, gen.policyText);
     const forensicFlags = cartridge.classifyForensics(task, gen.policyText);
     const boundCount = evaluation.boundFacts.length;
@@ -664,10 +726,17 @@ export async function runPolicyAbacHopeLoop(options: {
 
 function parseCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
+  const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
   const delayIdx = argv.indexOf('--delay-ms');
+  const rawProvider =
+    providerIdx >= 0 && argv[providerIdx + 1] ? argv[providerIdx + 1].toLowerCase() : undefined;
+  if (rawProvider !== undefined && rawProvider !== 'gemini' && rawProvider !== 'groq') {
+    throw new Error(`Invalid --provider "${rawProvider}". Expected "gemini" or "groq".`);
+  }
   return {
     model: modelIdx >= 0 && argv[modelIdx + 1] ? argv[modelIdx + 1] : 'gemini-3.1-flash-lite',
+    provider: rawProvider as PolicyProviderOverride | undefined,
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 350,
     forceHopeArm: argv.includes('--force-hope-arm'),
