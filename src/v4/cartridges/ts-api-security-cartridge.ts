@@ -363,19 +363,17 @@ export function analyzeTypeScriptHandlerStatic(tsSource: string): StaticHandlerA
 
   const hasSafeParse = /\.\s*safeParse\s*\(/.test(code);
 
+  const sessionExpr = '(?:[a-zA-Z_$][a-zA-Z0-9_$]*\\s*\\??\\.\\s*)?session\\s*\\??\\.';
+  const tenantRhs = '(?:[a-zA-Z_$][a-zA-Z0-9_$.?]*\\.)?tenantId\\b';
   const hasTenantCheck =
-    /\bsession\s*\??\.\s*tenantId\s*(?:!==|===|!=|==)\s*[a-zA-Z_$][a-zA-Z0-9_$.?]*tenantId\b/.test(
-      code
-    ) ||
-    /\b[a-zA-Z_$][a-zA-Z0-9_$.?]*tenantId\s*(?:!==|===|!=|==)\s*session\s*\??\.\s*tenantId\b/.test(
-      code
-    );
+    new RegExp(`\\b${sessionExpr}tenantId\\s*(?:!==|===|!=|==)\\s*${tenantRhs}`).test(code) ||
+    new RegExp(`\\b${tenantRhs}\\s*(?:!==|===|!=|==)\\s*${sessionExpr}tenantId\\b`).test(code);
 
   const hasRoleAllowlistGuard =
     /\bALLOWED_ROLES\b/.test(code) &&
-    /\bALLOWED_ROLES\s*\.\s*(?:includes|has)\s*\(\s*session\s*\??\.\s*role(?:\s+as\b[^)]*)?\s*\)/.test(
-      code
-    );
+    new RegExp(
+      `\\bALLOWED_ROLES\\s*\\.\\s*(?:includes|has)\\s*\\(\\s*${sessionExpr}role(?:\\s+as\\b[^)]*)?\\s*\\)`
+    ).test(code);
 
   const hasErrorEnvelope =
     /\berror\s*:\s*\{[\s\S]{0,240}\}/.test(code) &&
