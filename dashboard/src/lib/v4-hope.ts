@@ -11,9 +11,25 @@ export interface V4ArmStats {
   readonly meanFactPassRate: number;
   readonly committedCount: number;
   readonly committedRate: number;
-  readonly p01RetrievedCount: number;
-  readonly p02RetrievedCount: number;
+  readonly p01RetrievedCount?: number;
+  readonly p02RetrievedCount?: number;
+  readonly ts01RetrievedCount?: number;
+  readonly ts04RetrievedCount?: number;
+  readonly ts08RetrievedCount?: number;
   readonly forensicDefectCounts: Record<string, number>;
+}
+
+export interface V4TsApiSummary {
+  readonly schemaVersion: string;
+  readonly cartridgeId: string;
+  readonly model: string;
+  readonly modelSlug: string;
+  readonly topK: number;
+  readonly temperature: number;
+  readonly totalTrials: number;
+  readonly arms: Record<V4PilotArm, V4ArmStats>;
+  readonly contrastsPp: V4ContrastsPp;
+  readonly generatedAt: string;
 }
 
 export interface V4ContrastsPp {
@@ -197,12 +213,45 @@ export interface V4HopeDashboardPayload {
         readonly did_remlPp: number;
       };
     };
+    readonly tsApiSecurity: {
+      readonly id: string;
+      readonly name: string;
+      readonly version: string;
+      readonly taskCount: number;
+      readonly ruleCount: number;
+      readonly totalLiveTrials: number;
+      readonly modelCount: number;
+      readonly topK: number;
+      readonly domainBreakdown: Record<string, number>;
+      readonly tasksSha256: string;
+      readonly defaultPrerequisiteEdgeCount: number;
+      readonly vaultAudits: {
+        readonly c: {
+          readonly sha256: string;
+          readonly retained: number;
+          readonly total: number;
+          readonly rate: number;
+          readonly rulesAt100Pct: number;
+        };
+        readonly cidAuto: {
+          readonly sha256: string;
+          readonly retained: number;
+          readonly total: number;
+          readonly rate: number;
+          readonly rulesAt100Pct: number;
+        };
+      };
+    };
   };
   readonly crossModel: {
     readonly generatedAt: string;
     readonly models: readonly V4ModelSummaryEntry[];
   };
   readonly receipts: readonly V4HopeReceipt[];
+  readonly tsApi: {
+    readonly summary: V4TsApiSummary;
+    readonly receipt: V4HopeReceipt;
+  };
 }
 
 export async function fetchV4HopePayload(

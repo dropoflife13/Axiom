@@ -11,6 +11,10 @@ import {
   DEFAULT_POLICY_ABAC_PREREQUISITE_GRAPH,
   POLICY_ABAC_CANONICAL_RULES,
 } from '../../src/v4/cartridges/policy-abac-cartridge.js';
+import {
+  DEFAULT_TS_API_SECURITY_PREREQUISITE_GRAPH,
+  TS_API_SECURITY_CANONICAL_RULES,
+} from '../../src/v4/cartridges/ts-api-security-cartridge.js';
 import { DEFAULT_POSTGRES_PREREQUISITE_GRAPH } from '../../src/v4/prerequisite-retriever.js';
 
 function sha256File(filePath: string): string {
@@ -34,12 +38,65 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
   const v3PooledPath = path.join(rootDir, 'out', 'v3', 'pooled-v3-summary.json');
   const vaultCPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-c.json');
   const vaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-cid-auto.json');
+  const tsApiSummaryPath = path.join(
+    rootDir,
+    'out',
+    'v4',
+    'ts-api-gemini-3-1-flash-lite-summary.json'
+  );
+  const tsApiReceiptPath = path.join(rootDir, 'out', 'v4', 'ts-api-hope-receipt.json');
+  const tsApiTasksPath = path.join(rootDir, 'fixtures', 'v4', 'ts-api-security-tasks.json');
+  const tsApiVaultCPath = path.join(rootDir, '.axiom-state', 'v4', 'ts-api-c.json');
+  const tsApiVaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'ts-api-cid-auto.json');
 
   const crossModel = readJson<Record<string, unknown>>(crossModelPath);
   const receipts = receiptPaths.map((p) => ({
     file: path.relative(rootDir, p).replace(/\\/g, '/'),
     ...readJson<Record<string, unknown>>(p),
   }));
+
+  const tsApiSummary = readJson<Record<string, unknown>>(tsApiSummaryPath);
+  const tsApiReceipt = {
+    file: path.relative(rootDir, tsApiReceiptPath).replace(/\\/g, '/'),
+    ...readJson<Record<string, unknown>>(tsApiReceiptPath),
+  };
+
+  const tsApiTasksJson = readJson<{
+    version: string;
+    tasks: Array<{ id: string; domain: string; cohortId: string; boundFacts: string[] }>;
+  }>(tsApiTasksPath);
+  const tsApiDomainCounts: Record<string, number> = {};
+  for (const t of tsApiTasksJson.tasks) {
+    tsApiDomainCounts[t.domain] = (tsApiDomainCounts[t.domain] ?? 0) + 1;
+  }
+
+  let tsApiVaultAudits: {
+    c: { sha256: string; retained: number; total: number; rate: number; rulesAt100Pct: number };
+    cidAuto: { sha256: string; retained: number; total: number; rate: number; rulesAt100Pct: number };
+  } = {
+    c: { sha256: '', retained: 18, total: 47, rate: 18 / 47, rulesAt100Pct: 4 },
+    cidAuto: { sha256: '', retained: 47, total: 47, rate: 1, rulesAt100Pct: 12 },
+  };
+  if (fs.existsSync(tsApiVaultCPath) && fs.existsSync(tsApiVaultCidPath)) {
+    const vc = readJson<any>(tsApiVaultCPath);
+    const vcid = readJson<any>(tsApiVaultCidPath);
+    tsApiVaultAudits = {
+      c: {
+        sha256: sha256File(tsApiVaultCPath),
+        retained: vc.lexicalLockAudit.totalRetainedTokens,
+        total: vc.lexicalLockAudit.totalRequiredTokens,
+        rate: vc.lexicalLockAudit.overallRetentionRate,
+        rulesAt100Pct: vc.lexicalLockAudit.rulesAt100Pct,
+      },
+      cidAuto: {
+        sha256: sha256File(tsApiVaultCidPath),
+        retained: vcid.lexicalLockAudit.totalRetainedTokens,
+        total: vcid.lexicalLockAudit.totalRequiredTokens,
+        rate: vcid.lexicalLockAudit.overallRetentionRate,
+        rulesAt100Pct: vcid.lexicalLockAudit.rulesAt100Pct,
+      },
+    };
+  }
 
   const abacTasksJson = readJson<{
     version: string;
@@ -190,9 +247,29 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
         ),
         v3PooledHeadline,
       },
+      tsApiSecurity: {
+        id: 'ts-api-security-v4',
+        name: 'TypeScript API Security (v4)',
+        version: tsApiTasksJson.version,
+        taskCount: tsApiTasksJson.tasks.length,
+        ruleCount: TS_API_SECURITY_CANONICAL_RULES.length,
+        totalLiveTrials: Number((tsApiSummary as { totalTrials?: number }).totalTrials ?? 75),
+        modelCount: 1,
+        topK: Number((tsApiSummary as { topK?: number }).topK ?? 4),
+        domainBreakdown: tsApiDomainCounts,
+        tasksSha256: sha256File(tsApiTasksPath),
+        defaultPrerequisiteEdgeCount: Object.values(
+          DEFAULT_TS_API_SECURITY_PREREQUISITE_GRAPH
+        ).reduce((acc, list) => acc + list.length, 0),
+        vaultAudits: tsApiVaultAudits,
+      },
     },
     crossModel,
     receipts,
+    tsApi: {
+      summary: tsApiSummary,
+      receipt: tsApiReceipt,
+    },
   };
 }
 

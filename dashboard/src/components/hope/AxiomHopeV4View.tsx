@@ -6,6 +6,7 @@ import {
   Check,
   CheckCircle2,
   Clock,
+  Code2,
   Copy,
   Database,
   FileCode2,
@@ -20,6 +21,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -37,7 +39,7 @@ import {
   type V4PilotArm,
 } from '@/lib/v4-hope';
 
-type CartridgeKey = 'policyAbac' | 'postgresV3';
+type CartridgeKey = 'policyAbac' | 'tsApiSecurity' | 'postgresV3';
 type ComparisonMetric = 'fullTask' | 'meanFact';
 
 const ARM_ORDER: readonly V4PilotArm[] = ['A', 'C', 'C_ID_prereq', 'C_ID_auto', 'C_ID_hope'];
@@ -59,6 +61,9 @@ const MODEL_SHORT_NAMES: Record<string, string> = {
 function describeCandidatePatch(dec: V4CandidateDecision): string {
   if (dec.candidateId === 'Q-STATIC-P-01') {
     return 'Naive static prerequisite prior (7 domain rules -> P-01, P-02)';
+  }
+  if (dec.candidateId === 'Q-STATIC-TS-PREREQ') {
+    return 'Naive static prerequisite prior (14 edges across 6 domain rules)';
   }
   const parts: string[] = [];
   if (dec.proposedPrerequisiteEdges.length > 0) {
@@ -373,9 +378,53 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
     return rows;
   }, [payload, pooled, metric]);
 
+  const tsApiAudits = useMemo(() => {
+    const decisions = payload?.tsApi?.receipt?.candidateDecisions ?? [];
+    let approved = 0;
+    let rejected = 0;
+    let promotedRegressions = 0;
+    for (const d of decisions) {
+      if (d.status === 'approved') {
+        approved++;
+        promotedRegressions += d.gateAudit.canaryReplay.canaryRegressions;
+      } else {
+        rejected++;
+      }
+    }
+    return {
+      total: decisions.length,
+      approved,
+      rejected,
+      promotedRegressions,
+    };
+  }, [payload]);
+
+  const tsApiChartData = useMemo(() => {
+    const arms = payload?.tsApi?.summary?.arms;
+    if (!arms) return [];
+    return ARM_ORDER.map((arm) => ({
+      arm,
+      name: ARM_META[arm].shortLabel,
+      label: ARM_META[arm].label,
+      value: Number(
+        (
+          (metric === 'fullTask'
+            ? arms[arm].fullTaskPassRate
+            : arms[arm].meanFactPassRate) * 100
+        ).toFixed(1)
+      ),
+      fullTask: Number((arms[arm].fullTaskPassRate * 100).toFixed(1)),
+      meanFact: Number((arms[arm].meanFactPassRate * 100).toFixed(1)),
+      color: ARM_META[arm].color,
+    }));
+  }, [payload, metric]);
+
   const activeReceipt: V4HopeReceipt | undefined = useMemo(() => {
+    if (cartridgeKey === 'tsApiSecurity') {
+      return payload?.tsApi?.receipt;
+    }
     return payload?.receipts.find((r) => r.model === selectedModelId) ?? payload?.receipts[0];
-  }, [payload, selectedModelId]);
+  }, [cartridgeKey, payload, selectedModelId]);
 
   const receiptModelTabs = useMemo(() => {
     return (payload?.receipts ?? []).map((r) => {
@@ -417,6 +466,27 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
     []
   );
 
+  const renderTsApiTooltip = useCallback(({ active, payload: items }: any) => {
+    if (!active || !items || items.length === 0) return null;
+    const row = items[0]?.payload;
+    if (!row) return null;
+    return (
+      <div className="rounded-md border border-zinc-700 bg-[#0d0e13] px-3 py-2 text-xs shadow-lg">
+        <p className="mb-1.5 font-medium text-zinc-100">{row.label}</p>
+        <div className="flex flex-col gap-1 font-mono text-[11px] tabular-nums">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-zinc-400">Full-Task Pass</span>
+            <span className="font-medium text-zinc-100">{Number(row.fullTask).toFixed(1)}%</span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-zinc-400">Mean Fact Pass</span>
+            <span className="font-medium text-emerald-400">{Number(row.meanFact).toFixed(1)}%</span>
+          </div>
+        </div>
+      </div>
+    );
+  }, []);
+
   if (error) {
     return (
       <div className="w-full min-h-[60vh] bg-[#09090b] text-zinc-100 px-6 py-12">
@@ -450,12 +520,20 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
   }
 
   const abac = payload.cartridges.policyAbac;
+  const tsApiCartridge = payload.cartridges.tsApiSecurity;
+  const tsApiSummary = payload.tsApi.summary;
   const pg = payload.cartridges.postgresV3;
+
+  const isTsApi = cartridgeKey === 'tsApiSecurity';
+  const pipelineTraceLabel = isTsApi
+    ? `${tsApiCartridge.taskCount} traces / model`
+    : `${abac.taskCount} traces / model`;
+  const pipelineAuditStats = isTsApi ? tsApiAudits : totalSlowClockAudits;
 
   const promotedEdgeSummary = activeReceipt
     ? Object.entries(activeReceipt.promotedPrerequisiteGraph)
         .map(([from, targets]) => `${from} → [${targets.join(', ')}]`)
-        .join(' · ') || 'None'
+        .join(' · ') || 'None (static/regressing edges rejected)'
     : 'None';
 
   return (
@@ -505,6 +583,11 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
                     value: 'policyAbac',
                     label: 'Policy-as-Code ABAC (v4)',
                     sublabel: `${abac.taskCount}T · ${abac.ruleCount}R`,
+                  },
+                  {
+                    value: 'tsApiSecurity',
+                    label: 'TypeScript API Security (v4)',
+                    sublabel: `${tsApiCartridge.taskCount}T · ${tsApiCartridge.ruleCount}R`,
                   },
                   {
                     value: 'postgresV3',
@@ -584,6 +667,76 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
                 </div>
                 <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
                   {totalSlowClockAudits.approved} approved / {totalSlowClockAudits.rejected} rejected across {totalSlowClockAudits.total} audits
+                </p>
+              </div>
+            </div>
+          ) : cartridgeKey === 'tsApiSecurity' ? (
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  C_ID_hope Full-Task Pass
+                </p>
+                <div className="mt-2 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
+                    {formatPct1(tsApiSummary.arms.C_ID_hope.fullTaskPassRate)}
+                  </span>
+                  <span className="font-mono text-xs text-emerald-400 tabular-nums">
+                    {formatPct1(tsApiSummary.arms.C_ID_hope.meanFactPassRate)} facts
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
+                  {tsApiCartridge.totalLiveTrials} live trials · esbuild + node:vm · K={tsApiCartridge.topK}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  Lift vs. Unconstrained C
+                </p>
+                <div className="mt-2 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
+                    {formatSignedPp(tsApiSummary.contrastsPp.C_ID_hope_minus_C_task)}
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                    {formatSignedPp(tsApiSummary.contrastsPp.C_ID_hope_minus_C_fact)} facts
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
+                  C_ID_auto lock: {tsApiCartridge.vaultAudits.cidAuto.retained}/{tsApiCartridge.vaultAudits.cidAuto.total} tokens vs. C ({tsApiCartridge.vaultAudits.c.retained}/{tsApiCartridge.vaultAudits.c.total})
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  Fact Lift vs. Static C_ID_prereq
+                </p>
+                <div className="mt-2 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
+                    {formatSignedPp(tsApiSummary.contrastsPp.C_ID_hope_minus_C_ID_prereq_fact)}
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                    {formatSignedPp(tsApiSummary.contrastsPp.C_ID_hope_minus_C_ID_prereq_task)} full
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-500">
+                  Static prior evicted <code className="font-mono text-[11px] text-zinc-400">TS-08</code> (15/15 → 1/15)
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
+                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  Promoted Canary Regressions
+                </p>
+                <div className="mt-2 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
+                    {tsApiAudits.promotedRegressions}
+                  </span>
+                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400">
+                    STRICT 0-REG
+                  </span>
+                </div>
+                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
+                  {tsApiAudits.approved} approved / {tsApiAudits.rejected} rejected across {tsApiAudits.total} audits
                 </p>
               </div>
             </div>
@@ -686,6 +839,35 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
                   <CopyHashButton value={abac.tasksSha256} label="policy-abac-tasks.json" />
                 </div>
               </>
+            ) : cartridgeKey === 'tsApiSecurity' ? (
+              <>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
+                  <span className="inline-flex items-center gap-1.5 text-zinc-200 font-medium">
+                    <Code2 className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
+                    <code className="font-mono text-xs">{tsApiCartridge.id}</code>
+                  </span>
+                  <span className="tabular-nums">
+                    Domains: payouts ({tsApiCartridge.domainBreakdown.payouts ?? 0}) · admin (
+                    {tsApiCartridge.domainBreakdown.admin ?? 0}) · profiles (
+                    {tsApiCartridge.domainBreakdown.profiles ?? 0})
+                  </span>
+                  <span className="tabular-nums">
+                    Vault Token Lock:{' '}
+                    <strong className="font-mono font-medium text-emerald-400">
+                      {tsApiCartridge.vaultAudits.cidAuto.retained}/{tsApiCartridge.vaultAudits.cidAuto.total} (100.0%)
+                    </strong>{' '}
+                    vs. C{' '}
+                    <strong className="font-mono font-medium text-amber-400">
+                      {tsApiCartridge.vaultAudits.c.retained}/{tsApiCartridge.vaultAudits.c.total} (
+                      {formatPct1(tsApiCartridge.vaultAudits.c.rate)})
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
+                  <span>tasks.json:</span>
+                  <CopyHashButton value={tsApiCartridge.tasksSha256} label="ts-api-security-tasks.json" />
+                </div>
+              </>
             ) : (
               <>
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
@@ -765,7 +947,7 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
                 <span>fast-clock.ts</span>
-                <span>18 traces / model</span>
+                <span>{pipelineTraceLabel}</span>
               </div>
             </div>
 
@@ -795,7 +977,7 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
               </div>
               <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
                 <span>quarantine-vault.ts</span>
-                <span>{totalSlowClockAudits.total} staged audits</span>
+                <span>{pipelineAuditStats.total} staged audits</span>
               </div>
             </div>
 
@@ -844,7 +1026,7 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
               <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
                 <span>slow-clock.ts</span>
                 <span>
-                  {totalSlowClockAudits.approved} promoted · {totalSlowClockAudits.rejected} rejected
+                  {pipelineAuditStats.approved} promoted · {pipelineAuditStats.rejected} rejected
                 </span>
               </div>
             </div>
@@ -864,11 +1046,14 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
                 id="hope-comparison-heading"
                 className="text-sm font-semibold tracking-tight text-zinc-100"
               >
-                3-Model 5-Arm Policy-as-Code ABAC Comparison
+                {isTsApi
+                  ? '5-Arm TypeScript API Security Comparison (Gemini 3.1 Flash-Lite)'
+                  : '3-Model 5-Arm Policy-as-Code ABAC Comparison'}
               </h2>
               <p className="text-xs text-zinc-500">
-                18 held-out Cedar ABAC tasks × 5 arms × 3 models = 270 live trials (K = 4,
-                temperature = 0, frozen vaults).
+                {isTsApi
+                  ? `${tsApiCartridge.taskCount} held-out TypeScript API endpoints × 5 arms = ${tsApiSummary.totalTrials} live trials (K = ${tsApiSummary.topK}, temperature = ${tsApiSummary.temperature}, esbuild + node:vm sandbox).`
+                  : '18 held-out Cedar ABAC tasks × 5 arms × 3 models = 270 live trials (K = 4, temperature = 0, frozen vaults).'}
               </p>
             </div>
             <AccessibleSegmentedTabs<ComparisonMetric>
@@ -882,50 +1067,89 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
             />
           </div>
 
-          {/* Recharts Grouped Bar Chart */}
+          {/* Recharts Bar Chart */}
           <div className="px-4 pt-5 pb-3 border-b border-zinc-800/80">
             <div className="h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
-                  barGap={3}
-                  barCategoryGap="22%"
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tickFormatter={(v) => `${v}%`}
-                    tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={42}
-                  />
-                  <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                  <Legend
-                    wrapperStyle={{
-                      paddingTop: '10px',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                  {ARM_ORDER.map((arm) => (
-                    <Bar
-                      key={arm}
-                      dataKey={arm}
-                      name={ARM_META[arm].label}
-                      fill={ARM_META[arm].color}
-                      radius={[2, 2, 0, 0]}
-                      isAnimationActive={false}
+                {isTsApi ? (
+                  <BarChart
+                    data={tsApiChartData}
+                    margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+                    barCategoryGap="28%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                      axisLine={{ stroke: '#27272a' }}
+                      tickLine={false}
                     />
-                  ))}
-                </BarChart>
+                    <YAxis
+                      domain={[0, 100]}
+                      tickFormatter={(v) => `${v}%`}
+                      tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={42}
+                    />
+                    <Tooltip
+                      content={renderTsApiTooltip}
+                      cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      name={metric === 'fullTask' ? 'Full-Task Pass %' : 'Mean Fact Pass %'}
+                      radius={[2, 2, 0, 0]}
+                      maxBarSize={64}
+                      isAnimationActive={false}
+                    >
+                      {tsApiChartData.map((entry) => (
+                        <Cell key={entry.arm} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
+                    barGap={3}
+                    barCategoryGap="22%"
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                      axisLine={{ stroke: '#27272a' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tickFormatter={(v) => `${v}%`}
+                      tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-mono)' }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={42}
+                    />
+                    <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                    <Legend
+                      wrapperStyle={{
+                        paddingTop: '10px',
+                        fontSize: '11px',
+                        fontFamily: 'var(--font-mono)',
+                      }}
+                    />
+                    {ARM_ORDER.map((arm) => (
+                      <Bar
+                        key={arm}
+                        dataKey={arm}
+                        name={ARM_META[arm].label}
+                        fill={ARM_META[arm].color}
+                        radius={[2, 2, 0, 0]}
+                        isAnimationActive={false}
+                      />
+                    ))}
+                  </BarChart>
+                )}
               </ResponsiveContainer>
             </div>
           </div>
@@ -937,157 +1161,289 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
             aria-labelledby={comparisonCaptionId}
             className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-400"
           >
-            <table className="w-full border-collapse text-left text-xs">
-              <caption id={comparisonCaptionId} className="sr-only">
-                3-Model 5-Arm Policy-as-Code ABAC performance comparison table showing{' '}
-                {metric === 'fullTask' ? 'Full-Task Pass Rate' : 'Mean Fact Pass Rate'} across A,
-                C, C_ID_prereq, C_ID_auto, and C_ID_hope.
-              </caption>
-              <thead className="sticky top-0 z-10 bg-[#0d0e13] border-b border-zinc-800 font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                <tr>
-                  <th
-                    scope="col"
-                    className="sticky left-0 z-20 bg-[#0d0e13] px-4 py-2.5 font-medium"
-                  >
-                    Model
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Provider
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    A
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    C
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium text-amber-400/90">
-                    C_ID_prereq
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400/90">
-                    C_ID_auto
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2.5 text-right font-medium text-emerald-400"
-                  >
-                    C_ID_hope
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    HOPE − C
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    HOPE − Static
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/70 font-mono tabular-nums">
-                {payload.crossModel.models.map((m) => {
-                  const val = (arm: V4PilotArm) =>
-                    metric === 'fullTask'
-                      ? m.summary.arms[arm].fullTaskPassRate
-                      : m.summary.arms[arm].meanFactPassRate;
-                  const hopeMinusC =
-                    metric === 'fullTask'
-                      ? m.summary.contrastsPp.C_ID_hope_minus_C_task
-                      : m.summary.contrastsPp.C_ID_hope_minus_C_fact;
-                  const hopeMinusStatic =
-                    metric === 'fullTask'
-                      ? m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_task
-                      : m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_fact;
-
-                  return (
-                    <tr
-                      key={m.modelId}
-                      className="hover:bg-zinc-900/50 transition-colors"
+            {isTsApi ? (
+              <table className="w-full border-collapse text-left text-xs">
+                <caption id={comparisonCaptionId} className="sr-only">
+                  5-Arm TypeScript API Security performance comparison table for{' '}
+                  {tsApiSummary.model} showing Full-Task Pass, Mean Fact Pass, Compiled &amp;
+                  Committed Rate, Retrieval Counts, and Missing Error Envelope defects across A, C,
+                  C_ID_prereq, C_ID_auto, and C_ID_hope.
+                </caption>
+                <thead className="sticky top-0 z-10 bg-[#0d0e13] border-b border-zinc-800 font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="sticky left-0 z-20 bg-[#0d0e13] px-4 py-2.5 font-medium"
                     >
-                      <th
-                        scope="row"
-                        className="sticky left-0 z-10 bg-[#101116] px-4 py-2.5 font-medium text-zinc-100 whitespace-nowrap"
+                      Arm
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      Full-Task Pass
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      Mean Fact Pass
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      Committed
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      TS-01 Ret
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      TS-04 Ret
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      TS-08 Ret
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      Missing Env
+                    </th>
+                    <th scope="col" className="px-4 py-2.5 text-right font-medium">
+                      Delta vs. C
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/70 font-mono tabular-nums">
+                  {ARM_ORDER.map((arm) => {
+                    const s = tsApiSummary.arms[arm];
+                    const cBase = tsApiSummary.arms.C;
+                    const deltaPp =
+                      metric === 'fullTask'
+                        ? (s.fullTaskPassRate - cBase.fullTaskPassRate) * 100
+                        : (s.meanFactPassRate - cBase.meanFactPassRate) * 100;
+                    const isHope = arm === 'C_ID_hope';
+                    return (
+                      <tr
+                        key={arm}
+                        className={`${
+                          isHope ? 'bg-[#0d0e13] font-semibold' : 'hover:bg-zinc-900/50'
+                        } transition-colors`}
                       >
-                        {m.modelId}
-                      </th>
-                      <td className="px-3 py-2.5 font-sans text-zinc-400 whitespace-nowrap">
-                        {m.provider}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-zinc-400">
-                        {formatPct1(val('A'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-zinc-400">
-                        {formatPct1(val('C'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-amber-300/90">
-                        {formatPct1(val('C_ID_prereq'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-sky-300">
-                        {formatPct1(val('C_ID_auto'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-semibold text-emerald-400">
-                        {formatPct1(val('C_ID_hope'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-emerald-400">
-                        {formatSignedPp(hopeMinusC)}
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-emerald-400">
-                        {formatSignedPp(hopeMinusStatic)}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {/* Pooled Mean Summary Row */}
-                <tr className="bg-[#0d0e13] font-semibold">
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 bg-[#0d0e13] px-4 py-2.5 font-sans text-zinc-50 whitespace-nowrap"
-                  >
-                    Pooled Mean (n = {pooled.count})
-                  </th>
-                  <td className="px-3 py-2.5 font-sans font-normal text-zinc-400 whitespace-nowrap">
-                    Multi-Provider
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-zinc-300">
-                    {formatPct1(metric === 'fullTask' ? pooled.fullTask.A : pooled.meanFact.A)}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-zinc-300">
-                    {formatPct1(metric === 'fullTask' ? pooled.fullTask.C : pooled.meanFact.C)}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-amber-300">
-                    {formatPct1(
+                        <th
+                          scope="row"
+                          className={`sticky left-0 z-10 px-4 py-2.5 whitespace-nowrap ${
+                            isHope
+                              ? 'bg-[#0d0e13] text-emerald-400 font-semibold'
+                              : 'bg-[#101116] text-zinc-100 font-medium'
+                          }`}
+                        >
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="h-2 w-2 rounded-[2px] flex-shrink-0"
+                              style={{ backgroundColor: ARM_META[arm].color }}
+                              aria-hidden="true"
+                            />
+                            <span>{ARM_META[arm].label}</span>
+                          </span>
+                        </th>
+                        <td
+                          className={`px-3 py-2.5 text-right ${
+                            isHope ? 'text-emerald-400' : 'text-zinc-300'
+                          }`}
+                        >
+                          {s.fullTaskPassCount}/{s.totalTasks} ({formatPct1(s.fullTaskPassRate)})
+                        </td>
+                        <td
+                          className={`px-3 py-2.5 text-right ${
+                            isHope
+                              ? 'text-emerald-400'
+                              : arm === 'C_ID_auto'
+                                ? 'text-sky-300'
+                                : arm === 'C_ID_prereq'
+                                  ? 'text-amber-300/90'
+                                  : 'text-zinc-400'
+                          }`}
+                        >
+                          {formatPct1(s.meanFactPassRate)}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {s.committedCount}/{s.totalTasks}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {s.ts01RetrievedCount ?? 0}/{s.totalTasks}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {s.ts04RetrievedCount ?? 0}/{s.totalTasks}
+                        </td>
+                        <td
+                          className={`px-3 py-2.5 text-right ${
+                            arm === 'C_ID_prereq' ? 'text-amber-400' : 'text-zinc-400'
+                          }`}
+                        >
+                          {s.ts08RetrievedCount ?? 0}/{s.totalTasks}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {s.forensicDefectCounts.missingErrorEnvelope ?? 0}/{s.totalTasks}
+                        </td>
+                        <td
+                          className={`px-4 py-2.5 text-right ${
+                            deltaPp > 0
+                              ? 'text-emerald-400'
+                              : deltaPp < 0
+                                ? 'text-rose-400'
+                                : 'text-zinc-500'
+                          }`}
+                        >
+                          {arm === 'C' ? 'baseline' : formatSignedPp(deltaPp)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full border-collapse text-left text-xs">
+                <caption id={comparisonCaptionId} className="sr-only">
+                  3-Model 5-Arm Policy-as-Code ABAC performance comparison table showing{' '}
+                  {metric === 'fullTask' ? 'Full-Task Pass Rate' : 'Mean Fact Pass Rate'} across A,
+                  C, C_ID_prereq, C_ID_auto, and C_ID_hope.
+                </caption>
+                <thead className="sticky top-0 z-10 bg-[#0d0e13] border-b border-zinc-800 font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="sticky left-0 z-20 bg-[#0d0e13] px-4 py-2.5 font-medium"
+                    >
+                      Model
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 font-medium">
+                      Provider
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      A
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      C
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-amber-400/90">
+                      C_ID_prereq
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400/90">
+                      C_ID_auto
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-2.5 text-right font-medium text-emerald-400"
+                    >
+                      C_ID_hope
+                    </th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                      HOPE − C
+                    </th>
+                    <th scope="col" className="px-4 py-2.5 text-right font-medium">
+                      HOPE − Static
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/70 font-mono tabular-nums">
+                  {payload.crossModel.models.map((m) => {
+                    const val = (arm: V4PilotArm) =>
                       metric === 'fullTask'
-                        ? pooled.fullTask.C_ID_prereq
-                        : pooled.meanFact.C_ID_prereq
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-sky-300">
-                    {formatPct1(
+                        ? m.summary.arms[arm].fullTaskPassRate
+                        : m.summary.arms[arm].meanFactPassRate;
+                    const hopeMinusC =
                       metric === 'fullTask'
-                        ? pooled.fullTask.C_ID_auto
-                        : pooled.meanFact.C_ID_auto
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-emerald-400">
-                    {formatPct1(
+                        ? m.summary.contrastsPp.C_ID_hope_minus_C_task
+                        : m.summary.contrastsPp.C_ID_hope_minus_C_fact;
+                    const hopeMinusStatic =
                       metric === 'fullTask'
-                        ? pooled.fullTask.C_ID_hope
-                        : pooled.meanFact.C_ID_hope
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-emerald-400">
-                    {formatSignedPp(
-                      metric === 'fullTask'
-                        ? pooled.contrasts.hopeMinusC_task
-                        : pooled.contrasts.hopeMinusC_fact
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-emerald-400">
-                    {formatSignedPp(
-                      metric === 'fullTask'
-                        ? pooled.contrasts.hopeMinusPrereq_task
-                        : pooled.contrasts.hopeMinusPrereq_fact
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                        ? m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_task
+                        : m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_fact;
+
+                    return (
+                      <tr
+                        key={m.modelId}
+                        className="hover:bg-zinc-900/50 transition-colors"
+                      >
+                        <th
+                          scope="row"
+                          className="sticky left-0 z-10 bg-[#101116] px-4 py-2.5 font-medium text-zinc-100 whitespace-nowrap"
+                        >
+                          {m.modelId}
+                        </th>
+                        <td className="px-3 py-2.5 font-sans text-zinc-400 whitespace-nowrap">
+                          {m.provider}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {formatPct1(val('A'))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">
+                          {formatPct1(val('C'))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-amber-300/90">
+                          {formatPct1(val('C_ID_prereq'))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-sky-300">
+                          {formatPct1(val('C_ID_auto'))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-semibold text-emerald-400">
+                          {formatPct1(val('C_ID_hope'))}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-emerald-400">
+                          {formatSignedPp(hopeMinusC)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-emerald-400">
+                          {formatSignedPp(hopeMinusStatic)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {/* Pooled Mean Summary Row */}
+                  <tr className="bg-[#0d0e13] font-semibold">
+                    <th
+                      scope="row"
+                      className="sticky left-0 z-10 bg-[#0d0e13] px-4 py-2.5 font-sans text-zinc-50 whitespace-nowrap"
+                    >
+                      Pooled Mean (n = {pooled.count})
+                    </th>
+                    <td className="px-3 py-2.5 font-sans font-normal text-zinc-400 whitespace-nowrap">
+                      Multi-Provider
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-zinc-300">
+                      {formatPct1(metric === 'fullTask' ? pooled.fullTask.A : pooled.meanFact.A)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-zinc-300">
+                      {formatPct1(metric === 'fullTask' ? pooled.fullTask.C : pooled.meanFact.C)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-amber-300">
+                      {formatPct1(
+                        metric === 'fullTask'
+                          ? pooled.fullTask.C_ID_prereq
+                          : pooled.meanFact.C_ID_prereq
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-sky-300">
+                      {formatPct1(
+                        metric === 'fullTask'
+                          ? pooled.fullTask.C_ID_auto
+                          : pooled.meanFact.C_ID_auto
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-emerald-400">
+                      {formatPct1(
+                        metric === 'fullTask'
+                          ? pooled.fullTask.C_ID_hope
+                          : pooled.meanFact.C_ID_hope
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-emerald-400">
+                      {formatSignedPp(
+                        metric === 'fullTask'
+                          ? pooled.contrasts.hopeMinusC_task
+                          : pooled.contrasts.hopeMinusC_fact
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-emerald-400">
+                      {formatSignedPp(
+                        metric === 'fullTask'
+                          ? pooled.contrasts.hopeMinusPrereq_task
+                          : pooled.contrasts.hopeMinusPrereq_fact
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
           </div>
         </section>
 
@@ -1104,20 +1460,32 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
                 id="hope-ledger-heading"
                 className="text-sm font-semibold tracking-tight text-zinc-100"
               >
-                Immutable Slow Clock Governance Ledger
+                {isTsApi
+                  ? 'Immutable Slow Clock Governance Ledger — TypeScript API Security'
+                  : 'Immutable Slow Clock Governance Ledger'}
               </h2>
               <p className="text-xs text-zinc-500">
-                Per-model cryptographic receipt inspector showing exact snapshot SHA-256 transitions
-                and Gate 1 / 2 / 3 audit outcomes.
+                {isTsApi
+                  ? 'Cryptographic receipt inspector for ts-api-security-v4 showing exact snapshot SHA-256 transitions and Gate 1 / 2 / 3 cross-domain canary audits.'
+                  : 'Per-model cryptographic receipt inspector showing exact snapshot SHA-256 transitions and Gate 1 / 2 / 3 audit outcomes.'}
               </p>
             </div>
 
-            <AccessibleSegmentedTabs<string>
-              ariaLabel="Slow Clock Receipt Model Selector"
-              value={activeReceipt?.model ?? selectedModelId}
-              onChange={setSelectedModelId}
-              options={receiptModelTabs}
-            />
+            {isTsApi ? (
+              <span className="inline-flex items-center gap-2 rounded-md border border-zinc-800 bg-[#0b0c10] px-3 py-1.5 font-mono text-xs text-zinc-200 tabular-nums">
+                <span>{MODEL_SHORT_NAMES[tsApiSummary.model] ?? tsApiSummary.model}</span>
+                <span className="text-zinc-500">
+                  {tsApiAudits.approved}✓ / {tsApiAudits.rejected}✕
+                </span>
+              </span>
+            ) : (
+              <AccessibleSegmentedTabs<string>
+                ariaLabel="Slow Clock Receipt Model Selector"
+                value={activeReceipt?.model ?? selectedModelId}
+                onChange={setSelectedModelId}
+                options={receiptModelTabs}
+              />
+            )}
           </div>
 
           {activeReceipt && (

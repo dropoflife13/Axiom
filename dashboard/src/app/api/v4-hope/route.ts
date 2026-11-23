@@ -68,10 +68,13 @@ export async function GET() {
         ...readJsonFile<Record<string, unknown>>(full),
       }));
 
-      // Refresh live fixture hashes if available
+      // Refresh live fixture hashes & TS-API artifacts if available
       const abacTasksPath = resolveRepoFile('fixtures/v4/policy-abac-tasks.json');
       const v3FactsPath = resolveRepoFile('fixtures/task-v3/facts.json');
       const v3TasksPath = resolveRepoFile('fixtures/task-v3/tasks.json');
+      const tsApiTasksPath = resolveRepoFile('fixtures/v4/ts-api-security-tasks.json');
+      const tsApiSummaryPath = resolveRepoFile('out/v4/ts-api-gemini-3-1-flash-lite-summary.json');
+      const tsApiReceiptPath = resolveRepoFile('out/v4/ts-api-hope-receipt.json');
 
       const cartridges = baseSnapshot?.cartridges as Record<string, any> | undefined;
       if (cartridges?.policyAbac && abacTasksPath) {
@@ -110,6 +113,34 @@ export async function GET() {
           tasksSha256: sha256File(v3TasksPath),
         };
       }
+      if (cartridges?.tsApiSecurity && tsApiTasksPath) {
+        const tsDoc = readJsonFile<{
+          version: string;
+          tasks: Array<{ domain: string }>;
+        }>(tsApiTasksPath);
+        const domainBreakdown: Record<string, number> = {};
+        for (const t of tsDoc.tasks) {
+          domainBreakdown[t.domain] = (domainBreakdown[t.domain] ?? 0) + 1;
+        }
+        cartridges.tsApiSecurity = {
+          ...cartridges.tsApiSecurity,
+          version: tsDoc.version,
+          taskCount: tsDoc.tasks.length,
+          domainBreakdown,
+          tasksSha256: sha256File(tsApiTasksPath),
+        };
+      }
+
+      const tsApi =
+        tsApiSummaryPath && tsApiReceiptPath
+          ? {
+              summary: readJsonFile<Record<string, unknown>>(tsApiSummaryPath),
+              receipt: {
+                file: 'out/v4/ts-api-hope-receipt.json',
+                ...readJsonFile<Record<string, unknown>>(tsApiReceiptPath),
+              },
+            }
+          : baseSnapshot?.tsApi;
 
       return NextResponse.json({
         ...(baseSnapshot ?? { schemaVersion: '4.0.0-hope-dashboard-snapshot' }),
@@ -117,6 +148,7 @@ export async function GET() {
         source: 'live-artifacts',
         crossModel,
         receipts,
+        ...(tsApi ? { tsApi } : {}),
       });
     }
 
