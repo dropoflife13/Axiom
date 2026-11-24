@@ -36,6 +36,15 @@ import {
   TS_API_VAULT_CID_AUTO_PATH,
   type TsApiVaultFile,
 } from './build-ts-api-vaults.js';
+import {
+  assemblePromptBundleWithOptionalCompaction,
+  createCompactionAccumulator,
+  finalizeCompactionStats,
+  parseCompactionCliFlags,
+  recordCompactionStat,
+  type AssembledPromptResult,
+  type CompactionStatsSummary,
+} from './run-policy-abac-pilot.js';
 
 dotenv.config();
 
@@ -119,6 +128,7 @@ export interface TsApiPilotSummaryReport {
   readonly topK: number;
   readonly temperature: number;
   readonly totalTrials: number;
+  readonly compaction?: CompactionStatsSummary;
   readonly arms: Partial<Record<TsApiPilotArm, TsApiArmSummaryStats>> &
     Record<'A' | 'C' | 'C_ID_auto' | 'C_ID_prereq', TsApiArmSummaryStats>;
   readonly contrastsPp: {
@@ -287,6 +297,32 @@ export function buildBaseTsApiSystemPrompt(lessonsBlock?: string): string {
 
   if (!lessonsBlock) return base;
   return `${base}\n\nCRITICAL API SECURITY LESSONS FROM PRIOR AUDITS:\n${lessonsBlock}`;
+}
+
+/**
+ * Assembles the TypeScript API Security system prompt from retrieved rule IDs,
+ * applying `compactContextBundle()` ONLY when `compact === true`. When `compact`
+ * is false/omitted, output is 100% identical to the uncompacted baseline prompt.
+ */
+export function assembleTsApiPromptWithOptionalCompaction(params: {
+  readonly retrievedRuleIds: readonly string[];
+  readonly lessonsById: ReadonlyMap<string, string>;
+  readonly canonicalRules: readonly CanonicalRule[];
+  readonly cartridge: TsApiSecurityCartridge;
+  readonly enforceCanonicalLock: boolean;
+  readonly compact?: boolean;
+  readonly maxContextTokens?: number;
+}): AssembledPromptResult {
+  return assemblePromptBundleWithOptionalCompaction({
+    retrievedRuleIds: params.retrievedRuleIds,
+    lessonsById: params.lessonsById,
+    canonicalRules: params.canonicalRules,
+    tokenExtractor: (r) => params.cartridge.extractRequiredTokens(r),
+    buildSystemPrompt: buildBaseTsApiSystemPrompt,
+    enforceCanonicalLock: params.enforceCanonicalLock,
+    compact: params.compact,
+    maxContextTokens: params.maxContextTokens,
+  });
 }
 
 export function stripTsCodeFences(raw: string): string {
@@ -475,7 +511,8 @@ export async function generateTsHandlerViaLlm(
 }
 
 export function summarizeTsApiPilotCheckpoint(
-  checkpoint: TsApiPilotCheckpointFile
+  checkpoint: TsApiPilotCheckpointFile,
+  compaction?: CompactionStatsSummary
 ): TsApiPilotSummaryReport {
   const trialsList = Object.values(checkpoint.trials);
   const presentArms = ALL_TS_API_PILOT_ARMS.filter(
@@ -530,6 +567,7 @@ export function summarizeTsApiPilotCheckpoint(
     topK: checkpoint.topK,
     temperature: checkpoint.temperature,
     totalTrials: trialsList.length,
+    ...(compaction ? { compaction } : {}),
     arms: armStats,
     contrastsPp: {
       C_ID_auto_minus_C_task: pp(
@@ -616,6 +654,15 @@ export function formatTsApiSummaryMarkdown(summary: TsApiPilotSummaryReport): st
     '',
     `- **Cartridge:** \`ts-api-security-v4\` (15 held-out tasks × ${armCount} arms = ${summary.totalTrials} trials)`,
     `- **Retrieval Budget:** \`K = ${summary.topK}\`, \`temperature = ${summary.temperature}\``,
+    ...(summary.compaction
+      ? [
+          `- **Context Compaction (\`--compact\`):** ${summary.compaction.beforeTokens} -> ${summary.compaction.afterTokens} tokens (**-${summary.compaction.reductionPct.toFixed(2)}%**, ${summary.compaction.preservedTokenCount}/${summary.compaction.totalRequiredTokens} required tokens preserved${
+            summary.compaction.maxContextTokens !== undefined
+              ? `, cap=${summary.compaction.maxContextTokens}`
+              : ''
+          })`,
+        ]
+      : []),
     '',
     `## 1. ${armCount}-Arm Performance Table`,
     '',
@@ -678,12 +725,17 @@ export async function runTsApiPilot(options: {
   delayMs?: number;
   vaultCPath?: string;
   vaultCidAutoPath?: string;
+  compact?: boolean;
+  maxContextTokens?: number;
 } = {}): Promise<TsApiPilotSummaryReport> {
   const model = options.model ?? 'gemini-3.1-flash-lite';
   const provider = options.provider;
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 350;
+  const compact = options.compact ?? false;
+  const maxContextTokens = options.maxContextTokens;
   const modelSlug = slugifyModel(model);
+  const runIdSlug = compact ? `${modelSlug}-compact` : modelSlug;
 
   const vaultCPath = path.resolve(options.vaultCPath ?? TS_API_VAULT_C_PATH);
   const vaultCidAutoPath = path.resolve(
@@ -733,7 +785,7 @@ export async function runTsApiPilot(options: {
   const lessonsCById = new Map(vaultC.lessons.map((l) => [l.factId, l.lesson]));
   const lessonsCidById = new Map(vaultCidAuto.lessons.map((l) => [l.factId, l.lesson]));
 
-  const runDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${modelSlug}`);
+  const runDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${runIdSlug}`);
   const checkpointPath = path.join(runDir, 'checkpoint.json');
   const outDir = path.resolve('out', 'v4');
   fs.mkdirSync(runDir, { recursive: true });
@@ -778,6 +830,7 @@ export async function runTsApiPilot(options: {
 
   let completedCount = Object.keys(checkpoint.trials).length;
   const totalCount = tasks.length * TS_API_PILOT_ARMS.length;
+  const compactionAcc = compact ? createCompactionAccumulator(maxContextTokens) : null;
 
   for (const task of tasks) {
     const rankedRuleIds = rankTsApiRulesByPromptTfIdf(task, canonicalRules);
@@ -797,28 +850,52 @@ export async function runTsApiPilot(options: {
       let retrievedRuleIds: readonly string[] = [];
       let injectedPrerequisites: readonly string[] = [];
       let displacedRuleIds: readonly string[] = [];
-      let lessonsBlock: string | undefined;
+      let lessonsById: ReadonlyMap<string, string> | undefined;
+      let enforceCanonicalLock = false;
 
       if (arm === 'C') {
         retrievedRuleIds = baselineTopK;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCById;
+        enforceCanonicalLock = false;
       } else if (arm === 'C_ID_auto') {
         retrievedRuleIds = baselineTopK;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCidById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCidById;
+        enforceCanonicalLock = true;
       } else if (arm === 'C_ID_prereq') {
         retrievedRuleIds = prereqRetrieval.selected;
         injectedPrerequisites = prereqRetrieval.injectedPrerequisites;
         displacedRuleIds = prereqRetrieval.displaced;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCidById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCidById;
+        enforceCanonicalLock = true;
       }
 
-      const systemPrompt = buildBaseTsApiSystemPrompt(lessonsBlock);
+      const assembled =
+        lessonsById !== undefined
+          ? assembleTsApiPromptWithOptionalCompaction({
+              retrievedRuleIds,
+              lessonsById,
+              canonicalRules,
+              cartridge,
+              enforceCanonicalLock,
+              compact,
+              maxContextTokens,
+            })
+          : assembleTsApiPromptWithOptionalCompaction({
+              retrievedRuleIds: [],
+              lessonsById: new Map(),
+              canonicalRules,
+              cartridge,
+              enforceCanonicalLock: false,
+              compact,
+              maxContextTokens,
+            });
+
+      if (compactionAcc && retrievedRuleIds.length > 0) {
+        recordCompactionStat(compactionAcc, assembled);
+      }
+
+      const effectiveRetrievedIds = assembled.includedRuleIds;
+      const systemPrompt = assembled.systemPrompt;
       const userPrompt = buildTsApiUserPrompt(task);
 
       const gen = await generateTsHandlerViaLlm(model, systemPrompt, userPrompt, 0, provider);
@@ -834,7 +911,7 @@ export async function runTsApiPilot(options: {
         domain: task.domain,
         cohortId: task.cohortId,
         arm,
-        retrievedRuleIds: [...retrievedRuleIds],
+        retrievedRuleIds: [...effectiveRetrievedIds],
         injectedPrerequisites: [...injectedPrerequisites],
         displacedRuleIds: [...displacedRuleIds],
         promptChars: systemPrompt.length + userPrompt.length,
@@ -861,22 +938,30 @@ export async function runTsApiPilot(options: {
 
       const statusMark = fullTaskPass ? 'PASS' : evaluation.committed ? 'FAIL' : 'COMPILE_ERR';
       console.log(
-        `[${String(completedCount).padStart(2, '0')}/${totalCount}] ${task.id} | ${arm.padEnd(11)} | ${statusMark.padEnd(11)} | facts=${passedCount}/${boundCount} | rules=[${retrievedRuleIds.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
+        `[${String(completedCount).padStart(2, '0')}/${totalCount}] ${task.id} | ${arm.padEnd(11)} | ${statusMark.padEnd(11)} | facts=${passedCount}/${boundCount} | rules=[${effectiveRetrievedIds.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
       );
 
       if (delayMs > 0) await sleep(delayMs);
     }
   }
 
-  const summary = summarizeTsApiPilotCheckpoint(checkpoint);
-  const summaryJsonPath = path.join(outDir, `ts-api-${modelSlug}-summary.json`);
-  const summaryMdPath = path.join(outDir, `ts-api-${modelSlug}-summary.md`);
+  const compactionSummary = compactionAcc
+    ? finalizeCompactionStats(compactionAcc)
+    : undefined;
+  const summary = summarizeTsApiPilotCheckpoint(checkpoint, compactionSummary);
+  const summaryJsonPath = path.join(outDir, `ts-api-${runIdSlug}-summary.json`);
+  const summaryMdPath = path.join(outDir, `ts-api-${runIdSlug}-summary.md`);
   const summaryMd = formatTsApiSummaryMarkdown(summary);
 
   fs.writeFileSync(summaryJsonPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   fs.writeFileSync(summaryMdPath, summaryMd, 'utf8');
 
   console.log(`\n${summaryMd}`);
+  if (compactionSummary) {
+    console.log(
+      `[v4-ts-pilot][compact] Cumulative context tokens: ${compactionSummary.beforeTokens} -> ${compactionSummary.afterTokens} (-${compactionSummary.reductionPct.toFixed(2)}% saved across ${compactionSummary.bundlesCompacted} bundles, preserved ${compactionSummary.preservedTokenCount}/${compactionSummary.totalRequiredTokens} required tokens)`
+    );
+  }
   console.log(`[v4-ts-pilot] Checkpoint: ${checkpointPath}`);
   console.log(`[v4-ts-pilot] Summary:    ${summaryJsonPath}`);
   console.log(`[v4-ts-pilot] Report:     ${summaryMdPath}`);
@@ -884,7 +969,7 @@ export async function runTsApiPilot(options: {
   return summary;
 }
 
-function parseCliArgs(argv: string[]) {
+export function parseTsApiPilotCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
   const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
@@ -899,6 +984,7 @@ function parseCliArgs(argv: string[]) {
     provider: rawProvider as TsApiProviderOverride | undefined,
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 350,
+    ...parseCompactionCliFlags(argv),
   };
 }
 
@@ -909,7 +995,7 @@ const isEntrypoint =
   path.resolve(process.argv[1]).endsWith('run-ts-api-pilot.ts');
 
 if (isEntrypoint) {
-  const args = parseCliArgs(process.argv.slice(2));
+  const args = parseTsApiPilotCliArgs(process.argv.slice(2));
   runTsApiPilot(args).catch((err) => {
     console.error(err);
     process.exit(1);

@@ -32,11 +32,16 @@ import {
   type PolicyAbacVaultFile,
 } from './build-policy-abac-vaults.js';
 import {
-  buildBasePolicySystemPrompt,
+  assemblePolicyPromptWithOptionalCompaction,
+  createCompactionAccumulator,
+  finalizeCompactionStats,
   formatSummaryMarkdown,
   generatePolicyViaLlm,
+  parseCompactionCliFlags,
   rankRulesByPromptTfIdf,
+  recordCompactionStat,
   summarizePilotCheckpoint,
+  type CompactionStatsSummary,
   type PilotCheckpointFile,
   type PilotTrialRecord,
   type PolicyProviderOverride,
@@ -82,6 +87,7 @@ export interface PolicyAbacHopeReceiptFile {
   readonly model: string;
   readonly topK: number;
   readonly temperature: number;
+  readonly compaction?: CompactionStatsSummary;
   readonly sourceCheckpointPath: string;
   readonly initialSnapshotSha256: string;
   readonly finalSnapshotSha256: string;
@@ -137,6 +143,8 @@ export async function runPolicyAbacHopeLoop(options: {
   topK?: number;
   delayMs?: number;
   forceHopeArm?: boolean;
+  compact?: boolean;
+  maxContextTokens?: number;
 } = {}): Promise<{
   receiptFile: PolicyAbacHopeReceiptFile;
   summary: ReturnType<typeof summarizePilotCheckpoint>;
@@ -146,21 +154,30 @@ export async function runPolicyAbacHopeLoop(options: {
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 350;
   const forceHopeArm = options.forceHopeArm ?? false;
+  const compact = options.compact ?? false;
+  const maxContextTokens = options.maxContextTokens;
   const modelSlug = slugifyModel(model);
+  const outputSlug = compact ? `${modelSlug}-compact` : modelSlug;
 
-  const runDir = path.resolve('.axiom-state', 'runs-v4', `policy-abac-${modelSlug}`);
-  const checkpointPath = path.join(runDir, 'checkpoint.json');
-  const replayCachePath = path.join(runDir, 'hope-replay-cache.json');
+  const baseRunDir = path.resolve('.axiom-state', 'runs-v4', `policy-abac-${modelSlug}`);
+  const outRunDir = path.resolve('.axiom-state', 'runs-v4', `policy-abac-${outputSlug}`);
+  const outCheckpointPath = path.join(outRunDir, 'checkpoint.json');
+  const baseCheckpointPath = path.join(baseRunDir, 'checkpoint.json');
+  const checkpointPath =
+    compact && !fs.existsSync(outCheckpointPath) && fs.existsSync(baseCheckpointPath)
+      ? baseCheckpointPath
+      : outCheckpointPath;
+  const replayCachePath = path.join(outRunDir, 'hope-replay-cache.json');
   const quarantineStatePath = path.resolve(
     '.axiom-state',
     'v4',
-    `policy-abac-hope-quarantine-${modelSlug}.json`
+    `policy-abac-hope-quarantine-${outputSlug}.json`
   );
   const outDir = path.resolve('out', 'v4');
-  const receiptOutPath = path.join(outDir, `policy-abac-${modelSlug}-hope-receipt.json`);
+  const receiptOutPath = path.join(outDir, `policy-abac-${outputSlug}-hope-receipt.json`);
   const legacyGeminiReceiptPath = path.join(outDir, 'policy-abac-hope-receipt.json');
-  const summaryJsonPath = path.join(outDir, `policy-abac-${modelSlug}-summary.json`);
-  const summaryMdPath = path.join(outDir, `policy-abac-${modelSlug}-summary.md`);
+  const summaryJsonPath = path.join(outDir, `policy-abac-${outputSlug}-summary.json`);
+  const summaryMdPath = path.join(outDir, `policy-abac-${outputSlug}-summary.md`);
 
   if (!fs.existsSync(checkpointPath)) {
     throw new Error(
@@ -171,6 +188,7 @@ export async function runPolicyAbacHopeLoop(options: {
     throw new Error(`Missing frozen C_ID_auto vault at ${POLICY_VAULT_CID_AUTO_PATH}.`);
   }
 
+  fs.mkdirSync(outRunDir, { recursive: true });
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(path.dirname(quarantineStatePath), { recursive: true });
 
@@ -422,20 +440,29 @@ export async function runPolicyAbacHopeLoop(options: {
   }
 
   // Seed replay cache deterministically with exact prompt-matched trials from checkpoint.json
+  // (Only seed from non-compact checkpoint if we are in matching non-compact mode, OR if reading a compact checkpoint)
+  const isSourceAlreadyCompact = checkpointPath === outCheckpointPath && compact;
   const seedFromArm = (arm: 'C_ID_auto' | 'C_ID_prereq') => {
+    if (compact && !isSourceAlreadyCompact) return;
     for (const task of tasks) {
       const trial = checkpoint.trials[`${task.id}::${arm}`];
       if (!trial) continue;
-      const lessonsBlock = trial.retrievedRuleIds
-        .map((id) => `[${id}] ${cidAutoById.get(id) ?? ''}`)
-        .join('\n');
-      const sysPrompt = buildBasePolicySystemPrompt(lessonsBlock);
+      const assembledSeed = assemblePolicyPromptWithOptionalCompaction({
+        retrievedRuleIds: trial.retrievedRuleIds,
+        lessonsById: cidAutoById,
+        canonicalRules,
+        cartridge,
+        enforceCanonicalLock: true,
+        compact,
+        maxContextTokens,
+      });
+      const sysPrompt = assembledSeed.systemPrompt;
       const key = promptCacheKey(task.id, sysPrompt);
       if (!replayCache[key]) {
         replayCache[key] = {
           cacheKey: key,
           taskId: task.id,
-          retrievedRuleIds: [...trial.retrievedRuleIds],
+          retrievedRuleIds: [...assembledSeed.includedRuleIds],
           policyText: trial.policyText,
           committed: trial.committed,
           fullTaskPass: trial.fullTaskPass,
@@ -460,6 +487,8 @@ export async function runPolicyAbacHopeLoop(options: {
   };
   saveReplayCache();
 
+  const compactionAcc = compact ? createCompactionAccumulator(maxContextTokens) : null;
+
   const livePairedEvaluator: PairedCanaryEvaluator<PolicyAbacTask> = async (
     task,
     snapshot
@@ -467,14 +496,23 @@ export async function runPolicyAbacHopeLoop(options: {
     const rankedIds = rankedByTaskId.get(task.id)!;
     const ret = retrieveWithPrerequisites(rankedIds, topK, snapshot.prerequisiteGraph);
     const lessonsMap = buildLessonsMapForSnapshot(snapshot, canonicalById, cidAutoById);
-    const lessonsBlock = ret.selected
-      .map((id) => `[${id}] ${lessonsMap.get(id) ?? ''}`)
-      .join('\n');
-    const systemPrompt = buildBasePolicySystemPrompt(lessonsBlock);
+    const assembled = assemblePolicyPromptWithOptionalCompaction({
+      retrievedRuleIds: ret.selected,
+      lessonsById: lessonsMap,
+      canonicalRules,
+      cartridge,
+      enforceCanonicalLock: true,
+      compact,
+      maxContextTokens,
+    });
+    const systemPrompt = assembled.systemPrompt;
     const key = promptCacheKey(task.id, systemPrompt);
 
     let cached = replayCache[key];
     if (!cached) {
+      if (compactionAcc) {
+        recordCompactionStat(compactionAcc, assembled);
+      }
       const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
       const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
       const evaluation = cartridge.evaluate(task, gen.policyText);
@@ -486,7 +524,7 @@ export async function runPolicyAbacHopeLoop(options: {
       cached = {
         cacheKey: key,
         taskId: task.id,
-        retrievedRuleIds: [...ret.selected],
+        retrievedRuleIds: [...assembled.includedRuleIds],
         policyText: gen.policyText,
         committed: evaluation.committed,
         fullTaskPass,
@@ -628,7 +666,7 @@ export async function runPolicyAbacHopeLoop(options: {
   };
 
   fs.writeFileSync(receiptOutPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
-  if (modelSlug === 'gemini-3-1-flash-lite') {
+  if (!compact && modelSlug === 'gemini-3-1-flash-lite') {
     fs.writeFileSync(legacyGeminiReceiptPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
   }
   console.log(`\n[HOPE] Wrote Slow Clock governance receipt to ${receiptOutPath}`);
@@ -637,7 +675,7 @@ export async function runPolicyAbacHopeLoop(options: {
   // LIVE EVALUATION OF C_ID_hope ARM (18 calls on gemini-3.1-flash-lite, temp=0)
   // =========================================================================
   console.log(
-    `\n[HOPE Arm] Evaluating C_ID_hope across all ${tasks.length} tasks live on ${model} (temperature=0, K=${topK})...`
+    `\n[HOPE Arm] Evaluating C_ID_hope across all ${tasks.length} tasks live on ${model} (temperature=0, K=${topK}${compact ? ', --compact' : ''})...`
   );
   const finalLessonsMap = buildLessonsMapForSnapshot(
     finalSnapshot,
@@ -659,10 +697,20 @@ export async function runPolicyAbacHopeLoop(options: {
       topK,
       finalSnapshot.prerequisiteGraph
     );
-    const lessonsBlock = retrieval.selected
-      .map((id) => `[${id}] ${finalLessonsMap.get(id) ?? ''}`)
-      .join('\n');
-    const systemPrompt = buildBasePolicySystemPrompt(lessonsBlock);
+    const assembled = assemblePolicyPromptWithOptionalCompaction({
+      retrievedRuleIds: retrieval.selected,
+      lessonsById: finalLessonsMap,
+      canonicalRules,
+      cartridge,
+      enforceCanonicalLock: true,
+      compact,
+      maxContextTokens,
+    });
+    if (compactionAcc) {
+      recordCompactionStat(compactionAcc, assembled);
+    }
+    const effectiveRetrievedIds = assembled.includedRuleIds;
+    const systemPrompt = assembled.systemPrompt;
     const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
 
     const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
@@ -678,7 +726,7 @@ export async function runPolicyAbacHopeLoop(options: {
       domain: task.domain,
       cohortId: task.cohortId,
       arm: 'C_ID_hope',
-      retrievedRuleIds: [...retrieval.selected],
+      retrievedRuleIds: [...effectiveRetrievedIds],
       injectedPrerequisites: [...retrieval.injectedPrerequisites],
       displacedRuleIds: [...retrieval.displaced],
       promptChars: systemPrompt.length + userPrompt.length,
@@ -701,30 +749,49 @@ export async function runPolicyAbacHopeLoop(options: {
 
     checkpoint.trials[key] = record;
     checkpoint.updatedAt = new Date().toISOString();
-    fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(outCheckpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
 
     hopeDone++;
     const statusMark = fullTaskPass ? 'PASS' : evaluation.committed ? 'FAIL' : 'SYNTAX_ERR';
     console.log(
-      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(10)} | facts=${passedCount}/${boundCount} | rules=[${retrieval.selected.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
+      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(10)} | facts=${passedCount}/${boundCount} | rules=[${effectiveRetrievedIds.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
     );
 
     if (delayMs > 0) await sleep(delayMs);
   }
 
-  const summary = summarizePilotCheckpoint(checkpoint);
+  const compactionSummary = compactionAcc
+    ? finalizeCompactionStats(compactionAcc)
+    : undefined;
+  const finalReceiptFile: PolicyAbacHopeReceiptFile = compactionSummary
+    ? { ...receiptFile, compaction: compactionSummary }
+    : receiptFile;
+  if (compactionSummary) {
+    fs.writeFileSync(
+      receiptOutPath,
+      `${JSON.stringify(finalReceiptFile, null, 2)}\n`,
+      'utf8'
+    );
+  }
+
+  const summary = summarizePilotCheckpoint(checkpoint, compactionSummary);
   const summaryMd = formatSummaryMarkdown(summary);
   fs.writeFileSync(summaryJsonPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   fs.writeFileSync(summaryMdPath, summaryMd, 'utf8');
 
   console.log(`\n${summaryMd}`);
+  if (compactionSummary) {
+    console.log(
+      `[HOPE][compact] Cumulative context tokens: ${compactionSummary.beforeTokens} -> ${compactionSummary.afterTokens} (-${compactionSummary.reductionPct.toFixed(2)}% saved across ${compactionSummary.bundlesCompacted} bundles, preserved ${compactionSummary.preservedTokenCount}/${compactionSummary.totalRequiredTokens} required tokens)`
+    );
+  }
   console.log(`[HOPE] Updated 5-arm summary JSON: ${summaryJsonPath}`);
   console.log(`[HOPE] Updated 5-arm summary MD:   ${summaryMdPath}`);
 
-  return { receiptFile, summary };
+  return { receiptFile: finalReceiptFile, summary };
 }
 
-function parseCliArgs(argv: string[]) {
+export function parsePolicyHopeCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
   const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
@@ -740,6 +807,7 @@ function parseCliArgs(argv: string[]) {
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 350,
     forceHopeArm: argv.includes('--force-hope-arm'),
+    ...parseCompactionCliFlags(argv),
   };
 }
 
@@ -750,7 +818,7 @@ const isEntrypoint =
   path.resolve(process.argv[1]).endsWith('run-policy-abac-hope-loop.ts');
 
 if (isEntrypoint) {
-  const args = parseCliArgs(process.argv.slice(2));
+  const args = parsePolicyHopeCliArgs(process.argv.slice(2));
   runPolicyAbacHopeLoop(args).catch((err) => {
     console.error(err);
     process.exit(1);

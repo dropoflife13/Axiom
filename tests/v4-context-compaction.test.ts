@@ -1,7 +1,32 @@
 // tests/v4-context-compaction.test.ts
+import fs from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { REQUIRED_FACT_TOKENS } from '../scripts/v3/verify-cid-vault.js';
 import { scanWorkspaceDocsAndReports } from '../scripts/v4/audit-context-rot.js';
+import {
+  POLICY_VAULT_C_PATH,
+  POLICY_VAULT_CID_AUTO_PATH,
+  type PolicyAbacVaultFile,
+} from '../scripts/v4/build-policy-abac-vaults.js';
+import {
+  TS_API_VAULT_C_PATH,
+  TS_API_VAULT_CID_AUTO_PATH,
+  type TsApiVaultFile,
+} from '../scripts/v4/build-ts-api-vaults.js';
+import { parsePolicyHopeCliArgs } from '../scripts/v4/run-policy-abac-hope-loop.js';
+import {
+  assemblePolicyPromptWithOptionalCompaction,
+  buildBasePolicySystemPrompt,
+  parsePolicyPilotCliArgs,
+  rankRulesByPromptTfIdf,
+} from '../scripts/v4/run-policy-abac-pilot.js';
+import { parseTsApiHopeCliArgs } from '../scripts/v4/run-ts-api-hope-loop.js';
+import {
+  assembleTsApiPromptWithOptionalCompaction,
+  buildBaseTsApiSystemPrompt,
+  parseTsApiPilotCliArgs,
+  rankTsApiRulesByPromptTfIdf,
+} from '../scripts/v4/run-ts-api-pilot.js';
 import { PolicyAbacCartridge } from '../src/v4/cartridges/policy-abac-cartridge.js';
 import { PostgresV3Cartridge } from '../src/v4/cartridges/postgres-v3-adapter.js';
 import { TsApiSecurityCartridge } from '../src/v4/cartridges/ts-api-security-cartridge.js';
@@ -419,5 +444,220 @@ describe('Axiom-HOPE v4 Context Rot Detector & Slow Clock Integration (context-r
       expect(c.afterTokens).toBeLessThan(c.beforeTokens);
       expect(c.preservedTokens).toBe(c.totalRequiredTokens);
     }
+  });
+});
+
+describe('v4 Runner --compact Top-4 Bundle Wiring (ABAC & TS-API)', () => {
+  it('parses --compact and --max-context-tokens across all 4 CLI runners with safe default false', () => {
+    const abacPilotDefault = parsePolicyPilotCliArgs([]);
+    const abacHopeDefault = parsePolicyHopeCliArgs([]);
+    const tsPilotDefault = parseTsApiPilotCliArgs([]);
+    const tsHopeDefault = parseTsApiHopeCliArgs([]);
+
+    expect(abacPilotDefault.compact).toBe(false);
+    expect(abacPilotDefault.maxContextTokens).toBeUndefined();
+    expect(abacHopeDefault.compact).toBe(false);
+    expect(tsPilotDefault.compact).toBe(false);
+    expect(tsHopeDefault.compact).toBe(false);
+
+    const flags = ['--model', 'gemma-4-31b-it', '--compact', '--max-context-tokens', '160'];
+    expect(parsePolicyPilotCliArgs(flags)).toMatchObject({
+      model: 'gemma-4-31b-it',
+      compact: true,
+      maxContextTokens: 160,
+    });
+    expect(parsePolicyHopeCliArgs(flags)).toMatchObject({
+      model: 'gemma-4-31b-it',
+      compact: true,
+      maxContextTokens: 160,
+    });
+    expect(parseTsApiPilotCliArgs(flags)).toMatchObject({
+      model: 'gemma-4-31b-it',
+      compact: true,
+      maxContextTokens: 160,
+    });
+    expect(parseTsApiHopeCliArgs(flags)).toMatchObject({
+      model: 'gemma-4-31b-it',
+      compact: true,
+      maxContextTokens: 160,
+    });
+  });
+
+  it('reduces Top-4 ABAC and TS-API bundle prompt tokens while preserving 100% operational tokens and keeping default uncompacted output identical', () => {
+    // 1. Policy-as-Code ABAC (18 tasks x Top-4 retrieval)
+    const abac = new PolicyAbacCartridge();
+    const abacTasks = abac.loadTasks();
+    const abacRules = abac.loadCanonicalRules().rules;
+    const abacVaultCid = JSON.parse(
+      fs.readFileSync(POLICY_VAULT_CID_AUTO_PATH, 'utf8')
+    ) as PolicyAbacVaultFile;
+    const abacVaultC = JSON.parse(
+      fs.readFileSync(POLICY_VAULT_C_PATH, 'utf8')
+    ) as PolicyAbacVaultFile;
+    const abacCidMap = new Map(abacVaultCid.lessons.map((l) => [l.factId, l.lesson]));
+    const abacCMap = new Map(abacVaultC.lessons.map((l) => [l.factId, l.lesson]));
+
+    let abacBeforeTotal = 0;
+    let abacAfterTotal = 0;
+    let abacSysBeforeTotal = 0;
+    let abacSysAfterTotal = 0;
+
+    for (const task of abacTasks) {
+      const top4 = rankRulesByPromptTfIdf(task.prompt, abacRules).slice(0, 4);
+
+      const expectedBaselineBlock = top4
+        .map((id) => `[${id}] ${abacCidMap.get(id) ?? ''}`)
+        .join('\n');
+      const expectedBaselinePrompt = buildBasePolicySystemPrompt(expectedBaselineBlock);
+
+      const uncompacted = assemblePolicyPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: abacCidMap,
+        canonicalRules: abacRules,
+        cartridge: abac,
+        enforceCanonicalLock: true,
+        compact: false,
+      });
+      expect(uncompacted.lessonsBlock).toBe(expectedBaselineBlock);
+      expect(uncompacted.systemPrompt).toBe(expectedBaselinePrompt);
+
+      const compacted = assemblePolicyPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: abacCidMap,
+        canonicalRules: abacRules,
+        cartridge: abac,
+        enforceCanonicalLock: true,
+        compact: true,
+      });
+      expect(compacted.includedRuleIds).toEqual(top4);
+      expect(compacted.droppedRuleIds).toEqual([]);
+      expect(compacted.preservedTokenCount).toBe(compacted.totalRequiredTokens);
+      expect(compacted.afterTokens).toBeLessThan(compacted.beforeTokens);
+
+      abacBeforeTotal += compacted.beforeTokens;
+      abacAfterTotal += compacted.afterTokens;
+      abacSysBeforeTotal += estimateTokens(uncompacted.systemPrompt);
+      abacSysAfterTotal += estimateTokens(compacted.systemPrompt);
+
+      // Unconstrained C arm also compacts without enforcing canonical token lock
+      const armCCompacted = assemblePolicyPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: abacCMap,
+        canonicalRules: abacRules,
+        cartridge: abac,
+        enforceCanonicalLock: false,
+        compact: true,
+      });
+      expect(armCCompacted.preservedTokenCount).toBe(armCCompacted.totalRequiredTokens);
+      expect(armCCompacted.afterTokens).toBeLessThanOrEqual(armCCompacted.beforeTokens);
+    }
+
+    expect(abacAfterTotal).toBeLessThan(abacBeforeTotal);
+    expect(abacSysAfterTotal).toBeLessThan(abacSysBeforeTotal);
+
+    // Budget cap enforcement on Top-4 ABAC bundle
+    const abacSampleTop4 = rankRulesByPromptTfIdf(abacTasks[0].prompt, abacRules).slice(0, 4);
+    const cappedAbac = assemblePolicyPromptWithOptionalCompaction({
+      retrievedRuleIds: abacSampleTop4,
+      lessonsById: abacCidMap,
+      canonicalRules: abacRules,
+      cartridge: abac,
+      enforceCanonicalLock: true,
+      compact: true,
+      maxContextTokens: 80,
+    });
+    expect(cappedAbac.afterTokens).toBeLessThanOrEqual(80);
+    expect(cappedAbac.droppedRuleIds.length).toBeGreaterThan(0);
+    expect(cappedAbac.preservedTokenCount).toBe(cappedAbac.totalRequiredTokens);
+
+    // 2. TypeScript API Security Contracts (15 tasks x Top-4 retrieval)
+    const tsApi = new TsApiSecurityCartridge();
+    const tsTasks = tsApi.loadTasks();
+    const tsRules = tsApi.loadCanonicalRules().rules;
+    const tsVaultCid = JSON.parse(
+      fs.readFileSync(TS_API_VAULT_CID_AUTO_PATH, 'utf8')
+    ) as TsApiVaultFile;
+    const tsVaultC = JSON.parse(
+      fs.readFileSync(TS_API_VAULT_C_PATH, 'utf8')
+    ) as TsApiVaultFile;
+    const tsCidMap = new Map(tsVaultCid.lessons.map((l) => [l.factId, l.lesson]));
+    const tsCMap = new Map(tsVaultC.lessons.map((l) => [l.factId, l.lesson]));
+
+    let tsBeforeTotal = 0;
+    let tsAfterTotal = 0;
+    let tsSysBeforeTotal = 0;
+    let tsSysAfterTotal = 0;
+
+    for (const task of tsTasks) {
+      const top4 = rankTsApiRulesByPromptTfIdf(task, tsRules).slice(0, 4);
+
+      const expectedBaselineBlock = top4
+        .map((id) => `[${id}] ${tsCidMap.get(id) ?? ''}`)
+        .join('\n');
+      const expectedBaselinePrompt = buildBaseTsApiSystemPrompt(expectedBaselineBlock);
+
+      const uncompacted = assembleTsApiPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: tsCidMap,
+        canonicalRules: tsRules,
+        cartridge: tsApi,
+        enforceCanonicalLock: true,
+        compact: false,
+      });
+      expect(uncompacted.lessonsBlock).toBe(expectedBaselineBlock);
+      expect(uncompacted.systemPrompt).toBe(expectedBaselinePrompt);
+
+      const compacted = assembleTsApiPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: tsCidMap,
+        canonicalRules: tsRules,
+        cartridge: tsApi,
+        enforceCanonicalLock: true,
+        compact: true,
+      });
+      expect(compacted.includedRuleIds).toEqual(top4);
+      expect(compacted.droppedRuleIds).toEqual([]);
+      expect(compacted.preservedTokenCount).toBe(compacted.totalRequiredTokens);
+      expect(compacted.afterTokens).toBeLessThan(compacted.beforeTokens);
+
+      tsBeforeTotal += compacted.beforeTokens;
+      tsAfterTotal += compacted.afterTokens;
+      tsSysBeforeTotal += estimateTokens(uncompacted.systemPrompt);
+      tsSysAfterTotal += estimateTokens(compacted.systemPrompt);
+
+      const armCCompacted = assembleTsApiPromptWithOptionalCompaction({
+        retrievedRuleIds: top4,
+        lessonsById: tsCMap,
+        canonicalRules: tsRules,
+        cartridge: tsApi,
+        enforceCanonicalLock: false,
+        compact: true,
+      });
+      expect(armCCompacted.preservedTokenCount).toBe(armCCompacted.totalRequiredTokens);
+      expect(armCCompacted.afterTokens).toBeLessThanOrEqual(armCCompacted.beforeTokens);
+    }
+
+    expect(tsAfterTotal).toBeLessThan(tsBeforeTotal);
+    expect(tsSysAfterTotal).toBeLessThan(tsSysBeforeTotal);
+
+    const tsSampleTop4 = rankTsApiRulesByPromptTfIdf(tsTasks[0], tsRules).slice(0, 4);
+    const cappedTs = assembleTsApiPromptWithOptionalCompaction({
+      retrievedRuleIds: tsSampleTop4,
+      lessonsById: tsCidMap,
+      canonicalRules: tsRules,
+      cartridge: tsApi,
+      enforceCanonicalLock: true,
+      compact: true,
+      maxContextTokens: 80,
+    });
+    expect(cappedTs.afterTokens).toBeLessThanOrEqual(80);
+    expect(cappedTs.droppedRuleIds.length).toBeGreaterThan(0);
+    expect(cappedTs.preservedTokenCount).toBe(cappedTs.totalRequiredTokens);
+
+    const abacPct = (((abacBeforeTotal - abacAfterTotal) / abacBeforeTotal) * 100).toFixed(2);
+    const tsPct = (((tsBeforeTotal - tsAfterTotal) / tsBeforeTotal) * 100).toFixed(2);
+    console.log(
+      `[Runner --compact Top-4 Bundles] ABAC: ${abacBeforeTotal}->${abacAfterTotal} (-${abacPct}%) | TS-API: ${tsBeforeTotal}->${tsAfterTotal} (-${tsPct}%)`
+    );
   });
 });
