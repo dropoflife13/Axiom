@@ -5,3 +5,5 @@ export * from './fast-clock.js';
 export * from './quarantine-vault.js';
 export * from './slow-clock.js';
 export * from './hope-engine.js';
+export * from './context-compactor.js';
+export * from './context-rot-detector.js';
