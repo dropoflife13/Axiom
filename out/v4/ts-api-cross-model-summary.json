@@ -1,0 +1,737 @@
+{
+  "schemaVersion": "4.0.0-ts-api-cross-model-summary",
+  "generatedAt": "2026-11-24T01:06:45.504Z",
+  "models": [
+    {
+      "modelId": "gemini-3.1-flash-lite",
+      "provider": "Google AI Studio",
+      "status": "complete-5-arm",
+      "completedTrials": 75,
+      "summary": {
+        "schemaVersion": "4.0.0-ts-api-pilot-summary",
+        "cartridgeId": "ts-api-security-v4",
+        "model": "gemini-3.1-flash-lite",
+        "modelSlug": "gemini-3-1-flash-lite",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 75,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.42370370370370375,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 0,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 4,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 5,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.7100000000000001,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.7759259259259259,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 1,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6838888888888889,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 14,
+            "ts04RetrievedCount": 10,
+            "ts08RetrievedCount": 1,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 1,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 10,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 15,
+            "fullTaskPassCount": 9,
+            "fullTaskPassRate": 0.6,
+            "meanFactPassRate": 0.9111111111111111,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 5,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 0,
+          "C_ID_auto_minus_C_fact": 6.59,
+          "C_ID_prereq_minus_C_ID_auto_task": 0,
+          "C_ID_prereq_minus_C_ID_auto_fact": -9.2,
+          "C_ID_prereq_minus_C_task": 0,
+          "C_ID_prereq_minus_C_fact": -2.61,
+          "C_ID_prereq_minus_A_task": 0,
+          "C_ID_prereq_minus_A_fact": 26.02,
+          "C_ID_hope_minus_C_task": 60,
+          "C_ID_hope_minus_C_fact": 20.11,
+          "C_ID_hope_minus_C_ID_auto_task": 60,
+          "C_ID_hope_minus_C_ID_auto_fact": 13.52,
+          "C_ID_hope_minus_C_ID_prereq_task": 60,
+          "C_ID_hope_minus_C_ID_prereq_fact": 22.72,
+          "C_ID_hope_minus_A_task": 60,
+          "C_ID_hope_minus_A_fact": 48.74
+        },
+        "generatedAt": "2026-11-24T01:06:45.476Z"
+      },
+      "promotedPrerequisiteGraph": {},
+      "updatedRuleIds": [
+        "TS-05",
+        "TS-11",
+        "TS-12"
+      ],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-TS-PREREQ",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.0920370370370371,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.1,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-05",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.040000000000000036,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-11-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.22222222222222224,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-12-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.1,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-007",
+            "TSAPI-008",
+            "TSAPI-009"
+          ]
+        },
+        {
+          "candidateId": "Q-REFINE-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-REFINE-TS-12",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.225,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-REFINE-TS-05",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.08333333333333337,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-10",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.019999999999999928,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-11",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 1.7763568394002506e-16,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    },
+    {
+      "modelId": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "status": "complete-5-arm",
+      "completedTrials": 75,
+      "summary": {
+        "schemaVersion": "4.0.0-ts-api-pilot-summary",
+        "cartridgeId": "ts-api-security-v4",
+        "model": "gemma-4-31b-it",
+        "modelSlug": "gemma-4-31b-it",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 75,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.5751851851851851,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 0,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 2,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.7675925925925926,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 1,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.8055555555555556,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 1,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.5883333333333333,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 14,
+            "ts04RetrievedCount": 10,
+            "ts08RetrievedCount": 1,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 15,
+            "fullTaskPassCount": 3,
+            "fullTaskPassRate": 0.2,
+            "meanFactPassRate": 0.8018518518518519,
+            "committedCount": 14,
+            "committedRate": 0.9333333333333333,
+            "ts01RetrievedCount": 6,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 1,
+              "missingSafeParse": 1,
+              "missingTenantCheck": 0,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 10,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 0,
+          "C_ID_auto_minus_C_fact": 3.8,
+          "C_ID_prereq_minus_C_ID_auto_task": 0,
+          "C_ID_prereq_minus_C_ID_auto_fact": -21.72,
+          "C_ID_prereq_minus_C_task": 0,
+          "C_ID_prereq_minus_C_fact": -17.93,
+          "C_ID_prereq_minus_A_task": 0,
+          "C_ID_prereq_minus_A_fact": 1.31,
+          "C_ID_hope_minus_C_task": 20,
+          "C_ID_hope_minus_C_fact": 3.43,
+          "C_ID_hope_minus_C_ID_auto_task": 20,
+          "C_ID_hope_minus_C_ID_auto_fact": -0.37,
+          "C_ID_hope_minus_C_ID_prereq_task": 20,
+          "C_ID_hope_minus_C_ID_prereq_fact": 21.35,
+          "C_ID_hope_minus_A_task": 20,
+          "C_ID_hope_minus_A_fact": 22.67
+        },
+        "generatedAt": "2026-11-24T01:06:45.488Z"
+      },
+      "promotedPrerequisiteGraph": {
+        "TS-10": [
+          "TS-05"
+        ]
+      },
+      "updatedRuleIds": [
+        "TS-11"
+      ],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-TS-PREREQ",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.21722222222222232,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.18,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-05",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.1,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-11-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.3333333333333332,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-12-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.05,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-007",
+            "TSAPI-008",
+            "TSAPI-009"
+          ]
+        },
+        {
+          "candidateId": "Q-REFINE-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-REFINE-TS-12",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.25,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-009"
+          ]
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-10",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.019999999999999928,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-11",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.02222222222222232,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    },
+    {
+      "modelId": "qwen/qwen3.8-27b",
+      "provider": "Groq",
+      "status": "complete-5-arm",
+      "completedTrials": 75,
+      "summary": {
+        "schemaVersion": "4.0.0-ts-api-pilot-summary",
+        "cartridgeId": "ts-api-security-v4",
+        "model": "qwen/qwen3.8-27b",
+        "modelSlug": "qwen-qwen3-8-27b",
+        "topK": 4,
+        "temperature": 0,
+        "totalTrials": 75,
+        "arms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.5559259259259259,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 0,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 7,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 5,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6649999999999998,
+            "committedCount": 13,
+            "committedRate": 0.8666666666666667,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 2,
+              "missingSafeParse": 1,
+              "missingTenantCheck": 2,
+              "leakedSecretIdentifier": 1,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 1
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.7166666666666667,
+            "committedCount": 14,
+            "committedRate": 0.9333333333333333,
+            "ts01RetrievedCount": 11,
+            "ts04RetrievedCount": 0,
+            "ts08RetrievedCount": 15,
+            "forensicDefectCounts": {
+              "syntaxError": 1,
+              "missingSafeParse": 1,
+              "missingTenantCheck": 2,
+              "leakedSecretIdentifier": 1,
+              "missingErrorEnvelope": 15,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 15,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.576851851851852,
+            "committedCount": 12,
+            "committedRate": 0.8,
+            "ts01RetrievedCount": 14,
+            "ts04RetrievedCount": 10,
+            "ts08RetrievedCount": 1,
+            "forensicDefectCounts": {
+              "syntaxError": 3,
+              "missingSafeParse": 1,
+              "missingTenantCheck": 2,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 6,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 1
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 15,
+            "fullTaskPassCount": 10,
+            "fullTaskPassRate": 0.6666666666666666,
+            "meanFactPassRate": 0.9083333333333333,
+            "committedCount": 15,
+            "committedRate": 1,
+            "ts01RetrievedCount": 5,
+            "ts04RetrievedCount": 5,
+            "ts08RetrievedCount": 6,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingSafeParse": 0,
+              "missingTenantCheck": 1,
+              "leakedSecretIdentifier": 0,
+              "missingErrorEnvelope": 5,
+              "missingIdempotencyKey": 0,
+              "missingNoStoreHeader": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "C_ID_auto_minus_C_task": 0,
+          "C_ID_auto_minus_C_fact": 5.17,
+          "C_ID_prereq_minus_C_ID_auto_task": 0,
+          "C_ID_prereq_minus_C_ID_auto_fact": -13.98,
+          "C_ID_prereq_minus_C_task": 0,
+          "C_ID_prereq_minus_C_fact": -8.81,
+          "C_ID_prereq_minus_A_task": 0,
+          "C_ID_prereq_minus_A_fact": 2.09,
+          "C_ID_hope_minus_C_task": 66.67,
+          "C_ID_hope_minus_C_fact": 24.33,
+          "C_ID_hope_minus_C_ID_auto_task": 66.67,
+          "C_ID_hope_minus_C_ID_auto_fact": 19.17,
+          "C_ID_hope_minus_C_ID_prereq_task": 66.67,
+          "C_ID_hope_minus_C_ID_prereq_fact": 33.15,
+          "C_ID_hope_minus_A_task": 66.67,
+          "C_ID_hope_minus_A_fact": 35.24
+        },
+        "generatedAt": "2026-11-24T01:06:45.498Z"
+      },
+      "promotedPrerequisiteGraph": {
+        "TS-10": [
+          "TS-04",
+          "TS-05"
+        ],
+        "TS-11": [
+          "TS-09"
+        ]
+      },
+      "updatedRuleIds": [
+        "TS-10",
+        "TS-11"
+      ],
+      "candidateDecisions": [
+        {
+          "candidateId": "Q-STATIC-TS-PREREQ",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.13981481481481475,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-04",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.040000000000000036,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-10-TS-05",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.05999999999999996,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-11-TS-09",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.5555555555555555,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-EDGE-TS-11-TS-01",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.11111111111111105,
+          "canaryRegressions": 3,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-008",
+            "TSAPI-010"
+          ]
+        },
+        {
+          "candidateId": "Q-EDGE-TS-11-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": -0.11111111111111105,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006"
+          ]
+        },
+        {
+          "candidateId": "Q-EDGE-TS-12-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.125,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-007",
+            "TSAPI-008",
+            "TSAPI-009"
+          ]
+        },
+        {
+          "candidateId": "Q-REFINE-TS-04",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-REFINE-TS-12",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0.25,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-007"
+          ]
+        },
+        {
+          "candidateId": "Q-REFINE-TS-05",
+          "status": "rejected",
+          "rejectedByGate": "canary_replay",
+          "targetCohortDelta": 0,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-011"
+          ]
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-10",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.1,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        },
+        {
+          "candidateId": "Q-ANCHOR-TS-11",
+          "status": "approved",
+          "rejectedByGate": null,
+          "targetCohortDelta": 0.1333333333333334,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      ]
+    }
+  ]
+}

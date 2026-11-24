@@ -1,0 +1,1641 @@
+{
+  "version": "4.0.0-ts-api-security",
+  "domain": "ts-api-security",
+  "tasks": [
+    {
+      "id": "TSAPI-001",
+      "cohortId": "financial-payout",
+      "domain": "payouts",
+      "method": "POST",
+      "route": "/api/v1/payouts/initiate",
+      "title": "Wire Payout Initiation Endpoint",
+      "prompt": "Implement POST /api/v1/payouts/initiate in TypeScript using safeParse validation, active session auth, finance_approver role guard, strict tenant isolation, x-idempotency-key enforcement, amountCents bounds (1..10000000), standardized error envelopes, Cache-Control: no-store, and audit emission.",
+      "allowedRoles": ["finance_approver"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "testVectors": [
+        {
+          "id": "TSAPI-001-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized finance_approver initiates bounded same-tenant wire payout with idempotency key",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-valid",
+            "headers": { "x-idempotency-key": "idem-wire-001", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "destinationAccount": "acct-991", "amountCents": 250000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fin-1", "tenantId": "tenant-acme", "role": "finance_approver" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-001-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects payout targeting another tenant with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-xtenant",
+            "headers": { "x-idempotency-key": "idem-wire-002", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-globex", "destinationAccount": "acct-991", "amountCents": 250000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fin-1", "tenantId": "tenant-acme", "role": "finance_approver" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-001-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects missing session with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-unauth",
+            "headers": { "x-idempotency-key": "idem-wire-003", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "destinationAccount": "acct-991", "amountCents": 250000, "currency": "USD" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-001-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects malformed payload with non-numeric amountCents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-badbody",
+            "headers": { "x-idempotency-key": "idem-wire-004", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "amountCents": "not-a-number" }
+          },
+          "session": { "userId": "usr-fin-1", "tenantId": "tenant-acme", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-001-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects non-finance role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-badrole",
+            "headers": { "x-idempotency-key": "idem-wire-005", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "destinationAccount": "acct-991", "amountCents": 250000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-mem-2", "tenantId": "tenant-acme", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-001-V6",
+          "factId": "TS-07",
+          "kind": "missing_idempotency_key",
+          "description": "Rejects payout missing x-idempotency-key header with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-noidem",
+            "headers": { "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "destinationAccount": "acct-991", "amountCents": 250000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fin-1", "tenantId": "tenant-acme", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-001-V7",
+          "factId": "TS-10",
+          "kind": "out_of_bounds_amount",
+          "description": "Rejects payout amount exceeding 10000000 cents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-001-oob",
+            "headers": { "x-idempotency-key": "idem-wire-007", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-acme", "destinationAccount": "acct-991", "amountCents": 25000000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fin-1", "tenantId": "tenant-acme", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-002",
+      "cohortId": "financial-payout",
+      "domain": "payouts",
+      "method": "POST",
+      "route": "/api/v1/payouts/ach-batch",
+      "title": "ACH Batch Disbursement Endpoint",
+      "prompt": "Implement POST /api/v1/payouts/ach-batch enforcing strict authentication, finance_approver/treasury_ops role allowlist, safeParse payload checks, tenant isolation, x-idempotency-key, amountCents bounds, standardized error envelopes, Cache-Control: no-store, and audit logging.",
+      "allowedRoles": ["finance_approver", "treasury_ops"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "testVectors": [
+        {
+          "id": "TSAPI-002-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized treasury_ops dispatches same-tenant ACH batch",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-valid",
+            "headers": { "x-idempotency-key": "idem-ach-001", "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-north", "destinationAccount": "ach-batch-42", "amountCents": 875000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-tr-9", "tenantId": "tenant-north", "role": "treasury_ops" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-002-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant ACH disbursement with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-xtenant",
+            "headers": { "x-idempotency-key": "idem-ach-002" },
+            "rawBody": { "tenantId": "tenant-south", "destinationAccount": "ach-batch-42", "amountCents": 875000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-tr-9", "tenantId": "tenant-north", "role": "treasury_ops" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-002-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects unauthenticated request with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-unauth",
+            "headers": { "x-idempotency-key": "idem-ach-003" },
+            "rawBody": { "tenantId": "tenant-north", "destinationAccount": "ach-batch-42", "amountCents": 875000, "currency": "USD" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-002-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects unparseable JSON body with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-badjson",
+            "headers": { "x-idempotency-key": "idem-ach-004" },
+            "invalidJson": true
+          },
+          "session": { "userId": "usr-tr-9", "tenantId": "tenant-north", "role": "treasury_ops" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-002-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Blocks viewer role from ACH batch dispatch with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-badrole",
+            "headers": { "x-idempotency-key": "idem-ach-005" },
+            "rawBody": { "tenantId": "tenant-north", "destinationAccount": "ach-batch-42", "amountCents": 875000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-vw-1", "tenantId": "tenant-north", "role": "viewer" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-002-V6",
+          "factId": "TS-07",
+          "kind": "missing_idempotency_key",
+          "description": "Blocks blank x-idempotency-key header with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-noidem",
+            "headers": { "x-idempotency-key": "   " },
+            "rawBody": { "tenantId": "tenant-north", "destinationAccount": "ach-batch-42", "amountCents": 875000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-tr-9", "tenantId": "tenant-north", "role": "treasury_ops" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-002-V7",
+          "factId": "TS-10",
+          "kind": "out_of_bounds_amount",
+          "description": "Blocks zero amountCents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-002-oob",
+            "headers": { "x-idempotency-key": "idem-ach-007" },
+            "rawBody": { "tenantId": "tenant-north", "destinationAccount": "ach-batch-42", "amountCents": 0, "currency": "USD" }
+          },
+          "session": { "userId": "usr-tr-9", "tenantId": "tenant-north", "role": "treasury_ops" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-003",
+      "cohortId": "financial-payout",
+      "domain": "payouts",
+      "method": "POST",
+      "route": "/api/v1/payouts/settlements",
+      "title": "Instant Treasury Settlement Endpoint",
+      "prompt": "Implement POST /api/v1/payouts/settlements enforcing tenant isolation, safeParse validation, auth and finance_approver role allowlist, x-idempotency-key, amountCents bounds, error envelope, Cache-Control: no-store, and audit trail.",
+      "allowedRoles": ["finance_approver"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "testVectors": [
+        {
+          "id": "TSAPI-003-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized finance_approver executes settlement within cap",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-valid",
+            "headers": { "x-idempotency-key": "idem-settle-001" },
+            "rawBody": { "tenantId": "tenant-fin", "destinationAccount": "treasury-77", "amountCents": 9999999, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fa-3", "tenantId": "tenant-fin", "role": "finance_approver" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-003-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects settlement for foreign tenant with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-xtenant",
+            "headers": { "x-idempotency-key": "idem-settle-002" },
+            "rawBody": { "tenantId": "tenant-other", "destinationAccount": "treasury-77", "amountCents": 50000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fa-3", "tenantId": "tenant-fin", "role": "finance_approver" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-003-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects null session with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-unauth",
+            "headers": { "x-idempotency-key": "idem-settle-003" },
+            "rawBody": { "tenantId": "tenant-fin", "destinationAccount": "treasury-77", "amountCents": 50000, "currency": "USD" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-003-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects missing destinationAccount with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-badbody",
+            "headers": { "x-idempotency-key": "idem-settle-004" },
+            "rawBody": { "tenantId": "tenant-fin", "amountCents": 50000 }
+          },
+          "session": { "userId": "usr-fa-3", "tenantId": "tenant-fin", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-003-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects support_agent role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-badrole",
+            "headers": { "x-idempotency-key": "idem-settle-005" },
+            "rawBody": { "tenantId": "tenant-fin", "destinationAccount": "treasury-77", "amountCents": 50000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-sup-2", "tenantId": "tenant-fin", "role": "support_agent" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-003-V6",
+          "factId": "TS-07",
+          "kind": "missing_idempotency_key",
+          "description": "Rejects missing idempotency key with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-noidem",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-fin", "destinationAccount": "treasury-77", "amountCents": 50000, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fa-3", "tenantId": "tenant-fin", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-003-V7",
+          "factId": "TS-10",
+          "kind": "out_of_bounds_amount",
+          "description": "Rejects negative amountCents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-003-oob",
+            "headers": { "x-idempotency-key": "idem-settle-007" },
+            "rawBody": { "tenantId": "tenant-fin", "destinationAccount": "treasury-77", "amountCents": -500, "currency": "USD" }
+          },
+          "session": { "userId": "usr-fa-3", "tenantId": "tenant-fin", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-004",
+      "cohortId": "financial-payout",
+      "domain": "payouts",
+      "method": "POST",
+      "route": "/api/v1/payouts/refunds",
+      "title": "Vendor Invoice Refund Endpoint",
+      "prompt": "Implement POST /api/v1/payouts/refunds requiring authenticated billing_admin or finance_approver session, tenant isolation, safeParse, x-idempotency-key, amountCents cap, no secret leaks, Cache-Control: no-store, error envelope, and audit logging.",
+      "allowedRoles": ["finance_approver", "billing_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "testVectors": [
+        {
+          "id": "TSAPI-004-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized billing_admin issues same-tenant vendor refund",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-valid",
+            "headers": { "x-idempotency-key": "idem-ref-001" },
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 12450, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ba-4", "tenantId": "tenant-v4", "role": "billing_admin" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-004-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects cross-tenant refund with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-xtenant",
+            "headers": { "x-idempotency-key": "idem-ref-002" },
+            "rawBody": { "tenantId": "tenant-v9", "destinationAccount": "vendor-108", "amountCents": 12450, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ba-4", "tenantId": "tenant-v4", "role": "billing_admin" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-004-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects unauthenticated refund with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-unauth",
+            "headers": { "x-idempotency-key": "idem-ref-003" },
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 12450, "currency": "USD" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-004-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects fractional amountCents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-badbody",
+            "headers": { "x-idempotency-key": "idem-ref-004" },
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 12.55, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ba-4", "tenantId": "tenant-v4", "role": "billing_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-004-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects contractor role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-badrole",
+            "headers": { "x-idempotency-key": "idem-ref-005" },
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 12450, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ct-1", "tenantId": "tenant-v4", "role": "contractor" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-004-V6",
+          "factId": "TS-07",
+          "kind": "missing_idempotency_key",
+          "description": "Rejects missing x-idempotency-key with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-noidem",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 12450, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ba-4", "tenantId": "tenant-v4", "role": "billing_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-004-V7",
+          "factId": "TS-10",
+          "kind": "out_of_bounds_amount",
+          "description": "Rejects oversized refund amountCents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-004-oob",
+            "headers": { "x-idempotency-key": "idem-ref-007" },
+            "rawBody": { "tenantId": "tenant-v4", "destinationAccount": "vendor-108", "amountCents": 10000001, "currency": "USD" }
+          },
+          "session": { "userId": "usr-ba-4", "tenantId": "tenant-v4", "role": "billing_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-005",
+      "cohortId": "financial-payout",
+      "domain": "payouts",
+      "method": "POST",
+      "route": "/api/v1/payouts/fx-transfer",
+      "title": "Cross-Border FX Transfer Endpoint",
+      "prompt": "Implement POST /api/v1/payouts/fx-transfer with safeParse schema checks, strict tenant isolation, finance_approver role allowlist, x-idempotency-key header, bounded integer amountCents, standardized error envelope, Cache-Control: no-store, and audit event emission.",
+      "allowedRoles": ["finance_approver"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-10"],
+      "testVectors": [
+        {
+          "id": "TSAPI-005-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized finance_approver submits bounded FX transfer",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-valid",
+            "headers": { "x-idempotency-key": "idem-fx-001" },
+            "rawBody": { "tenantId": "tenant-fx", "destinationAccount": "iban-de-88", "amountCents": 440000, "currency": "EUR" }
+          },
+          "session": { "userId": "usr-fx-1", "tenantId": "tenant-fx", "role": "finance_approver" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-005-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant FX transfer with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-xtenant",
+            "headers": { "x-idempotency-key": "idem-fx-002" },
+            "rawBody": { "tenantId": "tenant-rival", "destinationAccount": "iban-de-88", "amountCents": 440000, "currency": "EUR" }
+          },
+          "session": { "userId": "usr-fx-1", "tenantId": "tenant-fx", "role": "finance_approver" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-005-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks anonymous caller with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-unauth",
+            "headers": { "x-idempotency-key": "idem-fx-003" },
+            "rawBody": { "tenantId": "tenant-fx", "destinationAccount": "iban-de-88", "amountCents": 440000, "currency": "EUR" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-005-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks non-object body with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-badbody",
+            "headers": { "x-idempotency-key": "idem-fx-004" },
+            "rawBody": ["invalid", "array"]
+          },
+          "session": { "userId": "usr-fx-1", "tenantId": "tenant-fx", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-005-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Blocks analyst role from FX transfer with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-badrole",
+            "headers": { "x-idempotency-key": "idem-fx-005" },
+            "rawBody": { "tenantId": "tenant-fx", "destinationAccount": "iban-de-88", "amountCents": 440000, "currency": "EUR" }
+          },
+          "session": { "userId": "usr-an-5", "tenantId": "tenant-fx", "role": "analyst" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-005-V6",
+          "factId": "TS-07",
+          "kind": "missing_idempotency_key",
+          "description": "Blocks FX transfer without x-idempotency-key with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-noidem",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-fx", "destinationAccount": "iban-de-88", "amountCents": 440000, "currency": "EUR" }
+          },
+          "session": { "userId": "usr-fx-1", "tenantId": "tenant-fx", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-005-V7",
+          "factId": "TS-10",
+          "kind": "out_of_bounds_amount",
+          "description": "Blocks FX transfer over 10000000 cents with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-005-oob",
+            "headers": { "x-idempotency-key": "idem-fx-007" },
+            "rawBody": { "tenantId": "tenant-fx", "destinationAccount": "iban-de-88", "amountCents": 50000000, "currency": "EUR" }
+          },
+          "session": { "userId": "usr-fx-1", "tenantId": "tenant-fx", "role": "finance_approver" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-006",
+      "cohortId": "admin-export",
+      "domain": "admin",
+      "method": "POST",
+      "route": "/api/v1/admin/exports/audit-log",
+      "title": "Tenant Audit Trail Export Endpoint",
+      "prompt": "Implement POST /api/v1/admin/exports/audit-log enforcing active session auth, security_auditor/tenant_admin role allowlist, safeParse body validation, strict tenant isolation, exportFields projection with limit <= 500, zero secret leakage, Cache-Control: no-store, standardized error envelopes, and audit logging.",
+      "allowedRoles": ["tenant_admin", "security_auditor"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "testVectors": [
+        {
+          "id": "TSAPI-006-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized security_auditor exports bounded same-tenant audit log",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-valid",
+            "headers": { "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-sec", "exportFields": ["id", "action", "actorId", "createdAt"], "limit": 200 }
+          },
+          "session": { "userId": "usr-aud-1", "tenantId": "tenant-sec", "role": "security_auditor" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-006-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant audit export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-xtenant",
+            "headers": { "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-other", "exportFields": ["id", "action"], "limit": 100 }
+          },
+          "session": { "userId": "usr-aud-1", "tenantId": "tenant-sec", "role": "security_auditor" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-006-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks unauthenticated export request with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-sec", "exportFields": ["id"], "limit": 100 }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-006-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects missing exportFields array with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-sec", "limit": "all" }
+          },
+          "session": { "userId": "usr-aud-1", "tenantId": "tenant-sec", "role": "security_auditor" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-006-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects standard member role from admin export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-badrole",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-sec", "exportFields": ["id"], "limit": 50 }
+          },
+          "session": { "userId": "usr-mem-6", "tenantId": "tenant-sec", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-006-V6",
+          "factId": "TS-11",
+          "kind": "excessive_export_limit",
+          "description": "Rejects export limit exceeding 500 rows with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-006-limit",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-sec", "exportFields": ["id", "action"], "limit": 5000 }
+          },
+          "session": { "userId": "usr-aud-1", "tenantId": "tenant-sec", "role": "security_auditor" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-007",
+      "cohortId": "admin-export",
+      "domain": "admin",
+      "method": "POST",
+      "route": "/api/v1/admin/exports/billing",
+      "title": "Billing Ledger CSV Export Endpoint",
+      "prompt": "Implement POST /api/v1/admin/exports/billing enforcing tenant_admin/finance_auditor role guard, safeParse input validation, tenant isolation, bounded limit <= 500 with exportFields projection, Cache-Control: no-store, error envelope, and audit logging.",
+      "allowedRoles": ["tenant_admin", "finance_auditor"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "testVectors": [
+        {
+          "id": "TSAPI-007-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized tenant_admin exports billing ledger within limit",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-valid",
+            "headers": { "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-bill", "exportFields": ["invoiceId", "amountCents", "status"], "limit": 500 }
+          },
+          "session": { "userId": "usr-adm-7", "tenantId": "tenant-bill", "role": "tenant_admin" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-007-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects cross-tenant billing export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-other", "exportFields": ["invoiceId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-adm-7", "tenantId": "tenant-bill", "role": "tenant_admin" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-007-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects unauthenticated request with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bill", "exportFields": ["invoiceId"], "limit": 50 }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-007-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects empty exportFields list with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bill", "exportFields": [], "limit": 50 }
+          },
+          "session": { "userId": "usr-adm-7", "tenantId": "tenant-bill", "role": "tenant_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-007-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects billing_viewer role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-badrole",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bill", "exportFields": ["invoiceId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-bv-2", "tenantId": "tenant-bill", "role": "billing_viewer" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-007-V6",
+          "factId": "TS-11",
+          "kind": "excessive_export_limit",
+          "description": "Rejects limit 501 with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-007-limit",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bill", "exportFields": ["invoiceId"], "limit": 501 }
+          },
+          "session": { "userId": "usr-adm-7", "tenantId": "tenant-bill", "role": "tenant_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-008",
+      "cohortId": "admin-export",
+      "domain": "admin",
+      "method": "POST",
+      "route": "/api/v1/admin/exports/compliance",
+      "title": "SOC2 Compliance Evidence Export Endpoint",
+      "prompt": "Implement POST /api/v1/admin/exports/compliance requiring compliance_officer or tenant_admin role, safeParse validation, tenant isolation, projected exportFields with limit <= 500, Cache-Control: no-store, standardized error envelopes, and audit events.",
+      "allowedRoles": ["tenant_admin", "compliance_officer"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "testVectors": [
+        {
+          "id": "TSAPI-008-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized compliance_officer exports bounded evidence records",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-soc2", "exportFields": ["controlId", "status", "verifiedAt"], "limit": 150 }
+          },
+          "session": { "userId": "usr-co-8", "tenantId": "tenant-soc2", "role": "compliance_officer" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-008-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant evidence export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-foreign", "exportFields": ["controlId"], "limit": 100 }
+          },
+          "session": { "userId": "usr-co-8", "tenantId": "tenant-soc2", "role": "compliance_officer" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-008-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks anonymous access with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-soc2", "exportFields": ["controlId"], "limit": 100 }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-008-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks malformed JSON body with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-badbody",
+            "headers": {},
+            "invalidJson": true
+          },
+          "session": { "userId": "usr-co-8", "tenantId": "tenant-soc2", "role": "compliance_officer" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-008-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Blocks developer role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-badrole",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-soc2", "exportFields": ["controlId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-dev-3", "tenantId": "tenant-soc2", "role": "developer" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-008-V6",
+          "factId": "TS-11",
+          "kind": "excessive_export_limit",
+          "description": "Rejects unbounded export limit 10000 with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-008-limit",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-soc2", "exportFields": ["controlId"], "limit": 10000 }
+          },
+          "session": { "userId": "usr-co-8", "tenantId": "tenant-soc2", "role": "compliance_officer" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-009",
+      "cohortId": "admin-export",
+      "domain": "admin",
+      "method": "POST",
+      "route": "/api/v1/admin/exports/directory",
+      "title": "Tenant Access Directory Export Endpoint",
+      "prompt": "Implement POST /api/v1/admin/exports/directory enforcing tenant_admin role allowlist, safeParse validation, tenant isolation, explicit exportFields projection with limit <= 500, zero secret leakage, Cache-Control: no-store, error envelopes, and audit events.",
+      "allowedRoles": ["tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "testVectors": [
+        {
+          "id": "TSAPI-009-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized tenant_admin exports directory fields",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-dir", "exportFields": ["userId", "email", "role"], "limit": 250 }
+          },
+          "session": { "userId": "usr-ta-9", "tenantId": "tenant-dir", "role": "tenant_admin" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-009-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects cross-tenant directory export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ext", "exportFields": ["userId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-ta-9", "tenantId": "tenant-dir", "role": "tenant_admin" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-009-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects missing session with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-dir", "exportFields": ["userId"], "limit": 50 }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-009-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects invalid exportFields type with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-dir", "exportFields": "userId", "limit": 50 }
+          },
+          "session": { "userId": "usr-ta-9", "tenantId": "tenant-dir", "role": "tenant_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-009-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects support_agent role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-badrole",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-dir", "exportFields": ["userId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-sa-9", "tenantId": "tenant-dir", "role": "support_agent" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-009-V6",
+          "factId": "TS-11",
+          "kind": "excessive_export_limit",
+          "description": "Rejects limit 1500 with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-009-limit",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-dir", "exportFields": ["userId"], "limit": 1500 }
+          },
+          "session": { "userId": "usr-ta-9", "tenantId": "tenant-dir", "role": "tenant_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-010",
+      "cohortId": "admin-export",
+      "domain": "admin",
+      "method": "POST",
+      "route": "/api/v1/admin/exports/incidents",
+      "title": "Security Incident Digest Export Endpoint",
+      "prompt": "Implement POST /api/v1/admin/exports/incidents requiring security_auditor or incident_commander role, safeParse validation, strict tenant isolation, exportFields projection with limit <= 500, zero secret leakage, Cache-Control: no-store, standardized error envelopes, and audit events.",
+      "allowedRoles": ["security_auditor", "incident_commander"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-05", "TS-06", "TS-08", "TS-09", "TS-11"],
+      "testVectors": [
+        {
+          "id": "TSAPI-010-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Authorized incident_commander exports bounded incident digest",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ops", "exportFields": ["incidentId", "severity", "resolvedAt"], "limit": 100 }
+          },
+          "session": { "userId": "usr-ic-10", "tenantId": "tenant-ops", "role": "incident_commander" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-010-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Rejects cross-tenant incident export with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-z", "exportFields": ["incidentId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-ic-10", "tenantId": "tenant-ops", "role": "incident_commander" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-010-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Rejects unauthenticated request with 401",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ops", "exportFields": ["incidentId"], "limit": 50 }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-010-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Rejects negative limit with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ops", "exportFields": ["incidentId"], "limit": -5 }
+          },
+          "session": { "userId": "usr-ic-10", "tenantId": "tenant-ops", "role": "incident_commander" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-010-V5",
+          "factId": "TS-05",
+          "kind": "unauthorized_role",
+          "description": "Rejects guest role with 403",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-badrole",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ops", "exportFields": ["incidentId"], "limit": 50 }
+          },
+          "session": { "userId": "usr-gst-1", "tenantId": "tenant-ops", "role": "guest" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-010-V6",
+          "factId": "TS-11",
+          "kind": "excessive_export_limit",
+          "description": "Rejects limit 2000 with 400",
+          "request": {
+            "method": "POST",
+            "requestId": "req-010-limit",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-ops", "exportFields": ["incidentId"], "limit": 2000 }
+          },
+          "session": { "userId": "usr-ic-10", "tenantId": "tenant-ops", "role": "incident_commander" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-011",
+      "cohortId": "profile-mutation",
+      "domain": "profiles",
+      "method": "PATCH",
+      "route": "/api/v1/users/profile",
+      "title": "User Display Profile Mutation Endpoint",
+      "prompt": "Implement PATCH /api/v1/users/profile enforcing active session auth, safeParse validation, tenant isolation, self-or-tenant_admin ownership check, mass-assignment rejection of role/tenantId, zero secret leakage, Cache-Control: no-store, standardized error envelopes, and audit events.",
+      "allowedRoles": ["member", "tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "testVectors": [
+        {
+          "id": "TSAPI-011-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Member updates own display profile within same tenant",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-valid",
+            "headers": { "content-type": "application/json" },
+            "rawBody": { "tenantId": "tenant-u1", "targetUserId": "usr-11", "displayName": "Ada Lovelace" }
+          },
+          "session": { "userId": "usr-11", "tenantId": "tenant-u1", "role": "member" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-011-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant profile mutation with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-u2", "targetUserId": "usr-11", "displayName": "Ada Lovelace" }
+          },
+          "session": { "userId": "usr-11", "tenantId": "tenant-u1", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-011-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks unauthenticated profile update with 401",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-u1", "targetUserId": "usr-11", "displayName": "Ada" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-011-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks missing displayName/targetUserId with 400",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-u1", "displayName": 12345 }
+          },
+          "session": { "userId": "usr-11", "tenantId": "tenant-u1", "role": "member" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-011-V5",
+          "factId": "TS-12",
+          "kind": "cross_user_mutation",
+          "description": "Blocks member modifying another user's profile with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-idor",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-u1", "targetUserId": "usr-other", "displayName": "Hijacked" }
+          },
+          "session": { "userId": "usr-11", "tenantId": "tenant-u1", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-011-V6",
+          "factId": "TS-12",
+          "kind": "mass_assignment",
+          "description": "Blocks mass-assignment attempt to escalate role to tenant_admin",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-011-mass",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-u1", "targetUserId": "usr-11", "displayName": "Ada", "role": "tenant_admin" }
+          },
+          "session": { "userId": "usr-11", "tenantId": "tenant-u1", "role": "member" },
+          "expectedStatuses": [400, 403],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-012",
+      "cohortId": "profile-mutation",
+      "domain": "profiles",
+      "method": "PATCH",
+      "route": "/api/v1/users/notifications",
+      "title": "Notification Preferences Update Endpoint",
+      "prompt": "Implement PATCH /api/v1/users/notifications with auth guard, safeParse validation, tenant isolation, ownership check, mass-assignment block on role/tenantId, zero secret leakage, Cache-Control: no-store, error envelope, and audit events.",
+      "allowedRoles": ["member", "tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "testVectors": [
+        {
+          "id": "TSAPI-012-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "User updates own notification preferences",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-n1", "targetUserId": "usr-12", "displayName": "Email Digest Weekly" }
+          },
+          "session": { "userId": "usr-12", "tenantId": "tenant-n1", "role": "member" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-012-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant preference update with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-n2", "targetUserId": "usr-12", "displayName": "Alerts" }
+          },
+          "session": { "userId": "usr-12", "tenantId": "tenant-n1", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-012-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks unauthenticated call with 401",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-n1", "targetUserId": "usr-12", "displayName": "Alerts" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-012-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks invalid JSON with 400",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-badbody",
+            "headers": {},
+            "invalidJson": true
+          },
+          "session": { "userId": "usr-12", "tenantId": "tenant-n1", "role": "member" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-012-V5",
+          "factId": "TS-12",
+          "kind": "cross_user_mutation",
+          "description": "Blocks IDOR notification mutation for peer user with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-idor",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-n1", "targetUserId": "usr-peer", "displayName": "Disabled" }
+          },
+          "session": { "userId": "usr-12", "tenantId": "tenant-n1", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-012-V6",
+          "factId": "TS-12",
+          "kind": "mass_assignment",
+          "description": "Blocks mass-assignment of role field",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-012-mass",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-n1", "targetUserId": "usr-12", "displayName": "Alerts", "role": "superadmin" }
+          },
+          "session": { "userId": "usr-12", "tenantId": "tenant-n1", "role": "member" },
+          "expectedStatuses": [400, 403],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-013",
+      "cohortId": "profile-mutation",
+      "domain": "profiles",
+      "method": "PATCH",
+      "route": "/api/v1/users/recovery-email",
+      "title": "Recovery Email Rotation Endpoint",
+      "prompt": "Implement PATCH /api/v1/users/recovery-email with auth check, safeParse body parsing, strict tenant isolation, self-or-tenant_admin guard, mass-assignment prevention, zero secret leaks, Cache-Control: no-store, error envelope, and audit logging.",
+      "allowedRoles": ["member", "tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "testVectors": [
+        {
+          "id": "TSAPI-013-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "Tenant admin updates recovery email for same-tenant user",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r1", "targetUserId": "usr-99", "displayName": "backup@example.org" }
+          },
+          "session": { "userId": "usr-admin-13", "tenantId": "tenant-r1", "role": "tenant_admin" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-013-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks tenant_admin rotating recovery email across tenants with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r2", "targetUserId": "usr-99", "displayName": "backup@example.org" }
+          },
+          "session": { "userId": "usr-admin-13", "tenantId": "tenant-r1", "role": "tenant_admin" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-013-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks anonymous caller with 401",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r1", "targetUserId": "usr-99", "displayName": "backup@example.org" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-013-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks empty targetUserId with 400",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r1", "targetUserId": "", "displayName": "backup@example.org" }
+          },
+          "session": { "userId": "usr-admin-13", "tenantId": "tenant-r1", "role": "tenant_admin" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-013-V5",
+          "factId": "TS-12",
+          "kind": "cross_user_mutation",
+          "description": "Blocks non-admin rotating another user's recovery email with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-idor",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r1", "targetUserId": "usr-99", "displayName": "attacker@evil.test" }
+          },
+          "session": { "userId": "usr-mem-13", "tenantId": "tenant-r1", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-013-V6",
+          "factId": "TS-12",
+          "kind": "mass_assignment",
+          "description": "Blocks mass-assignment of role alongside recovery email update",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-013-mass",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-r1", "targetUserId": "usr-mem-13", "displayName": "me@example.org", "role": "tenant_admin" }
+          },
+          "session": { "userId": "usr-mem-13", "tenantId": "tenant-r1", "role": "member" },
+          "expectedStatuses": [400, 403],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-014",
+      "cohortId": "profile-mutation",
+      "domain": "profiles",
+      "method": "PATCH",
+      "route": "/api/v1/users/mfa-label",
+      "title": "MFA Device Label Update Endpoint",
+      "prompt": "Implement PATCH /api/v1/users/mfa-label with auth guard, safeParse validation, tenant isolation, self-or-tenant_admin ownership check, mass-assignment rejection, zero secret exposure, Cache-Control: no-store, standardized error envelopes, and audit logging.",
+      "allowedRoles": ["member", "tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "testVectors": [
+        {
+          "id": "TSAPI-014-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "User updates own MFA hardware key label",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-mfa", "targetUserId": "usr-14", "displayName": "YubiKey 5C Work" }
+          },
+          "session": { "userId": "usr-14", "tenantId": "tenant-mfa", "role": "member" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-014-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant MFA label update with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-other", "targetUserId": "usr-14", "displayName": "YubiKey" }
+          },
+          "session": { "userId": "usr-14", "tenantId": "tenant-mfa", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-014-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks unauthenticated MFA update with 401",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-mfa", "targetUserId": "usr-14", "displayName": "YubiKey" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-014-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks missing displayName with 400",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-badbody",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-mfa", "targetUserId": "usr-14" }
+          },
+          "session": { "userId": "usr-14", "tenantId": "tenant-mfa", "role": "member" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-014-V5",
+          "factId": "TS-12",
+          "kind": "cross_user_mutation",
+          "description": "Blocks updating another user's MFA label with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-idor",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-mfa", "targetUserId": "usr-victim", "displayName": "Rogue Key" }
+          },
+          "session": { "userId": "usr-14", "tenantId": "tenant-mfa", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-014-V6",
+          "factId": "TS-12",
+          "kind": "mass_assignment",
+          "description": "Blocks mass-assignment of role in MFA label payload",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-014-mass",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-mfa", "targetUserId": "usr-14", "displayName": "YubiKey", "role": "tenant_admin" }
+          },
+          "session": { "userId": "usr-14", "tenantId": "tenant-mfa", "role": "member" },
+          "expectedStatuses": [400, 403],
+          "expectAuditEvent": false
+        }
+      ]
+    },
+    {
+      "id": "TSAPI-015",
+      "cohortId": "profile-mutation",
+      "domain": "profiles",
+      "method": "PATCH",
+      "route": "/api/v1/users/billing-contact",
+      "title": "Billing Contact Profile Update Endpoint",
+      "prompt": "Implement PATCH /api/v1/users/billing-contact enforcing authentication, safeParse validation, tenant isolation, self-or-tenant_admin ownership guard, mass-assignment block on role/tenantId, zero secret leakage, Cache-Control: no-store, error envelope, and audit logging.",
+      "allowedRoles": ["member", "tenant_admin"],
+      "boundFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "applicableFacts": ["TS-01", "TS-02", "TS-03", "TS-04", "TS-06", "TS-08", "TS-09", "TS-12"],
+      "testVectors": [
+        {
+          "id": "TSAPI-015-V1",
+          "factId": "TS-09",
+          "kind": "valid",
+          "description": "User updates own billing contact label within tenant",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-valid",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bc", "targetUserId": "usr-15", "displayName": "AP Finance Desk" }
+          },
+          "session": { "userId": "usr-15", "tenantId": "tenant-bc", "role": "member" },
+          "expectedStatuses": [200, 201],
+          "expectAuditEvent": true
+        },
+        {
+          "id": "TSAPI-015-V2",
+          "factId": "TS-01",
+          "kind": "cross_tenant",
+          "description": "Blocks cross-tenant billing contact update with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-xtenant",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-other", "targetUserId": "usr-15", "displayName": "AP Desk" }
+          },
+          "session": { "userId": "usr-15", "tenantId": "tenant-bc", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-015-V3",
+          "factId": "TS-03",
+          "kind": "unauthenticated",
+          "description": "Blocks unauthenticated caller with 401",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-unauth",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bc", "targetUserId": "usr-15", "displayName": "AP Desk" }
+          },
+          "session": null,
+          "expectedStatuses": [401],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-015-V4",
+          "factId": "TS-02",
+          "kind": "malformed_payload",
+          "description": "Blocks null payload with 400",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-badbody",
+            "headers": {},
+            "rawBody": null
+          },
+          "session": { "userId": "usr-15", "tenantId": "tenant-bc", "role": "member" },
+          "expectedStatuses": [400],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-015-V5",
+          "factId": "TS-12",
+          "kind": "cross_user_mutation",
+          "description": "Blocks member overwriting another user's billing contact with 403",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-idor",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bc", "targetUserId": "usr-boss", "displayName": "Spoofed" }
+          },
+          "session": { "userId": "usr-15", "tenantId": "tenant-bc", "role": "member" },
+          "expectedStatuses": [403],
+          "expectAuditEvent": false
+        },
+        {
+          "id": "TSAPI-015-V6",
+          "factId": "TS-12",
+          "kind": "mass_assignment",
+          "description": "Blocks mass-assignment of role in billing contact payload",
+          "request": {
+            "method": "PATCH",
+            "requestId": "req-015-mass",
+            "headers": {},
+            "rawBody": { "tenantId": "tenant-bc", "targetUserId": "usr-15", "displayName": "AP Desk", "role": "finance_approver" }
+          },
+          "session": { "userId": "usr-15", "tenantId": "tenant-bc", "role": "member" },
+          "expectedStatuses": [400, 403],
+          "expectAuditEvent": false
+        }
+      ]
+    }
+  ]
+}
