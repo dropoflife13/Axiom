@@ -33,7 +33,14 @@ import {
   type TsApiVaultFile,
 } from './build-ts-api-vaults.js';
 import {
-  buildBaseTsApiSystemPrompt,
+  createCompactionAccumulator,
+  finalizeCompactionStats,
+  parseCompactionCliFlags,
+  recordCompactionStat,
+  type CompactionStatsSummary,
+} from './run-policy-abac-pilot.js';
+import {
+  assembleTsApiPromptWithOptionalCompaction,
   buildTsApiUserPrompt,
   formatTsApiSummaryMarkdown,
   generateTsHandlerViaLlm,
@@ -88,6 +95,7 @@ export interface TsApiHopeReceiptFile {
   readonly model: string;
   readonly topK: number;
   readonly temperature: number;
+  readonly compaction?: CompactionStatsSummary;
   readonly sourceCheckpointPath: string;
   readonly initialSnapshotSha256: string;
   readonly finalSnapshotSha256: string;
@@ -166,6 +174,8 @@ export async function runTsApiHopeLoop(options: {
   delayMs?: number;
   forceHopeArm?: boolean;
   reuseReplayCache?: boolean;
+  compact?: boolean;
+  maxContextTokens?: number;
 } = {}): Promise<{
   receiptFile: TsApiHopeReceiptFile;
   summary: ReturnType<typeof summarizeTsApiPilotCheckpoint>;
@@ -176,21 +186,30 @@ export async function runTsApiHopeLoop(options: {
   const delayMs = options.delayMs ?? 1000;
   const forceHopeArm = options.forceHopeArm ?? false;
   const reuseReplayCache = options.reuseReplayCache ?? false;
+  const compact = options.compact ?? false;
+  const maxContextTokens = options.maxContextTokens;
   const modelSlug = slugifyModel(model);
+  const outputSlug = compact ? `${modelSlug}-compact` : modelSlug;
 
-  const runDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${modelSlug}`);
-  const checkpointPath = path.join(runDir, 'checkpoint.json');
-  const replayCachePath = path.join(runDir, 'hope-replay-cache.json');
+  const baseRunDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${modelSlug}`);
+  const outRunDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${outputSlug}`);
+  const outCheckpointPath = path.join(outRunDir, 'checkpoint.json');
+  const baseCheckpointPath = path.join(baseRunDir, 'checkpoint.json');
+  const checkpointPath =
+    compact && !fs.existsSync(outCheckpointPath) && fs.existsSync(baseCheckpointPath)
+      ? baseCheckpointPath
+      : outCheckpointPath;
+  const replayCachePath = path.join(outRunDir, 'hope-replay-cache.json');
   const quarantineStatePath = path.resolve(
     '.axiom-state',
     'v4',
-    `ts-api-hope-quarantine-${modelSlug}.json`
+    `ts-api-hope-quarantine-${outputSlug}.json`
   );
   const outDir = path.resolve('out', 'v4');
-  const receiptOutPath = path.join(outDir, `ts-api-${modelSlug}-hope-receipt.json`);
+  const receiptOutPath = path.join(outDir, `ts-api-${outputSlug}-hope-receipt.json`);
   const canonicalReceiptPath = path.join(outDir, 'ts-api-hope-receipt.json');
-  const summaryJsonPath = path.join(outDir, `ts-api-${modelSlug}-summary.json`);
-  const summaryMdPath = path.join(outDir, `ts-api-${modelSlug}-summary.md`);
+  const summaryJsonPath = path.join(outDir, `ts-api-${outputSlug}-summary.json`);
+  const summaryMdPath = path.join(outDir, `ts-api-${outputSlug}-summary.md`);
 
   if (!fs.existsSync(checkpointPath)) {
     throw new Error(
@@ -201,6 +220,7 @@ export async function runTsApiHopeLoop(options: {
     throw new Error(`Missing frozen C_ID_auto vault at ${TS_API_VAULT_CID_AUTO_PATH}.`);
   }
 
+  fs.mkdirSync(outRunDir, { recursive: true });
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(path.dirname(quarantineStatePath), { recursive: true });
 
@@ -520,20 +540,28 @@ export async function runTsApiHopeLoop(options: {
   }
 
   // Seed replay cache deterministically with exact prompt-matched trials from checkpoint.json
+  const isSourceAlreadyCompact = checkpointPath === outCheckpointPath && compact;
   const seedFromArm = (arm: 'C_ID_auto' | 'C_ID_prereq') => {
+    if (compact && !isSourceAlreadyCompact) return;
     for (const task of tasks) {
       const trial = checkpoint.trials[`${task.id}::${arm}`];
       if (!trial) continue;
-      const lessonsBlock = trial.retrievedRuleIds
-        .map((id) => `[${id}] ${cidAutoById.get(id) ?? ''}`)
-        .join('\n');
-      const sysPrompt = buildBaseTsApiSystemPrompt(lessonsBlock);
+      const assembledSeed = assembleTsApiPromptWithOptionalCompaction({
+        retrievedRuleIds: trial.retrievedRuleIds,
+        lessonsById: cidAutoById,
+        canonicalRules,
+        cartridge,
+        enforceCanonicalLock: true,
+        compact,
+        maxContextTokens,
+      });
+      const sysPrompt = assembledSeed.systemPrompt;
       const key = promptCacheKey(task.id, sysPrompt);
       if (!replayCache[key]) {
         replayCache[key] = {
           cacheKey: key,
           taskId: task.id,
-          retrievedRuleIds: [...trial.retrievedRuleIds],
+          retrievedRuleIds: [...assembledSeed.includedRuleIds],
           tsSource: trial.tsSource,
           committed: trial.committed,
           fullTaskPass: trial.fullTaskPass,
@@ -558,6 +586,8 @@ export async function runTsApiHopeLoop(options: {
   };
   saveReplayCache();
 
+  const compactionAcc = compact ? createCompactionAccumulator(maxContextTokens) : null;
+
   const livePairedEvaluator: PairedCanaryEvaluator<TsApiSecurityTask> = async (
     task,
     snapshot
@@ -565,14 +595,23 @@ export async function runTsApiHopeLoop(options: {
     const rankedIds = rankedByTaskId.get(task.id)!;
     const ret = retrieveWithPrerequisites(rankedIds, topK, snapshot.prerequisiteGraph);
     const lessonsMap = buildLessonsMapForSnapshot(snapshot, canonicalById, cidAutoById);
-    const lessonsBlock = ret.selected
-      .map((id) => `[${id}] ${lessonsMap.get(id) ?? ''}`)
-      .join('\n');
-    const systemPrompt = buildBaseTsApiSystemPrompt(lessonsBlock);
+    const assembled = assembleTsApiPromptWithOptionalCompaction({
+      retrievedRuleIds: ret.selected,
+      lessonsById: lessonsMap,
+      canonicalRules,
+      cartridge,
+      enforceCanonicalLock: true,
+      compact,
+      maxContextTokens,
+    });
+    const systemPrompt = assembled.systemPrompt;
     const key = promptCacheKey(task.id, systemPrompt);
 
     let cached = replayCache[key];
     if (!cached) {
+      if (compactionAcc) {
+        recordCompactionStat(compactionAcc, assembled);
+      }
       const userPrompt = buildTsApiUserPrompt(task);
       const gen = await generateTsHandlerViaLlm(model, systemPrompt, userPrompt, 0, provider);
       const evaluation = await cartridge.evaluate(task, gen.tsSource);
@@ -584,7 +623,7 @@ export async function runTsApiHopeLoop(options: {
       cached = {
         cacheKey: key,
         taskId: task.id,
-        retrievedRuleIds: [...ret.selected],
+        retrievedRuleIds: [...assembled.includedRuleIds],
         tsSource: gen.tsSource,
         committed: evaluation.committed,
         fullTaskPass,
@@ -726,7 +765,7 @@ export async function runTsApiHopeLoop(options: {
   };
 
   fs.writeFileSync(receiptOutPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
-  if (modelSlug === 'gemini-3-1-flash-lite') {
+  if (!compact && modelSlug === 'gemini-3-1-flash-lite') {
     fs.writeFileSync(canonicalReceiptPath, `${JSON.stringify(receiptFile, null, 2)}\n`, 'utf8');
   }
   console.log(`\n[HOPE] Wrote Slow Clock governance receipt to ${receiptOutPath}`);
@@ -735,7 +774,7 @@ export async function runTsApiHopeLoop(options: {
   // LIVE EVALUATION OF C_ID_hope ARM (15 calls on gemini-3.1-flash-lite, temp=0)
   // =========================================================================
   console.log(
-    `\n[HOPE Arm] Evaluating C_ID_hope across all ${tasks.length} tasks live on ${model} (temperature=0, K=${topK})...`
+    `\n[HOPE Arm] Evaluating C_ID_hope across all ${tasks.length} tasks live on ${model} (temperature=0, K=${topK}${compact ? ', --compact' : ''})...`
   );
   const finalLessonsMap = buildLessonsMapForSnapshot(
     finalSnapshot,
@@ -757,10 +796,20 @@ export async function runTsApiHopeLoop(options: {
       topK,
       finalSnapshot.prerequisiteGraph
     );
-    const lessonsBlock = retrieval.selected
-      .map((id) => `[${id}] ${finalLessonsMap.get(id) ?? ''}`)
-      .join('\n');
-    const systemPrompt = buildBaseTsApiSystemPrompt(lessonsBlock);
+    const assembled = assembleTsApiPromptWithOptionalCompaction({
+      retrievedRuleIds: retrieval.selected,
+      lessonsById: finalLessonsMap,
+      canonicalRules,
+      cartridge,
+      enforceCanonicalLock: true,
+      compact,
+      maxContextTokens,
+    });
+    if (compactionAcc) {
+      recordCompactionStat(compactionAcc, assembled);
+    }
+    const effectiveRetrievedIds = assembled.includedRuleIds;
+    const systemPrompt = assembled.systemPrompt;
     const userPrompt = buildTsApiUserPrompt(task);
     const cacheKey = promptCacheKey(task.id, systemPrompt);
     const cachedHit = reuseReplayCache ? replayCache[cacheKey] : undefined;
@@ -776,7 +825,7 @@ export async function runTsApiHopeLoop(options: {
         domain: task.domain,
         cohortId: task.cohortId,
         arm: 'C_ID_hope',
-        retrievedRuleIds: [...retrieval.selected],
+        retrievedRuleIds: [...effectiveRetrievedIds],
         injectedPrerequisites: [...retrieval.injectedPrerequisites],
         displacedRuleIds: [...retrieval.displaced],
         promptChars: systemPrompt.length + userPrompt.length,
@@ -810,7 +859,7 @@ export async function runTsApiHopeLoop(options: {
         domain: task.domain,
         cohortId: task.cohortId,
         arm: 'C_ID_hope',
-        retrievedRuleIds: [...retrieval.selected],
+        retrievedRuleIds: [...effectiveRetrievedIds],
         injectedPrerequisites: [...retrieval.injectedPrerequisites],
         displacedRuleIds: [...retrieval.displaced],
         promptChars: systemPrompt.length + userPrompt.length,
@@ -834,30 +883,49 @@ export async function runTsApiHopeLoop(options: {
 
     checkpoint.trials[key] = record;
     checkpoint.updatedAt = new Date().toISOString();
-    fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
+    fs.writeFileSync(outCheckpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
 
     hopeDone++;
     const statusMark = record.fullTaskPass ? 'PASS' : record.committed ? 'FAIL' : 'COMPILE_ERR';
     console.log(
-      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(11)} | facts=${record.passedFactsCount}/${record.boundFactsCount} | rules=[${retrieval.selected.join(',')}] | failed=[${record.failedFacts.join(',')}] (${usedCache ? 'replay-cache' : `${record.latencyMs}ms`})`
+      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(11)} | facts=${record.passedFactsCount}/${record.boundFactsCount} | rules=[${effectiveRetrievedIds.join(',')}] | failed=[${record.failedFacts.join(',')}] (${usedCache ? 'replay-cache' : `${record.latencyMs}ms`})`
     );
 
     if (!usedCache && delayMs > 0) await sleep(delayMs);
   }
 
-  const summary = summarizeTsApiPilotCheckpoint(checkpoint);
+  const compactionSummary = compactionAcc
+    ? finalizeCompactionStats(compactionAcc)
+    : undefined;
+  const finalReceiptFile: TsApiHopeReceiptFile = compactionSummary
+    ? { ...receiptFile, compaction: compactionSummary }
+    : receiptFile;
+  if (compactionSummary) {
+    fs.writeFileSync(
+      receiptOutPath,
+      `${JSON.stringify(finalReceiptFile, null, 2)}\n`,
+      'utf8'
+    );
+  }
+
+  const summary = summarizeTsApiPilotCheckpoint(checkpoint, compactionSummary);
   const summaryMd = formatTsApiSummaryMarkdown(summary);
   fs.writeFileSync(summaryJsonPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   fs.writeFileSync(summaryMdPath, summaryMd, 'utf8');
 
   console.log(`\n${summaryMd}`);
+  if (compactionSummary) {
+    console.log(
+      `[HOPE][compact] Cumulative context tokens: ${compactionSummary.beforeTokens} -> ${compactionSummary.afterTokens} (-${compactionSummary.reductionPct.toFixed(2)}% saved across ${compactionSummary.bundlesCompacted} bundles, preserved ${compactionSummary.preservedTokenCount}/${compactionSummary.totalRequiredTokens} required tokens)`
+    );
+  }
   console.log(`[HOPE] Updated 5-arm summary JSON: ${summaryJsonPath}`);
   console.log(`[HOPE] Updated 5-arm summary MD:   ${summaryMdPath}`);
 
-  return { receiptFile, summary };
+  return { receiptFile: finalReceiptFile, summary };
 }
 
-function parseCliArgs(argv: string[]) {
+export function parseTsApiHopeCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
   const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
@@ -874,6 +942,7 @@ function parseCliArgs(argv: string[]) {
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 1000,
     forceHopeArm: argv.includes('--force-hope-arm'),
     reuseReplayCache: argv.includes('--reuse-replay-cache'),
+    ...parseCompactionCliFlags(argv),
   };
 }
 
@@ -884,7 +953,7 @@ const isEntrypoint =
   path.resolve(process.argv[1]).endsWith('run-ts-api-hope-loop.ts');
 
 if (isEntrypoint) {
-  const args = parseCliArgs(process.argv.slice(2));
+  const args = parseTsApiHopeCliArgs(process.argv.slice(2));
   runTsApiHopeLoop(args).catch((err) => {
     console.error(err);
     process.exit(1);

@@ -27,9 +27,12 @@ import {
 } from '../../src/v4/cartridges/policy-abac-cartridge.js';
 import type { CanonicalRule } from '../../src/v4/domain-cartridge.js';
 import {
+  compactContextBundle,
   computeArtifactSha256,
+  estimateTokens,
   evaluateLexicalIdentifierLock,
 } from '../../src/v4/hope/index.js';
+import { extractRequiredTokens } from '../../src/v4/lexical-token-extractor.js';
 import { retrieveWithPrerequisites } from '../../src/v4/prerequisite-retriever.js';
 import {
   POLICY_VAULT_C_PATH,
@@ -105,6 +108,19 @@ export interface ArmSummaryStats {
   readonly forensicDefectCounts: Record<string, number>;
 }
 
+export interface CompactionStatsSummary {
+  readonly enabled: true;
+  readonly maxContextTokens?: number;
+  readonly bundlesCompacted: number;
+  readonly beforeTokens: number;
+  readonly afterTokens: number;
+  readonly savedTokens: number;
+  readonly reductionPct: number;
+  readonly preservedTokenCount: number;
+  readonly totalRequiredTokens: number;
+  readonly droppedRuleCount: number;
+}
+
 export interface PilotSummaryReport {
   readonly schemaVersion: '4.0.0-policy-pilot-summary';
   readonly model: string;
@@ -112,6 +128,7 @@ export interface PilotSummaryReport {
   readonly topK: number;
   readonly temperature: number;
   readonly totalTrials: number;
+  readonly compaction?: CompactionStatsSummary;
   readonly arms: Partial<Record<PilotArm, ArmSummaryStats>> &
     Record<'A' | 'C' | 'C_ID_auto' | 'C_ID_prereq', ArmSummaryStats>;
   readonly contrastsPp: {
@@ -253,6 +270,286 @@ export function buildBasePolicySystemPrompt(lessonsBlock?: string): string {
 
   if (!lessonsBlock) return base;
   return `${base}\n\nCRITICAL AUTHORIZATION LESSONS FROM PRIOR AUDITS:\n${lessonsBlock}`;
+}
+
+export interface CompactionAccumulator {
+  bundlesCompacted: number;
+  beforeTokens: number;
+  afterTokens: number;
+  preservedTokenCount: number;
+  totalRequiredTokens: number;
+  droppedRuleCount: number;
+  readonly maxContextTokens?: number;
+}
+
+export function createCompactionAccumulator(
+  maxContextTokens?: number
+): CompactionAccumulator {
+  return {
+    bundlesCompacted: 0,
+    beforeTokens: 0,
+    afterTokens: 0,
+    preservedTokenCount: 0,
+    totalRequiredTokens: 0,
+    droppedRuleCount: 0,
+    ...(maxContextTokens !== undefined ? { maxContextTokens } : {}),
+  };
+}
+
+export function recordCompactionStat(
+  acc: CompactionAccumulator,
+  stat: {
+    readonly beforeTokens: number;
+    readonly afterTokens: number;
+    readonly preservedTokenCount: number;
+    readonly totalRequiredTokens: number;
+    readonly droppedRuleIds: readonly string[];
+  }
+): void {
+  acc.bundlesCompacted += 1;
+  acc.beforeTokens += stat.beforeTokens;
+  acc.afterTokens += stat.afterTokens;
+  acc.preservedTokenCount += stat.preservedTokenCount;
+  acc.totalRequiredTokens += stat.totalRequiredTokens;
+  acc.droppedRuleCount += stat.droppedRuleIds.length;
+}
+
+export function finalizeCompactionStats(
+  acc: CompactionAccumulator
+): CompactionStatsSummary {
+  const savedTokens = acc.beforeTokens - acc.afterTokens;
+  const reductionPct =
+    acc.beforeTokens > 0
+      ? Number(((savedTokens / acc.beforeTokens) * 100).toFixed(2))
+      : 0;
+  return {
+    enabled: true,
+    ...(acc.maxContextTokens !== undefined
+      ? { maxContextTokens: acc.maxContextTokens }
+      : {}),
+    bundlesCompacted: acc.bundlesCompacted,
+    beforeTokens: acc.beforeTokens,
+    afterTokens: acc.afterTokens,
+    savedTokens,
+    reductionPct,
+    preservedTokenCount: acc.preservedTokenCount,
+    totalRequiredTokens: acc.totalRequiredTokens,
+    droppedRuleCount: acc.droppedRuleCount,
+  };
+}
+
+function collectUnionRequiredTokens(
+  lessonText: string,
+  canonicalRule: CanonicalRule | undefined,
+  canonicalExtractor: (rule: CanonicalRule) => readonly string[]
+): string[] {
+  const combined: string[] = [];
+  const seenLower = new Set<string>();
+  const pushUnique = (tok: string) => {
+    const clean = tok.trim();
+    if (!clean) return;
+    const key = clean.toLowerCase();
+    if (seenLower.has(key)) return;
+    seenLower.add(key);
+    combined.push(clean);
+  };
+
+  if (canonicalRule) {
+    for (const tok of canonicalExtractor(canonicalRule)) {
+      pushUnique(tok);
+    }
+  }
+  for (const tok of extractRequiredTokens(lessonText)) {
+    pushUnique(tok);
+  }
+  return combined;
+}
+
+export interface AssembledPromptResult {
+  readonly lessonsBlock: string | undefined;
+  readonly systemPrompt: string;
+  readonly includedRuleIds: readonly string[];
+  readonly droppedRuleIds: readonly string[];
+  readonly beforeTokens: number;
+  readonly afterTokens: number;
+  readonly reductionPct: number;
+  readonly preservedTokenCount: number;
+  readonly totalRequiredTokens: number;
+}
+
+export function parseCompactionCliFlags(argv: readonly string[]): {
+  readonly compact: boolean;
+  readonly maxContextTokens?: number;
+} {
+  const maxTokensIdx = argv.indexOf('--max-context-tokens');
+  let maxContextTokens: number | undefined;
+  if (maxTokensIdx >= 0) {
+    const parsed = Number(argv[maxTokensIdx + 1]);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      throw new Error(
+        `Invalid --max-context-tokens "${argv[maxTokensIdx + 1]}". Expected a positive number.`
+      );
+    }
+    maxContextTokens = Math.floor(parsed);
+  }
+  return {
+    compact: argv.includes('--compact'),
+    ...(maxContextTokens !== undefined ? { maxContextTokens } : {}),
+  };
+}
+
+/**
+ * Shared domain-agnostic helper that assembles a prompt from retrieved rule IDs,
+ * applying `compactContextBundle()` ONLY when `compact === true` while preserving
+ * 100% character-for-character baseline prompts when `compact` is false/omitted.
+ */
+export function assemblePromptBundleWithOptionalCompaction(params: {
+  readonly retrievedRuleIds: readonly string[];
+  readonly lessonsById: ReadonlyMap<string, string>;
+  readonly canonicalRules: readonly CanonicalRule[];
+  readonly tokenExtractor: (rule: CanonicalRule) => string[];
+  readonly buildSystemPrompt: (lessonsBlock?: string) => string;
+  readonly enforceCanonicalLock: boolean;
+  readonly compact?: boolean;
+  readonly maxContextTokens?: number;
+}): AssembledPromptResult {
+  const {
+    retrievedRuleIds,
+    lessonsById,
+    canonicalRules,
+    tokenExtractor,
+    buildSystemPrompt,
+    enforceCanonicalLock,
+  } = params;
+
+  if (retrievedRuleIds.length === 0) {
+    return {
+      lessonsBlock: undefined,
+      systemPrompt: buildSystemPrompt(undefined),
+      includedRuleIds: [],
+      droppedRuleIds: [],
+      beforeTokens: 0,
+      afterTokens: 0,
+      reductionPct: 0,
+      preservedTokenCount: 0,
+      totalRequiredTokens: 0,
+    };
+  }
+
+  if (!params.compact) {
+    const lessonsBlock = retrievedRuleIds
+      .map((id) => `[${id}] ${lessonsById.get(id) ?? ''}`)
+      .join('\n');
+    const tokens = estimateTokens(lessonsBlock);
+    return {
+      lessonsBlock,
+      systemPrompt: buildSystemPrompt(lessonsBlock),
+      includedRuleIds: [...retrievedRuleIds],
+      droppedRuleIds: [],
+      beforeTokens: tokens,
+      afterTokens: tokens,
+      reductionPct: 0,
+      preservedTokenCount: 0,
+      totalRequiredTokens: 0,
+    };
+  }
+
+  const canonicalById = new Map(canonicalRules.map((r) => [r.id, r]));
+  const bundleRules: CanonicalRule[] = retrievedRuleIds.map((id) => {
+    const statement = lessonsById.get(id) ?? '';
+    const canonical = enforceCanonicalLock ? canonicalById.get(id) : undefined;
+    const reqTokens = collectUnionRequiredTokens(
+      statement,
+      canonical,
+      tokenExtractor
+    );
+    return {
+      id,
+      statement,
+      active: true,
+      requiredTokens: reqTokens,
+    };
+  });
+
+  const compacted = compactContextBundle(bundleRules, {
+    maxTokens: params.maxContextTokens ?? 100_000,
+  });
+
+  if (compacted.preservedTokenCount !== compacted.totalRequiredTokens) {
+    throw new Error(
+      `[compact] Lexical token retention invariant violated: ${compacted.preservedTokenCount}/${compacted.totalRequiredTokens}`
+    );
+  }
+
+  if (enforceCanonicalLock) {
+    for (const compactedRule of compacted.compactedRules) {
+      const lock = evaluateLexicalIdentifierLock(
+        {
+          candidateId: `COMPACT-${compactedRule.id}`,
+          factId: compactedRule.id,
+          triggerFlag: 'compact',
+          proposedRuleText: compactedRule.statement,
+          proposedPrerequisiteEdges: [],
+          evidenceHashes: [],
+          observedCount: 1,
+          status: 'staged',
+          gateAudit: null,
+          createdAt: '',
+          updatedAt: '',
+        },
+        canonicalRules,
+        tokenExtractor
+      );
+      if (!lock.passed) {
+        throw new Error(
+          `[compact] Canonical Lexical Lock failed on ${compactedRule.id}: missing [${lock.missingTokens.join(', ')}]`
+        );
+      }
+    }
+  }
+
+  const lessonsBlock =
+    compacted.compactedRules.length > 0
+      ? compacted.compactedRules.map((r) => `[${r.id}] ${r.statement}`).join('\n')
+      : undefined;
+
+  return {
+    lessonsBlock,
+    systemPrompt: buildSystemPrompt(lessonsBlock),
+    includedRuleIds: compacted.compactedRules.map((r) => r.id),
+    droppedRuleIds: [...compacted.droppedRuleIds],
+    beforeTokens: compacted.beforeTokens,
+    afterTokens: compacted.afterTokens,
+    reductionPct: compacted.reductionPct,
+    preservedTokenCount: compacted.preservedTokenCount,
+    totalRequiredTokens: compacted.totalRequiredTokens,
+  };
+}
+
+/**
+ * Assembles the ABAC system prompt from retrieved rule IDs, applying `compactContextBundle()`
+ * ONLY when `compact === true`. When `compact` is false/omitted, output is 100% identical to
+ * the uncompacted baseline prompt.
+ */
+export function assemblePolicyPromptWithOptionalCompaction(params: {
+  readonly retrievedRuleIds: readonly string[];
+  readonly lessonsById: ReadonlyMap<string, string>;
+  readonly canonicalRules: readonly CanonicalRule[];
+  readonly cartridge: PolicyAbacCartridge;
+  readonly enforceCanonicalLock: boolean;
+  readonly compact?: boolean;
+  readonly maxContextTokens?: number;
+}): AssembledPromptResult {
+  return assemblePromptBundleWithOptionalCompaction({
+    retrievedRuleIds: params.retrievedRuleIds,
+    lessonsById: params.lessonsById,
+    canonicalRules: params.canonicalRules,
+    tokenExtractor: (r) => params.cartridge.extractRequiredTokens(r),
+    buildSystemPrompt: buildBasePolicySystemPrompt,
+    enforceCanonicalLock: params.enforceCanonicalLock,
+    compact: params.compact,
+    maxContextTokens: params.maxContextTokens,
+  });
 }
 
 export function stripPolicyFences(raw: string): string {
@@ -421,7 +718,8 @@ export async function generatePolicyViaLlm(
 }
 
 export function summarizePilotCheckpoint(
-  checkpoint: PilotCheckpointFile
+  checkpoint: PilotCheckpointFile,
+  compaction?: CompactionStatsSummary
 ): PilotSummaryReport {
   const trialsList = Object.values(checkpoint.trials);
   const presentArms = ALL_PILOT_ARMS.filter(
@@ -473,6 +771,7 @@ export function summarizePilotCheckpoint(
     topK: checkpoint.topK,
     temperature: checkpoint.temperature,
     totalTrials: trialsList.length,
+    ...(compaction ? { compaction } : {}),
     arms: armStats,
     contrastsPp: {
       C_ID_auto_minus_C_task: pp(
@@ -559,6 +858,15 @@ export function formatSummaryMarkdown(summary: PilotSummaryReport): string {
     '',
     `- **Cartridge:** \`policy-abac-v4\` (18 held-out tasks × ${armCount} arms = ${summary.totalTrials} trials)`,
     `- **Retrieval Budget:** \`K = ${summary.topK}\`, \`temperature = ${summary.temperature}\``,
+    ...(summary.compaction
+      ? [
+          `- **Context Compaction (\`--compact\`):** ${summary.compaction.beforeTokens} -> ${summary.compaction.afterTokens} tokens (**-${summary.compaction.reductionPct.toFixed(2)}%**, ${summary.compaction.preservedTokenCount}/${summary.compaction.totalRequiredTokens} required tokens preserved${
+            summary.compaction.maxContextTokens !== undefined
+              ? `, cap=${summary.compaction.maxContextTokens}`
+              : ''
+          })`,
+        ]
+      : []),
     '',
     `## 1. ${armCount}-Arm Performance Table`,
     '',
@@ -621,12 +929,17 @@ export async function runPolicyAbacPilot(options: {
   delayMs?: number;
   vaultCPath?: string;
   vaultCidAutoPath?: string;
+  compact?: boolean;
+  maxContextTokens?: number;
 } = {}): Promise<PilotSummaryReport> {
   const model = options.model ?? 'gemini-3.1-flash-lite';
   const provider = options.provider;
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 350;
+  const compact = options.compact ?? false;
+  const maxContextTokens = options.maxContextTokens;
   const modelSlug = slugifyModel(model);
+  const runIdSlug = compact ? `${modelSlug}-compact` : modelSlug;
 
   const vaultCPath = path.resolve(options.vaultCPath ?? POLICY_VAULT_C_PATH);
   const vaultCidAutoPath = path.resolve(
@@ -676,7 +989,7 @@ export async function runPolicyAbacPilot(options: {
   const lessonsCById = new Map(vaultC.lessons.map((l) => [l.factId, l.lesson]));
   const lessonsCidById = new Map(vaultCidAuto.lessons.map((l) => [l.factId, l.lesson]));
 
-  const runDir = path.resolve('.axiom-state', 'runs-v4', `policy-abac-${modelSlug}`);
+  const runDir = path.resolve('.axiom-state', 'runs-v4', `policy-abac-${runIdSlug}`);
   const checkpointPath = path.join(runDir, 'checkpoint.json');
   const outDir = path.resolve('out', 'v4');
   fs.mkdirSync(runDir, { recursive: true });
@@ -721,6 +1034,7 @@ export async function runPolicyAbacPilot(options: {
 
   let completedCount = Object.keys(checkpoint.trials).length;
   const totalCount = tasks.length * PILOT_ARMS.length;
+  const compactionAcc = compact ? createCompactionAccumulator(maxContextTokens) : null;
 
   for (const task of tasks) {
     const rankedRuleIds = rankRulesByPromptTfIdf(task.prompt, canonicalRules);
@@ -740,28 +1054,52 @@ export async function runPolicyAbacPilot(options: {
       let retrievedRuleIds: readonly string[] = [];
       let injectedPrerequisites: readonly string[] = [];
       let displacedRuleIds: readonly string[] = [];
-      let lessonsBlock: string | undefined;
+      let lessonsById: ReadonlyMap<string, string> | undefined;
+      let enforceCanonicalLock = false;
 
       if (arm === 'C') {
         retrievedRuleIds = baselineTopK;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCById;
+        enforceCanonicalLock = false;
       } else if (arm === 'C_ID_auto') {
         retrievedRuleIds = baselineTopK;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCidById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCidById;
+        enforceCanonicalLock = true;
       } else if (arm === 'C_ID_prereq') {
         retrievedRuleIds = prereqRetrieval.selected;
         injectedPrerequisites = prereqRetrieval.injectedPrerequisites;
         displacedRuleIds = prereqRetrieval.displaced;
-        lessonsBlock = retrievedRuleIds
-          .map((id) => `[${id}] ${lessonsCidById.get(id) ?? ''}`)
-          .join('\n');
+        lessonsById = lessonsCidById;
+        enforceCanonicalLock = true;
       }
 
-      const systemPrompt = buildBasePolicySystemPrompt(lessonsBlock);
+      const assembled =
+        lessonsById !== undefined
+          ? assemblePolicyPromptWithOptionalCompaction({
+              retrievedRuleIds,
+              lessonsById,
+              canonicalRules,
+              cartridge,
+              enforceCanonicalLock,
+              compact,
+              maxContextTokens,
+            })
+          : assemblePolicyPromptWithOptionalCompaction({
+              retrievedRuleIds: [],
+              lessonsById: new Map(),
+              canonicalRules,
+              cartridge,
+              enforceCanonicalLock: false,
+              compact,
+              maxContextTokens,
+            });
+
+      if (compactionAcc && retrievedRuleIds.length > 0) {
+        recordCompactionStat(compactionAcc, assembled);
+      }
+
+      const effectiveRetrievedIds = assembled.includedRuleIds;
+      const systemPrompt = assembled.systemPrompt;
       const userPrompt = `Task ${task.id} (${task.domain}): ${task.title}\n${task.prompt}`;
 
       const gen = await generatePolicyViaLlm(model, systemPrompt, userPrompt, 0, provider);
@@ -777,7 +1115,7 @@ export async function runPolicyAbacPilot(options: {
         domain: task.domain,
         cohortId: task.cohortId,
         arm,
-        retrievedRuleIds: [...retrievedRuleIds],
+        retrievedRuleIds: [...effectiveRetrievedIds],
         injectedPrerequisites: [...injectedPrerequisites],
         displacedRuleIds: [...displacedRuleIds],
         promptChars: systemPrompt.length + userPrompt.length,
@@ -804,22 +1142,30 @@ export async function runPolicyAbacPilot(options: {
 
       const statusMark = fullTaskPass ? 'PASS' : evaluation.committed ? 'FAIL' : 'SYNTAX_ERR';
       console.log(
-        `[${String(completedCount).padStart(2, '0')}/${totalCount}] ${task.id} | ${arm.padEnd(11)} | ${statusMark.padEnd(10)} | facts=${passedCount}/${boundCount} | rules=[${retrievedRuleIds.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
+        `[${String(completedCount).padStart(2, '0')}/${totalCount}] ${task.id} | ${arm.padEnd(11)} | ${statusMark.padEnd(10)} | facts=${passedCount}/${boundCount} | rules=[${effectiveRetrievedIds.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
       );
 
       if (delayMs > 0) await sleep(delayMs);
     }
   }
 
-  const summary = summarizePilotCheckpoint(checkpoint);
-  const summaryJsonPath = path.join(outDir, `policy-abac-${modelSlug}-summary.json`);
-  const summaryMdPath = path.join(outDir, `policy-abac-${modelSlug}-summary.md`);
+  const compactionSummary = compactionAcc
+    ? finalizeCompactionStats(compactionAcc)
+    : undefined;
+  const summary = summarizePilotCheckpoint(checkpoint, compactionSummary);
+  const summaryJsonPath = path.join(outDir, `policy-abac-${runIdSlug}-summary.json`);
+  const summaryMdPath = path.join(outDir, `policy-abac-${runIdSlug}-summary.md`);
   const summaryMd = formatSummaryMarkdown(summary);
 
   fs.writeFileSync(summaryJsonPath, `${JSON.stringify(summary, null, 2)}\n`, 'utf8');
   fs.writeFileSync(summaryMdPath, summaryMd, 'utf8');
 
   console.log(`\n${summaryMd}`);
+  if (compactionSummary) {
+    console.log(
+      `[v4-pilot][compact] Cumulative context tokens: ${compactionSummary.beforeTokens} -> ${compactionSummary.afterTokens} (-${compactionSummary.reductionPct.toFixed(2)}% saved across ${compactionSummary.bundlesCompacted} bundles, preserved ${compactionSummary.preservedTokenCount}/${compactionSummary.totalRequiredTokens} required tokens)`
+    );
+  }
   console.log(`[v4-pilot] Checkpoint: ${checkpointPath}`);
   console.log(`[v4-pilot] Summary:    ${summaryJsonPath}`);
   console.log(`[v4-pilot] Report:     ${summaryMdPath}`);
@@ -827,7 +1173,7 @@ export async function runPolicyAbacPilot(options: {
   return summary;
 }
 
-function parseCliArgs(argv: string[]) {
+export function parsePolicyPilotCliArgs(argv: string[]) {
   const modelIdx = argv.indexOf('--model');
   const providerIdx = argv.indexOf('--provider');
   const topKIdx = argv.indexOf('--top-k');
@@ -842,6 +1188,7 @@ function parseCliArgs(argv: string[]) {
     provider: rawProvider as PolicyProviderOverride | undefined,
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 350,
+    ...parseCompactionCliFlags(argv),
   };
 }
 
@@ -852,7 +1199,7 @@ const isEntrypoint =
   path.resolve(process.argv[1]).endsWith('run-policy-abac-pilot.ts');
 
 if (isEntrypoint) {
-  const args = parseCliArgs(process.argv.slice(2));
+  const args = parsePolicyPilotCliArgs(process.argv.slice(2));
   runPolicyAbacPilot(args).catch((err) => {
     console.error(err);
     process.exit(1);
