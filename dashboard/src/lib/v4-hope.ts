@@ -249,6 +249,11 @@ export interface V4HopeDashboardPayload {
   };
   readonly receipts: readonly V4HopeReceipt[];
   readonly tsApi: {
+    readonly crossModel: {
+      readonly generatedAt: string;
+      readonly models: readonly V4ModelSummaryEntry[];
+    };
+    readonly receipts: readonly V4HopeReceipt[];
     readonly summary: V4TsApiSummary;
     readonly receipt: V4HopeReceipt;
   };

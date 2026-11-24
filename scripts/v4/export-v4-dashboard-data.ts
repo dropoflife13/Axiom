@@ -38,13 +38,18 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
   const v3PooledPath = path.join(rootDir, 'out', 'v3', 'pooled-v3-summary.json');
   const vaultCPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-c.json');
   const vaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-cid-auto.json');
+  const tsApiCrossModelPath = path.join(rootDir, 'out', 'v4', 'ts-api-cross-model-summary.json');
+  const tsApiReceiptPaths = [
+    path.join(rootDir, 'out', 'v4', 'ts-api-hope-receipt.json'),
+    path.join(rootDir, 'out', 'v4', 'ts-api-gemma-4-31b-it-hope-receipt.json'),
+    path.join(rootDir, 'out', 'v4', 'ts-api-qwen-qwen3-8-27b-hope-receipt.json'),
+  ];
   const tsApiSummaryPath = path.join(
     rootDir,
     'out',
     'v4',
     'ts-api-gemini-3-1-flash-lite-summary.json'
   );
-  const tsApiReceiptPath = path.join(rootDir, 'out', 'v4', 'ts-api-hope-receipt.json');
   const tsApiTasksPath = path.join(rootDir, 'fixtures', 'v4', 'ts-api-security-tasks.json');
   const tsApiVaultCPath = path.join(rootDir, '.axiom-state', 'v4', 'ts-api-c.json');
   const tsApiVaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'ts-api-cid-auto.json');
@@ -55,11 +60,16 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
     ...readJson<Record<string, unknown>>(p),
   }));
 
+  const tsApiCrossModel = readJson<{
+    generatedAt: string;
+    models: Array<{ completedTrials?: number; summary?: { topK?: number } }>;
+  }>(tsApiCrossModelPath);
+  const tsApiReceipts = tsApiReceiptPaths.map((p) => ({
+    file: path.relative(rootDir, p).replace(/\\/g, '/'),
+    ...readJson<Record<string, unknown>>(p),
+  }));
   const tsApiSummary = readJson<Record<string, unknown>>(tsApiSummaryPath);
-  const tsApiReceipt = {
-    file: path.relative(rootDir, tsApiReceiptPath).replace(/\\/g, '/'),
-    ...readJson<Record<string, unknown>>(tsApiReceiptPath),
-  };
+  const tsApiReceipt = tsApiReceipts[0];
 
   const tsApiTasksJson = readJson<{
     version: string;
@@ -253,8 +263,11 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
         version: tsApiTasksJson.version,
         taskCount: tsApiTasksJson.tasks.length,
         ruleCount: TS_API_SECURITY_CANONICAL_RULES.length,
-        totalLiveTrials: Number((tsApiSummary as { totalTrials?: number }).totalTrials ?? 75),
-        modelCount: 1,
+        totalLiveTrials: tsApiCrossModel.models.reduce(
+          (acc, m) => acc + (m.completedTrials ?? 0),
+          0
+        ) || 225,
+        modelCount: tsApiCrossModel.models.length || 3,
         topK: Number((tsApiSummary as { topK?: number }).topK ?? 4),
         domainBreakdown: tsApiDomainCounts,
         tasksSha256: sha256File(tsApiTasksPath),
@@ -267,6 +280,8 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
     crossModel,
     receipts,
     tsApi: {
+      crossModel: tsApiCrossModel,
+      receipts: tsApiReceipts,
       summary: tsApiSummary,
       receipt: tsApiReceipt,
     },

@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "4.0.0-ts-api-pilot-summary",
+  "cartridgeId": "ts-api-security-v4",
+  "model": "qwen/qwen3.8-27b",
+  "modelSlug": "qwen-qwen3-8-27b",
+  "topK": 4,
+  "temperature": 0,
+  "totalTrials": 75,
+  "arms": {
+    "A": {
+      "arm": "A",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.5559259259259259,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 0,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 0,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 7,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 5,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C": {
+      "arm": "C",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.6649999999999998,
+      "committedCount": 13,
+      "committedRate": 0.8666666666666667,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 2,
+        "missingSafeParse": 1,
+        "missingTenantCheck": 2,
+        "leakedSecretIdentifier": 1,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 1
+      }
+    },
+    "C_ID_auto": {
+      "arm": "C_ID_auto",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.7166666666666667,
+      "committedCount": 14,
+      "committedRate": 0.9333333333333333,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 1,
+        "missingSafeParse": 1,
+        "missingTenantCheck": 2,
+        "leakedSecretIdentifier": 1,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_prereq": {
+      "arm": "C_ID_prereq",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.576851851851852,
+      "committedCount": 12,
+      "committedRate": 0.8,
+      "ts01RetrievedCount": 14,
+      "ts04RetrievedCount": 10,
+      "ts08RetrievedCount": 1,
+      "forensicDefectCounts": {
+        "syntaxError": 3,
+        "missingSafeParse": 1,
+        "missingTenantCheck": 2,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 6,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 1
+      }
+    },
+    "C_ID_hope": {
+      "arm": "C_ID_hope",
+      "totalTasks": 15,
+      "fullTaskPassCount": 10,
+      "fullTaskPassRate": 0.6666666666666666,
+      "meanFactPassRate": 0.9083333333333333,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 5,
+      "ts04RetrievedCount": 5,
+      "ts08RetrievedCount": 6,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 1,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 5,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    }
+  },
+  "contrastsPp": {
+    "C_ID_auto_minus_C_task": 0,
+    "C_ID_auto_minus_C_fact": 5.17,
+    "C_ID_prereq_minus_C_ID_auto_task": 0,
+    "C_ID_prereq_minus_C_ID_auto_fact": -13.98,
+    "C_ID_prereq_minus_C_task": 0,
+    "C_ID_prereq_minus_C_fact": -8.81,
+    "C_ID_prereq_minus_A_task": 0,
+    "C_ID_prereq_minus_A_fact": 2.09,
+    "C_ID_hope_minus_C_task": 66.67,
+    "C_ID_hope_minus_C_fact": 24.33,
+    "C_ID_hope_minus_C_ID_auto_task": 66.67,
+    "C_ID_hope_minus_C_ID_auto_fact": 19.17,
+    "C_ID_hope_minus_C_ID_prereq_task": 66.67,
+    "C_ID_hope_minus_C_ID_prereq_fact": 33.15,
+    "C_ID_hope_minus_A_task": 66.67,
+    "C_ID_hope_minus_A_fact": 35.24
+  },
+  "generatedAt": "2026-11-24T01:06:24.641Z"
+}

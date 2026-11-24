@@ -388,11 +388,14 @@ export async function generateTsHandlerViaLlm(
         const retryAfterRaw = response.headers.get('retry-after');
         const retryAfter = retryAfterRaw ? parseFloat(retryAfterRaw) : 12;
         const isPerMinuteQuota = /PerMinute|per minute|RPM|TPM/i.test(errBody);
-        const isDailyQuota =
+        const isDailyQuotaMsg = /tokens per day|requests per day|PerDay|daily.*limit/i.test(errBody);
+        // Treat rolling-window TPD waits <= 1200s (e.g. Groq rolling 24h TPD) as retryable,
+        // while still failing fast on genuinely exhausted daily quotas (> 1200s or no retry-after).
+        const isUnrecoverableDailyQuota =
           !isPerMinuteQuota &&
-          (/tokens per day|requests per day|PerDay|daily.*limit/i.test(errBody) ||
-            (!Number.isNaN(retryAfter) && retryAfter > 180));
-        if (isDailyQuota) {
+          ((isDailyQuotaMsg && (Number.isNaN(retryAfter) || retryAfter > 1200)) ||
+            (!Number.isNaN(retryAfter) && retryAfter > 1200));
+        if (isUnrecoverableDailyQuota) {
           throw new Error(
             `[RATE_LIMIT_QUOTA] ${endpoint.provider.toUpperCase()} HTTP ${response.status} (retry-after=${retryAfterRaw ?? 'n/a'}): ${errBody.slice(0, 300)}`
           );
@@ -412,7 +415,8 @@ export async function generateTsHandlerViaLlm(
             : !Number.isNaN(retryAfter) && retryAfter > 0
               ? retryAfter
               : 15;
-        const delayMs = Math.min((baseDelay + Math.min(rateLimitAttempts * 3, 15)) * 1000, 65_000);
+        const maxCapMs = isDailyQuotaMsg ? 1_215_000 : 65_000;
+        const delayMs = Math.min((baseDelay + Math.min(rateLimitAttempts * 3, 15)) * 1000, maxCapMs);
         console.warn(
           `[v4-ts-pilot] ${endpoint.provider} HTTP ${response.status}; waiting ${(delayMs / 1000).toFixed(1)}s before retry (${rateLimitAttempts}/25)...`
         );

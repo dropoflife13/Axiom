@@ -73,8 +73,25 @@ export async function GET() {
       const v3FactsPath = resolveRepoFile('fixtures/task-v3/facts.json');
       const v3TasksPath = resolveRepoFile('fixtures/task-v3/tasks.json');
       const tsApiTasksPath = resolveRepoFile('fixtures/v4/ts-api-security-tasks.json');
+      const tsApiCrossModelPath = resolveRepoFile('out/v4/ts-api-cross-model-summary.json');
+      const tsApiReceiptRelPaths = [
+        'out/v4/ts-api-hope-receipt.json',
+        'out/v4/ts-api-gemma-4-31b-it-hope-receipt.json',
+        'out/v4/ts-api-qwen-qwen3-8-27b-hope-receipt.json',
+      ];
+      const resolvedTsApiReceipts = tsApiReceiptRelPaths
+        .map((rel) => ({ rel, full: resolveRepoFile(rel) }))
+        .filter((r): r is { rel: string; full: string } => Boolean(r.full));
       const tsApiSummaryPath = resolveRepoFile('out/v4/ts-api-gemini-3-1-flash-lite-summary.json');
       const tsApiReceiptPath = resolveRepoFile('out/v4/ts-api-hope-receipt.json');
+
+      const tsApiCrossModel = tsApiCrossModelPath
+        ? readJsonFile<{ models?: Array<{ completedTrials?: number }> }>(tsApiCrossModelPath)
+        : null;
+      const tsApiReceipts = resolvedTsApiReceipts.map(({ rel, full }) => ({
+        file: rel,
+        ...readJsonFile<Record<string, unknown>>(full),
+      }));
 
       const cartridges = baseSnapshot?.cartridges as Record<string, any> | undefined;
       if (cartridges?.policyAbac && abacTasksPath) {
@@ -126,21 +143,42 @@ export async function GET() {
           ...cartridges.tsApiSecurity,
           version: tsDoc.version,
           taskCount: tsDoc.tasks.length,
+          ...(tsApiCrossModel?.models
+            ? {
+                modelCount: tsApiCrossModel.models.length,
+                totalLiveTrials: tsApiCrossModel.models.reduce(
+                  (acc, m) => acc + (m.completedTrials ?? 0),
+                  0
+                ),
+              }
+            : {}),
           domainBreakdown,
           tasksSha256: sha256File(tsApiTasksPath),
         };
       }
 
-      const tsApi =
-        tsApiSummaryPath && tsApiReceiptPath
+      const fallbackTsApi = (baseSnapshot?.tsApi as Record<string, unknown> | undefined) ?? undefined;
+      const tsApiSummaryObj = tsApiSummaryPath
+        ? readJsonFile<Record<string, unknown>>(tsApiSummaryPath)
+        : fallbackTsApi?.summary;
+      const primaryTsApiReceipt =
+        tsApiReceipts[0] ??
+        (tsApiReceiptPath
           ? {
-              summary: readJsonFile<Record<string, unknown>>(tsApiSummaryPath),
-              receipt: {
-                file: 'out/v4/ts-api-hope-receipt.json',
-                ...readJsonFile<Record<string, unknown>>(tsApiReceiptPath),
-              },
+              file: 'out/v4/ts-api-hope-receipt.json',
+              ...readJsonFile<Record<string, unknown>>(tsApiReceiptPath),
             }
-          : baseSnapshot?.tsApi;
+          : fallbackTsApi?.receipt);
+
+      const tsApi =
+        tsApiCrossModel && tsApiReceipts.length > 0
+          ? {
+              crossModel: tsApiCrossModel,
+              receipts: tsApiReceipts,
+              ...(tsApiSummaryObj ? { summary: tsApiSummaryObj } : {}),
+              ...(primaryTsApiReceipt ? { receipt: primaryTsApiReceipt } : {}),
+            }
+          : fallbackTsApi;
 
       return NextResponse.json({
         ...(baseSnapshot ?? { schemaVersion: '4.0.0-hope-dashboard-snapshot' }),

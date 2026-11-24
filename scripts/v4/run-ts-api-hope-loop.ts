@@ -61,6 +61,9 @@ interface CachedTsReplayEntry {
   readonly failedFacts: readonly string[];
   readonly forensicFlags: Readonly<Record<string, boolean>>;
   readonly stderr?: string;
+  readonly returnedModel?: string;
+  readonly finishReason?: string;
+  readonly latencyMs?: number;
   readonly source: 'checkpoint' | 'live-replay';
   readonly timestamp: string;
 }
@@ -162,6 +165,7 @@ export async function runTsApiHopeLoop(options: {
   topK?: number;
   delayMs?: number;
   forceHopeArm?: boolean;
+  reuseReplayCache?: boolean;
 } = {}): Promise<{
   receiptFile: TsApiHopeReceiptFile;
   summary: ReturnType<typeof summarizeTsApiPilotCheckpoint>;
@@ -171,6 +175,7 @@ export async function runTsApiHopeLoop(options: {
   const topK = options.topK ?? 4;
   const delayMs = options.delayMs ?? 1000;
   const forceHopeArm = options.forceHopeArm ?? false;
+  const reuseReplayCache = options.reuseReplayCache ?? false;
   const modelSlug = slugifyModel(model);
 
   const runDir = path.resolve('.axiom-state', 'runs-v4', `ts-api-${modelSlug}`);
@@ -216,6 +221,12 @@ export async function runTsApiHopeLoop(options: {
   const rankedByTaskId = new Map<string, string[]>(
     tasks.map((t) => [t.id, rankTsApiRulesByPromptTfIdf(t, canonicalRules)])
   );
+
+  // Clear any stale quarantine state from an interrupted prior run so Clock 1/2
+  // re-stages deterministically (completed live replays remain in hope-replay-cache.json).
+  if (fs.existsSync(quarantineStatePath)) {
+    fs.unlinkSync(quarantineStatePath);
+  }
 
   // Initialize unmodified 3-Clock AxiomHopeEngine starting from empty prerequisite graph
   const engine = new AxiomHopeEngine<TsApiSecurityTask, string>({
@@ -584,6 +595,9 @@ export async function runTsApiHopeLoop(options: {
         failedFacts: [...evaluation.failedFacts],
         forensicFlags,
         ...(evaluation.stderr ? { stderr: evaluation.stderr } : {}),
+        returnedModel: gen.returnedModel,
+        finishReason: gen.finishReason,
+        latencyMs: gen.latencyMs,
         source: 'live-replay',
         timestamp: new Date().toISOString(),
       };
@@ -748,52 +762,87 @@ export async function runTsApiHopeLoop(options: {
       .join('\n');
     const systemPrompt = buildBaseTsApiSystemPrompt(lessonsBlock);
     const userPrompt = buildTsApiUserPrompt(task);
+    const cacheKey = promptCacheKey(task.id, systemPrompt);
+    const cachedHit = reuseReplayCache ? replayCache[cacheKey] : undefined;
 
-    const gen = await generateTsHandlerViaLlm(model, systemPrompt, userPrompt, 0, provider);
-    const evaluation = await cartridge.evaluate(task, gen.tsSource);
-    const forensicFlags = cartridge.classifyForensics(task, gen.tsSource);
-    const boundCount = evaluation.boundFacts.length;
-    const passedCount = evaluation.passedFacts.length;
-    const fullTaskPass = evaluation.committed && evaluation.failedFacts.length === 0;
+    let record: TsApiPilotTrialRecord;
+    let usedCache = false;
 
-    const record: TsApiPilotTrialRecord = {
-      key,
-      taskId: task.id,
-      domain: task.domain,
-      cohortId: task.cohortId,
-      arm: 'C_ID_hope',
-      retrievedRuleIds: [...retrieval.selected],
-      injectedPrerequisites: [...retrieval.injectedPrerequisites],
-      displacedRuleIds: [...retrieval.displaced],
-      promptChars: systemPrompt.length + userPrompt.length,
-      artifactSha256: computeArtifactSha256(gen.tsSource),
-      tsSource: gen.tsSource,
-      committed: evaluation.committed,
-      fullTaskPass,
-      boundFactsCount: boundCount,
-      passedFactsCount: passedCount,
-      factPassRate: boundCount > 0 ? passedCount / boundCount : 1,
-      passedFacts: [...evaluation.passedFacts],
-      failedFacts: [...evaluation.failedFacts],
-      forensicFlags,
-      ...(evaluation.stderr ? { stderr: evaluation.stderr } : {}),
-      returnedModel: gen.returnedModel,
-      finishReason: gen.finishReason,
-      latencyMs: gen.latencyMs,
-      timestamp: new Date().toISOString(),
-    };
+    if (cachedHit) {
+      usedCache = true;
+      record = {
+        key,
+        taskId: task.id,
+        domain: task.domain,
+        cohortId: task.cohortId,
+        arm: 'C_ID_hope',
+        retrievedRuleIds: [...retrieval.selected],
+        injectedPrerequisites: [...retrieval.injectedPrerequisites],
+        displacedRuleIds: [...retrieval.displaced],
+        promptChars: systemPrompt.length + userPrompt.length,
+        artifactSha256: computeArtifactSha256(cachedHit.tsSource),
+        tsSource: cachedHit.tsSource,
+        committed: cachedHit.committed,
+        fullTaskPass: cachedHit.fullTaskPass,
+        boundFactsCount: cachedHit.boundFactsCount,
+        passedFactsCount: cachedHit.passedFactsCount,
+        factPassRate: cachedHit.factPassRate,
+        passedFacts: [...cachedHit.passedFacts],
+        failedFacts: [...cachedHit.failedFacts],
+        forensicFlags: { ...cachedHit.forensicFlags },
+        ...(cachedHit.stderr ? { stderr: cachedHit.stderr } : {}),
+        returnedModel: cachedHit.returnedModel ?? model,
+        finishReason: cachedHit.finishReason ?? 'stop',
+        latencyMs: cachedHit.latencyMs ?? 0,
+        timestamp: cachedHit.timestamp,
+      };
+    } else {
+      const gen = await generateTsHandlerViaLlm(model, systemPrompt, userPrompt, 0, provider);
+      const evaluation = await cartridge.evaluate(task, gen.tsSource);
+      const forensicFlags = cartridge.classifyForensics(task, gen.tsSource);
+      const boundCount = evaluation.boundFacts.length;
+      const passedCount = evaluation.passedFacts.length;
+      const fullTaskPass = evaluation.committed && evaluation.failedFacts.length === 0;
+
+      record = {
+        key,
+        taskId: task.id,
+        domain: task.domain,
+        cohortId: task.cohortId,
+        arm: 'C_ID_hope',
+        retrievedRuleIds: [...retrieval.selected],
+        injectedPrerequisites: [...retrieval.injectedPrerequisites],
+        displacedRuleIds: [...retrieval.displaced],
+        promptChars: systemPrompt.length + userPrompt.length,
+        artifactSha256: computeArtifactSha256(gen.tsSource),
+        tsSource: gen.tsSource,
+        committed: evaluation.committed,
+        fullTaskPass,
+        boundFactsCount: boundCount,
+        passedFactsCount: passedCount,
+        factPassRate: boundCount > 0 ? passedCount / boundCount : 1,
+        passedFacts: [...evaluation.passedFacts],
+        failedFacts: [...evaluation.failedFacts],
+        forensicFlags,
+        ...(evaluation.stderr ? { stderr: evaluation.stderr } : {}),
+        returnedModel: gen.returnedModel,
+        finishReason: gen.finishReason,
+        latencyMs: gen.latencyMs,
+        timestamp: new Date().toISOString(),
+      };
+    }
 
     checkpoint.trials[key] = record;
     checkpoint.updatedAt = new Date().toISOString();
     fs.writeFileSync(checkpointPath, `${JSON.stringify(checkpoint, null, 2)}\n`, 'utf8');
 
     hopeDone++;
-    const statusMark = fullTaskPass ? 'PASS' : evaluation.committed ? 'FAIL' : 'COMPILE_ERR';
+    const statusMark = record.fullTaskPass ? 'PASS' : record.committed ? 'FAIL' : 'COMPILE_ERR';
     console.log(
-      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(11)} | facts=${passedCount}/${boundCount} | rules=[${retrieval.selected.join(',')}] | failed=[${evaluation.failedFacts.join(',')}] (${gen.latencyMs}ms)`
+      `[${String(hopeDone).padStart(2, '0')}/${tasks.length}] ${task.id} | C_ID_hope   | ${statusMark.padEnd(11)} | facts=${record.passedFactsCount}/${record.boundFactsCount} | rules=[${retrieval.selected.join(',')}] | failed=[${record.failedFacts.join(',')}] (${usedCache ? 'replay-cache' : `${record.latencyMs}ms`})`
     );
 
-    if (delayMs > 0) await sleep(delayMs);
+    if (!usedCache && delayMs > 0) await sleep(delayMs);
   }
 
   const summary = summarizeTsApiPilotCheckpoint(checkpoint);
@@ -824,6 +873,7 @@ function parseCliArgs(argv: string[]) {
     topK: topKIdx >= 0 && argv[topKIdx + 1] ? Number(argv[topKIdx + 1]) : 4,
     delayMs: delayIdx >= 0 && argv[delayIdx + 1] ? Number(argv[delayIdx + 1]) : 1000,
     forceHopeArm: argv.includes('--force-hope-arm'),
+    reuseReplayCache: argv.includes('--reuse-replay-cache'),
   };
 }
 

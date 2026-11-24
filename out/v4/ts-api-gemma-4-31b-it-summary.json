@@ -1,0 +1,135 @@
+{
+  "schemaVersion": "4.0.0-ts-api-pilot-summary",
+  "cartridgeId": "ts-api-security-v4",
+  "model": "gemma-4-31b-it",
+  "modelSlug": "gemma-4-31b-it",
+  "topK": 4,
+  "temperature": 0,
+  "totalTrials": 75,
+  "arms": {
+    "A": {
+      "arm": "A",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.5751851851851851,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 0,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 0,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 2,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C": {
+      "arm": "C",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.7675925925925926,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 1,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_auto": {
+      "arm": "C_ID_auto",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.8055555555555556,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 1,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_prereq": {
+      "arm": "C_ID_prereq",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.5883333333333333,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 14,
+      "ts04RetrievedCount": 10,
+      "ts08RetrievedCount": 1,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_hope": {
+      "arm": "C_ID_hope",
+      "totalTasks": 15,
+      "fullTaskPassCount": 3,
+      "fullTaskPassRate": 0.2,
+      "meanFactPassRate": 0.8018518518518519,
+      "committedCount": 14,
+      "committedRate": 0.9333333333333333,
+      "ts01RetrievedCount": 6,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 1,
+        "missingSafeParse": 1,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 10,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    }
+  },
+  "contrastsPp": {
+    "C_ID_auto_minus_C_task": 0,
+    "C_ID_auto_minus_C_fact": 3.8,
+    "C_ID_prereq_minus_C_ID_auto_task": 0,
+    "C_ID_prereq_minus_C_ID_auto_fact": -21.72,
+    "C_ID_prereq_minus_C_task": 0,
+    "C_ID_prereq_minus_C_fact": -17.93,
+    "C_ID_prereq_minus_A_task": 0,
+    "C_ID_prereq_minus_A_fact": 1.31,
+    "C_ID_hope_minus_C_task": 20,
+    "C_ID_hope_minus_C_fact": 3.43,
+    "C_ID_hope_minus_C_ID_auto_task": 20,
+    "C_ID_hope_minus_C_ID_auto_fact": -0.37,
+    "C_ID_hope_minus_C_ID_prereq_task": 20,
+    "C_ID_hope_minus_C_ID_prereq_fact": 21.35,
+    "C_ID_hope_minus_A_task": 20,
+    "C_ID_hope_minus_A_fact": 22.67
+  },
+  "generatedAt": "2026-11-23T07:30:17.266Z"
+}
