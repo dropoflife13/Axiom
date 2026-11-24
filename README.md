@@ -2,6 +2,19 @@
 
 Axiom is a deterministic verification and reflexion harness for LLM-generated architecture rules and SQL migrations. It measures whether short lessons learned from verified failures improve later generation.
 
+## Axiom-HOPE v4 (Automated Lexical Locks & 3-Clock Governance)
+
+Axiom-HOPE v4 generalizes deterministic architectural memory governance beyond SQL migrations to declarative authorization policies (Cedar-style ABAC) and imperative backend contracts (TypeScript API security), verified across **549 total live trials** (`gemini-3.1-flash-lite`, `gemma-4-31b-it`, `qwen/qwen3.8-27b`):
+- **Policy-as-Code ABAC (324 live trials):** 270 5-arm trials (`+66.7 pp` full-task pass, `3.7% → 70.4%`; `95.2%` fact compliance) + 54 reverse-masked necessity trials (`C_ID_masked` vs. `C_ID_auto` vs. `C`: `+63.0 pp` sufficiency, `-64.8 pp` necessity, `-1.9 pp` structure control).
+- **TypeScript API Security (225 live trials):** `0.0% → 48.9%` full-task pass (`87.4%` fact compliance), beating naive static prerequisites by `+48.9 pp` task / `+25.7 pp` facts with `0` promoted canary regressions.
+- **3-Clock Symbolic Architecture (`src/v4/hope/`):**
+  1. *Fast Clock (`EpisodicRingBuffer`):* Fixed FIFO trace ring buffer capturing task executions without mutating rules.
+  2. *Intermediate Clock (`QuarantineVault`):* Staged candidate vault with SHA-256 provenance digests.
+  3. *Slow Clock (`DeepMetaOptimizer`):* 3 deterministic zero-LLM gates (Gate 1: 100% Lexical Lock, Gate 2: Contradiction & DAG Cycle Linter, Gate 3: Paired Canary Replay with strict zero regressions).
+- **Lexical-Locked Context Compaction (`--compact`):** Live v4 runners support an opt-in `--compact` (and `--max-context-tokens <n>`) CLI flag providing rate-limit relief by deterministically compacting prompt rules while guaranteeing 100% lexical token retention.
+- **Self-Reflexion Skill (`.agents/skills/axiom-self-reflexion/`):** Zero-API-cost 3-clock loop capturing recurring local build/test fixes into lexical-locked workspace rules (`LEARNED_RULES.md`).
+- **Documentation & Research Index:** See [docs/INDEX.md](docs/INDEX.md) for the active documentation map, [docs/AXIOM-EXPLAINED.md](docs/AXIOM-EXPLAINED.md) for the plain-English guide, [docs/AXIOM-V4-HOPE.md](docs/AXIOM-V4-HOPE.md) for the complete v4 technical report, and [docs/AXIOM-PAPER.md](docs/AXIOM-PAPER.md) for the frozen v3 PostgreSQL study.
+
 ## Core Principles
 
 - **Deterministic authority:** LLM output is untrusted candidate material. The Verifier (`src/verifier/`) and PostgreSQL Oracle (`scripts/oracle.ts`) contain zero LLM calls and zero network dependencies.

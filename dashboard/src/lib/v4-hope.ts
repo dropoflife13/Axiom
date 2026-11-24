@@ -3,6 +3,99 @@
 
 export type V4PilotArm = 'A' | 'C' | 'C_ID_prereq' | 'C_ID_auto' | 'C_ID_hope';
 
+export interface V4MaskedArmStats {
+  readonly fullTaskPassRate: number;
+  readonly meanFactPassRate: number;
+}
+
+export interface V4PolicyAbacMaskedSummary {
+  readonly schemaVersion: string;
+  readonly cartridgeId: string;
+  readonly generatedAt: string;
+  readonly vaultAudit: {
+    readonly lexicalLockAudit: {
+      readonly totalRequiredTokens: number;
+      readonly totalRetainedTokens: number;
+      readonly overallRetentionRate: number;
+      readonly rulesWithZeroTokensRetained: number;
+      readonly totalRules: number;
+    };
+    readonly lengthAudit: {
+      readonly totalCanonicalChars: number;
+      readonly totalMaskedChars: number;
+      readonly totalCanonicalWords: number;
+      readonly totalMaskedWords: number;
+      readonly charRatioVsCanonical: number;
+      readonly wordRatioVsCanonical: number;
+      readonly totalCidAutoChars: number;
+      readonly totalCidAutoWords: number;
+      readonly charRatioVsCidAuto: number;
+      readonly wordRatioVsCidAuto: number;
+    };
+  };
+  readonly pooled: {
+    readonly modelCount: number;
+    readonly totalMaskedTrials: number;
+    readonly arms: {
+      readonly A: V4MaskedArmStats;
+      readonly C: V4MaskedArmStats;
+      readonly C_ID_masked: V4MaskedArmStats;
+      readonly C_ID_auto: V4MaskedArmStats;
+    };
+    readonly contrastsPp: {
+      readonly sufficiency_C_ID_auto_minus_C_task: number;
+      readonly sufficiency_C_ID_auto_minus_C_fact: number;
+      readonly necessity_C_ID_masked_minus_C_ID_auto_task: number;
+      readonly necessity_C_ID_masked_minus_C_ID_auto_fact: number;
+      readonly masked_minus_C_task: number;
+      readonly masked_minus_C_fact: number;
+      readonly masked_minus_A_task: number;
+      readonly masked_minus_A_fact: number;
+    };
+  };
+  readonly models: ReadonlyArray<{
+    readonly modelId: string;
+    readonly provider: string;
+    readonly complete: boolean;
+    readonly maskedStats: {
+      readonly modelId: string;
+      readonly provider: string;
+      readonly completedTrials: number;
+      readonly totalTasks: number;
+      readonly fullTaskPassCount: number;
+      readonly fullTaskPassRate: number;
+      readonly meanFactPassRate: number;
+      readonly committedCount: number;
+      readonly committedRate: number;
+      readonly p01RetrievedCount: number;
+      readonly p02RetrievedCount: number;
+      readonly forensicDefectCounts: Record<string, number>;
+    };
+    readonly baselineArms: Record<string, {
+      readonly arm: string;
+      readonly totalTasks: number;
+      readonly fullTaskPassCount: number;
+      readonly fullTaskPassRate: number;
+      readonly meanFactPassRate: number;
+      readonly committedCount: number;
+      readonly committedRate: number;
+      readonly p01RetrievedCount: number;
+      readonly p02RetrievedCount: number;
+      readonly forensicDefectCounts: Record<string, number>;
+    }>;
+    readonly contrastsPp: {
+      readonly sufficiency_C_ID_auto_minus_C_task: number;
+      readonly sufficiency_C_ID_auto_minus_C_fact: number;
+      readonly necessity_C_ID_masked_minus_C_ID_auto_task: number;
+      readonly necessity_C_ID_masked_minus_C_ID_auto_fact: number;
+      readonly masked_minus_C_task: number;
+      readonly masked_minus_C_fact: number;
+      readonly masked_minus_A_task: number;
+      readonly masked_minus_A_fact: number;
+    };
+  }>;
+}
+
 export interface V4ArmStats {
   readonly arm: string;
   readonly totalTasks: number;
@@ -248,6 +341,7 @@ export interface V4HopeDashboardPayload {
     readonly models: readonly V4ModelSummaryEntry[];
   };
   readonly receipts: readonly V4HopeReceipt[];
+  readonly maskedSummary?: V4PolicyAbacMaskedSummary;
   readonly tsApi: {
     readonly crossModel: {
       readonly generatedAt: string;

@@ -1,8 +1,8 @@
 # Axiom-HOPE (Ablation v4): Automated Lexical Locks, 3-Clock Symbolic Governance, and Cross-Domain Generalization
 
 > **Branch:** `feat/v4-axiom-hope` (branched from frozen tag `v3.0-final`, commit `50433cc`)
-> **Scope:** Standalone technical report documenting the Axiom-HOPE v4 architecture, unit/integration verification (`321/321` Vitest tests across `34` files), and 3-domain generalization across PostgreSQL 16 DDL (`postgres-v3`), Policy-as-Code ABAC (`policy-abac-v4`, **270 live trials** across 3 models), and Imperative TypeScript API Security Contracts (`ts-api-security-v4`, **225 live trials** across 3 models).
-> **Data Provenance:** Every metric, contrast, forensic count, and SHA-256 digest in this report is sourced verbatim from `out/v4/policy-abac-cross-model-summary.json`, `out/v4/ts-api-cross-model-summary.json`, `out/v4/*-hope-receipt.json`, `.axiom-state/v4/*.json`, and the deterministic v4 test suite. Frozen v2/v3 checkpoints, vaults, and manuscripts (`docs/AXIOM-PAPER.md`, `docs/AXIOM-V3-PAPER-RESULTS.md`) are untouched.
+> **Scope:** Standalone technical report documenting the Axiom-HOPE v4 architecture, unit/integration verification (`332/332` Vitest tests across `37` files), and 3-domain generalization across PostgreSQL 16 DDL (`postgres-v3`), Policy-as-Code ABAC (`policy-abac-v4`, **324 live trials** across 3 models: 270 5-arm + 54 `C_ID_masked` reverse-masked necessity trials), and Imperative TypeScript API Security Contracts (`ts-api-security-v4`, **225 live trials** across 3 models; **549 total live trials**).
+> **Data Provenance:** Every metric, contrast, forensic count, and SHA-256 digest in this report is sourced verbatim from `out/v4/policy-abac-cross-model-summary.json`, `out/v4/policy-abac-cid-masked-summary.json`, `out/v4/ts-api-cross-model-summary.json`, `out/v4/*-hope-receipt.json`, `.axiom-state/v4/*.json`, and the deterministic v4 test suite. Frozen v2/v3 checkpoints, vaults, and manuscripts (`docs/AXIOM-PAPER.md`, `docs/AXIOM-V3-PAPER-RESULTS.md`) are untouched.
 
 ---
 
@@ -110,6 +110,52 @@ The 3-model replication surfaces two findings that static memory heuristics cann
    - **`Q-P-06-P-02` (`P-06 -> P-02`)** passed all 3 gates on **3/3 models** (`+12.5 pp` on `ABAC-004`, `0` canary regressions), lifting `P-02` retrieval from `17/18` to `18/18` and eliminating `missingForbidSuspended` to `0/18` across all three models.
    - **`Q-P-12-P-07` (`P-12 -> [P-02, P-07]`)** fixed `ABAC-017` (`5/6 → 6/6`) on both Gemini and Qwen, **but** behaved differently on perturbed canary `ABAC-010` (a healthcare break-glass task where `P-12` sat in slot #4): on **`gemini-3.1-flash-lite`**, injecting `P-07` caused `ABAC-010` to fail (`1` canary regression → **REJECTED**); on **`gemma-4-31b-it`**, it produced `0.0 pp` target gain (**REJECTED**); on **`qwen/qwen3.8-27b`**, Qwen scoped `P-07` cleanly without breaking `ABAC-010` (`+8.3 pp` target gain, **`0` canary regressions → APPROVED & PROMOTED**), lifting Qwen's `C_ID_hope` to **`77.8%` (`14/18`)**!
    - **`Q-P-06-CONJUNCT`** (lexical-locked `P-06` rule clarification against split OR-ed `permit` blocks) fixed Gemini's split-`permit` bug on `ABAC-002` (`2/6 → 6/6`, `+22.2 pp`, `0` regressions → **APPROVED & PROMOTED** on Gemini, lifting Gemini to **`72.2%` (`13/18`)**), while being cleanly **REJECTED** as vacuous (`0.0 pp`) on Gemma and Qwen (which did not exhibit split-`permit` failures).
+
+---
+
+### 3.5 Bidirectional Causal Identification: Reverse-Masked Necessity Arm (`C_ID_masked`, 54 Live Trials)
+
+To establish bidirectional causal identification—ruling out prose length, rule completeness, and structural familiarity as confounders—we introduced the **Reverse-Masked Necessity Arm (`C_ID_masked`)** across the exact same 3-model matrix (`18` tasks × `3` models = `54` live trials, `K = 4`, `temperature = 0`, exact same Top-4 TF-IDF retrieval order as `C` and `C_ID_auto`).
+
+In `C_ID_masked`, all `12` canonical rules (`P-01`..`P-12`) were rewritten into syntactically complete, naturalistic prose that **deterministically stripped 100% of concrete operational tokens** (`0/78` retained, `0.0%`), replacing identifiers such as `principal.tenant_id`, `Action::"approve_payout"`, and `context.mfa_verified` with generic prose descriptors while strictly controlling character length (`1993` chars, `0.89x` vs. `C_ID_auto`; `282` words, `1.15x` vs. `C_ID_auto`).
+
+```
+Bidirectional Causal Identification Logic:
+  1. Sufficiency (C_ID_auto - C = +63.0 pp):
+     Distilled prose + Exact Lexical Tokens  ==> Performance Restored (+63.0 pp)
+  2. Necessity (C_ID_masked - C_ID_auto = -64.8 pp):
+     Full Canonical Structure - Exact Lexical Tokens ==> Complete Collapse (-64.8 pp)
+  3. Structure Control (C_ID_masked - C = -1.9 pp):
+     Full Canonical Structure alone without Exact Lexical Tokens ==> Null (-1.9 pp)
+```
+
+#### 3.5.1 Bidirectional Full-Task Pass Rate Comparison
+
+| Model | Provider | `A` (Zero-Shot) | `C` (Unconstrained) | `C_ID_masked` (Reverse-Masked) | `C_ID_auto` (Lexical-Locked) | Sufficiency (`C_ID_auto − C`) | Necessity (`C_ID_masked − C_ID_auto`) | Structure Control (`C_ID_masked − C`) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `gemini-3.1-flash-lite` | Google AI Studio | 0.0% | 11.1% | **5.6%** (1/18) | 66.7% (12/18) | +55.6 pp | **-61.1 pp** | -5.6 pp |
+| `gemma-4-31b-it` | Google AI Studio | 0.0% | 0.0% | **0.0%** (0/18) | 61.1% (11/18) | +61.1 pp | **-61.1 pp** | +0.0 pp |
+| `qwen/qwen3.8-27b` | Groq | 0.0% | 0.0% | **0.0%** (0/18) | 72.2% (13/18) | +72.2 pp | **-72.2 pp** | +0.0 pp |
+| **Pooled Mean (n=3)** | Multi-Provider | 0.0% | 3.7% | **1.9%** (1/54) | 66.7% (36/54) | **+63.0 pp** | **-64.8 pp** | **-1.9 pp** |
+
+#### 3.5.2 Bidirectional Mean Bound-Fact Pass Rate Comparison
+
+| Model | `A` | `C` | `C_ID_masked` | `C_ID_auto` | Sufficiency (`C_ID_auto − C`) | Necessity (`C_ID_masked − C_ID_auto`) | Structure Control (`C_ID_masked − C`) |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+| `gemini-3.1-flash-lite` | 57.2% | 76.8% | **71.6%** | 91.2% | +14.3 pp | **-19.6 pp** | -5.2 pp |
+| `gemma-4-31b-it` | 61.9% | 60.4% | **63.2%** | 92.8% | +32.5 pp | **-29.6 pp** | +2.9 pp |
+| `qwen/qwen3.8-27b` | 30.4% | 60.3% | **64.0%** | 94.9% | +34.5 pp | **-30.9 pp** | +3.7 pp |
+| **Pooled Mean (n=3)** | 49.8% | 65.8% | **66.3%** | 92.9% | **+27.1 pp** | **-26.7 pp** | **+0.4 pp** |
+
+#### 3.5.3 Length & Token Retention Audit (`policy-abac-cid-masked.json`)
+
+| Vault | Retained Tokens | Retention Rate | Total Chars | Total Words | Char Ratio vs. `C_ID_auto` | Word Ratio vs. `C_ID_auto` |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| Canonical Rules (`P-01..P-12`) | `78/78` | 100.0% | 1626 | 164 | 0.72x | 0.67x |
+| `C_ID_auto` (Lexical-Locked) | `78/78` | 100.0% | 2249 | 246 | 1.00x | 1.00x |
+| **`C_ID_masked` (Reverse-Masked)** | **`0/78`** | **0.0%** | **1993** | **282** | **0.89x** | **1.15x** |
+
+When exact operational tokens are masked, models experience a catastrophic resurgence of structural omissions: `missingForbidSuspended` surges from `1/18` under `C_ID_auto` back up to `6/18` (Gemini), `16/18` (Gemma), and `18/18` (Qwen), while `paraphrasedMfaClaim` jumps from `0/18` back to `11/18` and `5/18`. This confirms that **exact lexical identifiers**—not rule length, prose elaboration, or sentence structure—are both **necessary and sufficient** for multi-model architectural rule adherence.
 
 ---
 

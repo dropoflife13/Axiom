@@ -8,7 +8,8 @@
 
 | File | Purpose | Est. Tokens | Size (B) |
 | :--- | :--- | ---: | ---: |
-| [`docs/AXIOM-V4-HOPE.md`](../docs/AXIOM-V4-HOPE.md) | Primary Axiom-HOPE v4 architecture, 3-clock governance, SQL/ABAC/TS-API benchmarks (495+ trials), and promotion receipts | 14,828 | 37,682 |
+| [`docs/AXIOM-EXPLAINED.md`](../docs/AXIOM-EXPLAINED.md) | Primary Axiom-HOPE v4 architecture, 3-clock governance, SQL/ABAC/TS-API benchmarks (495+ trials), and promotion receipts | 3,433 | 11,950 |
+| [`docs/AXIOM-V4-HOPE.md`](../docs/AXIOM-V4-HOPE.md) | Primary Axiom-HOPE v4 architecture, 3-clock governance, SQL/ABAC/TS-API benchmarks (495+ trials), and promotion receipts | 16,516 | 41,911 |
 
 ## 2. Frozen Ablation v3 Archives (Read-Only — Do Not Modify)
 
@@ -78,7 +79,7 @@
 
 ## 6. Workspace Hygiene & Context-Rot Notes
 
-- **Audited Corpus:** 46 files (21 in `docs/`, 25 in `out/v4/`) totaling **194,423 estimated tokens** (634,337 bytes).
+- **Audited Corpus:** 46 files (21 in `docs/`, 25 in `out/v4/`) totaling **196,111 estimated tokens** (638,566 bytes).
 - **Single Source of Truth Rule:** Start in [`docs/AXIOM-V4-HOPE.md`](../docs/AXIOM-V4-HOPE.md) for current HOPE v4 architecture/results, and the 3 files in Section 4.1 (`policy-abac-cross-model-summary.md`, `policy-abac-cid-masked-summary.md`, `ts-api-cross-model-summary.md`) rather than reading per-model JSON dumps unless debugging a specific trial.
 - **Detected Duplicate / Superseded Groups (Read-Only):**
   - `exact_duplicate` (34,346 tokens): Byte-identical files (exact SHA-256 match; frozen v3 archival pair) — `docs/AXIOM-PAPER.md`, `docs/AXIOM-V3-PAPER-RESULTS.md`

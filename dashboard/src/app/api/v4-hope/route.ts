@@ -48,6 +48,7 @@ export async function GET() {
     ]);
 
     const crossModelPath = resolveRepoFile('out/v4/policy-abac-cross-model-summary.json');
+    const maskedSummaryPath = resolveRepoFile('out/v4/policy-abac-cid-masked-summary.json');
     const receiptRelPaths = [
       'out/v4/policy-abac-hope-receipt.json',
       'out/v4/policy-abac-gemma-4-31b-it-hope-receipt.json',
@@ -63,6 +64,9 @@ export async function GET() {
         ? readJsonFile<Record<string, unknown>>(snapshotPath)
         : null;
       const crossModel = readJsonFile<Record<string, unknown>>(crossModelPath);
+      const maskedSummary = maskedSummaryPath
+        ? readJsonFile<Record<string, unknown>>(maskedSummaryPath)
+        : (baseSnapshot?.maskedSummary as Record<string, unknown> | undefined);
       const receipts = resolvedReceipts.map(({ rel, full }) => ({
         file: rel,
         ...readJsonFile<Record<string, unknown>>(full),
@@ -186,6 +190,7 @@ export async function GET() {
         source: 'live-artifacts',
         crossModel,
         receipts,
+        ...(maskedSummary ? { maskedSummary } : {}),
         ...(tsApi ? { tsApi } : {}),
       });
     }

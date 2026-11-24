@@ -75,7 +75,10 @@ const FROZEN_V3_ARCHIVES = new Set<string>([
   'docs/AXIOM-V3-LIVE-DOSSIER.md',
 ]);
 
-const ACTIVE_V4_DOCS = new Set<string>(['docs/AXIOM-V4-HOPE.md']);
+const ACTIVE_V4_DOCS = new Set<string>([
+  'docs/AXIOM-V4-HOPE.md',
+  'docs/AXIOM-EXPLAINED.md',
+]);
 
 const RECEIPT_ALIASES = new Map<string, string>([
   [

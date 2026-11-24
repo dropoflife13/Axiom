@@ -1,6 +1,6 @@
 {
   "schemaVersion": "4.0.0-hope-dashboard-snapshot",
-  "generatedAt": "2026-11-24T01:10:08.998Z",
+  "generatedAt": "2026-11-24T06:07:34.193Z",
   "cartridges": {
     "policyAbac": {
       "id": "policy-abac-v4",
@@ -16,7 +16,7 @@
         "healthcare": 6,
         "admin": 6
       },
-      "tasksSha256": "4500a63f74ed402e81cc83be4d361101e9024bc03ac9e5366c21baba658fb4fb",
+      "tasksSha256": "2e97762b126a54f31e2e315f5095dd91a81c8cd0397bdef22f686f112c3b1bb0",
       "defaultPrerequisiteEdgeCount": 14,
       "vaultAudits": {
         "c": {
@@ -85,7 +85,7 @@
         "admin": 5,
         "profiles": 5
       },
-      "tasksSha256": "8551df62384d8a0f6ad304d9d88890ece655f3f5fe3d20d9b5a52ab454fc2745",
+      "tasksSha256": "7fa7746fbf28bef5d02b0a900fdaf6fddb8f0fbef46c8ef8bf62b40f5fbeb1f0",
       "defaultPrerequisiteEdgeCount": 14,
       "vaultAudits": {
         "c": {
@@ -2617,6 +2617,537 @@
       "generatedAt": "2026-11-21T17:20:06.611Z"
     }
   ],
+  "maskedSummary": {
+    "schemaVersion": "4.0.0-policy-cid-masked-summary",
+    "cartridgeId": "policy-abac-v4",
+    "generatedAt": "2026-11-24T03:01:14.395Z",
+    "vaultAudit": {
+      "lexicalLockAudit": {
+        "totalRequiredTokens": 78,
+        "totalRetainedTokens": 0,
+        "overallRetentionRate": 0,
+        "rulesWithZeroTokensRetained": 12,
+        "totalRules": 12
+      },
+      "lengthAudit": {
+        "totalCanonicalChars": 1626,
+        "totalMaskedChars": 1993,
+        "totalCanonicalWords": 164,
+        "totalMaskedWords": 282,
+        "charRatioVsCanonical": 1.2257,
+        "wordRatioVsCanonical": 1.7195,
+        "totalCidAutoChars": 2249,
+        "totalCidAutoWords": 246,
+        "charRatioVsCidAuto": 0.8862,
+        "wordRatioVsCidAuto": 1.1463
+      }
+    },
+    "pooled": {
+      "modelCount": 3,
+      "totalMaskedTrials": 54,
+      "arms": {
+        "A": {
+          "fullTaskPassRate": 0,
+          "meanFactPassRate": 0.49847883597883585
+        },
+        "C": {
+          "fullTaskPassRate": 0.037037037037037035,
+          "meanFactPassRate": 0.6582231040564374
+        },
+        "C_ID_masked": {
+          "fullTaskPassRate": 0.018518518518518517,
+          "meanFactPassRate": 0.6625220458553791
+        },
+        "C_ID_auto": {
+          "fullTaskPassRate": 0.6666666666666666,
+          "meanFactPassRate": 0.9294091710758378
+        }
+      },
+      "contrastsPp": {
+        "sufficiency_C_ID_auto_minus_C_task": 62.96,
+        "sufficiency_C_ID_auto_minus_C_fact": 27.12,
+        "necessity_C_ID_masked_minus_C_ID_auto_task": -64.81,
+        "necessity_C_ID_masked_minus_C_ID_auto_fact": -26.69,
+        "masked_minus_C_task": -1.85,
+        "masked_minus_C_fact": 0.43,
+        "masked_minus_A_task": 1.85,
+        "masked_minus_A_fact": 16.4
+      }
+    },
+    "models": [
+      {
+        "modelId": "gemini-3.1-flash-lite",
+        "provider": "Google AI Studio",
+        "complete": true,
+        "maskedStats": {
+          "modelId": "gemini-3.1-flash-lite",
+          "provider": "Google AI Studio",
+          "completedTrials": 18,
+          "totalTasks": 18,
+          "fullTaskPassCount": 1,
+          "fullTaskPassRate": 0.05555555555555555,
+          "meanFactPassRate": 0.7156084656084656,
+          "committedCount": 18,
+          "committedRate": 1,
+          "p01RetrievedCount": 1,
+          "p02RetrievedCount": 17,
+          "forensicDefectCounts": {
+            "syntaxError": 0,
+            "missingTenantIsolation": 0,
+            "missingForbidSuspended": 6,
+            "paraphrasedMfaClaim": 11,
+            "missingMfaRequirement": 11,
+            "missingSeparationOfDuties": 6,
+            "missingLockedResourceGuard": 3,
+            "missingSessionFreshnessGuard": 5,
+            "missingNetworkRiskGuard": 6,
+            "missingServiceAccountForbid": 3
+          }
+        },
+        "baselineArms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.5720899470899469,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 7,
+              "missingMfaRequirement": 11,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 2,
+            "fullTaskPassRate": 0.1111111111111111,
+            "meanFactPassRate": 0.7679894179894182,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 7,
+              "missingMfaRequirement": 7,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 12,
+            "fullTaskPassRate": 0.6666666666666666,
+            "meanFactPassRate": 0.9115079365079366,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 1,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 2,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 10,
+            "fullTaskPassRate": 0.5555555555555556,
+            "meanFactPassRate": 0.9221560846560847,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 2,
+              "missingMfaRequirement": 2,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 3,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 13,
+            "fullTaskPassRate": 0.7222222222222222,
+            "meanFactPassRate": 0.9554894179894179,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 2,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "sufficiency_C_ID_auto_minus_C_task": 55.56,
+          "sufficiency_C_ID_auto_minus_C_fact": 14.35,
+          "necessity_C_ID_masked_minus_C_ID_auto_task": -61.11,
+          "necessity_C_ID_masked_minus_C_ID_auto_fact": -19.59,
+          "masked_minus_C_task": -5.56,
+          "masked_minus_C_fact": -5.24,
+          "masked_minus_A_task": 5.56,
+          "masked_minus_A_fact": 14.35
+        }
+      },
+      {
+        "modelId": "gemma-4-31b-it",
+        "provider": "Google AI Studio",
+        "complete": true,
+        "maskedStats": {
+          "modelId": "gemma-4-31b-it",
+          "provider": "Google AI Studio",
+          "completedTrials": 18,
+          "totalTasks": 18,
+          "fullTaskPassCount": 0,
+          "fullTaskPassRate": 0,
+          "meanFactPassRate": 0.6322751322751321,
+          "committedCount": 18,
+          "committedRate": 1,
+          "p01RetrievedCount": 1,
+          "p02RetrievedCount": 17,
+          "forensicDefectCounts": {
+            "syntaxError": 0,
+            "missingTenantIsolation": 2,
+            "missingForbidSuspended": 16,
+            "paraphrasedMfaClaim": 0,
+            "missingMfaRequirement": 0,
+            "missingSeparationOfDuties": 6,
+            "missingLockedResourceGuard": 6,
+            "missingSessionFreshnessGuard": 7,
+            "missingNetworkRiskGuard": 6,
+            "missingServiceAccountForbid": 2
+          }
+        },
+        "baselineArms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6193121693121691,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 14,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 3,
+              "missingSessionFreshnessGuard": 7,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6035714285714283,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 3,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 3,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 6,
+              "missingSessionFreshnessGuard": 7,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 2
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 11,
+            "fullTaskPassRate": 0.6111111111111112,
+            "meanFactPassRate": 0.9281746031746033,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 2,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 2,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 7,
+            "fullTaskPassRate": 0.3888888888888889,
+            "meanFactPassRate": 0.8499338624338626,
+            "committedCount": 17,
+            "committedRate": 0.9444444444444444,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 1,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 5,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 0,
+              "missingSessionFreshnessGuard": 6,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 11,
+            "fullTaskPassRate": 0.6111111111111112,
+            "meanFactPassRate": 0.9351190476190477,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 5,
+              "missingNetworkRiskGuard": 2,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "sufficiency_C_ID_auto_minus_C_task": 61.11,
+          "sufficiency_C_ID_auto_minus_C_fact": 32.46,
+          "necessity_C_ID_masked_minus_C_ID_auto_task": -61.11,
+          "necessity_C_ID_masked_minus_C_ID_auto_fact": -29.59,
+          "masked_minus_C_task": 0,
+          "masked_minus_C_fact": 2.87,
+          "masked_minus_A_task": 0,
+          "masked_minus_A_fact": 1.3
+        }
+      },
+      {
+        "modelId": "qwen/qwen3.8-27b",
+        "provider": "Groq",
+        "complete": true,
+        "maskedStats": {
+          "modelId": "qwen/qwen3.8-27b",
+          "provider": "Groq",
+          "completedTrials": 18,
+          "totalTasks": 18,
+          "fullTaskPassCount": 0,
+          "fullTaskPassRate": 0,
+          "meanFactPassRate": 0.6396825396825396,
+          "committedCount": 18,
+          "committedRate": 1,
+          "p01RetrievedCount": 1,
+          "p02RetrievedCount": 17,
+          "forensicDefectCounts": {
+            "syntaxError": 0,
+            "missingTenantIsolation": 1,
+            "missingForbidSuspended": 18,
+            "paraphrasedMfaClaim": 5,
+            "missingMfaRequirement": 5,
+            "missingSeparationOfDuties": 4,
+            "missingLockedResourceGuard": 6,
+            "missingSessionFreshnessGuard": 2,
+            "missingNetworkRiskGuard": 6,
+            "missingServiceAccountForbid": 1
+          }
+        },
+        "baselineArms": {
+          "A": {
+            "arm": "A",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.3040343915343915,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 0,
+            "p02RetrievedCount": 0,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 4,
+              "missingMfaRequirement": 5,
+              "missingSeparationOfDuties": 6,
+              "missingLockedResourceGuard": 5,
+              "missingSessionFreshnessGuard": 2,
+              "missingNetworkRiskGuard": 6,
+              "missingServiceAccountForbid": 2
+            }
+          },
+          "C": {
+            "arm": "C",
+            "totalTasks": 18,
+            "fullTaskPassCount": 0,
+            "fullTaskPassRate": 0,
+            "meanFactPassRate": 0.6031084656084655,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 18,
+              "paraphrasedMfaClaim": 3,
+              "missingMfaRequirement": 3,
+              "missingSeparationOfDuties": 5,
+              "missingLockedResourceGuard": 6,
+              "missingSessionFreshnessGuard": 2,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 3
+            }
+          },
+          "C_ID_auto": {
+            "arm": "C_ID_auto",
+            "totalTasks": 18,
+            "fullTaskPassCount": 13,
+            "fullTaskPassRate": 0.7222222222222222,
+            "meanFactPassRate": 0.9485449735449735,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 17,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 1,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 1,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 3,
+              "missingNetworkRiskGuard": 1,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_prereq": {
+            "arm": "C_ID_prereq",
+            "totalTasks": 18,
+            "fullTaskPassCount": 9,
+            "fullTaskPassRate": 0.5,
+            "meanFactPassRate": 0.9128968253968254,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 18,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 4,
+              "missingMfaRequirement": 4,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 4,
+              "missingNetworkRiskGuard": 4,
+              "missingServiceAccountForbid": 0
+            }
+          },
+          "C_ID_hope": {
+            "arm": "C_ID_hope",
+            "totalTasks": 18,
+            "fullTaskPassCount": 14,
+            "fullTaskPassRate": 0.7777777777777778,
+            "meanFactPassRate": 0.9647486772486773,
+            "committedCount": 18,
+            "committedRate": 1,
+            "p01RetrievedCount": 1,
+            "p02RetrievedCount": 18,
+            "forensicDefectCounts": {
+              "syntaxError": 0,
+              "missingTenantIsolation": 0,
+              "missingForbidSuspended": 0,
+              "paraphrasedMfaClaim": 0,
+              "missingMfaRequirement": 0,
+              "missingSeparationOfDuties": 0,
+              "missingLockedResourceGuard": 1,
+              "missingSessionFreshnessGuard": 1,
+              "missingNetworkRiskGuard": 3,
+              "missingServiceAccountForbid": 0
+            }
+          }
+        },
+        "contrastsPp": {
+          "sufficiency_C_ID_auto_minus_C_task": 72.22,
+          "sufficiency_C_ID_auto_minus_C_fact": 34.54,
+          "necessity_C_ID_masked_minus_C_ID_auto_task": -72.22,
+          "necessity_C_ID_masked_minus_C_ID_auto_fact": -30.89,
+          "masked_minus_C_task": 0,
+          "masked_minus_C_fact": 3.66,
+          "masked_minus_A_task": 0,
+          "masked_minus_A_fact": 33.56
+        }
+      }
+    ]
+  },
   "tsApi": {
     "crossModel": {
       "schemaVersion": "4.0.0-ts-api-cross-model-summary",

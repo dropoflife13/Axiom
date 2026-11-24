@@ -38,6 +38,7 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
   const v3PooledPath = path.join(rootDir, 'out', 'v3', 'pooled-v3-summary.json');
   const vaultCPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-c.json');
   const vaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'policy-abac-cid-auto.json');
+  const maskedSummaryPath = path.join(rootDir, 'out', 'v4', 'policy-abac-cid-masked-summary.json');
   const tsApiCrossModelPath = path.join(rootDir, 'out', 'v4', 'ts-api-cross-model-summary.json');
   const tsApiReceiptPaths = [
     path.join(rootDir, 'out', 'v4', 'ts-api-hope-receipt.json'),
@@ -55,6 +56,9 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
   const tsApiVaultCidPath = path.join(rootDir, '.axiom-state', 'v4', 'ts-api-cid-auto.json');
 
   const crossModel = readJson<Record<string, unknown>>(crossModelPath);
+  const maskedSummary = fs.existsSync(maskedSummaryPath)
+    ? readJson<Record<string, unknown>>(maskedSummaryPath)
+    : null;
   const receipts = receiptPaths.map((p) => ({
     file: path.relative(rootDir, p).replace(/\\/g, '/'),
     ...readJson<Record<string, unknown>>(p),
@@ -279,6 +283,7 @@ export function buildV4DashboardSnapshot(rootDir = process.cwd()) {
     },
     crossModel,
     receipts,
+    ...(maskedSummary ? { maskedSummary } : {}),
     tsApi: {
       crossModel: tsApiCrossModel,
       receipts: tsApiReceipts,

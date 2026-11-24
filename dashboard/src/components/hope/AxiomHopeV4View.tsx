@@ -1270,6 +1270,196 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
         </section>
 
         {/* ================================================================
+            SECTION 3.5: Bidirectional Causal Identification (Policy ABAC only)
+           ================================================================ */}
+        {cartridgeKey === 'policyAbac' && payload.maskedSummary && (
+          <section
+            aria-labelledby="hope-masked-causal-heading"
+            className="rounded-lg border border-zinc-800 bg-[#101116] overflow-hidden"
+          >
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-zinc-800 px-5 py-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2
+                    id="hope-masked-causal-heading"
+                    className="text-sm font-semibold tracking-tight text-zinc-100"
+                  >
+                    Bidirectional Causal Identification (C_ID_masked vs. C_ID_auto vs. C)
+                  </h2>
+                  <span className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">
+                    54 LIVE TRIALS · K=4
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Isolates necessity from sufficiency by stripping 100% of operational tokens (0/78 retained; 0.0%) while controlling rule length and prose structure (1,993 chars; 0.89x vs. C_ID_auto).
+                </p>
+              </div>
+              <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400">
+                <span className="rounded border border-zinc-800 bg-zinc-950 px-2 py-0.5">
+                  Vault: policy-abac-cid-masked.json
+                </span>
+              </div>
+            </div>
+
+            {/* 3 Metric Summary Cards */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 border-b border-zinc-800 p-4">
+              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
+                  Sufficiency (C_ID_auto − C)
+                </p>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-xl font-semibold text-emerald-400 tabular-nums">
+                    +{payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_task.toFixed(1)} pp
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                    +{payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_fact.toFixed(1)} pp facts
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Restoring exact lexical identifiers to distilled rules restores production compliance.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
+                  Necessity (C_ID_masked − C_ID_auto)
+                </p>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-xl font-semibold text-rose-400 tabular-nums">
+                    {payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task.toFixed(1)} pp
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                    {payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact.toFixed(1)} pp facts
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Stripping exact operational tokens from canonical rules causes immediate task collapse.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
+                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
+                  Structure Control (C_ID_masked − C)
+                </p>
+                <div className="mt-1.5 flex items-baseline justify-between gap-2">
+                  <span className="font-mono text-xl font-semibold text-zinc-300 tabular-nums">
+                    {payload.maskedSummary.pooled.contrastsPp.masked_minus_C_task.toFixed(1)} pp
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
+                    +{payload.maskedSummary.pooled.contrastsPp.masked_minus_C_fact.toFixed(1)} pp facts
+                  </span>
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Full sentence structure and length alone provide null gain without exact lexical tokens.
+                </p>
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-separate border-spacing-0 text-left text-xs">
+                <thead className="bg-[#0d0e13] font-mono text-[10.5px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800">
+                  <tr>
+                    <th scope="col" className="px-4 py-2.5 font-medium">Model</th>
+                    <th scope="col" className="px-3 py-2.5 font-medium">Provider</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">A</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium">C</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400/90">C_ID_masked</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400/90">C_ID_auto</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-emerald-400">Sufficiency</th>
+                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400">Necessity</th>
+                    <th scope="col" className="px-4 py-2.5 text-right font-medium text-zinc-400">Structure Control</th>
+                  </tr>
+                </thead>
+                <tbody className="font-mono tabular-nums [&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
+                  {payload.maskedSummary.models.map((m) => {
+                    const taskMode = metric === 'fullTask';
+                    const aVal = taskMode ? m.baselineArms.A.fullTaskPassRate : m.baselineArms.A.meanFactPassRate;
+                    const cVal = taskMode ? m.baselineArms.C.fullTaskPassRate : m.baselineArms.C.meanFactPassRate;
+                    const maskedVal = taskMode ? m.maskedStats.fullTaskPassRate : m.maskedStats.meanFactPassRate;
+                    const autoVal = taskMode ? m.baselineArms.C_ID_auto.fullTaskPassRate : m.baselineArms.C_ID_auto.meanFactPassRate;
+                    const suff = taskMode ? m.contrastsPp.sufficiency_C_ID_auto_minus_C_task : m.contrastsPp.sufficiency_C_ID_auto_minus_C_fact;
+                    const nec = taskMode ? m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task : m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact;
+                    const ctrl = taskMode ? m.contrastsPp.masked_minus_C_task : m.contrastsPp.masked_minus_C_fact;
+
+                    return (
+                      <tr key={m.modelId} className="hover:bg-zinc-900/50 transition-colors">
+                        <th scope="row" className="px-4 py-2.5 font-medium text-zinc-100 whitespace-nowrap">
+                          {m.modelId}
+                        </th>
+                        <td className="px-3 py-2.5 font-sans text-zinc-400 whitespace-nowrap">
+                          {m.provider}
+                        </td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(aVal)}</td>
+                        <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(cVal)}</td>
+                        <td className="px-3 py-2.5 text-right font-semibold text-rose-400/90">{formatPct1(maskedVal)}</td>
+                        <td className="px-3 py-2.5 text-right text-sky-300">{formatPct1(autoVal)}</td>
+                        <td className="px-3 py-2.5 text-right text-emerald-400">{formatSignedPp(suff)}</td>
+                        <td className="px-3 py-2.5 text-right text-rose-400">{formatSignedPp(nec)}</td>
+                        <td className="px-4 py-2.5 text-right text-zinc-300">{formatSignedPp(ctrl)}</td>
+                      </tr>
+                    );
+                  })}
+                  {/* Pooled Row */}
+                  <tr className="bg-[#0d0e13] font-semibold">
+                    <th scope="row" className="px-4 py-2.5 font-sans text-zinc-50 whitespace-nowrap">
+                      Pooled Mean (n = {payload.maskedSummary.pooled.modelCount})
+                    </th>
+                    <td className="px-3 py-2.5 font-sans font-normal text-zinc-400 whitespace-nowrap">
+                      Multi-Provider
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-zinc-300">
+                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.A.fullTaskPassRate : payload.maskedSummary.pooled.arms.A.meanFactPassRate)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-zinc-300">
+                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C.fullTaskPassRate : payload.maskedSummary.pooled.arms.C.meanFactPassRate)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-rose-400">
+                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C_ID_masked.fullTaskPassRate : payload.maskedSummary.pooled.arms.C_ID_masked.meanFactPassRate)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-sky-300">
+                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C_ID_auto.fullTaskPassRate : payload.maskedSummary.pooled.arms.C_ID_auto.meanFactPassRate)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-emerald-400">
+                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_task : payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_fact)}
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-rose-400">
+                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task : payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact)}
+                    </td>
+                    <td className="px-4 py-2.5 text-right text-zinc-300">
+                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.masked_minus_C_task : payload.maskedSummary.pooled.contrastsPp.masked_minus_C_fact)}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* Token & Length Control Audit Footer */}
+            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0d0e13] px-5 py-3 text-xs text-zinc-400 border-t border-zinc-800">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px]">
+                <span>
+                  Tokens Retained:{' '}
+                  <strong className="text-rose-400">
+                    {payload.maskedSummary.vaultAudit.lexicalLockAudit.totalRetainedTokens}/
+                    {payload.maskedSummary.vaultAudit.lexicalLockAudit.totalRequiredTokens} (0.0%)
+                  </strong>
+                </span>
+                <span>
+                  Length Ratio:{' '}
+                  <strong className="text-zinc-200">
+                    {payload.maskedSummary.vaultAudit.lengthAudit.charRatioVsCidAuto.toFixed(2)}x chars
+                  </strong>{' '}
+                  / {payload.maskedSummary.vaultAudit.lengthAudit.wordRatioVsCidAuto.toFixed(2)}x words vs. C_ID_auto
+                </span>
+                <span className="text-zinc-500">
+                  Forensic: missingForbidSuspended surges from 1/18 (C_ID_auto) to 6/18 (Gemini), 16/18 (Gemma), 18/18 (Qwen)
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ================================================================
             SECTION 4: Immutable Slow Clock Governance Ledger
            ================================================================ */}
         <section
