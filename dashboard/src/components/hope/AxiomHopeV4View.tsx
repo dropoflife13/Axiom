@@ -5,14 +5,8 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  Clock,
-  Code2,
   Copy,
-  Database,
-  FileCode2,
   GitCommitHorizontal,
-  Layers,
-  Lock,
   ShieldAlert,
   ShieldCheck,
   XCircle,
@@ -38,7 +32,10 @@ import {
   type V4ModelSummaryEntry,
   type V4PilotArm,
 } from '@/lib/v4-hope';
+import { ThreeClockCore3D } from './ThreeClockCore3D';
+import { HopeLiveCompactRunMonitor } from './HopeLiveCompactRunMonitor';
 
+type HopeSubTab = 'overview' | 'live' | 'proof';
 type CartridgeKey = 'policyAbac' | 'tsApiSecurity' | 'postgresV3';
 type ComparisonMetric = 'fullTask' | 'meanFact';
 
@@ -47,9 +44,9 @@ const ARM_ORDER: readonly V4PilotArm[] = ['A', 'C', 'C_ID_prereq', 'C_ID_auto', 
 const ARM_META: Record<V4PilotArm, { label: string; shortLabel: string; color: string }> = {
   A: { label: 'A (Zero-Shot)', shortLabel: 'A', color: '#52525b' },
   C: { label: 'C (Unconstrained)', shortLabel: 'C', color: '#71717a' },
-  C_ID_prereq: { label: 'C_ID_prereq (Static)', shortLabel: 'C_ID_prereq', color: '#d97706' },
-  C_ID_auto: { label: 'C_ID_auto (Lexical Lock)', shortLabel: 'C_ID_auto', color: '#38bdf8' },
-  C_ID_hope: { label: 'C_ID_hope (3-Clock HOPE)', shortLabel: 'C_ID_hope', color: '#10b981' },
+  C_ID_prereq: { label: 'C_ID_prereq (Static)', shortLabel: 'C_ID_prereq', color: '#b45309' },
+  C_ID_auto: { label: 'C_ID_auto (Lexical Lock)', shortLabel: 'C_ID_auto', color: '#0284c7' },
+  C_ID_hope: { label: 'C_ID_hope (3-Clock HOPE)', shortLabel: 'C_ID_hope', color: '#059669' },
 };
 
 const MODEL_SHORT_NAMES: Record<string, string> = {
@@ -90,11 +87,6 @@ interface SegmentedTabOption<T extends string> {
   readonly sublabel?: string;
 }
 
-/**
- * Accessible segmented tablist implementing roving tabindex + arrow-key navigation,
- * ARIA-selected styling (WCAG 1.4.1 non-color border indicator), and nearest-container
- * scroll-into-view on selection changes.
- */
 function AccessibleSegmentedTabs<T extends string>({
   ariaLabel,
   options,
@@ -143,7 +135,7 @@ function AccessibleSegmentedTabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
       onKeyDown={handleKeyDown}
-      className="inline-flex items-center overflow-x-auto max-w-full rounded-md border border-zinc-800 bg-[#0b0c10] p-0.5"
+      className="inline-flex items-center overflow-x-auto max-w-full rounded-[2px] border border-zinc-800/80 bg-[#08090c] divide-x divide-zinc-800/80"
     >
       {options.map((opt, idx) => {
         const isSelected = opt.value === value;
@@ -158,7 +150,7 @@ function AccessibleSegmentedTabs<T extends string>({
             aria-selected={isSelected}
             tabIndex={isSelected ? 0 : -1}
             onClick={() => onChange(opt.value)}
-            className="relative flex-none px-3 py-1.5 rounded-[4px] text-xs font-medium tracking-tight transition-colors whitespace-nowrap cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-400 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/70 aria-selected:bg-zinc-800/90 aria-selected:text-zinc-50 aria-selected:after:content-[''] aria-selected:after:absolute aria-selected:after:inset-x-2 aria-selected:after:bottom-0 aria-selected:after:border-b-2 aria-selected:after:border-emerald-400"
+            className="relative flex-none px-3 py-1.5 text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer focus-visible:outline focus-visible:outline-1 focus-visible:outline-zinc-400 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/70 aria-selected:bg-zinc-900 aria-selected:text-zinc-50 aria-selected:after:content-[''] aria-selected:after:absolute aria-selected:after:inset-x-0 aria-selected:after:bottom-0 aria-selected:after:border-b-2 aria-selected:after:border-emerald-500"
           >
             <span>{opt.label}</span>
             {opt.sublabel && (
@@ -252,17 +244,17 @@ function GatePill({
 }) {
   if (!executed) {
     return (
-      <span className="inline-flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500">
+      <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800/80 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500">
         {label}: SKIP
       </span>
     );
   }
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] ${
+      className={`inline-flex items-center gap-1 rounded-[2px] border px-1.5 py-0.5 font-mono text-[10px] ${
         passed
-          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-          : 'border-rose-500/30 bg-rose-500/10 text-rose-400'
+          ? 'border-emerald-700/60 bg-emerald-950/30 text-emerald-400'
+          : 'border-rose-700/60 bg-rose-950/30 text-rose-400'
       }`}
     >
       {passed ? (
@@ -278,7 +270,7 @@ function GatePill({
 function DecisionBadge({ decision }: { decision: V4CandidateDecision }) {
   if (decision.status === 'approved') {
     return (
-      <span className="inline-flex items-center gap-1 rounded border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 font-mono text-[10.5px] font-medium text-emerald-400">
+      <span className="inline-flex items-center gap-1 rounded-[2px] border border-emerald-700/60 bg-emerald-950/30 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-400">
         <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
         APPROVED
       </span>
@@ -287,10 +279,10 @@ function DecisionBadge({ decision }: { decision: V4CandidateDecision }) {
   const hasRegressions = decision.gateAudit.canaryReplay.canaryRegressions > 0;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 font-mono text-[10.5px] font-medium ${
+      className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 font-mono text-[10px] font-medium ${
         hasRegressions
-          ? 'border-rose-500/35 bg-rose-500/10 text-rose-400'
-          : 'border-amber-500/35 bg-amber-500/10 text-amber-400'
+          ? 'border-rose-700/60 bg-rose-950/30 text-rose-400'
+          : 'border-amber-700/60 bg-amber-950/30 text-amber-400'
       }`}
     >
       <ShieldAlert className="h-3 w-3" aria-hidden="true" />
@@ -314,9 +306,9 @@ function CopyHashButton({ value, label }: { value: string; label: string }) {
       onClick={handleCopy}
       title={`Copy full ${label} SHA-256`}
       aria-label={`Copy full ${label} SHA-256`}
-      className="inline-flex items-center gap-1 rounded border border-zinc-800 bg-zinc-900/80 px-1.5 py-0.5 font-mono text-[11px] text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800/80 transition-colors cursor-pointer"
+      className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800/80 bg-[#0b0c10] px-1.5 py-0.5 font-mono text-[10.5px] text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900 transition-colors cursor-pointer tabular-nums"
     >
-      <span>{shortSha(value, 12, 6)}</span>
+      <span>{value ? shortSha(value, 10, 6) : '—'}</span>
       {copied ? (
         <Check className="h-3 w-3 text-emerald-400" aria-hidden="true" />
       ) : (
@@ -328,14 +320,25 @@ function CopyHashButton({ value, label }: { value: string; label: string }) {
 
 export interface AxiomHopeV4ViewProps {
   onOpenV3Research?: () => void;
+  /** Optional GLB URL forwarded to the center ThreeClockCore3D viewport. */
+  glbUrl?: string;
 }
 
-export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
+export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewProps) {
   const [payload, setPayload] = useState<V4HopeDashboardPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<HopeSubTab>('overview');
   const [cartridgeKey, setCartridgeKey] = useState<CartridgeKey>('policyAbac');
   const [metric, setMetric] = useState<ComparisonMetric>('fullTask');
   const [selectedModelId, setSelectedModelId] = useState<string>('gemini-3.1-flash-lite');
+
+  const [liveClockSignal, setLiveClockSignal] = useState<{
+    progress: number | null;
+    quarantineActive: boolean;
+  }>({
+    progress: null,
+    quarantineActive: false,
+  });
 
   const comparisonCaptionId = useId();
   const ledgerCaptionId = useId();
@@ -356,6 +359,36 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
         setError(err instanceof Error ? err.message : String(err));
       });
     return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/v4-hope/live-compact', { cache: 'no-store' });
+        if (!res.ok || !active) return;
+        const json = await res.json();
+        const t = json?.totals;
+        const runs = Array.isArray(json?.runs) ? json.runs : [];
+        const hasReplay = runs.some((r: any) => r?.status === 'slow_clock_replay');
+        if (t && active) {
+          const prog =
+            t.totalTargetTasks > 0 ? t.totalCompletedTasks / t.totalTargetTasks : null;
+          setLiveClockSignal({
+            progress: prog,
+            quarantineActive: hasReplay || Number(t.activeRuns ?? 0) > 0,
+          });
+        }
+      } catch {
+        // ignore when offline / static snapshot
+      }
+    };
+    void poll();
+    const timer = window.setInterval(() => void poll(), 5000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   const abacPooled = useMemo(
@@ -437,53 +470,45 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
   );
 
   const receiptModelTabs = useMemo(() => {
-    return activeReceiptsList.map((r) => {
-      const approved = r.candidateDecisions.filter((d) => d.status === 'approved').length;
-      const rejected = r.candidateDecisions.filter((d) => d.status === 'rejected').length;
-      return {
-        value: r.model,
-        label: MODEL_SHORT_NAMES[r.model] ?? r.model,
-        sublabel: `${approved}✓ / ${rejected}✕`,
-      };
-    });
+    return activeReceiptsList.map((r) => ({
+      value: r.model,
+      label: MODEL_SHORT_NAMES[r.model] ?? r.model,
+    }));
   }, [activeReceiptsList]);
 
-  const renderTooltip = useCallback(
-    ({ active, payload: items, label }: any) => {
-      if (!active || !items || items.length === 0) return null;
-      return (
-        <div className="rounded-md border border-zinc-700 bg-[#0d0e13] px-3 py-2 text-xs shadow-lg">
-          <p className="mb-1.5 font-medium text-zinc-100">{label}</p>
-          <div className="flex flex-col gap-1">
-            {items.map((entry: any) => (
-              <div key={entry.dataKey} className="flex items-center justify-between gap-4">
-                <span className="flex items-center gap-1.5 text-zinc-400 font-mono text-[11px]">
-                  <span
-                    className="h-2 w-2 rounded-[2px]"
-                    style={{ backgroundColor: entry.color }}
-                  />
-                  {entry.dataKey}
-                </span>
-                <span className="font-mono font-medium text-zinc-100 tabular-nums">
-                  {Number(entry.value).toFixed(1)}%
-                </span>
-              </div>
-            ))}
-          </div>
+  const renderTooltip = useCallback(({ active, payload: items, label }: any) => {
+    if (!active || !items || items.length === 0) return null;
+    return (
+      <div className="rounded-[2px] border border-zinc-700 bg-[#0b0c10] px-3 py-2 text-xs">
+        <p className="mb-1.5 font-mono text-[11px] font-medium text-zinc-100">{label}</p>
+        <div className="flex flex-col gap-1">
+          {items.map((entry: any) => (
+            <div key={entry.dataKey} className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-1.5 text-zinc-400 font-mono text-[10.5px]">
+                <span
+                  className="h-2 w-2 rounded-[1px]"
+                  style={{ backgroundColor: entry.color }}
+                />
+                {entry.dataKey}
+              </span>
+              <span className="font-mono font-medium text-zinc-100 tabular-nums">
+                {Number(entry.value).toFixed(1)}%
+              </span>
+            </div>
+          ))}
         </div>
-      );
-    },
-    []
-  );
+      </div>
+    );
+  }, []);
 
   if (error) {
     return (
-      <div className="w-full min-h-[60vh] bg-[#09090b] text-zinc-100 px-6 py-12">
-        <div className="mx-auto max-w-6xl rounded-lg border border-rose-500/30 bg-rose-500/5 p-6">
+      <div className="w-full min-h-[60vh] bg-[#08090c] text-zinc-100 p-6">
+        <div className="w-full rounded-[2px] border border-rose-800/70 bg-[#0f1014] p-5">
           <p className="font-mono text-xs uppercase tracking-wider text-rose-400">
             Axiom-HOPE v4 Artifact Load Error
           </p>
-          <p className="mt-2 text-sm text-zinc-300">{error}</p>
+          <p className="mt-2 font-mono text-xs text-zinc-300">{error}</p>
         </div>
       </div>
     );
@@ -491,18 +516,13 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
 
   if (!payload || !abacPooled || !tsApiPooled || !activeCrossModel || !activePooled) {
     return (
-      <div className="w-full min-h-[60vh] bg-[#09090b] text-zinc-100 px-6 py-10">
-        <div className="mx-auto max-w-7xl space-y-6">
-          <div className="h-12 w-72 rounded-md border border-zinc-800 bg-zinc-900/50 animate-pulse" />
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-28 rounded-lg border border-zinc-800 bg-zinc-900/40 animate-pulse"
-              />
-            ))}
-          </div>
-          <div className="h-72 rounded-lg border border-zinc-800 bg-zinc-900/40 animate-pulse" />
+      <div className="w-full min-h-[70vh] bg-[#08090c] text-zinc-100 divide-y divide-zinc-800/80">
+        <div className="h-12 w-full bg-[#0b0c10] animate-pulse" />
+        <div className="h-[60vh] w-full bg-[#08090c] animate-pulse" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-zinc-800/80">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-20 bg-[#0b0c10] animate-pulse" />
+          ))}
         </div>
       </div>
     );
@@ -513,1169 +533,658 @@ export function AxiomHopeV4View({ onOpenV3Research }: AxiomHopeV4ViewProps) {
   const pg = payload.cartridges.postgresV3;
 
   const isTsApi = cartridgeKey === 'tsApiSecurity';
-  const pipelineTraceLabel = isTsApi
-    ? `${tsApiCartridge.taskCount} traces / model`
-    : `${abac.taskCount} traces / model`;
+  const isPostgres = cartridgeKey === 'postgresV3';
   const pipelineAuditStats = isTsApi ? tsApiAudits : abacAudits;
+
+  const activeVaultLock = isPostgres
+    ? {
+        retained: pg.lexicalRecallMatched,
+        total: pg.lexicalRecallTotal,
+        rate: pg.lexicalRecallTotal > 0 ? pg.lexicalRecallMatched / pg.lexicalRecallTotal : 0,
+      }
+    : isTsApi
+      ? tsApiCartridge.vaultAudits.cidAuto
+      : abac.vaultAudits.cidAuto;
+
+  const slowClockLocked =
+    pipelineAuditStats.promotedRegressions === 0 &&
+    activeVaultLock.total > 0 &&
+    activeVaultLock.retained === activeVaultLock.total;
 
   const promotedEdgeSummary = activeReceipt
     ? Object.entries(activeReceipt.promotedPrerequisiteGraph)
         .map(([from, targets]) => `${from} → [${targets.join(', ')}]`)
-        .join(' · ') || 'None (static/regressing edges rejected)'
-    : 'None';
+        .join(' · ') || 'None'
+    : '—';
+
+  // Overview 4-Number Readouts
+  const overviewFullTask = isPostgres
+    ? `${pg.f05V4DisplacedBoundTasks}/${pg.f05BaselineDisplacedBoundTasks} F-05`
+    : formatPct1(activePooled.fullTask.C_ID_hope);
+
+  const overviewLift = isPostgres
+    ? `+${pg.v3PooledHeadline.cidMinusC_remlPp.toFixed(1)} pp`
+    : formatSignedPp(activePooled.contrasts.hopeMinusC_task);
+
+  const overviewLexicalLock =
+    activeVaultLock.total > 0
+      ? `${formatPct1(activeVaultLock.rate)} · ${activeVaultLock.retained}/${activeVaultLock.total}`
+      : '—';
+
+  const overviewRegressions = isPostgres ? '0' : String(pipelineAuditStats.promotedRegressions);
 
   return (
-    <div className="w-full flex-1 bg-[#09090b] text-zinc-100">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* ================================================================
-            SECTION 1: Domain Cartridge Switcher & Overview Bar
-           ================================================================ */}
-        <section aria-labelledby="hope-v4-heading" className="space-y-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between border-b border-zinc-800/90 pb-5">
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded border border-zinc-800 bg-zinc-900 px-2 py-0.5 font-mono text-[10.5px] uppercase tracking-wider text-zinc-300">
-                  <ShieldCheck className="h-3 w-3 text-emerald-400" aria-hidden="true" />
-                  Axiom-HOPE v4 Governance
-                </span>
-                <span className="inline-flex items-center rounded border border-zinc-800 bg-zinc-950 px-2 py-0.5 font-mono text-[10px] text-zinc-400">
-                  {payload.source === 'live-artifacts'
-                    ? 'Source: out/v4/*.json (live repo artifacts)'
-                    : 'Source: v4-hope-snapshot.json'}
-                </span>
-              </div>
-              <h1
-                id="hope-v4-heading"
-                className="text-2xl font-semibold tracking-tight text-zinc-50"
-              >
-                Symbolic Memory Governance &amp; Cross-Domain Replication
-              </h1>
-              <p className="max-w-3xl text-sm text-zinc-400">
-                Zero-LLM 3-clock governance loop (Fast Clock → Quarantine Vault → Slow Clock)
-                combining automated lexical locking with zero-regression canary replay across
-                pluggable <code className="font-mono text-xs text-zinc-300">DomainCartridge</code>{' '}
-                oracles.
-              </p>
-            </div>
-
-            <div className="flex flex-col items-start lg:items-end gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                Active Domain Cartridge
-              </span>
-              <AccessibleSegmentedTabs<CartridgeKey>
-                ariaLabel="Domain Cartridge Selector"
-                value={cartridgeKey}
-                onChange={setCartridgeKey}
-                options={[
-                  {
-                    value: 'policyAbac',
-                    label: 'Policy-as-Code ABAC (v4)',
-                    sublabel: `${abac.taskCount}T · ${abac.ruleCount}R`,
-                  },
-                  {
-                    value: 'tsApiSecurity',
-                    label: 'TypeScript API Security (v4)',
-                    sublabel: `${tsApiCartridge.taskCount}T · ${tsApiCartridge.ruleCount}R`,
-                  },
-                  {
-                    value: 'postgresV3',
-                    label: 'PostgreSQL 16 DDL (v3.0-final Adapter)',
-                    sublabel: `${pg.taskCount}T · ${pg.ruleCount}R`,
-                  },
-                ]}
-              />
-            </div>
+    <div className="w-full flex-1 bg-[#08090c] text-zinc-100 flex flex-col">
+      {/* ================================================================
+          SINGLE SLIM TOP BAR: Brand + 3 Sub-Tabs | Cartridge Switcher
+         ================================================================ */}
+      <header className="w-full border-b border-zinc-800/80 bg-[#0b0c10] px-5 py-2.5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="inline-flex items-center gap-2 font-mono text-xs font-semibold tracking-wider text-zinc-100 uppercase">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+            <span>AXIOM HOPE v4</span>
           </div>
 
-          {/* KPI Strip */}
-          {cartridgeKey === 'policyAbac' ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Pooled C_ID_hope Full-Task Pass
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    {formatPct1(abacPooled.fullTask.C_ID_hope)}
-                  </span>
-                  <span className="font-mono text-xs text-emerald-400 tabular-nums">
-                    {formatPct1(abacPooled.meanFact.C_ID_hope)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  {abac.totalLiveTrials} live trials · {abac.modelCount} models · K={abac.topK}
-                </p>
-              </div>
+          <AccessibleSegmentedTabs<HopeSubTab>
+            ariaLabel="HOPE v4 View Tabs"
+            value={activeTab}
+            onChange={setActiveTab}
+            options={[
+              { value: 'overview', label: 'Overview' },
+              { value: 'live', label: 'Live Run' },
+              { value: 'proof', label: 'Proof & Ledger' },
+            ]}
+          />
+        </div>
 
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Lift vs. Unconstrained C
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {formatSignedPp(abacPooled.contrasts.hopeMinusC_task)}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    {formatSignedPp(abacPooled.contrasts.hopeMinusC_fact)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  C_ID_auto lock: {abac.vaultAudits.cidAuto.retained}/{abac.vaultAudits.cidAuto.total} tokens vs. C ({abac.vaultAudits.c.retained}/{abac.vaultAudits.c.total})
-                </p>
-              </div>
+        {activeTab !== 'live' && (
+          <AccessibleSegmentedTabs<CartridgeKey>
+            ariaLabel="Domain Cartridge Selector"
+            value={cartridgeKey}
+            onChange={setCartridgeKey}
+            options={[
+              { value: 'policyAbac', label: 'Policy ABAC' },
+              { value: 'tsApiSecurity', label: 'TS-API Sec' },
+              { value: 'postgresV3', label: 'PG16 DDL' },
+            ]}
+          />
+        )}
+      </header>
 
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Lift vs. Naive Static C_ID_prereq
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {formatSignedPp(abacPooled.contrasts.hopeMinusPrereq_task)}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    {formatSignedPp(abacPooled.contrasts.hopeMinusPrereq_fact)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Static <code className="font-mono text-[11px] text-zinc-400">Q-STATIC-P-01</code> rejected 3/3 models
-                </p>
-              </div>
+      {/* ================================================================
+          TAB 1 — OVERVIEW (Spacious Unobstructed 3D Stage + 4-Number Strip)
+         ================================================================ */}
+      {activeTab === 'overview' && (
+        <div className="w-full flex-1 flex flex-col">
+          {/* Unobstructed 3D Viewport — zero floating text, zero SVG lines, zero badges */}
+          <ThreeClockCore3D
+            glbUrl={glbUrl}
+            fastClockProgress={liveClockSignal.progress}
+            quarantineActive={liveClockSignal.quarantineActive}
+            slowClockLocked={slowClockLocked}
+          />
 
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Promoted Canary Regressions
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    {abacAudits.promotedRegressions}
-                  </span>
-                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400">
-                    STRICT 0-REG
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  {abacAudits.approved} approved / {abacAudits.rejected} rejected across {abacAudits.total} audits
-                </p>
-              </div>
-            </div>
-          ) : cartridgeKey === 'tsApiSecurity' ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Pooled C_ID_hope Full-Task Pass
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    {formatPct1(tsApiPooled.fullTask.C_ID_hope)}
-                  </span>
-                  <span className="font-mono text-xs text-emerald-400 tabular-nums">
-                    {formatPct1(tsApiPooled.meanFact.C_ID_hope)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  {tsApiCartridge.totalLiveTrials} live trials · {tsApiCartridge.modelCount} models · K={tsApiCartridge.topK}
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Lift vs. Unconstrained C
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {formatSignedPp(tsApiPooled.contrasts.hopeMinusC_task)}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    {formatSignedPp(tsApiPooled.contrasts.hopeMinusC_fact)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  C_ID_auto lock: {tsApiCartridge.vaultAudits.cidAuto.retained}/{tsApiCartridge.vaultAudits.cidAuto.total} tokens vs. C ({tsApiCartridge.vaultAudits.c.retained}/{tsApiCartridge.vaultAudits.c.total})
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Lift vs. Naive Static C_ID_prereq
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {formatSignedPp(tsApiPooled.contrasts.hopeMinusPrereq_task)}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    {formatSignedPp(tsApiPooled.contrasts.hopeMinusPrereq_fact)} facts
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Static <code className="font-mono text-[11px] text-zinc-400">Q-STATIC-TS-PREREQ</code> rejected 3/3 models
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Promoted Canary Regressions
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    {tsApiAudits.promotedRegressions}
-                  </span>
-                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400">
-                    STRICT 0-REG
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  {tsApiAudits.approved} approved / {tsApiAudits.rejected} rejected across {tsApiAudits.total} audits
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Automated Lexical Recall
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {pg.lexicalRecallMatched}/{pg.lexicalRecallTotal}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-300 tabular-nums">100.0%</span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Zero hand-curated tokens across {pg.ruleCount} active v3 rules
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  F-05 Bound Displacements
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-emerald-400 tabular-nums">
-                    {pg.f05V4DisplacedBoundTasks} / {pg.f05BaselineDisplacedBoundTasks}
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">K={pg.topK} exact</span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  Resolves {pg.f05V3OmissionsAcrossPool} F-05 omissions from v3.0-final pool
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  v3.0-final Pooled C_ID − C
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    +{pg.v3PooledHeadline.cidMinusC_remlPp.toFixed(2)} pp
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    DiD +{pg.v3PooledHeadline.did_remlPp.toFixed(2)}
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500 tabular-nums">
-                  {pg.modelCount} models · {pg.totalV3Trials.toLocaleString()} trials · 95% PI [+{pg.v3PooledHeadline.cidMinusC_piLowPp}, +{pg.v3PooledHeadline.cidMinusC_piHighPp}]
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800 bg-[#101116] p-4">
-                <p className="font-mono text-[10.5px] uppercase tracking-wider text-zinc-400">
-                  Gate 1 &amp; 2 False Positives
-                </p>
-                <div className="mt-2 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-2xl font-semibold text-zinc-50 tabular-nums">
-                    0 / {pg.ruleCount}
-                  </span>
-                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400">
-                    VERIFIED
-                  </span>
-                </div>
-                <p className="mt-1.5 text-xs text-zinc-500">
-                  Read-only adapter preserves frozen v3 vault SHA-256
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Cartridge Specification Metadata Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800/90 bg-[#0d0e13] px-4 py-2.5 text-xs text-zinc-400">
-            {cartridgeKey === 'policyAbac' ? (
-              <>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-zinc-200 font-medium">
-                    <FileCode2 className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-                    <code className="font-mono text-xs">{abac.id}</code>
-                  </span>
-                  <span className="tabular-nums">
-                    Domains: banking ({abac.domainBreakdown.banking ?? 0}) · healthcare (
-                    {abac.domainBreakdown.healthcare ?? 0}) · admin (
-                    {abac.domainBreakdown.admin ?? 0})
-                  </span>
-                  <span className="tabular-nums">
-                    Vault Token Lock:{' '}
-                    <strong className="font-mono font-medium text-emerald-400">
-                      {abac.vaultAudits.cidAuto.retained}/{abac.vaultAudits.cidAuto.total} (100.0%)
-                    </strong>{' '}
-                    vs. C{' '}
-                    <strong className="font-mono font-medium text-amber-400">
-                      {abac.vaultAudits.c.retained}/{abac.vaultAudits.c.total} (
-                      {formatPct1(abac.vaultAudits.c.rate)})
-                    </strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
-                  <span>tasks.json:</span>
-                  <CopyHashButton value={abac.tasksSha256} label="policy-abac-tasks.json" />
-                </div>
-              </>
-            ) : cartridgeKey === 'tsApiSecurity' ? (
-              <>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-zinc-200 font-medium">
-                    <Code2 className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-                    <code className="font-mono text-xs">{tsApiCartridge.id}</code>
-                  </span>
-                  <span className="tabular-nums">
-                    Domains: payouts ({tsApiCartridge.domainBreakdown.payouts ?? 0}) · admin (
-                    {tsApiCartridge.domainBreakdown.admin ?? 0}) · profiles (
-                    {tsApiCartridge.domainBreakdown.profiles ?? 0})
-                  </span>
-                  <span className="tabular-nums">
-                    Vault Token Lock:{' '}
-                    <strong className="font-mono font-medium text-emerald-400">
-                      {tsApiCartridge.vaultAudits.cidAuto.retained}/{tsApiCartridge.vaultAudits.cidAuto.total} (100.0%)
-                    </strong>{' '}
-                    vs. C{' '}
-                    <strong className="font-mono font-medium text-amber-400">
-                      {tsApiCartridge.vaultAudits.c.retained}/{tsApiCartridge.vaultAudits.c.total} (
-                      {formatPct1(tsApiCartridge.vaultAudits.c.rate)})
-                    </strong>
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
-                  <span>tasks.json:</span>
-                  <CopyHashButton value={tsApiCartridge.tasksSha256} label="ts-api-security-tasks.json" />
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-                  <span className="inline-flex items-center gap-1.5 text-zinc-200 font-medium">
-                    <Database className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-                    <code className="font-mono text-xs">{pg.id}</code>
-                  </span>
-                  <span className="tabular-nums">
-                    {pg.taskCount} held-out tasks across {Object.keys(pg.cohortBreakdown).length} cohorts ·{' '}
-                    {pg.defaultPrerequisiteEdgeCount} DAG edges
-                  </span>
-                  {onOpenV3Research && (
-                    <button
-                      type="button"
-                      onClick={onOpenV3Research}
-                      className="inline-flex items-center gap-1 font-mono text-[11px] text-zinc-300 underline decoration-zinc-600 underline-offset-4 hover:text-zinc-100 cursor-pointer"
-                    >
-                      Open frozen v3.0-final 9-model benchmark
-                      <ArrowRight className="h-3 w-3" aria-hidden="true" />
-                    </button>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-500">
-                  <span>facts.json:</span>
-                  <CopyHashButton value={pg.factsSha256} label="v3 facts.json" />
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* ================================================================
-            SECTION 2: 3-Clock Symbolic Governance Pipeline
-           ================================================================ */}
-        <section aria-labelledby="hope-clocks-heading" className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2
-                id="hope-clocks-heading"
-                className="text-sm font-semibold tracking-tight text-zinc-100"
-              >
-                3-Clock Symbolic Governance Pipeline
-              </h2>
-              <p className="text-xs text-zinc-500">
-                Strict Authority Separation (Invariant 0): zero LLM calls inside telemetry capture,
-                quarantine staging, or promotion gates.
-              </p>
-            </div>
-            <span className="hidden sm:inline-flex items-center gap-1.5 rounded border border-zinc-800 bg-zinc-950 px-2 py-0.5 font-mono text-[10.5px] text-zinc-400">
-              <Layers className="h-3 w-3 text-zinc-500" aria-hidden="true" />
-              src/v4/hope/* (0 cartridge-specific edits)
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1.25fr] lg:items-stretch">
-            {/* Stage 1: Fast Clock */}
-            <div className="flex flex-col justify-between rounded-lg border border-zinc-800 bg-[#101116] p-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-zinc-200">
-                    <Clock className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-                    1. Fast Clock
-                  </span>
-                  <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
-                    READ-ONLY
-                  </span>
-                </div>
-                <p className="font-mono text-xs text-zinc-300">EpisodicRingBuffer</p>
-                <p className="text-xs leading-relaxed text-zinc-400">
-                  Captures task-scoped execution traces (
-                  <code className="font-mono text-[11px] text-zinc-300">artifactSha256</code>,{' '}
-                  <code className="font-mono text-[11px] text-zinc-300">failedFacts</code>,{' '}
-                  <code className="font-mono text-[11px] text-zinc-300">forensicFlags</code>) in a
-                  fixed-capacity FIFO ring buffer. Never mutates canonical rules or prerequisite
-                  graphs.
-                </p>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
-                <span>fast-clock.ts</span>
-                <span>{pipelineTraceLabel}</span>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex items-center justify-center text-zinc-600" aria-hidden="true">
-              <ArrowRight className="h-4 w-4" />
-            </div>
-
-            {/* Stage 2: Intermediate Clock */}
-            <div className="flex flex-col justify-between rounded-lg border border-zinc-800 bg-[#101116] p-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-zinc-200">
-                    <Lock className="h-3.5 w-3.5 text-zinc-400" aria-hidden="true" />
-                    2. Intermediate Clock
-                  </span>
-                  <span className="rounded border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-400">
-                    SHA-256 PROVENANCE
-                  </span>
-                </div>
-                <p className="font-mono text-xs text-zinc-300">QuarantineVault</p>
-                <p className="text-xs leading-relaxed text-zinc-400">
-                  Ingests recurring Fast Clock failure clusters meeting{' '}
-                  <code className="font-mono text-[11px] text-zinc-300">minOccurrences</code> and
-                  stages deduplicated <code className="font-mono text-[11px] text-zinc-300">QuarantineCandidate</code>{' '}
-                  patches with artifact SHA-256 evidence digests and frozen v2/v3 path guards.
-                </p>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
-                <span>quarantine-vault.ts</span>
-                <span>{pipelineAuditStats.total} staged audits</span>
-              </div>
-            </div>
-
-            <div className="hidden lg:flex items-center justify-center text-zinc-600" aria-hidden="true">
-              <ArrowRight className="h-4 w-4" />
-            </div>
-
-            {/* Stage 3: Slow Clock */}
-            <div className="flex flex-col justify-between rounded-lg border border-zinc-800 bg-[#101116] p-4">
-              <div className="space-y-2.5">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="inline-flex items-center gap-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-zinc-200">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
-                    3. Slow Clock
-                  </span>
-                  <span className="rounded border border-emerald-500/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[10px] text-emerald-400">
-                    3 SEQUENTIAL GATES
-                  </span>
-                </div>
-                <p className="font-mono text-xs text-zinc-300">DeepMetaOptimizer</p>
-                <ol className="space-y-1.5 text-xs text-zinc-400">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 font-mono text-[10px] text-zinc-500">G1</span>
-                    <span>
-                      <strong className="font-medium text-zinc-200">Lexical Identifier Lock:</strong>{' '}
-                      100% <code className="font-mono text-[11px] text-zinc-300">extractRequiredTokens()</code> retention.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 font-mono text-[10px] text-zinc-500">G2</span>
-                    <span>
-                      <strong className="font-medium text-zinc-200">Contradiction &amp; Cycle Linter:</strong>{' '}
-                      syntax/policy conflicts + 3-color DFS DAG acyclicity.
-                    </span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 font-mono text-[10px] text-zinc-500">G3</span>
-                    <span>
-                      <strong className="font-medium text-zinc-200">Paired Canary Replay:</strong>{' '}
-                      <code className="font-mono text-[11px] text-emerald-400">targetCohortDelta &gt; 0</code> &amp;&amp;{' '}
-                      <code className="font-mono text-[11px] text-emerald-400">canaryRegressions === 0</code>.
-                    </span>
-                  </li>
-                </ol>
-              </div>
-              <div className="mt-4 flex items-center justify-between border-t border-zinc-800/80 pt-2.5 font-mono text-[10.5px] text-zinc-500 tabular-nums">
-                <span>slow-clock.ts</span>
-                <span>
-                  {pipelineAuditStats.approved} promoted · {pipelineAuditStats.rejected} rejected
-                </span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ================================================================
-            SECTION 3: 3-Model 5-Arm Cross-Domain Comparison
-           ================================================================ */}
-        <section
-          aria-labelledby="hope-comparison-heading"
-          className="rounded-lg border border-zinc-800 bg-[#101116] overflow-hidden"
-        >
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800 px-5 py-4">
-            <div>
-              <h2
-                id="hope-comparison-heading"
-                className="text-sm font-semibold tracking-tight text-zinc-100"
-              >
-                {isTsApi
-                  ? '3-Model 5-Arm TypeScript API Security Comparison'
-                  : '3-Model 5-Arm Policy-as-Code ABAC Comparison'}
-              </h2>
-              <p className="text-xs text-zinc-500">
-                {isTsApi
-                  ? `${tsApiCartridge.taskCount} held-out TypeScript API endpoints × 5 arms × ${tsApiCartridge.modelCount} models = ${tsApiCartridge.totalLiveTrials} live trials (K = ${tsApiCartridge.topK}, temperature = 0, esbuild + node:vm sandbox).`
-                  : '18 held-out Cedar ABAC tasks × 5 arms × 3 models = 270 live trials (K = 4, temperature = 0, frozen vaults).'}
-              </p>
-            </div>
-            <AccessibleSegmentedTabs<ComparisonMetric>
-              ariaLabel="Comparison Metric Toggle"
-              value={metric}
-              onChange={setMetric}
-              options={[
-                { value: 'fullTask', label: 'Full-Task Pass %' },
-                { value: 'meanFact', label: 'Mean Fact Pass %' },
-              ]}
-            />
-          </div>
-
-          {/* Recharts Bar Chart */}
-          <div className="px-4 pt-5 pb-3 border-b border-zinc-800/80">
-            <div className="h-[300px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 8, right: 16, left: 0, bottom: 4 }}
-                  barGap={3}
-                  barCategoryGap="22%"
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                    axisLine={{ stroke: '#27272a' }}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    domain={[0, 100]}
-                    tickFormatter={(v) => `${v}%`}
-                    tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-mono)' }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={42}
-                  />
-                  <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
-                  <Legend
-                    wrapperStyle={{
-                      paddingTop: '10px',
-                      fontSize: '11px',
-                      fontFamily: 'var(--font-mono)',
-                    }}
-                  />
-                  {ARM_ORDER.map((arm) => (
-                    <Bar
-                      key={arm}
-                      dataKey={arm}
-                      name={ARM_META[arm].label}
-                      fill={ARM_META[arm].color}
-                      radius={[2, 2, 0, 0]}
-                      isAnimationActive={false}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Accessible Responsive Comparison Table */}
-          <div
-            tabIndex={0}
-            role="region"
-            aria-labelledby={comparisonCaptionId}
-            className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-400"
-          >
-            <table className="w-full border-separate border-spacing-0 text-left text-xs">
-              <caption id={comparisonCaptionId} className="sr-only">
-                {isTsApi
-                  ? `3-Model 5-Arm TypeScript API Security performance comparison table showing ${
-                      metric === 'fullTask' ? 'Full-Task Pass Rate' : 'Mean Fact Pass Rate'
-                    } across A, C, C_ID_prereq, C_ID_auto, and C_ID_hope.`
-                  : `3-Model 5-Arm Policy-as-Code ABAC performance comparison table showing ${
-                      metric === 'fullTask' ? 'Full-Task Pass Rate' : 'Mean Fact Pass Rate'
-                    } across A, C, C_ID_prereq, C_ID_auto, and C_ID_hope.`}
-              </caption>
-              <thead className="sticky top-0 z-10 bg-[#0d0e13] font-mono text-[10.5px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800">
-                <tr>
-                  <th
-                    scope="col"
-                    className="sticky left-0 z-20 bg-[#0d0e13] px-4 py-2.5 font-medium"
-                  >
-                    Model
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 font-medium">
-                    Provider
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    A
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    C
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium text-amber-400/90">
-                    C_ID_prereq
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400/90">
-                    C_ID_auto
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-3 py-2.5 text-right font-medium text-emerald-400"
-                  >
-                    C_ID_hope
-                  </th>
-                  <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                    HOPE − C
-                  </th>
-                  <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                    HOPE − Static
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="font-mono tabular-nums [&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
-                {activeCrossModel.models.map((m) => {
-                  const val = (arm: V4PilotArm) =>
-                    metric === 'fullTask'
-                      ? m.summary.arms[arm].fullTaskPassRate
-                      : m.summary.arms[arm].meanFactPassRate;
-                  const hopeMinusC =
-                    metric === 'fullTask'
-                      ? m.summary.contrastsPp.C_ID_hope_minus_C_task
-                      : m.summary.contrastsPp.C_ID_hope_minus_C_fact;
-                  const hopeMinusStatic =
-                    metric === 'fullTask'
-                      ? m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_task
-                      : m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_fact;
-
-                  return (
-                    <tr key={m.modelId} className="hover:bg-zinc-900/50 transition-colors">
-                      <th
-                        scope="row"
-                        className="sticky left-0 z-10 bg-[#101116] px-4 py-2.5 font-medium text-zinc-100 whitespace-nowrap"
-                      >
-                        {m.modelId}
-                      </th>
-                      <td className="px-3 py-2.5 font-sans text-zinc-400 whitespace-nowrap">
-                        {m.provider}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-zinc-400">
-                        {formatPct1(val('A'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-zinc-400">
-                        {formatPct1(val('C'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-amber-300/90">
-                        {formatPct1(val('C_ID_prereq'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-sky-300">
-                        {formatPct1(val('C_ID_auto'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-semibold text-emerald-400">
-                        {formatPct1(val('C_ID_hope'))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right text-emerald-400">
-                        {formatSignedPp(hopeMinusC)}
-                      </td>
-                      <td className="px-4 py-2.5 text-right text-emerald-400">
-                        {formatSignedPp(hopeMinusStatic)}
-                      </td>
-                    </tr>
-                  );
-                })}
-                {/* Pooled Mean Summary Row */}
-                <tr className="bg-[#0d0e13] font-semibold">
-                  <th
-                    scope="row"
-                    className="sticky left-0 z-10 bg-[#0d0e13] px-4 py-2.5 font-sans text-zinc-50 whitespace-nowrap"
-                  >
-                    Pooled Mean (n = {activePooled.count})
-                  </th>
-                  <td className="px-3 py-2.5 font-sans font-normal text-zinc-400 whitespace-nowrap">
-                    Multi-Provider
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-zinc-300">
-                    {formatPct1(
-                      metric === 'fullTask' ? activePooled.fullTask.A : activePooled.meanFact.A
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-zinc-300">
-                    {formatPct1(
-                      metric === 'fullTask' ? activePooled.fullTask.C : activePooled.meanFact.C
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-amber-300">
-                    {formatPct1(
-                      metric === 'fullTask'
-                        ? activePooled.fullTask.C_ID_prereq
-                        : activePooled.meanFact.C_ID_prereq
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-sky-300">
-                    {formatPct1(
-                      metric === 'fullTask'
-                        ? activePooled.fullTask.C_ID_auto
-                        : activePooled.meanFact.C_ID_auto
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-emerald-400">
-                    {formatPct1(
-                      metric === 'fullTask'
-                        ? activePooled.fullTask.C_ID_hope
-                        : activePooled.meanFact.C_ID_hope
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5 text-right text-emerald-400">
-                    {formatSignedPp(
-                      metric === 'fullTask'
-                        ? activePooled.contrasts.hopeMinusC_task
-                        : activePooled.contrasts.hopeMinusC_fact
-                    )}
-                  </td>
-                  <td className="px-4 py-2.5 text-right text-emerald-400">
-                    {formatSignedPp(
-                      metric === 'fullTask'
-                        ? activePooled.contrasts.hopeMinusPrereq_task
-                        : activePooled.contrasts.hopeMinusPrereq_fact
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* ================================================================
-            SECTION 3.5: Bidirectional Causal Identification (Policy ABAC only)
-           ================================================================ */}
-        {cartridgeKey === 'policyAbac' && payload.maskedSummary && (
+          {/* Minimal Bottom Metric Strip — 4 Numbers Only */}
           <section
-            aria-labelledby="hope-masked-causal-heading"
-            className="rounded-lg border border-zinc-800 bg-[#101116] overflow-hidden"
+            aria-label="Key governance metrics"
+            className="w-full border-t border-b border-zinc-800/80 bg-[#0b0c10] grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 font-mono tabular-nums"
           >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-zinc-800 px-5 py-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2
-                    id="hope-masked-causal-heading"
-                    className="text-sm font-semibold tracking-tight text-zinc-100"
-                  >
-                    Bidirectional Causal Identification (C_ID_masked vs. C_ID_auto vs. C)
-                  </h2>
-                  <span className="rounded border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 font-mono text-[10px] text-zinc-300">
-                    54 LIVE TRIALS · K=4
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Isolates necessity from sufficiency by stripping 100% of operational tokens (0/78 retained; 0.0%) while controlling rule length and prose structure (1,993 chars; 0.89x vs. C_ID_auto).
-                </p>
+            <div className="px-6 py-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                {isPostgres ? 'F-05 Displacements' : 'Full-Task Pass'}
               </div>
-              <div className="flex items-center gap-2 font-mono text-[11px] text-zinc-400">
-                <span className="rounded border border-zinc-800 bg-zinc-950 px-2 py-0.5">
-                  Vault: policy-abac-cid-masked.json
-                </span>
+              <div className="mt-1.5 text-xl font-semibold text-zinc-100">{overviewFullTask}</div>
+            </div>
+
+            <div className="px-6 py-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                Lift vs. Unconstrained
+              </div>
+              <div className="mt-1.5 text-xl font-semibold text-emerald-400">{overviewLift}</div>
+            </div>
+
+            <div className="px-6 py-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                Lexical Lock
+              </div>
+              <div className="mt-1.5 text-xl font-semibold text-zinc-100">
+                {overviewLexicalLock}
               </div>
             </div>
 
-            {/* 3 Metric Summary Cards */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 border-b border-zinc-800 p-4">
-              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-                  Sufficiency (C_ID_auto − C)
-                </p>
-                <div className="mt-1.5 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-xl font-semibold text-emerald-400 tabular-nums">
-                    +{payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_task.toFixed(1)} pp
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    +{payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_fact.toFixed(1)} pp facts
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-zinc-500">
-                  Restoring exact lexical identifiers to distilled rules restores production compliance.
-                </p>
+            <div className="px-6 py-5">
+              <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                Canary Regressions
               </div>
-
-              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-                  Necessity (C_ID_masked − C_ID_auto)
-                </p>
-                <div className="mt-1.5 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-xl font-semibold text-rose-400 tabular-nums">
-                    {payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task.toFixed(1)} pp
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    {payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact.toFixed(1)} pp facts
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-zinc-500">
-                  Stripping exact operational tokens from canonical rules causes immediate task collapse.
-                </p>
-              </div>
-
-              <div className="rounded-lg border border-zinc-800/80 bg-[#0d0e13] p-3.5">
-                <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-400">
-                  Structure Control (C_ID_masked − C)
-                </p>
-                <div className="mt-1.5 flex items-baseline justify-between gap-2">
-                  <span className="font-mono text-xl font-semibold text-zinc-300 tabular-nums">
-                    {payload.maskedSummary.pooled.contrastsPp.masked_minus_C_task.toFixed(1)} pp
-                  </span>
-                  <span className="font-mono text-xs text-zinc-400 tabular-nums">
-                    +{payload.maskedSummary.pooled.contrastsPp.masked_minus_C_fact.toFixed(1)} pp facts
-                  </span>
-                </div>
-                <p className="mt-1 text-[11px] text-zinc-500">
-                  Full sentence structure and length alone provide null gain without exact lexical tokens.
-                </p>
-              </div>
-            </div>
-
-            {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-separate border-spacing-0 text-left text-xs">
-                <thead className="bg-[#0d0e13] font-mono text-[10.5px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800">
-                  <tr>
-                    <th scope="col" className="px-4 py-2.5 font-medium">Model</th>
-                    <th scope="col" className="px-3 py-2.5 font-medium">Provider</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium">A</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium">C</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400/90">C_ID_masked</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400/90">C_ID_auto</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-emerald-400">Sufficiency</th>
-                    <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400">Necessity</th>
-                    <th scope="col" className="px-4 py-2.5 text-right font-medium text-zinc-400">Structure Control</th>
-                  </tr>
-                </thead>
-                <tbody className="font-mono tabular-nums [&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
-                  {payload.maskedSummary.models.map((m) => {
-                    const taskMode = metric === 'fullTask';
-                    const aVal = taskMode ? m.baselineArms.A.fullTaskPassRate : m.baselineArms.A.meanFactPassRate;
-                    const cVal = taskMode ? m.baselineArms.C.fullTaskPassRate : m.baselineArms.C.meanFactPassRate;
-                    const maskedVal = taskMode ? m.maskedStats.fullTaskPassRate : m.maskedStats.meanFactPassRate;
-                    const autoVal = taskMode ? m.baselineArms.C_ID_auto.fullTaskPassRate : m.baselineArms.C_ID_auto.meanFactPassRate;
-                    const suff = taskMode ? m.contrastsPp.sufficiency_C_ID_auto_minus_C_task : m.contrastsPp.sufficiency_C_ID_auto_minus_C_fact;
-                    const nec = taskMode ? m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task : m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact;
-                    const ctrl = taskMode ? m.contrastsPp.masked_minus_C_task : m.contrastsPp.masked_minus_C_fact;
-
-                    return (
-                      <tr key={m.modelId} className="hover:bg-zinc-900/50 transition-colors">
-                        <th scope="row" className="px-4 py-2.5 font-medium text-zinc-100 whitespace-nowrap">
-                          {m.modelId}
-                        </th>
-                        <td className="px-3 py-2.5 font-sans text-zinc-400 whitespace-nowrap">
-                          {m.provider}
-                        </td>
-                        <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(aVal)}</td>
-                        <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(cVal)}</td>
-                        <td className="px-3 py-2.5 text-right font-semibold text-rose-400/90">{formatPct1(maskedVal)}</td>
-                        <td className="px-3 py-2.5 text-right text-sky-300">{formatPct1(autoVal)}</td>
-                        <td className="px-3 py-2.5 text-right text-emerald-400">{formatSignedPp(suff)}</td>
-                        <td className="px-3 py-2.5 text-right text-rose-400">{formatSignedPp(nec)}</td>
-                        <td className="px-4 py-2.5 text-right text-zinc-300">{formatSignedPp(ctrl)}</td>
-                      </tr>
-                    );
-                  })}
-                  {/* Pooled Row */}
-                  <tr className="bg-[#0d0e13] font-semibold">
-                    <th scope="row" className="px-4 py-2.5 font-sans text-zinc-50 whitespace-nowrap">
-                      Pooled Mean (n = {payload.maskedSummary.pooled.modelCount})
-                    </th>
-                    <td className="px-3 py-2.5 font-sans font-normal text-zinc-400 whitespace-nowrap">
-                      Multi-Provider
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-zinc-300">
-                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.A.fullTaskPassRate : payload.maskedSummary.pooled.arms.A.meanFactPassRate)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-zinc-300">
-                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C.fullTaskPassRate : payload.maskedSummary.pooled.arms.C.meanFactPassRate)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-rose-400">
-                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C_ID_masked.fullTaskPassRate : payload.maskedSummary.pooled.arms.C_ID_masked.meanFactPassRate)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-sky-300">
-                      {formatPct1(metric === 'fullTask' ? payload.maskedSummary.pooled.arms.C_ID_auto.fullTaskPassRate : payload.maskedSummary.pooled.arms.C_ID_auto.meanFactPassRate)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-emerald-400">
-                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_task : payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_fact)}
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-rose-400">
-                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task : payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact)}
-                    </td>
-                    <td className="px-4 py-2.5 text-right text-zinc-300">
-                      {formatSignedPp(metric === 'fullTask' ? payload.maskedSummary.pooled.contrastsPp.masked_minus_C_task : payload.maskedSummary.pooled.contrastsPp.masked_minus_C_fact)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Token & Length Control Audit Footer */}
-            <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0d0e13] px-5 py-3 text-xs text-zinc-400 border-t border-zinc-800">
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[11px]">
-                <span>
-                  Tokens Retained:{' '}
-                  <strong className="text-rose-400">
-                    {payload.maskedSummary.vaultAudit.lexicalLockAudit.totalRetainedTokens}/
-                    {payload.maskedSummary.vaultAudit.lexicalLockAudit.totalRequiredTokens} (0.0%)
-                  </strong>
-                </span>
-                <span>
-                  Length Ratio:{' '}
-                  <strong className="text-zinc-200">
-                    {payload.maskedSummary.vaultAudit.lengthAudit.charRatioVsCidAuto.toFixed(2)}x chars
-                  </strong>{' '}
-                  / {payload.maskedSummary.vaultAudit.lengthAudit.wordRatioVsCidAuto.toFixed(2)}x words vs. C_ID_auto
-                </span>
-                <span className="text-zinc-500">
-                  Forensic: missingForbidSuspended surges from 1/18 (C_ID_auto) to 6/18 (Gemini), 16/18 (Gemma), 18/18 (Qwen)
-                </span>
+              <div className="mt-1.5 text-xl font-semibold text-emerald-400">
+                {overviewRegressions}
               </div>
             </div>
           </section>
-        )}
 
-        {/* ================================================================
-            SECTION 4: Immutable Slow Clock Governance Ledger
-           ================================================================ */}
-        <section
-          aria-labelledby="hope-ledger-heading"
-          className="rounded-lg border border-zinc-800 bg-[#101116] overflow-hidden"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-zinc-800 px-5 py-4">
-            <div>
-              <h2
-                id="hope-ledger-heading"
-                className="text-sm font-semibold tracking-tight text-zinc-100"
+          {isPostgres && onOpenV3Research && (
+            <div className="w-full px-6 py-4 flex items-center justify-end bg-[#08090c]">
+              <button
+                type="button"
+                onClick={onOpenV3Research}
+                className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800/80 bg-[#0b0c10] px-3 py-1.5 font-mono text-[11px] text-zinc-300 hover:bg-zinc-900 transition-colors cursor-pointer"
               >
-                {isTsApi
-                  ? 'Immutable Slow Clock Governance Ledger — TypeScript API Security'
-                  : 'Immutable Slow Clock Governance Ledger'}
-              </h2>
-              <p className="text-xs text-zinc-500">
-                {isTsApi
-                  ? 'Per-model cryptographic receipt inspector for ts-api-security-v4 showing exact snapshot SHA-256 transitions and Gate 1 / 2 / 3 cross-domain canary audits.'
-                  : 'Per-model cryptographic receipt inspector showing exact snapshot SHA-256 transitions and Gate 1 / 2 / 3 audit outcomes.'}
-              </p>
+                <span>Open frozen v3.0-final benchmark</span>
+                <ArrowRight className="h-3 w-3" aria-hidden="true" />
+              </button>
             </div>
+          )}
+        </div>
+      )}
 
-            <AccessibleSegmentedTabs<string>
-              ariaLabel="Slow Clock Receipt Model Selector"
-              value={activeReceipt?.model ?? selectedModelId}
-              onChange={setSelectedModelId}
-              options={receiptModelTabs}
-            />
-          </div>
+      {/* ================================================================
+          TAB 2 — LIVE RUN (--compact Benchmark Monitor)
+         ================================================================ */}
+      {activeTab === 'live' && (
+        <div className="w-full flex-1 p-5 sm:p-6">
+          <HopeLiveCompactRunMonitor />
+        </div>
+      )}
 
-          {activeReceipt && (
-            <>
-              {/* Cryptographic Snapshot Transition Header */}
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3 border-b border-zinc-800/80 bg-[#0d0e13] px-5 py-3.5 text-xs">
-                <div className="space-y-1">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                    Snapshot SHA-256 Transition
-                  </span>
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <CopyHashButton
-                      value={activeReceipt.initialSnapshotSha256}
-                      label="beforeSnapshot"
-                    />
-                    <GitCommitHorizontal
-                      className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    <CopyHashButton
-                      value={activeReceipt.finalSnapshotSha256}
-                      label="afterSnapshot"
-                    />
+      {/* ================================================================
+          TAB 3 — PROOF & LEDGER (Single Source of Truth, Zero Duplication)
+         ================================================================ */}
+      {activeTab === 'proof' && (
+        <div className="w-full flex-1 divide-y divide-zinc-800/80">
+          {/* 1. Bidirectional Causal Identification (Policy ABAC) */}
+          {cartridgeKey === 'policyAbac' && payload.maskedSummary && (
+            <section
+              aria-labelledby="hope-masked-causal-heading"
+              className="w-full bg-[#0b0c10]"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 bg-[#0d0e13] px-5 py-3">
+                <h2
+                  id="hope-masked-causal-heading"
+                  className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-100"
+                >
+                  Bidirectional Causal Identification
+                </h2>
+                <span className="font-mono text-[10.5px] text-zinc-500 tabular-nums">
+                  C_ID_masked vs. C_ID_auto vs. C · 54 live trials
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800/80 border-b border-zinc-800/80 font-mono tabular-nums">
+                <div className="px-5 py-3.5">
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                    Sufficiency (C_ID_auto − C)
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-emerald-400">
+                    +
+                    {payload.maskedSummary.pooled.contrastsPp.sufficiency_C_ID_auto_minus_C_task.toFixed(
+                      1
+                    )}{' '}
+                    pp
                   </div>
                 </div>
-
-                <div className="space-y-1">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                    Promoted Prerequisite Graph
-                  </span>
-                  <p className="font-mono text-xs text-emerald-400">{promotedEdgeSummary}</p>
-                  {Object.keys(activeReceipt.updatedRuleStatements).length > 0 && (
-                    <p className="font-mono text-[10.5px] text-zinc-400">
-                      Updated rules: {Object.keys(activeReceipt.updatedRuleStatements).join(', ')}
-                    </p>
-                  )}
+                <div className="px-5 py-3.5">
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                    Necessity (C_ID_masked − C_ID_auto)
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-rose-400">
+                    {payload.maskedSummary.pooled.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task.toFixed(
+                      1
+                    )}{' '}
+                    pp
+                  </div>
                 </div>
-
-                <div className="space-y-1">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-zinc-500">
-                    Audit Provenance
-                  </span>
-                  <p className="font-mono text-xs text-zinc-300 tabular-nums">
-                    {activeReceipt.fastClockTraceCount} Fast Clock traces ·{' '}
-                    {activeReceipt.canaryCohortTaskIds.length} protected canaries
-                  </p>
-                  {activeReceipt.file && (
-                    <p className="font-mono text-[10.5px] text-zinc-500 truncate">
-                      {activeReceipt.file}
-                    </p>
-                  )}
+                <div className="px-5 py-3.5">
+                  <div className="text-[10px] uppercase tracking-wider text-zinc-500">
+                    Structure Control (C_ID_masked − C)
+                  </div>
+                  <div className="mt-1 text-lg font-semibold text-zinc-300">
+                    {payload.maskedSummary.pooled.contrastsPp.masked_minus_C_task.toFixed(1)} pp
+                  </div>
                 </div>
               </div>
 
-              {/* Candidate Gate Audit Table */}
-              <div
-                tabIndex={0}
-                role="region"
-                aria-labelledby={ledgerCaptionId}
-                className="overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-zinc-400"
-              >
-                <table className="w-full border-separate border-spacing-0 text-left text-xs">
-                  <caption id={ledgerCaptionId} className="sr-only">
-                    Slow Clock candidate governance audit ledger for {activeReceipt.model} showing
-                    Gate 1, Gate 2, Gate 3 results, target delta, canary regressions, and promotion
-                    decision.
-                  </caption>
-                  <thead className="sticky top-0 z-10 bg-[#0d0e13] font-mono text-[10.5px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800">
+              <div className="overflow-x-auto">
+                <table className="w-full border-separate border-spacing-0 text-left text-xs font-mono tabular-nums">
+                  <thead className="bg-[#0d0e13] text-[10px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800/80">
                     <tr>
-                      <th
-                        scope="col"
-                        className="sticky left-0 z-20 bg-[#0d0e13] px-4 py-2.5 font-medium"
-                      >
-                        Candidate
-                      </th>
-                      <th scope="col" className="px-3 py-2.5 font-medium">
-                        Proposed Patch
-                      </th>
-                      <th scope="col" className="px-3 py-2.5 font-medium">
-                        Slow Clock Gates (G1 · G2 · G3)
+                      <th scope="col" className="px-5 py-2.5 font-medium">
+                        Model
                       </th>
                       <th scope="col" className="px-3 py-2.5 text-right font-medium">
-                        Target Delta
+                        A
                       </th>
-                      <th scope="col" className="px-3 py-2.5 font-medium">
-                        Canary Regressions
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                        C
                       </th>
-                      <th scope="col" className="px-4 py-2.5 text-right font-medium">
-                        Decision
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400">
+                        C_ID_masked
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400">
+                        C_ID_auto
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-emerald-400">
+                        Sufficiency
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-rose-400">
+                        Necessity
+                      </th>
+                      <th scope="col" className="px-5 py-2.5 text-right font-medium">
+                        Structure
                       </th>
                     </tr>
                   </thead>
                   <tbody className="[&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
-                    {activeReceipt.candidateDecisions.map((dec) => {
-                      const cr = dec.gateAudit.canaryReplay;
-                      const deltaPp = cr.targetCohortDelta * 100;
+                    {payload.maskedSummary.models.map((m) => {
+                      const taskMode = metric === 'fullTask';
+                      const aVal = taskMode
+                        ? m.baselineArms.A.fullTaskPassRate
+                        : m.baselineArms.A.meanFactPassRate;
+                      const cVal = taskMode
+                        ? m.baselineArms.C.fullTaskPassRate
+                        : m.baselineArms.C.meanFactPassRate;
+                      const maskedVal = taskMode
+                        ? m.maskedStats.fullTaskPassRate
+                        : m.maskedStats.meanFactPassRate;
+                      const autoVal = taskMode
+                        ? m.baselineArms.C_ID_auto.fullTaskPassRate
+                        : m.baselineArms.C_ID_auto.meanFactPassRate;
+                      const suff = taskMode
+                        ? m.contrastsPp.sufficiency_C_ID_auto_minus_C_task
+                        : m.contrastsPp.sufficiency_C_ID_auto_minus_C_fact;
+                      const nec = taskMode
+                        ? m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_task
+                        : m.contrastsPp.necessity_C_ID_masked_minus_C_ID_auto_fact;
+                      const ctrl = taskMode
+                        ? m.contrastsPp.masked_minus_C_task
+                        : m.contrastsPp.masked_minus_C_fact;
+
                       return (
-                        <tr
-                          key={dec.candidateId}
-                          className="hover:bg-zinc-900/50 transition-colors align-top"
-                        >
-                          <th
-                            scope="row"
-                            className="sticky left-0 z-10 bg-[#101116] px-4 py-3 font-mono text-xs font-medium text-zinc-100 whitespace-nowrap"
-                          >
-                            <div>{dec.candidateId}</div>
-                            <div className="mt-0.5 text-[10px] font-normal text-zinc-500">
-                              {dec.factId} · {dec.origin}
-                            </div>
+                        <tr key={m.modelId} className="hover:bg-zinc-900/50 transition-colors">
+                          <th scope="row" className="px-5 py-2.5 font-medium text-zinc-100 whitespace-nowrap">
+                            {MODEL_SHORT_NAMES[m.modelId] ?? m.modelId}
                           </th>
-
-                          <td className="px-3 py-3 text-zinc-300 min-w-[220px]">
-                            <p className="text-xs leading-snug">{describeCandidatePatch(dec)}</p>
-                            {dec.receipt && (
-                              <p className="mt-1 font-mono text-[10px] text-zinc-500">
-                                {shortSha(dec.receipt.beforeSha256, 10, 4)} →{' '}
-                                {shortSha(dec.receipt.afterSha256, 10, 4)}
-                              </p>
-                            )}
+                          <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(aVal)}</td>
+                          <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(cVal)}</td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-rose-400">
+                            {formatPct1(maskedVal)}
                           </td>
-
-                          <td className="px-3 py-3 whitespace-nowrap">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <GatePill
-                                label="G1 Lock"
-                                executed={dec.gateAudit.lexicalLock.executed}
-                                passed={dec.gateAudit.lexicalLock.passed}
-                              />
-                              <GatePill
-                                label="G2 Lint"
-                                executed={dec.gateAudit.contradictionLinter.executed}
-                                passed={dec.gateAudit.contradictionLinter.passed}
-                              />
-                              <GatePill
-                                label="G3 Canary"
-                                executed={cr.executed}
-                                passed={cr.passed}
-                              />
-                            </div>
+                          <td className="px-3 py-2.5 text-right text-sky-300">{formatPct1(autoVal)}</td>
+                          <td className="px-3 py-2.5 text-right text-emerald-400">
+                            {formatSignedPp(suff)}
                           </td>
-
-                          <td className="px-3 py-3 text-right font-mono tabular-nums whitespace-nowrap">
-                            <span
-                              className={
-                                deltaPp > 0
-                                  ? 'text-emerald-400 font-medium'
-                                  : deltaPp < 0
-                                    ? 'text-rose-400 font-medium'
-                                    : 'text-zinc-400'
-                              }
-                            >
-                              {formatSignedPp(deltaPp)}
-                            </span>
-                            <div className="mt-0.5 text-[10px] text-zinc-500">
-                              {cr.targetBeforePassCount}→{cr.targetAfterPassCount}/{cr.targetTotal}{' '}
-                              full
-                            </div>
-                          </td>
-
-                          <td className="px-3 py-3 font-mono text-xs tabular-nums">
-                            {cr.canaryRegressions === 0 ? (
-                              <span className="text-emerald-400">0</span>
-                            ) : (
-                              <div>
-                                <span className="font-medium text-rose-400">
-                                  {cr.canaryRegressions}
-                                </span>
-                                <span className="ml-1.5 text-[10.5px] text-zinc-400">
-                                  ({cr.regressedCanaryTaskIds.join(', ')})
-                                </span>
-                              </div>
-                            )}
-                          </td>
-
-                          <td className="px-4 py-3 text-right whitespace-nowrap">
-                            <DecisionBadge decision={dec} />
-                          </td>
+                          <td className="px-3 py-2.5 text-right text-rose-400">{formatSignedPp(nec)}</td>
+                          <td className="px-5 py-2.5 text-right text-zinc-300">{formatSignedPp(ctrl)}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
               </div>
-            </>
+            </section>
           )}
-        </section>
-      </div>
+
+          {/* 2. 3-Model 5-Arm Comparison */}
+          <section aria-labelledby="hope-comparison-heading" className="w-full bg-[#0b0c10]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-zinc-800/80 bg-[#0d0e13] px-5 py-3">
+              <h2
+                id="hope-comparison-heading"
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-100"
+              >
+                {isTsApi
+                  ? '3-Model 5-Arm Comparison · TS-API Sec'
+                  : '3-Model 5-Arm Comparison · Policy ABAC'}
+              </h2>
+              <AccessibleSegmentedTabs<ComparisonMetric>
+                ariaLabel="Comparison Metric Toggle"
+                value={metric}
+                onChange={setMetric}
+                options={[
+                  { value: 'fullTask', label: 'Full Task %' },
+                  { value: 'meanFact', label: 'Mean Fact %' },
+                ]}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-12 divide-y xl:divide-y-0 xl:divide-x divide-zinc-800/80">
+              <div className="xl:col-span-5 px-4 py-5 bg-[#08090c]">
+                <div className="h-[260px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 8, right: 12, left: -8, bottom: 4 }}
+                      barGap={2}
+                      barCategoryGap="20%"
+                    >
+                      <CartesianGrid strokeDasharray="2 2" stroke="#27272a" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                        axisLine={{ stroke: '#27272a' }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        tickFormatter={(v) => `${v}%`}
+                        tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-mono)' }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={42}
+                      />
+                      <Tooltip content={renderTooltip} cursor={{ fill: 'rgba(255,255,255,0.03)' }} />
+                      <Legend
+                        wrapperStyle={{
+                          paddingTop: '8px',
+                          fontSize: '10px',
+                          fontFamily: 'var(--font-mono)',
+                        }}
+                      />
+                      {ARM_ORDER.map((arm) => (
+                        <Bar
+                          key={arm}
+                          dataKey={arm}
+                          name={ARM_META[arm].shortLabel}
+                          fill={ARM_META[arm].color}
+                          radius={[1, 1, 0, 0]}
+                          isAnimationActive={false}
+                        />
+                      ))}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              <div
+                tabIndex={0}
+                role="region"
+                aria-labelledby={comparisonCaptionId}
+                className="xl:col-span-7 overflow-x-auto bg-[#0b0c10]"
+              >
+                <table className="w-full border-separate border-spacing-0 text-left text-xs font-mono tabular-nums">
+                  <caption id={comparisonCaptionId} className="sr-only">
+                    3-Model 5-Arm performance comparison table
+                  </caption>
+                  <thead className="sticky top-0 z-10 bg-[#0d0e13] text-[10px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800/80">
+                    <tr>
+                      <th scope="col" className="sticky left-0 z-20 bg-[#0d0e13] px-5 py-2.5 font-medium">
+                        Model
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                        A
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                        C
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-amber-400">
+                        Prereq
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-sky-400">
+                        Auto
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium text-emerald-400">
+                        HOPE
+                      </th>
+                      <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                        HOPE−C
+                      </th>
+                      <th scope="col" className="px-5 py-2.5 text-right font-medium">
+                        HOPE−Stat
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="[&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
+                    {activeCrossModel.models.map((m) => {
+                      const val = (arm: V4PilotArm) =>
+                        metric === 'fullTask'
+                          ? m.summary.arms[arm].fullTaskPassRate
+                          : m.summary.arms[arm].meanFactPassRate;
+                      const hopeMinusC =
+                        metric === 'fullTask'
+                          ? m.summary.contrastsPp.C_ID_hope_minus_C_task
+                          : m.summary.contrastsPp.C_ID_hope_minus_C_fact;
+                      const hopeMinusStatic =
+                        metric === 'fullTask'
+                          ? m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_task
+                          : m.summary.contrastsPp.C_ID_hope_minus_C_ID_prereq_fact;
+
+                      return (
+                        <tr key={m.modelId} className="hover:bg-zinc-900/50 transition-colors">
+                          <th
+                            scope="row"
+                            className="sticky left-0 z-10 bg-[#0b0c10] px-5 py-2.5 font-medium text-zinc-100 whitespace-nowrap"
+                          >
+                            {MODEL_SHORT_NAMES[m.modelId] ?? m.modelId}
+                          </th>
+                          <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(val('A'))}</td>
+                          <td className="px-3 py-2.5 text-right text-zinc-400">{formatPct1(val('C'))}</td>
+                          <td className="px-3 py-2.5 text-right text-amber-300/90">
+                            {formatPct1(val('C_ID_prereq'))}
+                          </td>
+                          <td className="px-3 py-2.5 text-right text-sky-300">
+                            {formatPct1(val('C_ID_auto'))}
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-semibold text-emerald-400">
+                            {formatPct1(val('C_ID_hope'))}
+                          </td>
+                          <td className="px-3 py-2.5 text-right text-emerald-400">
+                            {formatSignedPp(hopeMinusC)}
+                          </td>
+                          <td className="px-5 py-2.5 text-right text-emerald-400">
+                            {formatSignedPp(hopeMinusStatic)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="bg-[#0d0e13] font-semibold">
+                      <th
+                        scope="row"
+                        className="sticky left-0 z-10 bg-[#0d0e13] px-5 py-2.5 text-zinc-50 whitespace-nowrap"
+                      >
+                        Pooled Mean (n={activePooled.count})
+                      </th>
+                      <td className="px-3 py-2.5 text-right text-zinc-300">
+                        {formatPct1(
+                          metric === 'fullTask' ? activePooled.fullTask.A : activePooled.meanFact.A
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-zinc-300">
+                        {formatPct1(
+                          metric === 'fullTask' ? activePooled.fullTask.C : activePooled.meanFact.C
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-amber-300">
+                        {formatPct1(
+                          metric === 'fullTask'
+                            ? activePooled.fullTask.C_ID_prereq
+                            : activePooled.meanFact.C_ID_prereq
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-sky-300">
+                        {formatPct1(
+                          metric === 'fullTask'
+                            ? activePooled.fullTask.C_ID_auto
+                            : activePooled.meanFact.C_ID_auto
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-emerald-400">
+                        {formatPct1(
+                          metric === 'fullTask'
+                            ? activePooled.fullTask.C_ID_hope
+                            : activePooled.meanFact.C_ID_hope
+                        )}
+                      </td>
+                      <td className="px-3 py-2.5 text-right text-emerald-400">
+                        {formatSignedPp(
+                          metric === 'fullTask'
+                            ? activePooled.contrasts.hopeMinusC_task
+                            : activePooled.contrasts.hopeMinusC_fact
+                        )}
+                      </td>
+                      <td className="px-5 py-2.5 text-right text-emerald-400">
+                        {formatSignedPp(
+                          metric === 'fullTask'
+                            ? activePooled.contrasts.hopeMinusPrereq_task
+                            : activePooled.contrasts.hopeMinusPrereq_fact
+                        )}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          {/* 3. Immutable Slow Clock Governance Ledger */}
+          <section aria-labelledby="hope-ledger-heading" className="w-full bg-[#0b0c10]">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between border-b border-zinc-800/80 bg-[#0d0e13] px-5 py-3">
+              <h2
+                id="hope-ledger-heading"
+                className="font-mono text-xs font-semibold uppercase tracking-wider text-zinc-100"
+              >
+                Immutable Slow Clock Governance Ledger
+              </h2>
+
+              <AccessibleSegmentedTabs<string>
+                ariaLabel="Slow Clock Receipt Model Selector"
+                value={activeReceipt?.model ?? selectedModelId}
+                onChange={setSelectedModelId}
+                options={receiptModelTabs}
+              />
+            </div>
+
+            {activeReceipt && (
+              <>
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-zinc-800/80 bg-[#090a0e] px-5 py-2.5 font-mono text-[10.5px]">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-zinc-500 uppercase">SHA-256</span>
+                    <CopyHashButton
+                      value={activeReceipt.initialSnapshotSha256}
+                      label="beforeSnapshot"
+                    />
+                    <GitCommitHorizontal className="h-3.5 w-3.5 text-zinc-500" aria-hidden="true" />
+                    <CopyHashButton
+                      value={activeReceipt.finalSnapshotSha256}
+                      label="afterSnapshot"
+                    />
+                  </div>
+                  <div className="text-emerald-400 truncate max-w-xl">
+                    <span className="text-zinc-500 uppercase mr-2">Promoted Graph</span>
+                    {promotedEdgeSummary}
+                  </div>
+                </div>
+
+                <div
+                  tabIndex={0}
+                  role="region"
+                  aria-labelledby={ledgerCaptionId}
+                  className="overflow-x-auto"
+                >
+                  <table className="w-full border-separate border-spacing-0 text-left text-xs">
+                    <caption id={ledgerCaptionId} className="sr-only">
+                      Slow Clock candidate governance audit ledger
+                    </caption>
+                    <thead className="sticky top-0 z-10 bg-[#0d0e13] font-mono text-[10px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800/80">
+                      <tr>
+                        <th scope="col" className="sticky left-0 z-20 bg-[#0d0e13] px-5 py-2.5 font-medium">
+                          Candidate
+                        </th>
+                        <th scope="col" className="px-3 py-2.5 font-medium">
+                          Proposed Patch
+                        </th>
+                        <th scope="col" className="px-3 py-2.5 font-medium">
+                          Gates (G1 · G2 · G3)
+                        </th>
+                        <th scope="col" className="px-3 py-2.5 text-right font-medium">
+                          Target Δ
+                        </th>
+                        <th scope="col" className="px-3 py-2.5 font-medium">
+                          Canary Reg
+                        </th>
+                        <th scope="col" className="px-5 py-2.5 text-right font-medium">
+                          Decision
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="[&_td]:border-b [&_td]:border-zinc-800/70 [&_th]:border-b [&_th]:border-zinc-800/70">
+                      {activeReceipt.candidateDecisions.map((dec) => {
+                        const cr = dec.gateAudit.canaryReplay;
+                        const deltaPp = cr.targetCohortDelta * 100;
+                        return (
+                          <tr key={dec.candidateId} className="hover:bg-zinc-900/50 transition-colors align-top">
+                            <th
+                              scope="row"
+                              className="sticky left-0 z-10 bg-[#0b0c10] px-5 py-2.5 font-mono text-xs font-medium text-zinc-100 whitespace-nowrap"
+                            >
+                              <div>{dec.candidateId}</div>
+                              <div className="mt-0.5 text-[10px] font-normal text-zinc-500">
+                                {dec.factId} · {dec.origin}
+                              </div>
+                            </th>
+                            <td className="px-3 py-2.5 text-zinc-300 min-w-[220px]">
+                              <p className="text-xs leading-snug">{describeCandidatePatch(dec)}</p>
+                            </td>
+                            <td className="px-3 py-2.5 whitespace-nowrap">
+                              <div className="flex flex-wrap items-center gap-1">
+                                <GatePill
+                                  label="G1"
+                                  executed={dec.gateAudit.lexicalLock.executed}
+                                  passed={dec.gateAudit.lexicalLock.passed}
+                                />
+                                <GatePill
+                                  label="G2"
+                                  executed={dec.gateAudit.contradictionLinter.executed}
+                                  passed={dec.gateAudit.contradictionLinter.passed}
+                                />
+                                <GatePill
+                                  label="G3"
+                                  executed={cr.executed}
+                                  passed={cr.passed}
+                                />
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 text-right font-mono tabular-nums whitespace-nowrap">
+                              <span
+                                className={
+                                  deltaPp > 0
+                                    ? 'text-emerald-400 font-medium'
+                                    : deltaPp < 0
+                                      ? 'text-rose-400 font-medium'
+                                      : 'text-zinc-400'
+                                }
+                              >
+                                {formatSignedPp(deltaPp)}
+                              </span>
+                              <div className="text-[10px] text-zinc-500">
+                                {cr.targetBeforePassCount}→{cr.targetAfterPassCount}/{cr.targetTotal}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2.5 font-mono text-xs tabular-nums">
+                              {cr.canaryRegressions === 0 ? (
+                                <span className="text-emerald-400">0</span>
+                              ) : (
+                                <div>
+                                  <span className="font-medium text-rose-400">
+                                    {cr.canaryRegressions}
+                                  </span>
+                                  <span className="ml-1.5 text-[10px] text-zinc-400">
+                                    ({cr.regressedCanaryTaskIds.join(', ')})
+                                  </span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-5 py-2.5 text-right whitespace-nowrap">
+                              <DecisionBadge decision={dec} />
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,330 @@
+{
+  "schemaVersion": "4.0.0-compact-benchmark-summary",
+  "generatedAt": "2026-11-25T07:05:00.754Z",
+  "totalPairedTrials": 99,
+  "rows": [
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "gemini-3.1-flash-lite",
+      "modelSlug": "gemini-3-1-flash-lite",
+      "provider": "Google AI Studio",
+      "taskCount": 18,
+      "baseline": {
+        "fullTaskPassCount": 13,
+        "fullTaskPassRate": 0.7222222222222222,
+        "meanFactPassRate": 0.9554894179894179,
+        "p50LatencyMs": 1248,
+        "p95LatencyMs": 19008
+      },
+      "compact": {
+        "fullTaskPassCount": 15,
+        "fullTaskPassRate": 0.8333333333333334,
+        "meanFactPassRate": 0.9657407407407407,
+        "p50LatencyMs": 1355,
+        "p95LatencyMs": 2032
+      },
+      "deltaPp": {
+        "fullTask": 11.11,
+        "meanFact": 1.03
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 30,
+        "beforeTokens": 6112,
+        "afterTokens": 5937,
+        "savedTokens": 175,
+        "reductionPct": 2.86,
+        "preservedTokenCount": 839,
+        "totalRequiredTokens": 839,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 6,
+        "approvedCount": 2,
+        "rejectedCount": 4,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "1150d533c5e049222f412d177103d0e5a11393ccbb9d9c6ffb88e48e8526b032"
+      }
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "gemma-4-31b-it",
+      "modelSlug": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "taskCount": 18,
+      "baseline": {
+        "fullTaskPassCount": 11,
+        "fullTaskPassRate": 0.6111111111111112,
+        "meanFactPassRate": 0.9351190476190477,
+        "p50LatencyMs": 30267,
+        "p95LatencyMs": 68330
+      },
+      "compact": {
+        "fullTaskPassCount": 13,
+        "fullTaskPassRate": 0.7222222222222222,
+        "meanFactPassRate": 0.9541666666666667,
+        "p50LatencyMs": 32567,
+        "p95LatencyMs": 84160
+      },
+      "deltaPp": {
+        "fullTask": 11.11,
+        "meanFact": 1.9
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 55,
+        "beforeTokens": 10215,
+        "afterTokens": 9884,
+        "savedTokens": 331,
+        "reductionPct": 3.24,
+        "preservedTokenCount": 1428,
+        "totalRequiredTokens": 1428,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 6,
+        "approvedCount": 2,
+        "rejectedCount": 4,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "0836fa58ce29c355a94c1a708064925233d967641f96b877c5d745cfc4e80ef0"
+      }
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "qwen/qwen3.8-27b",
+      "modelSlug": "qwen-qwen3-8-27b",
+      "provider": "Groq",
+      "taskCount": 18,
+      "baseline": {
+        "fullTaskPassCount": 14,
+        "fullTaskPassRate": 0.7777777777777778,
+        "meanFactPassRate": 0.9647486772486773,
+        "p50LatencyMs": 579,
+        "p95LatencyMs": 1035
+      },
+      "compact": {
+        "fullTaskPassCount": 14,
+        "fullTaskPassRate": 0.7777777777777778,
+        "meanFactPassRate": 0.9425264550264552,
+        "p50LatencyMs": 634,
+        "p95LatencyMs": 970
+      },
+      "deltaPp": {
+        "fullTask": 0,
+        "meanFact": -2.22
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 18,
+        "beforeTokens": 3414,
+        "afterTokens": 3319,
+        "savedTokens": 95,
+        "reductionPct": 2.78,
+        "preservedTokenCount": 491,
+        "totalRequiredTokens": 491,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 5,
+        "approvedCount": 2,
+        "rejectedCount": 3,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "0836fa58ce29c355a94c1a708064925233d967641f96b877c5d745cfc4e80ef0"
+      }
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "gemini-3.1-flash-lite",
+      "modelSlug": "gemini-3-1-flash-lite",
+      "provider": "Google AI Studio",
+      "taskCount": 15,
+      "baseline": {
+        "fullTaskPassCount": 9,
+        "fullTaskPassRate": 0.6,
+        "meanFactPassRate": 0.9111111111111111,
+        "p50LatencyMs": 2738,
+        "p95LatencyMs": 66088
+      },
+      "compact": {
+        "fullTaskPassCount": 13,
+        "fullTaskPassRate": 0.8666666666666667,
+        "meanFactPassRate": 0.9866666666666667,
+        "p50LatencyMs": 3786,
+        "p95LatencyMs": 5554
+      },
+      "deltaPp": {
+        "fullTask": 26.67,
+        "meanFact": 7.56
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 99,
+        "beforeTokens": 26238,
+        "afterTokens": 25055,
+        "savedTokens": 1183,
+        "reductionPct": 4.51,
+        "preservedTokenCount": 2342,
+        "totalRequiredTokens": 2342,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 10,
+        "approvedCount": 6,
+        "rejectedCount": 4,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "4da1cd48415565c58f209e92b03ac36e7c558c517eed8a8e87ab0ac329d866ee"
+      }
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "gemma-4-31b-it",
+      "modelSlug": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "taskCount": 15,
+      "baseline": {
+        "fullTaskPassCount": 3,
+        "fullTaskPassRate": 0.2,
+        "meanFactPassRate": 0.8018518518518519,
+        "p50LatencyMs": 42833,
+        "p95LatencyMs": 89731
+      },
+      "compact": {
+        "fullTaskPassCount": 8,
+        "fullTaskPassRate": 0.5333333333333333,
+        "meanFactPassRate": 0.951851851851852,
+        "p50LatencyMs": 59579,
+        "p95LatencyMs": 97876
+      },
+      "deltaPp": {
+        "fullTask": 33.33,
+        "meanFact": 15
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 15,
+        "beforeTokens": 3977,
+        "afterTokens": 3808,
+        "savedTokens": 169,
+        "reductionPct": 4.25,
+        "preservedTokenCount": 359,
+        "totalRequiredTokens": 359,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 9,
+        "approvedCount": 2,
+        "rejectedCount": 7,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "29df656edfee96d3e85b50dfa09f4d187fb4e436e1a74d39294452c7d1881eae"
+      }
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "qwen/qwen3.8-27b",
+      "modelSlug": "qwen-qwen3-8-27b",
+      "provider": "Groq",
+      "taskCount": 15,
+      "baseline": {
+        "fullTaskPassCount": 10,
+        "fullTaskPassRate": 0.6666666666666666,
+        "meanFactPassRate": 0.9083333333333333,
+        "p50LatencyMs": 1932,
+        "p95LatencyMs": 11554
+      },
+      "compact": {
+        "fullTaskPassCount": 10,
+        "fullTaskPassRate": 0.6666666666666666,
+        "meanFactPassRate": 0.9166666666666666,
+        "p50LatencyMs": 2226,
+        "p95LatencyMs": 12315
+      },
+      "deltaPp": {
+        "fullTask": 0,
+        "meanFact": 0.83
+      },
+      "compaction": {
+        "enabled": true,
+        "bundlesCompacted": 15,
+        "beforeTokens": 4186,
+        "afterTokens": 3979,
+        "savedTokens": 207,
+        "reductionPct": 4.95,
+        "preservedTokenCount": 391,
+        "totalRequiredTokens": 391,
+        "droppedRuleCount": 0
+      },
+      "governance": {
+        "totalAudits": 12,
+        "approvedCount": 4,
+        "rejectedCount": 8,
+        "promotedCanaryRegressions": 0,
+        "lexicalLockGateAllPassed": true,
+        "finalSnapshotSha256": "05339287057ea4ab63afa1814acd6cdb2c4cdc7ef28d3f5b84b512f0d0f6f22d"
+      }
+    }
+  ],
+  "pooledByCartridge": {
+    "policy-abac-v4": {
+      "modelCount": 3,
+      "totalPairedTrials": 54,
+      "baselineFullTaskPassRate": 0.7037037037037037,
+      "compactFullTaskPassRate": 0.7777777777777778,
+      "deltaFullTaskPp": 7.41,
+      "baselineMeanFactPassRate": 0.9517857142857142,
+      "compactMeanFactPassRate": 0.9541446208112875,
+      "deltaMeanFactPp": 0.24,
+      "totalBeforeTokens": 19741,
+      "totalAfterTokens": 19140,
+      "totalSavedTokens": 601,
+      "weightedReductionPct": 3.04,
+      "preservedTokenCount": 2758,
+      "totalRequiredTokens": 2758,
+      "promotedCanaryRegressions": 0
+    },
+    "ts-api-security-v4": {
+      "modelCount": 3,
+      "totalPairedTrials": 45,
+      "baselineFullTaskPassRate": 0.48888888888888893,
+      "compactFullTaskPassRate": 0.6888888888888888,
+      "deltaFullTaskPp": 20,
+      "baselineMeanFactPassRate": 0.8737654320987654,
+      "compactMeanFactPassRate": 0.9517283950617283,
+      "deltaMeanFactPp": 7.8,
+      "totalBeforeTokens": 34401,
+      "totalAfterTokens": 32842,
+      "totalSavedTokens": 1559,
+      "weightedReductionPct": 4.53,
+      "preservedTokenCount": 3092,
+      "totalRequiredTokens": 3092,
+      "promotedCanaryRegressions": 0
+    }
+  },
+  "overallPooled": {
+    "pairCount": 6,
+    "totalPairedTrials": 99,
+    "baselineFullTaskPassRate": 0.5962962962962963,
+    "compactFullTaskPassRate": 0.7333333333333334,
+    "deltaFullTaskPp": 13.7,
+    "baselineMeanFactPassRate": 0.9127755731922398,
+    "compactMeanFactPassRate": 0.9529365079365081,
+    "deltaMeanFactPp": 4.02,
+    "totalBeforeTokens": 54142,
+    "totalAfterTokens": 51982,
+    "totalSavedTokens": 2160,
+    "weightedReductionPct": 3.99,
+    "preservedTokenCount": 5850,
+    "totalRequiredTokens": 5850,
+    "promotedCanaryRegressions": 0
+  }
+}
