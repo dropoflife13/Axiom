@@ -39,7 +39,6 @@ interface NodeRect {
 interface DagLayout {
   readonly width: number;
   readonly height: number;
-  readonly laneStep: number;
   readonly nodes: Record<FlowNodeId, NodeRect>;
 }
 
@@ -52,8 +51,9 @@ interface ActivePulse {
   readonly startTime: number;
   readonly durationMs: number;
   readonly pathNodes: readonly FlowNodeId[];
-  readonly laneOffset: number;
+  readonly laneNorm: number;
   readonly outcome: FlowTraceEvent['outcome'];
+  readonly kind: FlowTraceEvent['kind'];
 }
 
 interface HoverState {
@@ -160,13 +160,16 @@ const PALETTE = {
   pass: '#10b981',
   quarantine: '#f59e0b',
   fail: '#ef4444',
+  probe: '#38bdf8',
   neutral: '#e4e4e7',
 } as const;
 
 const FONT_MONO =
   '"SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, Menlo, monospace';
 
-const STRAND_LANES = 11;
+const PASS_SUB_LANES = 8;
+const QUARANTINE_SUB_LANES = 6;
+const FAIL_SUB_LANES = 8;
 const HIT_RADIUS_PX = 9;
 const MAX_ACTIVE_PULSES = 3;
 
@@ -258,16 +261,57 @@ function computeDagLayout(width: number, height: number): DagLayout {
   return {
     width: w,
     height: h,
-    laneStep: clamp(w * 0.0023, 1.3, 2.2),
     nodes,
   };
 }
 
-function getStrandLaneOffset(eventIndex: number, laneStep: number): number {
-  const laneSlot = (eventIndex % STRAND_LANES) - Math.floor(STRAND_LANES / 2);
-  const microCycle = Math.floor(eventIndex / STRAND_LANES) % 3;
-  const microOffset = (microCycle - 1) * 0.36;
-  return (laneSlot + microOffset) * laneStep;
+interface StrandLaneInfo {
+  readonly outcome: FlowTraceEvent['outcome'];
+  readonly subLane: number;
+  readonly laneNorm: number;
+}
+
+interface RepresentativeStrand {
+  readonly eventIndex: number;
+  readonly event: FlowTraceEvent;
+  readonly laneNorm: number;
+}
+
+function getStrandLaneInfo(event: FlowTraceEvent, eventIndex: number): StrandLaneInfo {
+  const safeIdx = Math.max(0, eventIndex);
+  if (event.outcome === 'PASS') {
+    const subLane = safeIdx % PASS_SUB_LANES;
+    const laneNorm = -1.0 + (subLane / (PASS_SUB_LANES - 1)) * 0.64;
+    return { outcome: 'PASS', subLane, laneNorm };
+  }
+  if (event.outcome === 'QUARANTINE') {
+    const subLane = safeIdx % QUARANTINE_SUB_LANES;
+    const laneNorm = -0.26 + (subLane / (QUARANTINE_SUB_LANES - 1)) * 0.52;
+    return { outcome: 'QUARANTINE', subLane, laneNorm };
+  }
+  const subLane = safeIdx % FAIL_SUB_LANES;
+  const laneNorm = 0.36 + (subLane / (FAIL_SUB_LANES - 1)) * 0.64;
+  return { outcome: 'FAIL', subLane, laneNorm };
+}
+
+function collectRepresentativeStrands(
+  events: readonly FlowTraceEvent[],
+  clampedActiveIndex: number
+): RepresentativeStrand[] {
+  if (clampedActiveIndex < 0) return [];
+  const bySlot = new Map<string, RepresentativeStrand>();
+  for (let idx = 0; idx <= clampedActiveIndex; idx += 1) {
+    const ev = events[idx];
+    if (!ev || ev.pathNodes.length < 2) continue;
+    const { outcome, subLane, laneNorm } = getStrandLaneInfo(ev, idx);
+    const pathSignature = ev.pathNodes.join('>');
+    bySlot.set(`${outcome}|${subLane}|${pathSignature}`, {
+      eventIndex: idx,
+      event: ev,
+      laneNorm,
+    });
+  }
+  return Array.from(bySlot.values());
 }
 
 function isKnownNodeId(nodeId: string): nodeId is FlowNodeId {
@@ -278,47 +322,74 @@ function buildEdgeCurve(
   layout: DagLayout,
   fromId: FlowNodeId,
   toId: FlowNodeId,
-  laneOffset: number
+  laneNorm: number
 ): CubicCurve {
   const from = layout.nodes[fromId];
   const to = layout.nodes[toId];
 
-  // Lateral Quarantine branch: exits ORACLE_VERIFIER right port -> enters QUARANTINE_VAULT left port
+  // Lateral Quarantine bridge: wide, airy edge port spread & vertical Bezier arc
   if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
-    const p0: Point = { x: from.right, y: from.cy + laneOffset * 0.32 };
-    const p1: Point = { x: to.left, y: to.cy + laneOffset * 0.32 };
+    const p0: Point = { x: from.right, y: from.cy + laneNorm * (from.h * 0.38) };
+    const p1: Point = { x: to.left, y: to.cy + laneNorm * (to.h * 0.38) };
     const dx = p1.x - p0.x;
+    const arcSpread = laneNorm * clamp(layout.height * 0.085, 22, 42);
     return {
       p0,
-      cp1: { x: p0.x + dx * 0.52, y: p0.y + laneOffset * 0.72 },
-      cp2: { x: p1.x - dx * 0.52, y: p1.y + laneOffset * 0.72 },
+      cp1: { x: p0.x + dx * 0.52, y: p0.y + arcSpread },
+      cp2: { x: p1.x - dx * 0.52, y: p1.y + arcSpread },
       p1,
     };
   }
 
-  // Gate split: exits SLOW_CLOCK_GATE bottom port with a clean horizontal collar separation
+  // Gate split: fan across ±(gate.w * 0.34) with crisp Bezier separation
   if (fromId === 'SLOW_CLOCK_GATE' && (toId === 'GATE_APPROVED' || toId === 'GATE_REJECTED')) {
-    const portSpread = Math.min(14, from.w * 0.11);
+    const portSpread = Math.min(18, from.w * 0.14);
     const portBias = toId === 'GATE_APPROVED' ? -portSpread : portSpread;
-    const p0: Point = { x: from.cx + portBias + laneOffset * 0.28, y: from.bottom };
-    const p1: Point = { x: to.cx + laneOffset * 0.28, y: to.top };
+    const p0: Point = { x: from.cx + portBias + laneNorm * (to.w * 0.24), y: from.bottom };
+    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.34), y: to.top };
     const dy = p1.y - p0.y;
     return {
       p0,
-      cp1: { x: p0.x + laneOffset * 0.65, y: p0.y + dy * 0.48 },
-      cp2: { x: p1.x + laneOffset * 0.65, y: p1.y - dy * 0.48 },
+      cp1: { x: p0.x + laneNorm * (to.w * 0.30), y: p0.y + dy * 0.48 },
+      cp2: { x: to.cx + laneNorm * (to.w * 0.38), y: p1.y - dy * 0.48 },
       p1,
     };
   }
 
-  // Spine & Quarantine->Gate vertical conduits
-  const p0: Point = { x: from.cx + laneOffset * 0.32, y: from.bottom };
-  const p1: Point = { x: to.cx + laneOffset * 0.32, y: to.top };
+  // ORACLE_VERIFIER -> VERIFIED_OUTPUT: wide emerald green filament fan
+  if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
+    const p0: Point = { x: from.cx + laneNorm * (from.w * 0.34), y: from.bottom };
+    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.34), y: to.top };
+    const dy = p1.y - p0.y;
+    return {
+      p0,
+      cp1: { x: from.cx + laneNorm * (from.w * 0.42), y: p0.y + dy * 0.42 },
+      cp2: { x: to.cx + laneNorm * (to.w * 0.42), y: p1.y - dy * 0.42 },
+      p1,
+    };
+  }
+
+  // QUARANTINE_VAULT -> SLOW_CLOCK_GATE: separate Quarantine & Fail strands
+  if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') {
+    const p0: Point = { x: from.cx + laneNorm * (from.w * 0.38), y: from.bottom };
+    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.38), y: to.top };
+    const dy = p1.y - p0.y;
+    return {
+      p0,
+      cp1: { x: from.cx + laneNorm * (from.w * 0.44), y: p0.y + dy * 0.42 },
+      cp2: { x: to.cx + laneNorm * (to.w * 0.44), y: p1.y - dy * 0.42 },
+      p1,
+    };
+  }
+
+  // Vertical spine conduits (TASK_IN -> FAST_CLOCK, FAST_CLOCK -> ORACLE_VERIFIER)
+  const p0: Point = { x: from.cx + laneNorm * (from.w * 0.40), y: from.bottom };
+  const p1: Point = { x: to.cx + laneNorm * (to.w * 0.40), y: to.top };
   const dy = p1.y - p0.y;
   return {
     p0,
-    cp1: { x: p0.x + laneOffset * 0.92, y: p0.y + dy * 0.42 },
-    cp2: { x: p1.x + laneOffset * 0.92, y: p1.y - dy * 0.42 },
+    cp1: { x: from.cx + laneNorm * (from.w * 0.46), y: p0.y + dy * 0.42 },
+    cp2: { x: to.cx + laneNorm * (to.w * 0.46), y: p1.y - dy * 0.42 },
     p1,
   };
 }
@@ -417,18 +488,30 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: num
   return lo <= 0 ? ellipsis : text.slice(0, lo) + ellipsis;
 }
 
+function strandBaseColor(event: FlowTraceEvent): string {
+  if (event.kind === 'redteam_probe') return PALETTE.probe;
+  return outcomeColor(event.outcome);
+}
+
 function segmentSemanticColor(
   fromId: FlowNodeId,
   toId: FlowNodeId,
   event: FlowTraceEvent
 ): string {
+  if (fromId === 'TASK_IN' && toId === 'FAST_CLOCK') {
+    return PALETTE.probe;
+  }
+  if (fromId === 'FAST_CLOCK' && toId === 'ORACLE_VERIFIER') {
+    return event.kind === 'redteam_probe' ? PALETTE.probe : outcomeColor(event.outcome);
+  }
   if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') return PALETTE.pass;
   if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
-    return event.kind === 'redteam_probe' || event.outcome === 'QUARANTINE'
-      ? PALETTE.quarantine
-      : PALETTE.fail;
+    if (event.kind === 'redteam_probe') return PALETTE.probe;
+    return event.outcome === 'QUARANTINE' ? PALETTE.quarantine : PALETTE.fail;
   }
-  if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') return PALETTE.quarantine;
+  if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') {
+    return event.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.quarantine;
+  }
   if (fromId === 'SLOW_CLOCK_GATE' && toId === 'GATE_APPROVED') return PALETTE.pass;
   if (fromId === 'SLOW_CLOCK_GATE' && toId === 'GATE_REJECTED') return PALETTE.fail;
   return PALETTE.neutral;
@@ -458,9 +541,12 @@ function strokeActiveSegment(
     const grad = ctx.createLinearGradient(curve.p0.x, curve.p0.y, curve.p1.x, curve.p1.y);
     grad.addColorStop(
       0,
-      hexToRgba(event.kind === 'redteam_probe' ? PALETTE.quarantine : PALETTE.fail, alpha)
+      hexToRgba(event.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.fail, alpha)
     );
-    grad.addColorStop(1, hexToRgba(PALETTE.quarantine, alpha));
+    grad.addColorStop(
+      1,
+      hexToRgba(event.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.quarantine, alpha)
+    );
     ctx.strokeStyle = grad;
   } else {
     ctx.strokeStyle = hexToRgba(segmentSemanticColor(fromId, toId, event), alpha);
@@ -589,35 +675,52 @@ function drawStaticLayer(
   ctx.fillStyle = hexToRgba(PALETTE.fail, 0.7);
   ctx.fillText('BLOCK', rejMid.x + 10, rejMid.y);
 
-  // 5. Historical density trails (events 0 .. clampedActiveIndex)
+  // 5. Deduplicated outcome-separated filament strands (at most ~22 crisp strands + active on top)
   if (clampedActiveIndex >= 0) {
-    const visibleCount = clampedActiveIndex + 1;
-    const baseAlpha =
-      visibleCount <= 12
-        ? 0.34
-        : visibleCount <= 45
-          ? 0.23
-          : clamp(12 / visibleCount, 0.11, 0.2);
-
+    const representatives = collectRepresentativeStrands(events, clampedActiveIndex);
     ctx.lineCap = 'round';
-    for (let idx = 0; idx <= clampedActiveIndex; idx += 1) {
-      const ev = events[idx];
-      if (!ev || ev.pathNodes.length < 2) continue;
 
-      const laneOffset = getStrandLaneOffset(idx, layout.laneStep);
+    for (const rep of representatives) {
+      if (rep.eventIndex === clampedActiveIndex) continue;
+      const ev = rep.event;
       const matchesFilter = selectedNode === null || ev.pathNodes.includes(selectedNode);
-      const alpha = matchesFilter ? baseAlpha * (selectedNode ? 1.35 : 1) : baseAlpha * 0.22;
-      const color = outcomeColor(ev.outcome);
+      const alpha = selectedNode === null ? 0.42 : matchesFilter ? 0.52 : 0.09;
+      const color = strandBaseColor(ev);
 
-      ctx.strokeStyle = hexToRgba(color, clamp(alpha, 0.04, 0.65));
-      ctx.lineWidth = idx === clampedActiveIndex ? 1.35 : 0.95;
+      ctx.strokeStyle = hexToRgba(color, alpha);
+      ctx.lineWidth = 0.95;
 
       ctx.beginPath();
       for (let s = 0; s < ev.pathNodes.length - 1; s += 1) {
         const fromId = ev.pathNodes[s];
         const toId = ev.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-        const curve = buildEdgeCurve(layout, fromId, toId, laneOffset);
+        const curve = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
+        ctx.moveTo(curve.p0.x, curve.p0.y);
+        ctx.bezierCurveTo(
+          curve.cp1.x,
+          curve.cp1.y,
+          curve.cp2.x,
+          curve.cp2.y,
+          curve.p1.x,
+          curve.p1.y
+        );
+      }
+      ctx.stroke();
+    }
+
+    // Always draw clampedActiveIndex crisp on top at 1.6px / 0.92 alpha
+    const activeEv = events[clampedActiveIndex];
+    if (activeEv && activeEv.pathNodes.length >= 2) {
+      const { laneNorm } = getStrandLaneInfo(activeEv, clampedActiveIndex);
+      ctx.strokeStyle = hexToRgba(strandBaseColor(activeEv), 0.92);
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      for (let s = 0; s < activeEv.pathNodes.length - 1; s += 1) {
+        const fromId = activeEv.pathNodes[s];
+        const toId = activeEv.pathNodes[s + 1];
+        if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
+        const curve = buildEdgeCurve(layout, fromId, toId, laneNorm);
         ctx.moveTo(curve.p0.x, curve.p0.y);
         ctx.bezierCurveTo(
           curve.cp1.x,
@@ -894,7 +997,7 @@ function drawPulses(
       const fromId = pulse.pathNodes[segIdx];
       const toId = pulse.pathNodes[segIdx + 1];
       if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-      const curve = buildEdgeCurve(layout, fromId, toId, pulse.laneOffset);
+      const curve = buildEdgeCurve(layout, fromId, toId, pulse.laneNorm);
       tailPoints.push({
         pt: evalCubic(curve, localT),
         segIdx,
@@ -909,11 +1012,21 @@ function drawPulses(
       const fromId = pulse.pathNodes[curr.segIdx];
       const toId = pulse.pathNodes[curr.segIdx + 1];
       let segColor: string = PALETTE.neutral;
-      if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') segColor = PALETTE.pass;
-      else if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
-        segColor = pulse.outcome === 'QUARANTINE' ? PALETTE.quarantine : PALETTE.fail;
+      if (fromId === 'TASK_IN' && toId === 'FAST_CLOCK') {
+        segColor = PALETTE.probe;
+      } else if (fromId === 'FAST_CLOCK' && toId === 'ORACLE_VERIFIER') {
+        segColor = pulse.kind === 'redteam_probe' ? PALETTE.probe : outcomeColor(pulse.outcome);
+      } else if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
+        segColor = PALETTE.pass;
+      } else if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
+        segColor =
+          pulse.kind === 'redteam_probe'
+            ? PALETTE.probe
+            : pulse.outcome === 'QUARANTINE'
+              ? PALETTE.quarantine
+              : PALETTE.fail;
       } else if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') {
-        segColor = PALETTE.quarantine;
+        segColor = pulse.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.quarantine;
       } else if (fromId === 'SLOW_CLOCK_GATE' && toId === 'GATE_APPROVED') {
         segColor = PALETTE.pass;
       } else if (fromId === 'SLOW_CLOCK_GATE' && toId === 'GATE_REJECTED') {
@@ -935,7 +1048,7 @@ function drawPulses(
     const headTo = pulse.pathNodes[headSegIdx + 1];
     if (!isKnownNodeId(headFrom) || !isKnownNodeId(headTo)) continue;
 
-    const headCurve = buildEdgeCurve(layout, headFrom, headTo, pulse.laneOffset);
+    const headCurve = buildEdgeCurve(layout, headFrom, headTo, pulse.laneNorm);
     const headPt = evalCubic(headCurve, headLocalT);
     const tang = evalCubicTangent(headCurve, headLocalT);
     const angle = Math.atan2(tang.y, tang.x);
@@ -1079,26 +1192,34 @@ export function HopeFilamentCanvas({
     return counts;
   }, [events, clampedActiveIndex]);
 
-  // Precompute sampled polylines for crisp strand click & hover hit-testing
+  // Precompute sampled polylines for visible/active strands for crisp click & hover hit-testing
   const sampledStrands = useMemo<readonly SampledStrand[]>(() => {
     if (clampedActiveIndex < 0) return [];
+    const representatives = collectRepresentativeStrands(events, clampedActiveIndex);
+    const hasActive = representatives.some((r) => r.eventIndex === clampedActiveIndex);
+    const activeEv = events[clampedActiveIndex];
+    if (!hasActive && activeEv && activeEv.pathNodes.length >= 2) {
+      representatives.push({
+        eventIndex: clampedActiveIndex,
+        event: activeEv,
+        laneNorm: getStrandLaneInfo(activeEv, clampedActiveIndex).laneNorm,
+      });
+    }
     const list: SampledStrand[] = [];
-    for (let idx = 0; idx <= clampedActiveIndex; idx += 1) {
-      const ev = events[idx];
-      if (!ev || ev.pathNodes.length < 2) continue;
-      const laneOffset = getStrandLaneOffset(idx, layout.laneStep);
+    for (const rep of representatives) {
+      const ev = rep.event;
       const pts: Point[] = [];
       for (let s = 0; s < ev.pathNodes.length - 1; s += 1) {
         const fromId = ev.pathNodes[s];
         const toId = ev.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-        const curve = buildEdgeCurve(layout, fromId, toId, laneOffset);
+        const curve = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
         const segSteps = 8;
         for (let k = s === 0 ? 0 : 1; k <= segSteps; k += 1) {
           pts.push(evalCubic(curve, k / segSteps));
         }
       }
-      list.push({ eventIndex: idx, points: pts });
+      list.push({ eventIndex: rep.eventIndex, points: pts });
     }
     return list;
   }, [events, clampedActiveIndex, layout]);
@@ -1161,8 +1282,9 @@ export function HopeFilamentCanvas({
           startTime: now,
           durationMs: isPlaying ? 460 : 880,
           pathNodes: activeEvent.pathNodes,
-          laneOffset: getStrandLaneOffset(clampedActiveIndex, layout.laneStep),
+          laneNorm: getStrandLaneInfo(activeEvent, clampedActiveIndex).laneNorm,
           outcome: activeEvent.outcome,
+          kind: activeEvent.kind,
         };
         pulsesRef.current = [...pulsesRef.current.slice(-(MAX_ACTIVE_PULSES - 1)), nextPulse];
         lastCyclePulseAtRef.current = now;
@@ -1170,7 +1292,7 @@ export function HopeFilamentCanvas({
         pulsesRef.current = [];
       }
     }
-  }, [activeEvent, clampedActiveIndex, isPlaying, layout.laneStep]);
+  }, [activeEvent, clampedActiveIndex, isPlaying]);
 
   const drawFrameRef = useRef<(now: number) => void>(() => {});
 
@@ -1215,8 +1337,9 @@ export function HopeFilamentCanvas({
               startTime: now,
               durationMs: 520,
               pathNodes: activeEvent.pathNodes,
-              laneOffset: getStrandLaneOffset(clampedActiveIndex, layout.laneStep),
+              laneNorm: getStrandLaneInfo(activeEvent, clampedActiveIndex).laneNorm,
               outcome: activeEvent.outcome,
+              kind: activeEvent.kind,
             },
           ];
         }
@@ -1230,13 +1353,13 @@ export function HopeFilamentCanvas({
       if (currentHover?.kind === 'strand' && currentHover.eventIndex !== undefined) {
         const hoveredEv = events[currentHover.eventIndex];
         if (hoveredEv && hoveredEv.pathNodes.length >= 2) {
-          const laneOffset = getStrandLaneOffset(currentHover.eventIndex, layout.laneStep);
+          const { laneNorm } = getStrandLaneInfo(hoveredEv, currentHover.eventIndex);
           ctx.lineCap = 'round';
           for (let s = 0; s < hoveredEv.pathNodes.length - 1; s += 1) {
             const fromId = hoveredEv.pathNodes[s];
             const toId = hoveredEv.pathNodes[s + 1];
             if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-            const curve = buildEdgeCurve(layout, fromId, toId, laneOffset);
+            const curve = buildEdgeCurve(layout, fromId, toId, laneNorm);
             ctx.beginPath();
             ctx.moveTo(curve.p0.x, curve.p0.y);
             ctx.bezierCurveTo(
@@ -1256,13 +1379,13 @@ export function HopeFilamentCanvas({
 
       // Active event highlighted spline + failure tag badge
       if (activeEvent && activeEvent.pathNodes.length >= 2) {
-        const activeLane = getStrandLaneOffset(clampedActiveIndex, layout.laneStep);
+        const { laneNorm: activeLaneNorm } = getStrandLaneInfo(activeEvent, clampedActiveIndex);
         ctx.lineCap = 'round';
         for (let s = 0; s < activeEvent.pathNodes.length - 1; s += 1) {
           const fromId = activeEvent.pathNodes[s];
           const toId = activeEvent.pathNodes[s + 1];
           if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-          const curve = buildEdgeCurve(layout, fromId, toId, activeLane);
+          const curve = buildEdgeCurve(layout, fromId, toId, activeLaneNorm);
           strokeActiveSegment(ctx, curve, fromId, toId, activeEvent, 3.4, 0.16);
           strokeActiveSegment(ctx, curve, fromId, toId, activeEvent, 1.85, 0.94);
         }
