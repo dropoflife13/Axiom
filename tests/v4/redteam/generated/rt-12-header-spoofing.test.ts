@@ -38,7 +38,10 @@ describe('Red-Team v1 Probe RT-12: Spoofed forwarded host, origin, and proto hea
           expect(res.status).toBeLessThan(500);
           expect(res.redirectLocation ?? '').not.toContain('evil.example');
           expect(res.headers['location'] ?? '').not.toContain('evil.example');
-          expect(res.headers['access-control-allow-origin'] ?? '').not.toContain('evil.example');
+          const allowOrigin = res.headers['access-control-allow-origin'] ?? null;
+          expect(allowOrigin).not.toBe('*');
+          expect(allowOrigin ?? '').not.toContain('evil.example');
+          expect([null, 'http://127.0.0.1:3000']).toContain(allowOrigin);
           expect(res.bodyText).not.toContain('evil.example');
         }
       }
