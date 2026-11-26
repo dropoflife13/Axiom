@@ -48,6 +48,8 @@ export interface FlowRedTeamProbeInfo {
   readonly proposedRuleText: string;
   readonly evidenceHash: string;
   readonly status: 'staged' | 'approved' | 'rejected';
+  readonly liveVerdict: 'pass' | 'fail' | 'staged';
+  readonly durationMs?: number;
 }
 
 export interface FlowTerminalLine {
@@ -258,6 +260,8 @@ export interface RawRedTeamCandidateInput {
   readonly evidenceHashes?: unknown;
   readonly status?: unknown;
   readonly stagedAt?: unknown;
+  readonly liveVerdict?: unknown;
+  readonly durationMs?: unknown;
 }
 
 export interface RawRedTeamThreatInput {
@@ -735,6 +739,16 @@ export function buildRedTeamFlowTraceEvent(params: {
     candidate.status === 'approved' || candidate.status === 'rejected'
       ? candidate.status
       : 'staged';
+  const liveVerdict: 'pass' | 'fail' | 'staged' =
+    candidate.liveVerdict === 'pass' || candidate.liveVerdict === 'fail'
+      ? candidate.liveVerdict
+      : 'staged';
+  const durationMs =
+    typeof candidate.durationMs === 'number' &&
+    Number.isFinite(candidate.durationMs) &&
+    candidate.durationMs >= 0
+      ? candidate.durationMs
+      : undefined;
 
   let outcome: FlowOutcome = 'QUARANTINE';
   let terminalNode: FlowNodeId = 'SLOW_CLOCK_GATE';
@@ -746,7 +760,22 @@ export function buildRedTeamFlowTraceEvent(params: {
     'SLOW_CLOCK_GATE',
   ];
 
-  if (gateStatus === 'approved') {
+  if (liveVerdict === 'pass') {
+    outcome = 'PASS';
+    terminalNode = 'VERIFIED_OUTPUT';
+    pathNodes = ['TASK_IN', 'FAST_CLOCK', 'ORACLE_VERIFIER', 'VERIFIED_OUTPUT'];
+  } else if (liveVerdict === 'fail') {
+    outcome = 'FAIL';
+    terminalNode = 'GATE_REJECTED';
+    pathNodes = [
+      'TASK_IN',
+      'FAST_CLOCK',
+      'ORACLE_VERIFIER',
+      'QUARANTINE_VAULT',
+      'SLOW_CLOCK_GATE',
+      'GATE_REJECTED',
+    ];
+  } else if (gateStatus === 'approved') {
     outcome = 'QUARANTINE';
     terminalNode = 'GATE_APPROVED';
     pathNodes = [
@@ -802,8 +831,8 @@ export function buildRedTeamFlowTraceEvent(params: {
     },
     {
       prefix: '<',
-      tone: 'quarantine',
-      text: `quarantine status=${gateStatus} candidate=${candidateId}${severity ? ` severity=${severity}` : ''} hash=${evidenceHash.slice(0, 12)}`,
+      tone: liveVerdict === 'pass' ? 'pass' : liveVerdict === 'fail' ? 'fail' : 'quarantine',
+      text: `live-verdict=${liveVerdict}${durationMs !== undefined ? ` duration=${durationMs}ms` : ''} candidate=${candidateId}${severity ? ` severity=${severity}` : ''} hash=${evidenceHash.slice(0, 12)}`,
     },
   ];
 
@@ -832,17 +861,18 @@ export function buildRedTeamFlowTraceEvent(params: {
     shortName: 'Red-Team Loopback',
     taskId: factId,
     retrievedRuleIds: [],
-    fullTaskPass: false,
+    fullTaskPass: liveVerdict === 'pass',
     outcome,
     terminalNode,
     pathNodes,
-    passedFactsCount: 0,
+    passedFactsCount: liveVerdict === 'pass' ? 1 : 0,
     boundFactsCount: 1,
-    factPassRate: 0,
-    passedFacts: [],
-    failedFacts: factId ? [factId] : [],
+    factPassRate: liveVerdict === 'pass' ? 1 : 0,
+    passedFacts: liveVerdict === 'pass' && factId ? [factId] : [],
+    failedFacts: liveVerdict === 'pass' || !factId ? [] : [factId],
     activeForensicFlags: triggerFlag ? [triggerFlag] : [],
     ...(stderrSummary !== undefined ? { stderrSummary } : {}),
+    ...(durationMs !== undefined ? { latencyMs: durationMs } : {}),
     timestamp,
     source: dryRun ? 'redteam-dry-run' : 'redteam-loopback',
     promptDelta: {
@@ -871,6 +901,8 @@ export function buildRedTeamFlowTraceEvent(params: {
       proposedRuleText,
       evidenceHash,
       status: gateStatus,
+      liveVerdict,
+      ...(durationMs !== undefined ? { durationMs } : {}),
     },
     terminalLog,
   };

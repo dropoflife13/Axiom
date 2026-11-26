@@ -43,10 +43,72 @@ function readJsonSafe<T>(filePath: string | null): T | null {
   }
 }
 
+interface RawLiveProbeSummary {
+  readonly probeId?: unknown;
+  readonly status?: unknown;
+  readonly passedAssertions?: unknown;
+  readonly failedAssertions?: unknown;
+  readonly durationMs?: unknown;
+  readonly executedAt?: unknown;
+}
+
+function readLiveProbeVerdict(
+  candidate: RawRedTeamCandidateInput,
+  summaries: Readonly<Record<string, RawLiveProbeSummary>> | null
+): { readonly liveVerdict: 'pass' | 'fail' | 'staged'; readonly durationMs?: number } {
+  const factId = typeof candidate.factId === 'string' ? candidate.factId : '';
+  const summary = factId ? summaries?.[factId] : undefined;
+  if (!summary || summary.probeId !== factId) {
+    return { liveVerdict: 'staged' };
+  }
+
+  const durationMs =
+    typeof summary.durationMs === 'number' &&
+    Number.isFinite(summary.durationMs) &&
+    summary.durationMs >= 0
+      ? summary.durationMs
+      : undefined;
+
+  const passedAssertions =
+    typeof summary.passedAssertions === 'number' &&
+    Number.isInteger(summary.passedAssertions) &&
+    summary.passedAssertions >= 0
+      ? summary.passedAssertions
+      : null;
+  const failedAssertions =
+    typeof summary.failedAssertions === 'number' &&
+    Number.isInteger(summary.failedAssertions) &&
+    summary.failedAssertions >= 0
+      ? summary.failedAssertions
+      : null;
+  const executedAt =
+    typeof summary.executedAt === 'string' &&
+    !Number.isNaN(new Date(summary.executedAt).getTime());
+
+  const status = summary.status === 'pass' || summary.status === 'fail' ? summary.status : null;
+  const isCompletedPass =
+    status === 'pass' && passedAssertions !== null && passedAssertions > 0 && failedAssertions === 0;
+  const isCompletedFail = status === 'fail' && failedAssertions !== null && failedAssertions > 0;
+
+  if (isCompletedPass && durationMs !== undefined && executedAt) {
+    return {
+      liveVerdict: 'pass',
+      ...(durationMs !== undefined ? { durationMs } : {}),
+    };
+  }
+
+  if (isCompletedFail && durationMs !== undefined && executedAt) {
+    return { liveVerdict: 'fail', durationMs };
+  }
+
+  return { liveVerdict: 'staged' };
+}
+
 export async function GET() {
   try {
     const candidatesPath = resolveRepoFile('.axiom-state/redteam-v1/quarantine-candidates.json');
     const threatsPath = resolveRepoFile('.axiom-state/redteam-v1/threat-matrix.json');
+    const summariesPath = resolveRepoFile('.axiom-state/redteam-v1/probe-results-summary.json');
 
     const candidatesDoc = readJsonSafe<{
       readonly dryRun?: boolean;
@@ -58,9 +120,15 @@ export async function GET() {
       readonly targetBaseUrl?: string;
       readonly threats?: readonly RawRedTeamThreatInput[];
     }>(threatsPath);
+    const summariesDoc = readJsonSafe<Record<string, RawLiveProbeSummary>>(summariesPath);
 
     const threats = Array.isArray(threatsDoc?.threats) ? threatsDoc.threats : [];
-    const candidates = Array.isArray(candidatesDoc?.candidates) ? candidatesDoc.candidates : [];
+    const candidates = Array.isArray(candidatesDoc?.candidates)
+      ? candidatesDoc.candidates.map((candidate) => ({
+          ...candidate,
+          ...readLiveProbeVerdict(candidate, summariesDoc),
+        }))
+      : [];
 
     if (candidates.length === 0) {
       return NextResponse.json(
