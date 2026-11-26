@@ -2,6 +2,7 @@
 // dashboard telemetry strictly from Vitest's JSON reporter output.
 
 import { spawn } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {
@@ -23,6 +24,10 @@ export const REDTEAM_PROBE_IDS = [
   'RT-06',
   'RT-07',
   'RT-08',
+  'RT-09',
+  'RT-10',
+  'RT-11',
+  'RT-12',
 ] as const;
 
 export type RedTeamProbeId = (typeof REDTEAM_PROBE_IDS)[number];
@@ -75,7 +80,7 @@ function isProbeId(value: string): value is RedTeamProbeId {
 function extractProbeId(...values: unknown[]): RedTeamProbeId | null {
   for (const value of values) {
     if (typeof value !== 'string') continue;
-    const match = value.match(/\b(RT-0[1-8])\b/i);
+    const match = value.match(/\b(RT-(?:0[1-9]|1[0-2]))\b/i);
     const normalized = match?.[1]?.toUpperCase() ?? '';
     if (isProbeId(normalized)) return normalized;
   }
@@ -269,6 +274,182 @@ export function registerFaultInjectionManifest(stateDir: string, stagedAt?: stri
   );
 }
 
+export interface RedTeamMutationProbeThreat {
+  readonly id: 'RT-09' | 'RT-10' | 'RT-11' | 'RT-12';
+  readonly category:
+    | 'authz_idor'
+    | 'error_leakage_stack_trace'
+    | 'rate_limit_malformed_payload';
+  readonly route: string;
+  readonly method: 'GET' | 'POST';
+  readonly title: string;
+  readonly expectedDefense: string;
+  readonly severity: 'medium' | 'high';
+}
+
+export interface RedTeamMutationProbeCandidate {
+  readonly candidateId: string;
+  readonly cartridgeId: 'redteam-v1-loopback';
+  readonly factId: RedTeamMutationProbeThreat['id'];
+  readonly triggerFlag: RedTeamMutationProbeThreat['category'];
+  readonly route: string;
+  readonly proposedRuleText: string;
+  readonly evidenceHashes: readonly [string];
+  readonly status: 'staged';
+  readonly stagedAt: string;
+}
+
+function sha256Hex(value: string): string {
+  return crypto.createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+/**
+ * Builds staged, read-only manifest entries for RT-09 through RT-12.
+ * Never mutates canonical rule vaults.
+ */
+export function buildRedTeamMutationProbeManifest(
+  stagedAt = new Date().toISOString()
+): {
+  readonly threats: readonly RedTeamMutationProbeThreat[];
+  readonly candidates: readonly RedTeamMutationProbeCandidate[];
+} {
+  const threats: readonly RedTeamMutationProbeThreat[] = [
+    {
+      id: 'RT-09',
+      category: 'authz_idor',
+      route: '/api/v4-hope',
+      method: 'POST',
+      title: 'HTTP method tampering on read-only endpoints',
+      expectedDefense:
+        'Read-only endpoints (/api/v4-hope, /api/v4-hope/redteam, /api/runs) must reject POST, PUT, and DELETE with 405 Method Not Allowed, zero stack traces, and zero 0.0.0.0 redirects.',
+      severity: 'medium',
+    },
+    {
+      id: 'RT-10',
+      category: 'error_leakage_stack_trace',
+      route: '/api/v4-hope/redteam',
+      method: 'POST',
+      title: 'Malformed JSON, prototype-pollution keys, and mismatched Content-Type handling',
+      expectedDefense:
+        'Endpoints (/api/v4-hope/redteam, /api/runs) must reject truncated JSON, __proto__ payloads, and text/plain bodies with a clean 4xx status (< 500) and zero SyntaxError stack leakage.',
+      severity: 'high',
+    },
+    {
+      id: 'RT-11',
+      category: 'rate_limit_malformed_payload',
+      route: '/api/v4-hope/redteam',
+      method: 'POST',
+      title: 'Oversized 256KB payload rejection',
+      expectedDefense:
+        'POST /api/v4-hope/redteam must reject an oversized 256KB payload quickly with 405, 413, or 400 (< 500) within timeout and zero server crash.',
+      severity: 'medium',
+    },
+    {
+      id: 'RT-12',
+      category: 'authz_idor',
+      route: '/api/ablation-results',
+      method: 'GET',
+      title: 'Spoofed forwarded host, origin, and proto header non-reflection',
+      expectedDefense:
+        'Endpoints (/api/ablation-results, /api/portfolio, /api/v4-hope/redteam) must never reflect spoofed X-Forwarded-Host, Origin, or X-Forwarded-Proto values in Location, Access-Control-Allow-Origin, or the response body.',
+      severity: 'high',
+    },
+  ];
+
+  return {
+    threats,
+    candidates: threats.map((threat) => ({
+      candidateId: `Q-RT-${threat.id}`,
+      cartridgeId: 'redteam-v1-loopback',
+      factId: threat.id,
+      triggerFlag: threat.category,
+      route: threat.route,
+      proposedRuleText: `On ${threat.method} ${threat.route}: ${threat.expectedDefense}`,
+      evidenceHashes: [
+        sha256Hex(
+          JSON.stringify({
+            id: threat.id,
+            route: threat.route,
+            method: threat.method,
+            expectedDefense: threat.expectedDefense,
+          })
+        ),
+      ],
+      status: 'staged',
+      stagedAt,
+    })),
+  };
+}
+
+/**
+ * Idempotently registers staged RT-09..RT-12 entries into existing local
+ * Red-Team telemetry manifests without mutating canonical vaults.
+ */
+export function registerMutationProbeManifest(stateDir: string, stagedAt?: string): void {
+  const candidatesPath = path.join(stateDir, 'quarantine-candidates.json');
+  const threatsPath = path.join(stateDir, 'threat-matrix.json');
+  const candidatesDoc = readJsonObject(candidatesPath);
+  const threatsDoc = readJsonObject(threatsPath);
+  const candidates = Array.isArray(candidatesDoc.candidates)
+    ? candidatesDoc.candidates.filter(
+        (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object'
+      )
+    : null;
+  const threats = Array.isArray(threatsDoc.threats)
+    ? threatsDoc.threats.filter(
+        (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object'
+      )
+    : null;
+
+  if (!candidates || !threats) {
+    return;
+  }
+
+  const manifest = buildRedTeamMutationProbeManifest(stagedAt);
+  const candidateByFactId = new Map(manifest.candidates.map((c) => [c.factId, c]));
+  const seenFactIds = new Set<string>();
+  const refreshedCandidates = candidates.map((entry) => {
+    const factId = typeof entry.factId === 'string' ? entry.factId : '';
+    const replacement = candidateByFactId.get(factId as RedTeamMutationProbeCandidate['factId']);
+    if (!replacement) return entry;
+    seenFactIds.add(factId);
+    const existingStagedAt =
+      typeof entry.stagedAt === 'string' && entry.stagedAt.length > 0
+        ? entry.stagedAt
+        : replacement.stagedAt;
+    return { ...replacement, stagedAt: existingStagedAt };
+  });
+  const nextCandidates = [
+    ...refreshedCandidates,
+    ...manifest.candidates.filter((c) => !seenFactIds.has(c.factId)),
+  ];
+
+  const threatById = new Map(manifest.threats.map((t) => [t.id, t]));
+  const seenThreatIds = new Set<string>();
+  const refreshedThreats = threats.map((entry) => {
+    const id = typeof entry.id === 'string' ? entry.id : '';
+    const replacement = threatById.get(id as RedTeamMutationProbeThreat['id']);
+    if (!replacement) return entry;
+    seenThreatIds.add(id);
+    return replacement;
+  });
+  const nextThreats = [
+    ...refreshedThreats,
+    ...manifest.threats.filter((t) => !seenThreatIds.has(t.id)),
+  ];
+
+  fs.writeFileSync(
+    candidatesPath,
+    `${JSON.stringify({ ...candidatesDoc, candidates: nextCandidates }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    threatsPath,
+    `${JSON.stringify({ ...threatsDoc, threats: nextThreats }, null, 2)}\n`,
+    'utf8'
+  );
+}
+
 /**
  * Executes generated probes only after a loopback-only preflight. Both this
  * preflight and the generated probes use safeLoopbackFetch(), which enforces
@@ -288,6 +469,7 @@ export async function runRedTeamLiveVerdicts(
   const reportPath = path.join(stateDir, 'probe-results.json');
   const summaryPath = path.join(stateDir, 'probe-results-summary.json');
   fs.mkdirSync(stateDir, { recursive: true });
+  registerMutationProbeManifest(stateDir);
   if (isRedTeamFaultInjectionEnabled()) {
     registerFaultInjectionManifest(stateDir);
   }
