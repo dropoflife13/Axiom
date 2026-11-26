@@ -71,6 +71,60 @@ interface NodeMeta {
   readonly accent: string;
 }
 
+interface RecentOutcomeSlot {
+  readonly outcome: FlowTraceEvent['outcome'];
+  readonly kind: FlowTraceEvent['kind'];
+  readonly factPassRate: number;
+  readonly boundFactsCount: number;
+}
+
+interface NodeMiniBin {
+  readonly visits: number;
+  readonly total: number;
+  readonly passCount: number;
+  readonly quarantineCount: number;
+  readonly failCount: number;
+}
+
+interface QuarantinePulseBin {
+  readonly quarCount: number;
+  readonly totalCount: number;
+}
+
+interface GateAuditStats {
+  readonly g1PassCount: number;
+  readonly g1ExecCount: number;
+  readonly g2PassCount: number;
+  readonly g2ExecCount: number;
+  readonly g3PassCount: number;
+  readonly g3ExecCount: number;
+  readonly resolvedCount: number;
+}
+
+interface CanvasTelemetryStats {
+  readonly seenTotal: number;
+  readonly totalEvents: number;
+  readonly playbackPct: number;
+  readonly nodeCounts: Record<FlowNodeId, number>;
+  readonly verifiedCount: number;
+  readonly quarantineEnteredCount: number;
+  readonly gateTotal: number;
+  readonly approvedCount: number;
+  readonly rejectedCount: number;
+  readonly stagedCount: number;
+  readonly firstPassRate: number;
+  readonly quarantineRate: number;
+  readonly gateResolvedRate: number;
+  readonly gateApprovedShare: number;
+  readonly gateRejectedShare: number;
+  readonly avgLexicalLockPct: number;
+  readonly avgReductionPct: number;
+  readonly recentOutcomeSlots: readonly RecentOutcomeSlot[];
+  readonly quarantineBins: readonly QuarantinePulseBin[];
+  readonly nodeBins: Record<FlowNodeId, readonly NodeMiniBin[]>;
+  readonly gateStats: GateAuditStats;
+}
+
 const NODE_ORDER: readonly FlowNodeId[] = [
   'TASK_IN',
   'FAST_CLOCK',
@@ -212,8 +266,8 @@ function computeDagLayout(width: number, height: number): DagLayout {
   const w = Math.max(280, width);
   const h = Math.max(340, height);
 
-  const topPad = 26;
-  const bottomPad = 22;
+  const topPad = 24;
+  const bottomPad = 20;
   const usableH = Math.max(240, h - topPad - bottomPad);
 
   const isCompact = w < 520;
@@ -224,8 +278,8 @@ function computeDagLayout(width: number, height: number): DagLayout {
     ? clamp(w * 0.195, 70, 106)
     : clamp(w * 0.165, 92, 146);
 
-  const nodeH = clamp(usableH * 0.145, 42, 58);
-  const gateH = clamp(usableH * 0.135, 40, 54);
+  const nodeH = clamp(usableH * 0.145, 44, 58);
+  const gateH = clamp(usableH * 0.138, 42, 54);
 
   const leftX = clamp(w * 0.225, spineW / 2 + 12, w * 0.32);
   const minRightX = leftX + spineW / 2 + (isCompact ? 30 : 62) + spineW / 2;
@@ -242,20 +296,24 @@ function computeDagLayout(width: number, height: number): DagLayout {
     Math.max(minSplitHalf, Math.min(maxSplitByRightEdge, maxSplitByLeftSpine))
   );
 
-  const y0 = topPad + usableH * 0.085;
-  const y1 = topPad + usableH * 0.355;
-  const y2 = topPad + usableH * 0.635;
-  const y3 = topPad + usableH * 0.905;
+  const leftY0 = topPad + usableH * 0.13;
+  const leftY1 = topPad + usableH * 0.49;
+  const leftY2 = topPad + usableH * 0.85;
+
+  const rightY0 = topPad + usableH * 0.11;
+  const rightY1 = topPad + usableH * 0.39;
+  const rightY2 = topPad + usableH * 0.66;
+  const rightY3 = topPad + usableH * 0.91;
 
   const nodes: Record<FlowNodeId, NodeRect> = {
-    TASK_IN: createNodeRect('TASK_IN', leftX, y0, spineW, nodeH),
-    FAST_CLOCK: createNodeRect('FAST_CLOCK', leftX, y1, spineW, nodeH),
-    ORACLE_VERIFIER: createNodeRect('ORACLE_VERIFIER', leftX, y2, spineW, nodeH),
-    VERIFIED_OUTPUT: createNodeRect('VERIFIED_OUTPUT', leftX, y3, spineW, nodeH),
-    QUARANTINE_VAULT: createNodeRect('QUARANTINE_VAULT', rightCenterX, y1, spineW, nodeH),
-    SLOW_CLOCK_GATE: createNodeRect('SLOW_CLOCK_GATE', rightCenterX, y2, spineW, nodeH),
-    GATE_APPROVED: createNodeRect('GATE_APPROVED', rightCenterX - splitHalf, y3, gateW, gateH),
-    GATE_REJECTED: createNodeRect('GATE_REJECTED', rightCenterX + splitHalf, y3, gateW, gateH),
+    TASK_IN: createNodeRect('TASK_IN', leftX, leftY0, spineW, nodeH),
+    FAST_CLOCK: createNodeRect('FAST_CLOCK', leftX, leftY1, spineW, nodeH),
+    ORACLE_VERIFIER: createNodeRect('ORACLE_VERIFIER', leftX, leftY2, spineW, nodeH),
+    VERIFIED_OUTPUT: createNodeRect('VERIFIED_OUTPUT', rightCenterX, rightY0, spineW, nodeH),
+    QUARANTINE_VAULT: createNodeRect('QUARANTINE_VAULT', rightCenterX, rightY1, spineW, nodeH),
+    SLOW_CLOCK_GATE: createNodeRect('SLOW_CLOCK_GATE', rightCenterX, rightY2, spineW, nodeH),
+    GATE_APPROVED: createNodeRect('GATE_APPROVED', rightCenterX - splitHalf, rightY3, gateW, gateH),
+    GATE_REJECTED: createNodeRect('GATE_REJECTED', rightCenterX + splitHalf, rightY3, gateW, gateH),
   };
 
   return {
@@ -327,10 +385,36 @@ function buildEdgeCurve(
   const from = layout.nodes[fromId];
   const to = layout.nodes[toId];
 
-  // Lateral Quarantine bridge: wide, airy edge port spread & vertical Bezier arc
+  // ORACLE_VERIFIER (upper-right) -> VERIFIED_OUTPUT (left): sweeping emerald PASS arc
+  if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
+    const p0: Point = {
+      x: from.right,
+      y: from.cy - from.h * 0.22 + laneNorm * (from.h * 0.12),
+    };
+    const p1: Point = {
+      x: to.left,
+      y: to.cy + laneNorm * (to.h * 0.28),
+    };
+    const dx = p1.x - p0.x;
+    const lift = clamp(layout.height * 0.05, 10, 22);
+    return {
+      p0,
+      cp1: { x: p0.x + dx * 0.46, y: p0.y - lift + laneNorm * 14 },
+      cp2: { x: p1.x - dx * 0.48, y: p1.y + laneNorm * 18 },
+      p1,
+    };
+  }
+
+  // ORACLE_VERIFIER (lower-right) -> QUARANTINE_VAULT (left): strictly below PASS arc
   if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
-    const p0: Point = { x: from.right, y: from.cy + laneNorm * (from.h * 0.38) };
-    const p1: Point = { x: to.left, y: to.cy + laneNorm * (to.h * 0.38) };
+    const p0: Point = {
+      x: from.right,
+      y: from.cy + from.h * 0.22 + laneNorm * (from.h * 0.14),
+    };
+    const p1: Point = {
+      x: to.left,
+      y: to.cy + laneNorm * (to.h * 0.30),
+    };
     const dx = p1.x - p0.x;
     const arcSpread = laneNorm * clamp(layout.height * 0.085, 22, 42);
     return {
@@ -356,19 +440,6 @@ function buildEdgeCurve(
     };
   }
 
-  // ORACLE_VERIFIER -> VERIFIED_OUTPUT: wide emerald green filament fan
-  if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
-    const p0: Point = { x: from.cx + laneNorm * (from.w * 0.34), y: from.bottom };
-    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.34), y: to.top };
-    const dy = p1.y - p0.y;
-    return {
-      p0,
-      cp1: { x: from.cx + laneNorm * (from.w * 0.42), y: p0.y + dy * 0.42 },
-      cp2: { x: to.cx + laneNorm * (to.w * 0.42), y: p1.y - dy * 0.42 },
-      p1,
-    };
-  }
-
   // QUARANTINE_VAULT -> SLOW_CLOCK_GATE: separate Quarantine & Fail strands
   if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') {
     const p0: Point = { x: from.cx + laneNorm * (from.w * 0.38), y: from.bottom };
@@ -383,13 +454,13 @@ function buildEdgeCurve(
   }
 
   // Vertical spine conduits (TASK_IN -> FAST_CLOCK, FAST_CLOCK -> ORACLE_VERIFIER)
-  const p0: Point = { x: from.cx + laneNorm * (from.w * 0.40), y: from.bottom };
-  const p1: Point = { x: to.cx + laneNorm * (to.w * 0.40), y: to.top };
+  const p0: Point = { x: from.cx + laneNorm * (from.w * 0.42), y: from.bottom };
+  const p1: Point = { x: to.cx + laneNorm * (to.w * 0.42), y: to.top };
   const dy = p1.y - p0.y;
   return {
     p0,
-    cp1: { x: from.cx + laneNorm * (from.w * 0.46), y: p0.y + dy * 0.42 },
-    cp2: { x: to.cx + laneNorm * (to.w * 0.46), y: p1.y - dy * 0.42 },
+    cp1: { x: from.cx + laneNorm * (from.w * 0.48), y: p0.y + dy * 0.42 },
+    cp2: { x: to.cx + laneNorm * (to.w * 0.48), y: p1.y - dy * 0.42 },
     p1,
   };
 }
@@ -647,16 +718,16 @@ function drawStaticLayer(
   ctx.textBaseline = 'middle';
 
   const passCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'VERIFIED_OUTPUT', 0);
-  const passMid = evalCubic(passCurve, 0.5);
+  const passMid = evalCubic(passCurve, 0.56);
   ctx.textAlign = 'right';
   ctx.fillStyle = hexToRgba(PALETTE.pass, 0.72);
-  ctx.fillText('PASS', passMid.x - 12, passMid.y);
+  ctx.fillText('PASS', passMid.x - 14, passMid.y - 10);
 
   const stageCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const stageStart = evalCubic(stageCurve, 0.16);
+  const stageStart = evalCubic(stageCurve, 0.22);
   ctx.textAlign = 'left';
   ctx.fillStyle = hexToRgba(PALETTE.fail, 0.72);
-  ctx.fillText('STAGE', stageStart.x + 4, stageStart.y + 12);
+  ctx.fillText('STAGE', stageStart.x + 8, stageStart.y + 22);
 
   const appCurve = buildEdgeCurve(layout, 'SLOW_CLOCK_GATE', 'GATE_APPROVED', 0);
   const appMid = evalCubic(appCurve, 0.52);
@@ -757,14 +828,14 @@ function drawActiveFailureBadge(
   if (!badgeText) return;
 
   const curve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const mid = evalCubic(curve, 0.5);
+  const mid = evalCubic(curve, 0.52);
 
   ctx.font = `600 9.5px ${FONT_MONO}`;
   const textW = ctx.measureText(badgeText).width;
   const boxW = Math.min(layout.width * 0.34, textW + 16);
   const boxH = 20;
   const bx = clamp(mid.x - boxW / 2, 8, layout.width - boxW - 8);
-  const by = clamp(mid.y - boxH - 10, 26, layout.height - boxH - 8);
+  const by = clamp(mid.y - boxH - 16, 26, layout.height - boxH - 8);
 
   const isQuarantine = event.outcome === 'QUARANTINE' || event.kind === 'redteam_probe';
   const strokeColor = isQuarantine ? PALETTE.quarantine : PALETTE.fail;
@@ -785,10 +856,624 @@ function drawActiveFailureBadge(
   ctx.fillText(truncateText(ctx, badgeText, boxW - 18), bx + 13, by + boxH / 2 + 0.5);
 }
 
+function createEmptyMiniBins(count: number): Array<{
+  visits: number;
+  total: number;
+  passCount: number;
+  quarantineCount: number;
+  failCount: number;
+}> {
+  return Array.from({ length: count }, () => ({
+    visits: 0,
+    total: 0,
+    passCount: 0,
+    quarantineCount: 0,
+    failCount: 0,
+  }));
+}
+
+function computeCanvasTelemetryStats(
+  events: readonly FlowTraceEvent[],
+  clampedActiveIndex: number
+): CanvasTelemetryStats {
+  const totalEvents = events.length;
+  const seenTotal = clampedActiveIndex >= 0 ? clampedActiveIndex + 1 : 0;
+  const playbackPct = totalEvents > 0 ? seenTotal / totalEvents : 0;
+
+  const nodeCounts: Record<FlowNodeId, number> = {
+    TASK_IN: 0,
+    FAST_CLOCK: 0,
+    ORACLE_VERIFIER: 0,
+    VERIFIED_OUTPUT: 0,
+    QUARANTINE_VAULT: 0,
+    SLOW_CLOCK_GATE: 0,
+    GATE_APPROVED: 0,
+    GATE_REJECTED: 0,
+  };
+
+  const nodeBinsMutable: Record<
+    FlowNodeId,
+    Array<{
+      visits: number;
+      total: number;
+      passCount: number;
+      quarantineCount: number;
+      failCount: number;
+    }>
+  > = {
+    TASK_IN: createEmptyMiniBins(8),
+    FAST_CLOCK: createEmptyMiniBins(8),
+    ORACLE_VERIFIER: createEmptyMiniBins(8),
+    VERIFIED_OUTPUT: createEmptyMiniBins(8),
+    QUARANTINE_VAULT: createEmptyMiniBins(8),
+    SLOW_CLOCK_GATE: createEmptyMiniBins(8),
+    GATE_APPROVED: createEmptyMiniBins(8),
+    GATE_REJECTED: createEmptyMiniBins(8),
+  };
+
+  const quarantineBins: Array<{ quarCount: number; totalCount: number }> = Array.from(
+    { length: 6 },
+    () => ({ quarCount: 0, totalCount: 0 })
+  );
+
+  let lockSum = 0;
+  let reductionSum = 0;
+  let compactionSamples = 0;
+  let g1PassCount = 0;
+  let g1ExecCount = 0;
+  let g2PassCount = 0;
+  let g2ExecCount = 0;
+  let g3PassCount = 0;
+  let g3ExecCount = 0;
+
+  const recentStart = Math.max(0, clampedActiveIndex - 7);
+  const recentOutcomeSlots: RecentOutcomeSlot[] = [];
+
+  for (let i = 0; i <= clampedActiveIndex; i += 1) {
+    const ev = events[i];
+    if (!ev) continue;
+
+    const bin8 = seenTotal <= 8 ? i : Math.min(7, Math.floor((i * 8) / seenTotal));
+    const bin6 = seenTotal <= 6 ? i : Math.min(5, Math.floor((i * 6) / seenTotal));
+
+    for (const nodeId of NODE_ORDER) {
+      nodeBinsMutable[nodeId][bin8].total += 1;
+    }
+
+    let enteredQuarantine = false;
+    for (const n of ev.pathNodes) {
+      if (!isKnownNodeId(n)) continue;
+      nodeCounts[n] += 1;
+      const cell = nodeBinsMutable[n][bin8];
+      cell.visits += 1;
+      if (ev.outcome === 'PASS') cell.passCount += 1;
+      else if (ev.outcome === 'QUARANTINE') cell.quarantineCount += 1;
+      else cell.failCount += 1;
+      if (n === 'QUARANTINE_VAULT') enteredQuarantine = true;
+    }
+
+    quarantineBins[bin6].totalCount += 1;
+    if (enteredQuarantine) {
+      quarantineBins[bin6].quarCount += 1;
+    }
+
+    if (ev.promptDelta.beforeTokens > 0) {
+      lockSum += ev.promptDelta.lexicalLockPct;
+      reductionSum += ev.promptDelta.reductionPct;
+      compactionSamples += 1;
+    }
+
+    const gate = ev.slowClockGate;
+    if (gate.status !== 'none') {
+      if (gate.g1LexicalPassed !== undefined) {
+        g1ExecCount += 1;
+        if (gate.g1LexicalPassed) g1PassCount += 1;
+      }
+      if (gate.g2ConflictPassed !== undefined) {
+        g2ExecCount += 1;
+        if (gate.g2ConflictPassed) g2PassCount += 1;
+      }
+      if (gate.g3CanaryPassed !== undefined) {
+        g3ExecCount += 1;
+        if (gate.g3CanaryPassed) g3PassCount += 1;
+      }
+    }
+
+    if (i >= recentStart) {
+      recentOutcomeSlots.push({
+        outcome: ev.outcome,
+        kind: ev.kind,
+        factPassRate: ev.factPassRate,
+        boundFactsCount: ev.boundFactsCount,
+      });
+    }
+  }
+
+  const verifiedCount = nodeCounts.VERIFIED_OUTPUT;
+  const quarantineEnteredCount = nodeCounts.QUARANTINE_VAULT;
+  const approvedCount = nodeCounts.GATE_APPROVED;
+  const rejectedCount = nodeCounts.GATE_REJECTED;
+  const gateTotal = Math.max(nodeCounts.SLOW_CLOCK_GATE, approvedCount + rejectedCount);
+  const resolvedCount = approvedCount + rejectedCount;
+  const stagedCount = Math.max(0, gateTotal - resolvedCount);
+
+  return {
+    seenTotal,
+    totalEvents,
+    playbackPct,
+    nodeCounts,
+    verifiedCount,
+    quarantineEnteredCount,
+    gateTotal,
+    approvedCount,
+    rejectedCount,
+    stagedCount,
+    firstPassRate: seenTotal > 0 ? verifiedCount / seenTotal : 0,
+    quarantineRate: seenTotal > 0 ? quarantineEnteredCount / seenTotal : 0,
+    gateResolvedRate: gateTotal > 0 ? resolvedCount / gateTotal : 0,
+    gateApprovedShare: gateTotal > 0 ? approvedCount / gateTotal : 0,
+    gateRejectedShare: gateTotal > 0 ? rejectedCount / gateTotal : 0,
+    avgLexicalLockPct: compactionSamples > 0 ? lockSum / compactionSamples : 100,
+    avgReductionPct: compactionSamples > 0 ? reductionSum / compactionSamples : 0,
+    recentOutcomeSlots,
+    quarantineBins,
+    nodeBins: nodeBinsMutable,
+    gateStats: {
+      g1PassCount,
+      g1ExecCount,
+      g2PassCount,
+      g2ExecCount,
+      g3PassCount,
+      g3ExecCount,
+      resolvedCount,
+    },
+  };
+}
+
+function drawTaskInIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  stats: CanvasTelemetryStats,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const pctLabel =
+    stats.totalEvents > 0 ? `${Math.round(stats.playbackPct * 100)}%` : '--%';
+  ctx.font = `600 8.5px ${FONT_MONO}`;
+  const pctW = ctx.measureText(pctLabel).width;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle =
+    stats.totalEvents === 0
+      ? PALETTE.textDim
+      : stats.playbackPct >= 0.999
+        ? PALETTE.pass
+        : PALETTE.probe;
+  ctx.fillText(pctLabel, innerRight, indY);
+
+  const availW = Math.max(24, innerRight - innerLeft - pctW - 6);
+  const barCount = 8;
+  const gap = availW >= 56 ? 2 : 1.5;
+  const barW = clamp(Math.floor((availW - gap * (barCount - 1)) / barCount), 2, 7);
+  const maxBarH = clamp(rect.h * 0.21, 8, 12);
+  const barBottom = indY + maxBarH / 2;
+
+  for (let i = 0; i < barCount; i += 1) {
+    const bx = innerLeft + i * (barW + gap);
+    const slot = stats.recentOutcomeSlots[i];
+    if (!slot) {
+      ctx.fillStyle = hexToRgba(PALETTE.borderHover, 0.35);
+      ctx.fillRect(bx, barBottom - 2, barW, 2);
+      continue;
+    }
+
+    let color: string;
+    let hFrac: number;
+    if (slot.outcome === 'PASS') {
+      color = PALETTE.pass;
+      hFrac = 0.72 + 0.28 * clamp(slot.boundFactsCount / 8, 0, 1);
+    } else if (slot.outcome === 'QUARANTINE') {
+      color = slot.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.quarantine;
+      hFrac = 0.54 + 0.28 * clamp(slot.factPassRate, 0, 1);
+    } else {
+      color = PALETTE.fail;
+      hFrac = 0.3 + 0.38 * clamp(slot.factPassRate, 0, 1);
+    }
+    const bh = Math.max(3, Math.round(maxBarH * hFrac));
+    ctx.fillStyle = hexToRgba(color, 0.92);
+    ctx.fillRect(bx, barBottom - bh, barW, bh);
+  }
+}
+
+function drawFastClockIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  stats: CanvasTelemetryStats,
+  activeEvent: FlowTraceEvent | null,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const lockPct = clamp(
+    activeEvent
+      ? activeEvent.promptDelta.beforeTokens > 0
+        ? activeEvent.promptDelta.lexicalLockPct
+        : stats.avgLexicalLockPct
+      : stats.avgLexicalLockPct,
+    0,
+    100
+  );
+  const innerW = innerRight - innerLeft;
+  const lockLabel = innerW >= 112 ? `${Math.round(lockPct)}% LOCK` : `${Math.round(lockPct)}%`;
+
+  ctx.font = `600 8.5px ${FONT_MONO}`;
+  const labelW = ctx.measureText(lockLabel).width;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = stats.seenTotal > 0 ? PALETTE.probe : PALETTE.textDim;
+  ctx.fillText(lockLabel, innerRight, indY);
+
+  // 5 height-varied frequency ticks in #38bdf8
+  const tickCount = 5;
+  const tickW = innerW >= 120 ? 2.5 : 2;
+  const tickGap = 2;
+  const ticksTotalW = tickCount * tickW + (tickCount - 1) * tickGap;
+  const maxTickH = clamp(rect.h * 0.2, 8, 12);
+  const tickBottom = indY + maxTickH / 2;
+
+  const baseProfile = [0.44, 0.78, 1.0, 0.66, 0.88];
+  const reductionRef =
+    activeEvent && activeEvent.promptDelta.beforeTokens > 0
+      ? activeEvent.promptDelta.reductionPct
+      : stats.avgReductionPct;
+  const compScale = 0.68 + 0.32 * clamp(reductionRef / 15, 0, 1);
+  const ruleBoost = activeEvent ? clamp(activeEvent.retrievedRuleIds.length / 4, 0.25, 1) : 0.4;
+
+  for (let i = 0; i < tickCount; i += 1) {
+    const tx = innerLeft + i * (tickW + tickGap);
+    const mod = i % 2 === 0 ? compScale : ruleBoost;
+    const th = Math.max(3, Math.round(maxTickH * baseProfile[i] * (0.55 + 0.45 * mod)));
+    ctx.fillStyle = hexToRgba(PALETTE.probe, stats.seenTotal > 0 ? 0.92 : 0.35);
+    ctx.fillRect(tx, tickBottom - th, tickW, th);
+  }
+
+  // Lexical lock % fill strip
+  const stripLeft = innerLeft + ticksTotalW + 6;
+  const stripRight = innerRight - labelW - 6;
+  const stripW = stripRight - stripLeft;
+  if (stripW >= 14) {
+    const stripH = 4;
+    const stripTop = indY - stripH / 2;
+    ctx.fillStyle = PALETTE.bg;
+    ctx.fillRect(stripLeft, stripTop, stripW, stripH);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = PALETTE.border;
+    ctx.strokeRect(stripLeft + 0.5, stripTop + 0.5, stripW - 1, stripH - 1);
+
+    const fillW = Math.round((stripW - 2) * (lockPct / 100));
+    if (fillW > 0 && stats.seenTotal > 0) {
+      ctx.fillStyle = lockPct >= 99 ? PALETTE.probe : PALETTE.quarantine;
+      ctx.fillRect(stripLeft + 1, stripTop + 1, fillW, stripH - 2);
+    }
+  }
+}
+
+function drawOracleVerifierIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  activeEvent: FlowTraceEvent | null,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const passRate = activeEvent ? clamp(activeEvent.factPassRate, 0, 1) : 0;
+  const pctText = activeEvent ? `${Math.round(passRate * 100)}%` : '--%';
+
+  ctx.font = `600 8.5px ${FONT_MONO}`;
+  const pctW = ctx.measureText(pctText).width;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = !activeEvent
+    ? PALETTE.textDim
+    : passRate >= 0.999
+      ? PALETTE.pass
+      : passRate > 0
+        ? PALETTE.quarantine
+        : PALETTE.fail;
+  ctx.fillText(pctText, innerRight, indY);
+
+  const availW = Math.max(20, innerRight - innerLeft - pctW - 6);
+  const rawTotal = activeEvent ? Math.max(1, activeEvent.boundFactsCount) : 4;
+  const cellCount = Math.min(rawTotal, 12);
+  const gap = cellCount > 8 ? 1.5 : 2;
+  const cellW = clamp(Math.floor((availW - gap * (cellCount - 1)) / cellCount), 2, 10);
+  const cellH = clamp(Math.round(rect.h * 0.11), 5, 7);
+  const cellY = Math.round(indY - cellH / 2);
+
+  const passedCells = activeEvent
+    ? rawTotal <= 12
+      ? clamp(activeEvent.passedFactsCount, 0, cellCount)
+      : Math.round((activeEvent.passedFactsCount / rawTotal) * cellCount)
+    : 0;
+
+  for (let i = 0; i < cellCount; i += 1) {
+    const cx = innerLeft + i * (cellW + gap);
+    if (!activeEvent) {
+      ctx.fillStyle = hexToRgba(PALETTE.borderHover, 0.35);
+      ctx.fillRect(cx, cellY, cellW, cellH);
+      continue;
+    }
+    const isPassed = i < passedCells;
+    ctx.fillStyle = hexToRgba(isPassed ? PALETTE.pass : PALETTE.fail, 0.9);
+    ctx.fillRect(cx, cellY, cellW, cellH);
+  }
+}
+
+function drawVerifiedOutputIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  stats: CanvasTelemetryStats,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const r = rect.h >= 52 ? 7 : rect.h >= 47 ? 6 : 5;
+  const cx = innerLeft + r + 1;
+  const cy = indY;
+  const share = clamp(stats.firstPassRate, 0, 1);
+
+  // Track ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = hexToRgba(PALETTE.borderHover, 0.45);
+  ctx.stroke();
+
+  // Emerald arc gauge
+  if (share > 0) {
+    const startAngle = -Math.PI / 2;
+    const endAngle = startAngle + Math.PI * 2 * share;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'butt';
+    ctx.strokeStyle = PALETTE.pass;
+    ctx.stroke();
+  }
+
+  const pctText =
+    stats.seenTotal > 0 ? `${(share * 100).toFixed(1)}%` : '0.0%';
+  ctx.font = rect.h < 48 ? `600 8.5px ${FONT_MONO}` : `600 9px ${FONT_MONO}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = stats.verifiedCount > 0 ? PALETTE.pass : PALETTE.textMuted;
+  ctx.fillText(pctText, cx + r + 6, indY + 0.5);
+
+  // Secondary ratio on right if wide enough
+  const ratioText = `${stats.verifiedCount}/${stats.seenTotal}`;
+  ctx.font = `500 8px ${FONT_MONO}`;
+  const pctW = ctx.measureText(pctText).width;
+  const ratioW = ctx.measureText(ratioText).width;
+  if (innerRight - (cx + r + 6 + pctW + 8) >= ratioW) {
+    ctx.textAlign = 'right';
+    ctx.fillStyle = PALETTE.textMuted;
+    ctx.fillText(ratioText, innerRight, indY + 0.5);
+  }
+}
+
+function drawQuarantineVaultIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  stats: CanvasTelemetryStats,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const pctStr =
+    stats.seenTotal > 0 ? `${(stats.quarantineRate * 100).toFixed(1)}%` : '0.0%';
+  const innerW = innerRight - innerLeft;
+  const pillText = innerW >= 132 ? `${pctStr} STAGED` : pctStr;
+
+  ctx.font = rect.h < 48 ? `600 7.5px ${FONT_MONO}` : `600 8px ${FONT_MONO}`;
+  const textW = ctx.measureText(pillText).width;
+  const pillW = Math.min(innerW * 0.58, textW + 10);
+  const pillH = rect.h >= 48 ? 13 : 11;
+  const pillX = innerRight - pillW;
+  const pillY = indY - pillH / 2;
+
+  roundedRectPath(ctx, pillX, pillY, pillW, pillH, 2);
+  ctx.fillStyle =
+    stats.quarantineEnteredCount > 0
+      ? hexToRgba(PALETTE.quarantine, 0.12)
+      : PALETTE.bg;
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle =
+    stats.quarantineEnteredCount > 0
+      ? hexToRgba(PALETTE.quarantine, 0.5)
+      : PALETTE.border;
+  ctx.stroke();
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle =
+    stats.quarantineEnteredCount > 0 ? PALETTE.quarantine : PALETTE.textMuted;
+  ctx.fillText(truncateText(ctx, pillText, pillW - 6), pillX + pillW / 2, indY + 0.5);
+
+  // 6 amber step-frequency bars scaled to quarantine traffic share
+  const availW = Math.max(20, pillX - innerLeft - 6);
+  const barCount = 6;
+  const gap = availW >= 42 ? 2.5 : 1.5;
+  const barW = clamp(Math.floor((availW - gap * (barCount - 1)) / barCount), 2, 8);
+  const maxBarH = clamp(rect.h * 0.2, 8, 12);
+  const barBottom = indY + maxBarH / 2;
+
+  for (let i = 0; i < barCount; i += 1) {
+    const bx = innerLeft + i * (barW + gap);
+    const bin = stats.quarantineBins[i];
+    if (!bin || bin.totalCount === 0 || bin.quarCount === 0) {
+      ctx.fillStyle = hexToRgba(PALETTE.borderHover, 0.35);
+      ctx.fillRect(bx, barBottom - 2, barW, 2);
+      continue;
+    }
+    const share = clamp(bin.quarCount / bin.totalCount, 0, 1);
+    const bh = Math.max(3, Math.round(maxBarH * (0.22 + 0.78 * share)));
+    ctx.fillStyle = hexToRgba(PALETTE.quarantine, 0.45 + 0.5 * share);
+    ctx.fillRect(bx, barBottom - bh, barW, bh);
+  }
+}
+
+function drawSlowClockGateIndicator(
+  ctx: CanvasRenderingContext2D,
+  rect: NodeRect,
+  stats: CanvasTelemetryStats,
+  activeEvent: FlowTraceEvent | null,
+  isOnActivePath: boolean,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const resolvePct = Math.round(stats.gateResolvedRate * 100);
+  const pctLabel = stats.gateTotal > 0 ? `${resolvePct}%` : '--%';
+
+  ctx.font = `600 8.5px ${FONT_MONO}`;
+  const pctW = ctx.measureText(pctLabel).width;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle =
+    stats.gateTotal === 0
+      ? PALETTE.textDim
+      : resolvePct >= 85
+        ? PALETTE.pass
+        : PALETTE.quarantine;
+  ctx.fillText(pctLabel, innerRight, indY + 0.5);
+
+  const availW = Math.max(36, innerRight - innerLeft - pctW - 6);
+  const gap = availW >= 68 ? 3 : 2;
+  const pillW = clamp(Math.floor((availW - gap * 2) / 3), 12, 26);
+  const pillH = clamp(Math.round(rect.h * 0.2), 11, 13);
+  const pillY = indY - pillH / 2;
+
+  const activeGate = isOnActivePath && activeEvent ? activeEvent.slowClockGate : null;
+  const gates: ReadonlyArray<{
+    readonly label: string;
+    readonly activeVal: boolean | undefined;
+    readonly passCount: number;
+    readonly execCount: number;
+  }> = [
+    {
+      label: 'G1',
+      activeVal: activeGate?.g1LexicalPassed,
+      passCount: stats.gateStats.g1PassCount,
+      execCount: stats.gateStats.g1ExecCount,
+    },
+    {
+      label: 'G2',
+      activeVal: activeGate?.g2ConflictPassed,
+      passCount: stats.gateStats.g2PassCount,
+      execCount: stats.gateStats.g2ExecCount,
+    },
+    {
+      label: 'G3',
+      activeVal: activeGate?.g3CanaryPassed,
+      passCount: stats.gateStats.g3PassCount,
+      execCount: stats.gateStats.g3ExecCount,
+    },
+  ];
+
+  ctx.font = `600 7.5px ${FONT_MONO}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  for (let i = 0; i < gates.length; i += 1) {
+    const g = gates[i];
+    const gx = innerLeft + i * (pillW + gap);
+
+    let color: string = PALETTE.textDim;
+    let activeTone = false;
+    if (activeGate && activeGate.status !== 'none') {
+      if (g.activeVal === true) {
+        color = PALETTE.pass;
+        activeTone = true;
+      } else if (g.activeVal === false) {
+        color = PALETTE.fail;
+        activeTone = true;
+      } else if (activeGate.status === 'staged') {
+        color = PALETTE.quarantine;
+        activeTone = true;
+      }
+    } else if (g.execCount > 0) {
+      const rate = g.passCount / g.execCount;
+      color = rate >= 0.85 ? PALETTE.pass : rate >= 0.45 ? PALETTE.quarantine : PALETTE.fail;
+      activeTone = true;
+    }
+
+    roundedRectPath(ctx, gx, pillY, pillW, pillH, 1.5);
+    ctx.fillStyle = activeTone ? hexToRgba(color, 0.14) : PALETTE.bg;
+    ctx.fill();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = activeTone ? hexToRgba(color, 0.68) : PALETTE.border;
+    ctx.stroke();
+
+    ctx.fillStyle = activeTone ? color : PALETTE.textMuted;
+    ctx.fillText(g.label, gx + pillW / 2, indY + 0.5);
+  }
+}
+
+function drawGateMeterIndicator(
+  ctx: CanvasRenderingContext2D,
+  numerator: number,
+  denominator: number,
+  color: string,
+  showGuardTicks: boolean,
+  innerLeft: number,
+  innerRight: number,
+  indY: number
+): void {
+  const ratio = denominator > 0 ? clamp(numerator / denominator, 0, 1) : 0;
+  const pctLabel = denominator > 0 ? `${Math.round(ratio * 100)}%` : '0%';
+
+  ctx.font = `600 8.5px ${FONT_MONO}`;
+  const pctW = ctx.measureText(pctLabel).width;
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = numerator > 0 ? color : PALETTE.textMuted;
+  ctx.fillText(pctLabel, innerRight, indY + 0.5);
+
+  const trackW = Math.max(16, innerRight - innerLeft - pctW - 6);
+  const trackH = 6;
+  const trackY = Math.round(indY - trackH / 2);
+
+  ctx.fillStyle = PALETTE.bg;
+  ctx.fillRect(innerLeft, trackY, trackW, trackH);
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = PALETTE.border;
+  ctx.strokeRect(innerLeft + 0.5, trackY + 0.5, trackW - 1, trackH - 1);
+
+  if (showGuardTicks && trackW >= 28) {
+    ctx.fillStyle = hexToRgba(PALETTE.borderHover, 0.55);
+    for (const frac of [0.25, 0.5, 0.75]) {
+      const tx = Math.round(innerLeft + trackW * frac);
+      ctx.fillRect(tx, trackY + 1, 1, trackH - 2);
+    }
+  }
+
+  const fillW = Math.round((trackW - 2) * ratio);
+  if (fillW > 0) {
+    ctx.fillStyle = hexToRgba(color, 0.88);
+    ctx.fillRect(innerLeft + 1, trackY + 1, fillW, trackH - 2);
+    if (fillW >= 2) {
+      ctx.fillStyle = color;
+      ctx.fillRect(innerLeft + fillW, trackY + 1, 1, trackH - 2);
+    }
+  }
+}
+
 function drawNodeCards(
   ctx: CanvasRenderingContext2D,
   layout: DagLayout,
-  nodeCounts: Record<FlowNodeId, number>,
+  stats: CanvasTelemetryStats,
   activeEvent: FlowTraceEvent | null,
   clampedActiveIndex: number,
   totalEvents: number,
@@ -796,6 +1481,7 @@ function drawNodeCards(
   hoveredNode: FlowNodeId | null
 ): void {
   const activePathSet = new Set<FlowNodeId>(activeEvent?.pathNodes ?? []);
+  const { nodeCounts } = stats;
 
   for (const nodeId of NODE_ORDER) {
     const rect = layout.nodes[nodeId];
@@ -863,15 +1549,21 @@ function drawNodeCards(
 
     // Port connection collars (crisp terminal pins)
     ctx.fillStyle = isOnActivePath ? meta.accent : PALETTE.borderHover;
-    if (nodeId !== 'TASK_IN' && nodeId !== 'QUARANTINE_VAULT') {
+    if (
+      nodeId === 'FAST_CLOCK' ||
+      nodeId === 'ORACLE_VERIFIER' ||
+      nodeId === 'SLOW_CLOCK_GATE' ||
+      nodeId === 'GATE_APPROVED' ||
+      nodeId === 'GATE_REJECTED'
+    ) {
       ctx.fillRect(rect.cx - 2, rect.top - 1.5, 4, 3);
     }
-    if (nodeId === 'QUARANTINE_VAULT') {
+    if (nodeId === 'VERIFIED_OUTPUT' || nodeId === 'QUARANTINE_VAULT') {
       ctx.fillRect(rect.left - 1.5, rect.cy - 2, 3, 4);
     }
     if (nodeId === 'ORACLE_VERIFIER') {
-      ctx.fillRect(rect.right - 1.5, rect.cy - 2, 3, 4);
-      ctx.fillRect(rect.cx - 2, rect.bottom - 1.5, 4, 3);
+      ctx.fillRect(rect.right - 1.5, rect.cy - rect.h * 0.22 - 2, 3, 4);
+      ctx.fillRect(rect.right - 1.5, rect.cy + rect.h * 0.22 - 2, 3, 4);
     } else if (
       nodeId === 'TASK_IN' ||
       nodeId === 'FAST_CLOCK' ||
@@ -883,12 +1575,13 @@ function drawNodeCards(
 
     const innerLeft = rect.left + 9;
     const innerRight = rect.right - 8;
-    const titleY = rect.top + rect.h * 0.35;
-    const subY = rect.top + rect.h * 0.71;
+    const titleY = rect.top + Math.round(rect.h * 0.21);
+    const subY = rect.top + Math.round(rect.h * 0.48);
+    const indY = rect.top + Math.round(rect.h * 0.77);
 
     // Count pill on top-right
     const countLabel = `${count}`;
-    ctx.font = `600 9px ${FONT_MONO}`;
+    ctx.font = rect.h < 48 ? `600 8.5px ${FONT_MONO}` : `600 9px ${FONT_MONO}`;
     const countW = ctx.measureText(countLabel).width;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
@@ -898,14 +1591,19 @@ function drawNodeCards(
 
     // Node Title
     const titleMaxW = rect.w - 20 - countW;
-    ctx.font = `600 10px ${FONT_MONO}`;
+    ctx.font =
+      rect.h < 48
+        ? `600 9px ${FONT_MONO}`
+        : rect.h < 53
+          ? `600 9.5px ${FONT_MONO}`
+          : `600 10px ${FONT_MONO}`;
     ctx.textAlign = 'left';
     ctx.fillStyle = isOnActivePath || isSelected ? PALETTE.textPrimary : PALETTE.textSecondary;
     ctx.fillText(truncateText(ctx, meta.title, titleMaxW), innerLeft, titleY);
 
     // Node Telemetry Subline
     const subMaxW = rect.w - 17;
-    ctx.font = `500 9px ${FONT_MONO}`;
+    ctx.font = rect.h < 48 ? `500 8px ${FONT_MONO}` : `500 8.5px ${FONT_MONO}`;
     let subText = meta.defaultSub;
     let subColor: string = PALETTE.textMuted;
 
@@ -914,7 +1612,7 @@ function drawNodeCards(
         subText = `${activeEvent.taskId} · ${clampedActiveIndex + 1}/${totalEvents}`;
         subColor = PALETTE.textSecondary;
       } else if (nodeId === 'FAST_CLOCK') {
-        subText = `TOP-4 · -${activeEvent.promptDelta.reductionPct.toFixed(0)}% TOK · ${activeEvent.promptDelta.lexicalLockPct.toFixed(0)}% KEPT`;
+        subText = `TOP-4 · -${activeEvent.promptDelta.reductionPct.toFixed(0)}% TOK`;
         subColor = PALETTE.textSecondary;
       } else if (nodeId === 'ORACLE_VERIFIER') {
         if (activeEvent.kind === 'redteam_probe') {
@@ -932,16 +1630,8 @@ function drawNodeCards(
         subText = badge ? `${count} STAGED · ${badge}` : `${count} STAGED`;
         subColor = count > 0 ? PALETTE.quarantine : PALETTE.textMuted;
       } else if (nodeId === 'SLOW_CLOCK_GATE') {
-        if (
-          isOnActivePath &&
-          (activeEvent.slowClockGate.g1LexicalPassed !== undefined ||
-            activeEvent.slowClockGate.g2ConflictPassed !== undefined ||
-            activeEvent.slowClockGate.g3CanaryPassed !== undefined)
-        ) {
-          const g1 = activeEvent.slowClockGate.g1LexicalPassed === false ? '✕' : '✓';
-          const g2 = activeEvent.slowClockGate.g2ConflictPassed === false ? '✕' : '✓';
-          const g3 = activeEvent.slowClockGate.g3CanaryPassed === false ? '✕' : '✓';
-          subText = `G1${g1} G2${g2} G3${g3} · ${activeEvent.slowClockGate.status.toUpperCase()}`;
+        if (isOnActivePath && activeEvent.slowClockGate.status !== 'none') {
+          subText = `${activeEvent.slowClockGate.status.toUpperCase()} · ${count} AUDITS`;
           subColor =
             activeEvent.slowClockGate.status === 'approved'
               ? PALETTE.pass
@@ -949,20 +1639,68 @@ function drawNodeCards(
                 ? PALETTE.fail
                 : PALETTE.quarantine;
         } else {
-          subText = `G1·G2·G3 · ${count} CHECKS`;
+          subText = `${stats.gateStats.resolvedCount}/${stats.gateTotal} RESOLVED`;
           subColor = count > 0 ? PALETTE.quarantine : PALETTE.textMuted;
         }
       } else if (nodeId === 'GATE_APPROVED') {
-        subText = `${count} PROMOTED`;
+        subText =
+          stats.gateTotal > 0 ? `${count}/${stats.gateTotal} PROMOTED` : `${count} PROMOTED`;
         subColor = count > 0 ? PALETTE.pass : PALETTE.textMuted;
       } else if (nodeId === 'GATE_REJECTED') {
-        subText = `${count} BLOCKED`;
+        subText =
+          stats.gateTotal > 0 ? `${count}/${stats.gateTotal} BLOCKED` : `${count} BLOCKED`;
         subColor = count > 0 ? PALETTE.fail : PALETTE.textMuted;
       }
     }
 
     ctx.fillStyle = subColor;
     ctx.fillText(truncateText(ctx, subText, subMaxW), innerLeft, subY);
+
+    // Unique per-node completeness / frequency micro-indicator row
+    if (nodeId === 'TASK_IN') {
+      drawTaskInIndicator(ctx, rect, stats, innerLeft, innerRight, indY);
+    } else if (nodeId === 'FAST_CLOCK') {
+      drawFastClockIndicator(ctx, rect, stats, activeEvent, innerLeft, innerRight, indY);
+    } else if (nodeId === 'ORACLE_VERIFIER') {
+      drawOracleVerifierIndicator(ctx, rect, activeEvent, innerLeft, innerRight, indY);
+    } else if (nodeId === 'VERIFIED_OUTPUT') {
+      drawVerifiedOutputIndicator(ctx, rect, stats, innerLeft, innerRight, indY);
+    } else if (nodeId === 'QUARANTINE_VAULT') {
+      drawQuarantineVaultIndicator(ctx, rect, stats, innerLeft, innerRight, indY);
+    } else if (nodeId === 'SLOW_CLOCK_GATE') {
+      drawSlowClockGateIndicator(
+        ctx,
+        rect,
+        stats,
+        activeEvent,
+        isOnActivePath,
+        innerLeft,
+        innerRight,
+        indY
+      );
+    } else if (nodeId === 'GATE_APPROVED') {
+      drawGateMeterIndicator(
+        ctx,
+        stats.approvedCount,
+        stats.gateTotal,
+        PALETTE.pass,
+        false,
+        innerLeft,
+        innerRight,
+        indY
+      );
+    } else if (nodeId === 'GATE_REJECTED') {
+      drawGateMeterIndicator(
+        ctx,
+        stats.rejectedCount,
+        stats.gateTotal,
+        PALETTE.fail,
+        true,
+        innerLeft,
+        innerRight,
+        indY
+      );
+    }
   }
 }
 
@@ -1071,7 +1809,7 @@ function drawTooltip(
   layout: DagLayout,
   hover: HoverState,
   events: readonly FlowTraceEvent[],
-  nodeCounts: Record<FlowNodeId, number>
+  stats: CanvasTelemetryStats
 ): void {
   let line1 = '';
   let line2 = '';
@@ -1090,10 +1828,37 @@ function drawTooltip(
       line2 = `${ev.outcome} → ${NODE_META[ev.terminalNode].title} · Click to jump`;
     }
   } else if (hover.kind === 'node' && hover.nodeId) {
-    const meta = NODE_META[hover.nodeId];
+    const nodeId = hover.nodeId;
+    const meta = NODE_META[nodeId];
+    const count = stats.nodeCounts[nodeId];
+    const activeBins = stats.nodeBins[nodeId].filter((b) => b.visits > 0).length;
     accent = meta.accent;
-    line1 = `${meta.title} · ${nodeCounts[hover.nodeId]} traces`;
-    line2 = `${meta.defaultSub} · Click to filter`;
+
+    if (nodeId === 'TASK_IN') {
+      line1 = `${meta.title} · ${stats.seenTotal}/${stats.totalEvents} (${Math.round(stats.playbackPct * 100)}%)`;
+      line2 = `${activeBins}/8 slices active · Click to filter`;
+    } else if (nodeId === 'FAST_CLOCK') {
+      line1 = `${meta.title} · ${count} traces · ${stats.avgLexicalLockPct.toFixed(1)}% lock`;
+      line2 = `Avg -${stats.avgReductionPct.toFixed(1)}% tokens · Click to filter`;
+    } else if (nodeId === 'ORACLE_VERIFIER') {
+      line1 = `${meta.title} · ${count} verified runs`;
+      line2 = `${(stats.firstPassRate * 100).toFixed(1)}% first-pass · Click to filter`;
+    } else if (nodeId === 'VERIFIED_OUTPUT') {
+      line1 = `${meta.title} · ${stats.verifiedCount}/${stats.seenTotal} (${(stats.firstPassRate * 100).toFixed(1)}%)`;
+      line2 = `${activeBins}/8 slices active · Click to filter`;
+    } else if (nodeId === 'QUARANTINE_VAULT') {
+      line1 = `${meta.title} · ${stats.quarantineEnteredCount}/${stats.seenTotal} (${(stats.quarantineRate * 100).toFixed(1)}%)`;
+      line2 = `${stats.stagedCount} pending gate · Click to filter`;
+    } else if (nodeId === 'SLOW_CLOCK_GATE') {
+      line1 = `${meta.title} · ${stats.gateTotal} audited (${Math.round(stats.gateResolvedRate * 100)}% resolved)`;
+      line2 = `${stats.approvedCount} approved · ${stats.rejectedCount} blocked · Click to filter`;
+    } else if (nodeId === 'GATE_APPROVED') {
+      line1 = `${meta.title} · ${stats.approvedCount}/${stats.gateTotal} (${Math.round(stats.gateApprovedShare * 100)}%)`;
+      line2 = `${meta.defaultSub} · Click to filter`;
+    } else {
+      line1 = `${meta.title} · ${stats.rejectedCount}/${stats.gateTotal} (${Math.round(stats.gateRejectedShare * 100)}%)`;
+      line2 = `${meta.defaultSub} · Click to filter`;
+    }
   } else {
     return;
   }
@@ -1164,28 +1929,11 @@ export function HopeFilamentCanvas({
 
   const layout = useMemo(() => computeDagLayout(size.width, size.height), [size.width, size.height]);
 
-  const nodeCounts = useMemo(() => {
-    const counts: Record<FlowNodeId, number> = {
-      TASK_IN: 0,
-      FAST_CLOCK: 0,
-      ORACLE_VERIFIER: 0,
-      VERIFIED_OUTPUT: 0,
-      QUARANTINE_VAULT: 0,
-      SLOW_CLOCK_GATE: 0,
-      GATE_APPROVED: 0,
-      GATE_REJECTED: 0,
-    };
-    for (let i = 0; i <= clampedActiveIndex; i += 1) {
-      const ev = events[i];
-      if (!ev) continue;
-      for (const n of ev.pathNodes) {
-        if (isKnownNodeId(n)) {
-          counts[n] += 1;
-        }
-      }
-    }
-    return counts;
-  }, [events, clampedActiveIndex]);
+  const telemetryStats = useMemo(
+    () => computeCanvasTelemetryStats(events, clampedActiveIndex),
+    [events, clampedActiveIndex]
+  );
+  const { nodeCounts } = telemetryStats;
 
   // Precompute sampled polylines for visible/active strands for crisp click & hover hit-testing
   const sampledStrands = useMemo<readonly SampledStrand[]>(() => {
@@ -1209,7 +1957,7 @@ export function HopeFilamentCanvas({
         const toId = ev.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
         const curve = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
-        const segSteps = 8;
+        const segSteps = 12;
         for (let k = s === 0 ? 0 : 1; k <= segSteps; k += 1) {
           pts.push(evalCubic(curve, k / segSteps));
         }
@@ -1394,7 +2142,7 @@ export function HopeFilamentCanvas({
       drawNodeCards(
         ctx,
         layout,
-        nodeCounts,
+        telemetryStats,
         activeEvent,
         clampedActiveIndex,
         events.length,
@@ -1416,7 +2164,7 @@ export function HopeFilamentCanvas({
 
       // Hover tooltip
       if (currentHover) {
-        drawTooltip(ctx, layout, currentHover, events, nodeCounts);
+        drawTooltip(ctx, layout, currentHover, events, telemetryStats);
       }
 
       if (pulsesRef.current.length > 0 || (isPlaying && activeEvent !== null)) {
@@ -1430,6 +2178,7 @@ export function HopeFilamentCanvas({
       clampedActiveIndex,
       selectedNode,
       nodeCounts,
+      telemetryStats,
       isPlaying,
       rebuildStaticLayer,
     ]

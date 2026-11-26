@@ -142,6 +142,704 @@ function formatEventTime(iso: string): string {
   });
 }
 
+type TerminalLinePrefix = '$' | '>' | '<' | '[PASS]' | '[FAIL]' | '[GATE]' | '[INFO]';
+type TerminalLineTone = 'neutral' | 'info' | 'pass' | 'fail' | 'quarantine';
+
+interface TerminalLogLine {
+  readonly prefix: TerminalLinePrefix;
+  readonly tone: TerminalLineTone;
+  readonly text: string;
+}
+
+type FlowTraceEventWithTelemetry = FlowTraceEvent & {
+  readonly provider?: string;
+  readonly returnedModel?: string;
+  readonly finishReason?: string;
+  readonly artifactSha256?: string;
+  readonly stderrLines?: readonly string[];
+  readonly terminalLog?: readonly TerminalLogLine[];
+};
+
+const EQUALIZER_BAR_COUNT = 8;
+const BASE_EQ_PROFILE: readonly number[] = [0.34, 0.58, 0.82, 0.46, 0.92, 0.66, 0.48, 0.3];
+
+function inferProvider(event: FlowTraceEventWithTelemetry): string {
+  if (event.provider && event.provider.trim().length > 0) return event.provider;
+  if (event.kind === 'redteam_probe') return 'Loopback Target';
+  if (event.modelId.includes('qwen')) return 'Groq';
+  if (event.modelId.includes('gemini') || event.modelId.includes('gemma')) {
+    return 'Google AI Studio';
+  }
+  return 'Axiom Runner';
+}
+
+function resolveStderrLines(event: FlowTraceEventWithTelemetry): readonly string[] {
+  if (event.stderrLines && event.stderrLines.length > 0) {
+    return event.stderrLines;
+  }
+  if (!event.stderrSummary) return [];
+  return event.stderrSummary
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, 5);
+}
+
+function buildFallbackTerminalLog(event: FlowTraceEventWithTelemetry): readonly TerminalLogLine[] {
+  const provider = inferProvider(event);
+  if (event.kind === 'redteam_probe' && event.redTeam) {
+    const rt = event.redTeam;
+    const lines: TerminalLogLine[] = [
+      {
+        prefix: '$',
+        tone: 'neutral',
+        text: `redteam-v1 probe --target http://127.0.0.1:3000 --id ${event.taskId} --flag ${rt.triggerFlag}`,
+      },
+      {
+        prefix: '>',
+        tone: 'info',
+        text: `HTTP ${rt.method} ${rt.route}`,
+      },
+      {
+        prefix: '<',
+        tone: event.outcome === 'FAIL' ? 'fail' : 'quarantine',
+        text: `quarantine status=${rt.status} candidate=${rt.candidateId}${rt.severity ? ` severity=${rt.severity}` : ''} hash=${rt.evidenceHash.slice(0, 12)}`,
+      },
+    ];
+    if (rt.expectedDefense) {
+      lines.push({
+        prefix: '[INFO]',
+        tone: 'neutral',
+        text: `defense: ${rt.expectedDefense}`,
+      });
+    }
+    if (rt.proposedRuleText) {
+      lines.push({
+        prefix: '[GATE]',
+        tone:
+          rt.status === 'approved'
+            ? 'pass'
+            : rt.status === 'rejected'
+              ? 'fail'
+              : 'quarantine',
+        text: `staged-rule: ${rt.proposedRuleText}`,
+      });
+    }
+    return lines;
+  }
+
+  const shaShort = event.artifactSha256 ? event.artifactSha256.slice(0, 10) : 'cached';
+  const rulesText = event.retrievedRuleIds.join(',') || 'none';
+  const promptCharsLabel =
+    event.promptDelta.promptChars !== undefined ? `${event.promptDelta.promptChars}ch` : '?ch';
+  const lines: TerminalLogLine[] = [
+    {
+      prefix: '$',
+      tone: 'neutral',
+      text: `axiom-v4 verify --cartridge ${event.cartridgeId} --task ${event.taskId} --arm C_ID_hope`,
+    },
+    {
+      prefix: '>',
+      tone: 'info',
+      text: `context topK=4 rules=[${rulesText}] prompt=${promptCharsLabel} (-${event.promptDelta.reductionPct.toFixed(1)}% tok, ${event.promptDelta.lexicalLockPct.toFixed(0)}% lock)`,
+    },
+    {
+      prefix: '>',
+      tone: 'info',
+      text: `${provider} model=${event.returnedModel ?? event.modelId} finish=${event.finishReason ?? 'stop'} latency=${event.latencyMs !== undefined ? `${event.latencyMs}ms` : 'cached'} sha=${shaShort}`,
+    },
+    {
+      prefix: '<',
+      tone: event.fullTaskPass ? 'pass' : 'fail',
+      text: `oracle=${event.cartridgeId === 'policy-abac-v4' ? 'cedar-abac' : 'ts-api-sandbox'} facts=${event.passedFactsCount}/${event.boundFactsCount} (${Math.round(event.factPassRate * 100)}%)`,
+    },
+  ];
+
+  if (event.passedFacts.length > 0) {
+    lines.push({
+      prefix: '[PASS]',
+      tone: 'pass',
+      text: `verified: ${event.passedFacts.join(', ')}`,
+    });
+  }
+
+  const stderrLines = resolveStderrLines(event).slice(0, 3);
+  if (stderrLines.length > 0) {
+    for (const errLine of stderrLines) {
+      lines.push({
+        prefix: '[FAIL]',
+        tone: 'fail',
+        text: errLine,
+      });
+    }
+  } else if (event.failedFacts.length > 0) {
+    lines.push({
+      prefix: '[FAIL]',
+      tone: 'fail',
+      text: `failed facts: ${event.failedFacts.join(', ')}`,
+    });
+  }
+
+  if (event.slowClockGate.status !== 'none') {
+    const formatGateFlag = (val: boolean | undefined): string =>
+      val === undefined ? 'SKIP' : val ? 'PASS' : 'FAIL';
+    const g1 = formatGateFlag(event.slowClockGate.g1LexicalPassed);
+    const g2 = formatGateFlag(event.slowClockGate.g2ConflictPassed);
+    const g3 = formatGateFlag(event.slowClockGate.g3CanaryPassed);
+    lines.push({
+      prefix: '[GATE]',
+      tone:
+        event.slowClockGate.status === 'approved'
+          ? 'pass'
+          : event.slowClockGate.status === 'rejected'
+            ? 'fail'
+            : 'quarantine',
+      text: `slow-clock ${event.slowClockGate.candidateId ?? event.slowClockGate.factId ?? 'candidate'} G1=${g1} G2=${g2} G3=${g3} -> ${event.slowClockGate.status.toUpperCase()}`,
+    });
+  }
+
+  return lines;
+}
+
+function resolveTerminalLineClass(line: TerminalLogLine): {
+  readonly prefixClass: string;
+  readonly textClass: string;
+} {
+  if (line.prefix === '$') {
+    return { prefixClass: 'text-[#e4e4e7] font-semibold', textClass: 'text-[#e4e4e7]' };
+  }
+  if (line.prefix === '>') {
+    return { prefixClass: 'text-[#38bdf8] font-semibold', textClass: 'text-[#38bdf8]' };
+  }
+  if (line.prefix === '[PASS]') {
+    return { prefixClass: 'text-[#10b981] font-semibold', textClass: 'text-[#10b981]' };
+  }
+  if (line.prefix === '[FAIL]') {
+    return { prefixClass: 'text-[#ef4444] font-semibold', textClass: 'text-[#ef4444]' };
+  }
+  if (line.prefix === '[GATE]') {
+    const toneClass =
+      line.tone === 'pass'
+        ? 'text-[#10b981]'
+        : line.tone === 'fail'
+          ? 'text-[#ef4444]'
+          : 'text-[#f59e0b]';
+    return { prefixClass: `${toneClass} font-semibold`, textClass: toneClass };
+  }
+  if (line.prefix === '<') {
+    const toneClass =
+      line.tone === 'pass'
+        ? 'text-[#10b981]'
+        : line.tone === 'fail'
+          ? 'text-[#ef4444]'
+          : line.tone === 'quarantine'
+            ? 'text-[#f59e0b]'
+            : line.tone === 'info'
+              ? 'text-[#38bdf8]'
+              : 'text-[#e4e4e7]';
+    return { prefixClass: `${toneClass} font-semibold`, textClass: toneClass };
+  }
+  return {
+    prefixClass: line.tone === 'info' ? 'text-[#38bdf8] font-semibold' : 'text-zinc-400 font-semibold',
+    textClass: line.tone === 'info' ? 'text-[#38bdf8]' : 'text-zinc-300',
+  };
+}
+
+/**
+ * Animated 8-bar frequency equalizer driven smoothly by event latency, token throughput, and step index.
+ */
+function FrequencyEqualizer({
+  latencyMs,
+  afterTokens,
+  eventIndex,
+  outcome,
+  kind,
+  active,
+}: {
+  readonly latencyMs?: number;
+  readonly afterTokens: number;
+  readonly eventIndex: number;
+  readonly outcome: FlowOutcome;
+  readonly kind: FlowTraceEvent['kind'];
+  readonly active: boolean;
+}) {
+  const barRefs = useRef<Array<HTMLSpanElement | null>>([]);
+  const effectiveLatency = latencyMs ?? (kind === 'redteam_probe' ? 420 : 1800);
+  const throughputRatio = useMemo(() => {
+    const tokens = afterTokens > 0 ? afterTokens : 320;
+    return Math.min(1, Math.max(0.22, tokens / Math.max(260, effectiveLatency * 0.45)));
+  }, [afterTokens, effectiveLatency]);
+
+  const staticHeights = useMemo(() => {
+    return Array.from({ length: EQUALIZER_BAR_COUNT }, (_, idx) => {
+      const base = BASE_EQ_PROFILE[idx] ?? 0.5;
+      const shift = Math.sin((eventIndex + 1) * 1.15 + idx * 0.85) * 0.22;
+      return Math.min(1, Math.max(0.2, base * 0.72 + throughputRatio * 0.28 + shift));
+    });
+  }, [eventIndex, throughputRatio]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      staticHeights.forEach((h, idx) => {
+        const el = barRefs.current[idx];
+        if (el) el.style.transform = `scaleY(${h.toFixed(3)})`;
+      });
+      return;
+    }
+
+    let rafId = 0;
+    const tempo = Math.min(4.6, Math.max(1.25, 3600 / Math.max(550, effectiveLatency))) * (active ? 1.15 : 0.7);
+    const amplitude = active ? 0.34 : 0.22;
+
+    const tick = (nowMs: number) => {
+      const t = nowMs * 0.001 * tempo;
+      for (let idx = 0; idx < EQUALIZER_BAR_COUNT; idx++) {
+        const el = barRefs.current[idx];
+        if (!el) continue;
+        const base = staticHeights[idx] ?? 0.5;
+        const waveA = Math.sin(t * (1 + idx * 0.16) + eventIndex * 0.8 + idx * 0.75);
+        const waveB = Math.cos(t * 0.61 + idx * 1.25 + throughputRatio * 3.1);
+        const level = Math.min(1, Math.max(0.18, base + (waveA * 0.65 + waveB * 0.35) * amplitude));
+        el.style.transform = `scaleY(${level.toFixed(3)})`;
+      }
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [active, effectiveLatency, eventIndex, staticHeights, throughputRatio]);
+
+  const barColor =
+    kind === 'redteam_probe'
+      ? '#38bdf8'
+      : outcome === 'PASS'
+        ? '#10b981'
+        : outcome === 'FAIL'
+          ? '#ef4444'
+          : '#f59e0b';
+
+  return (
+    <div
+      aria-hidden="true"
+      title={`Latency ${effectiveLatency}ms · Step #${eventIndex + 1}`}
+      className="h-3.5 flex items-end gap-[2px] px-1 rounded-[1px] bg-[#06080c] border border-zinc-800/80 py-[2px]"
+    >
+      {staticHeights.map((h, idx) => (
+        <span
+          key={idx}
+          ref={(el) => {
+            barRefs.current[idx] = el;
+          }}
+          style={{
+            backgroundColor: barColor,
+            height: '100%',
+            transformOrigin: 'bottom',
+            transform: `scaleY(${h.toFixed(3)})`,
+          }}
+          className="w-[2px] rounded-[0.5px] will-change-transform"
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Live execution API and verifier terminal card inside the Left Panel hero.
+ */
+function LiveApiVerifierTerminal({
+  event,
+  eventIndex,
+  isLiveActive,
+}: {
+  readonly event: FlowTraceEventWithTelemetry;
+  readonly eventIndex: number;
+  readonly isLiveActive: boolean;
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const terminalLines = useMemo<readonly TerminalLogLine[]>(() => {
+    if (event.terminalLog && event.terminalLog.length > 0) {
+      return event.terminalLog;
+    }
+    return buildFallbackTerminalLog(event);
+  }, [event]);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [event.id]);
+
+  const dotColor =
+    event.kind === 'redteam_probe'
+      ? 'bg-[#38bdf8]'
+      : event.outcome === 'PASS'
+        ? 'bg-[#10b981]'
+        : event.outcome === 'FAIL'
+          ? 'bg-[#ef4444]'
+          : 'bg-[#f59e0b]';
+
+  const stepTag =
+    event.latencyMs !== undefined
+      ? `${event.latencyMs}ms · #${eventIndex + 1}`
+      : event.kind === 'redteam_probe'
+        ? `PROBE · #${eventIndex + 1}`
+        : `CACHED · #${eventIndex + 1}`;
+
+  return (
+    <div className="p-2.5 bg-[#090b0f]">
+      <div className="rounded-[2px] border border-zinc-800/90 bg-[#06080c] overflow-hidden">
+        <div className="bg-[#0b0e14] border-b border-zinc-800/80 px-2.5 py-1.5 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="relative flex h-2 w-2 flex-shrink-0" aria-hidden="true">
+              <span
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-70 ${dotColor}`}
+              />
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+            </span>
+            <span className="text-[9.5px] font-semibold uppercase tracking-wider text-zinc-200 truncate">
+              API &amp; VERIFIER TRACE
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <FrequencyEqualizer
+              latencyMs={event.latencyMs}
+              afterTokens={event.promptDelta.afterTokens}
+              eventIndex={eventIndex}
+              outcome={event.outcome}
+              kind={event.kind}
+              active={isLiveActive}
+            />
+            <span className="text-[9.5px] text-zinc-400 whitespace-nowrap">{stepTag}</span>
+          </div>
+        </div>
+
+        <div
+          ref={scrollRef}
+          className="max-h-[190px] overflow-y-auto scrollbar-thin p-2 space-y-1 bg-[#06080c] text-[10px] leading-[1.45]"
+        >
+          {terminalLines.map((line, idx) => {
+            const { prefixClass, textClass } = resolveTerminalLineClass(line);
+            const lineNo = String(idx + 1).padStart(2, '0');
+            return (
+              <div key={`${event.id}-tl-${idx}`} className="flex items-start gap-1.5">
+                <span className="w-4 flex-shrink-0 text-right text-[9px] text-zinc-600 select-none pt-[0.5px]">
+                  {lineNo}
+                </span>
+                <span className={`flex-shrink-0 ${prefixClass}`}>{line.prefix}</span>
+                <span className={`min-w-0 flex-1 break-words ${textClass}`}>{line.text}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Compact SVG radial ring gauge visualizing lexicalLockPct% retention.
+ */
+function LexicalLockRingGauge({ pct }: { readonly pct: number }) {
+  const clamped = Math.min(100, Math.max(0, pct));
+  const radius = 18;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - clamped / 100);
+  const strokeColor = clamped >= 95 ? '#10b981' : clamped >= 75 ? '#38bdf8' : '#f59e0b';
+  const label = clamped % 1 === 0 ? `${clamped.toFixed(0)}%` : `${clamped.toFixed(1)}%`;
+
+  return (
+    <div className="flex flex-col items-center justify-center flex-shrink-0" title={`Keywords kept: ${clamped.toFixed(1)}%`}>
+      <svg width="46" height="46" viewBox="0 0 46 46" className="block" aria-label={`Keywords kept ${label}`}>
+        <circle
+          cx="23"
+          cy="23"
+          r={radius}
+          fill="none"
+          stroke="#18181b"
+          strokeWidth="3.5"
+        />
+        <circle
+          cx="23"
+          cy="23"
+          r={radius}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="3.5"
+          strokeLinecap="butt"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          transform="rotate(-90 23 23)"
+        />
+        <text
+          x="23"
+          y="24"
+          textAnchor="middle"
+          dominantBaseline="middle"
+          fill="#f4f4f5"
+          fontSize="9.5"
+          fontWeight="600"
+          className="font-mono"
+        >
+          {label}
+        </text>
+      </svg>
+      <span className="text-[8px] uppercase tracking-wider text-zinc-500 -mt-0.5">LOCK</span>
+    </div>
+  );
+}
+
+/**
+ * Segmented check matrix bar rendering one micro block per passed/failed fact check.
+ */
+function SegmentedCheckMatrix({
+  passedFacts,
+  failedFacts,
+  passedFactsCount,
+  boundFactsCount,
+}: {
+  readonly passedFacts: readonly string[];
+  readonly failedFacts: readonly string[];
+  readonly passedFactsCount: number;
+  readonly boundFactsCount: number;
+}) {
+  const cells = useMemo(() => {
+    const merged: Array<{ readonly id: string; readonly state: 'pass' | 'fail' | 'unknown' }> = [
+      ...passedFacts.map((id) => ({ id, state: 'pass' as const })),
+      ...failedFacts.map((id) => ({ id, state: 'fail' as const })),
+    ].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+
+    if (merged.length > 0) {
+      return merged;
+    }
+
+    const total = Math.max(0, boundFactsCount);
+    return Array.from({ length: total }, (_, idx) => ({
+      id: `CHK-${idx + 1}`,
+      state: idx < passedFactsCount ? ('pass' as const) : ('fail' as const),
+    }));
+  }, [boundFactsCount, failedFacts, passedFacts, passedFactsCount]);
+
+  if (cells.length === 0) {
+    return (
+      <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2 py-1.5 text-[10px] text-zinc-500">
+        No bound fact assertions recorded
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 space-y-1.5">
+      <div className="flex items-center justify-between text-[9px] uppercase tracking-wider text-zinc-500">
+        <span>CHECK MATRIX ({cells.length})</span>
+        <span>
+          <span className="text-[#10b981]">{passedFactsCount}P</span>
+          {' / '}
+          <span className={failedFacts.length > 0 ? 'text-[#ef4444]' : 'text-zinc-500'}>
+            {Math.max(0, boundFactsCount - passedFactsCount)}F
+          </span>
+        </span>
+      </div>
+      <div className="flex items-center gap-[3px]" role="img" aria-label={`${passedFactsCount} passed out of ${boundFactsCount} checks`}>
+        {cells.map((cell) => (
+          <div
+            key={cell.id}
+            title={`${cell.id}: ${cell.state === 'pass' ? 'PASS' : 'FAIL'}`}
+            className={`h-2.5 flex-1 min-w-[6px] rounded-[1px] border transition-colors ${
+              cell.state === 'pass'
+                ? 'border-[#10b981]/80 bg-[#10b981]'
+                : cell.state === 'fail'
+                  ? 'border-[#ef4444]/80 bg-[#ef4444]'
+                  : 'border-zinc-700 bg-zinc-800'
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 3-cell severity bar gauge (LOW / MED / HIGH) for Red-Team probe routes.
+ */
+function RedTeamSeverityGauge({ severity }: { readonly severity?: string }) {
+  const normalized = (severity ?? '').trim().toLowerCase();
+  const level =
+    normalized === 'high' || normalized === 'critical'
+      ? 3
+      : normalized === 'medium' || normalized === 'med'
+        ? 2
+        : normalized === 'low'
+          ? 1
+          : 0;
+  const activeColor =
+    level >= 3
+      ? 'border-[#ef4444]/80 bg-[#ef4444]'
+      : level === 2
+        ? 'border-[#f59e0b]/80 bg-[#f59e0b]'
+        : 'border-[#38bdf8]/80 bg-[#38bdf8]';
+  const labelColor =
+    level >= 3
+      ? 'text-[#ef4444]'
+      : level === 2
+        ? 'text-[#f59e0b]'
+        : level === 1
+          ? 'text-[#38bdf8]'
+          : 'text-zinc-500';
+  const tiers = ['LOW', 'MED', 'HIGH'] as const;
+
+  return (
+    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-2 space-y-1.5">
+      <div className="flex items-center justify-between text-[9.5px] uppercase tracking-wider">
+        <span className="text-zinc-400">SEVERITY METER</span>
+        <span className={`font-semibold ${labelColor}`}>
+          {severity ? severity.toUpperCase() : 'UNRATED'}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {tiers.map((tier, idx) => {
+          const lit = idx < level;
+          return (
+            <div key={tier} className="space-y-0.5">
+              <div
+                className={`h-2 rounded-[1px] border ${
+                  lit ? activeColor : 'border-zinc-800 bg-[#090b0f]'
+                }`}
+              />
+              <div
+                className={`text-center text-[8.5px] tracking-wider ${
+                  lit ? labelColor : 'text-zinc-600'
+                }`}
+              >
+                {tier}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 4-slot density bar visualizing Top-4 retrieval saturation alongside rule pills.
+ */
+function RulesSlotDensityBar({ ruleIds }: { readonly ruleIds: readonly string[] }) {
+  const filledCount = ruleIds.length;
+  const slots = [0, 1, 2, 3] as const;
+
+  return (
+    <div className="grid grid-cols-4 gap-1" aria-label={`${filledCount} of 4 rule slots filled`}>
+      {slots.map((slotIdx) => {
+        const ruleId = ruleIds[slotIdx];
+        const filled = ruleId !== undefined;
+        return (
+          <div
+            key={slotIdx}
+            title={filled ? `Slot ${slotIdx + 1}: ${ruleId}` : `Slot ${slotIdx + 1}: empty`}
+            className={`h-1.5 rounded-[1px] border ${
+              filled
+                ? 'border-[#38bdf8]/80 bg-[#38bdf8]'
+                : 'border-zinc-800/80 bg-[#0d1016]'
+            }`}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * 3-segment G1 · G2 · G3 completion progress track for Slow Clock Gate checks.
+ */
+function SafetyGateProgressTrack({ gate }: { readonly gate: FlowTraceEvent['slowClockGate'] }) {
+  const stages = [
+    { key: 'G1', label: 'G1', passed: gate.g1LexicalPassed },
+    { key: 'G2', label: 'G2', passed: gate.g2ConflictPassed },
+    { key: 'G3', label: 'G3', passed: gate.g3CanaryPassed },
+  ] as const;
+
+  const passedCount = stages.filter((s) => s.passed === true).length;
+  const executedCount = stages.filter((s) => s.passed !== undefined).length;
+  const pct = Math.round((passedCount / 3) * 100);
+
+  const summaryBadge =
+    gate.status === 'none'
+      ? { text: '0/3 · N/A', cls: 'text-zinc-500 border-zinc-800 bg-[#0d1016]' }
+      : gate.status === 'approved'
+        ? {
+            text: `${passedCount}/3 · ${pct}%`,
+            cls: 'text-[#10b981] border-[#10b981]/40 bg-[#10b981]/10',
+          }
+        : gate.status === 'rejected'
+          ? {
+              text: `${passedCount}/3 · BLOCKED`,
+              cls: 'text-[#ef4444] border-[#ef4444]/40 bg-[#ef4444]/10',
+            }
+          : {
+              text: `${executedCount}/3 · STAGED`,
+              cls: 'text-[#f59e0b] border-[#f59e0b]/40 bg-[#f59e0b]/10',
+            };
+
+  return (
+    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 space-y-1.5">
+      <div className="flex items-center justify-between gap-2 text-[9.5px] uppercase tracking-wider">
+        <span className="text-zinc-400">G1 · G2 · G3 TRACK</span>
+        <span className={`rounded-[2px] border px-1.5 py-0.5 text-[9px] font-semibold ${summaryBadge.cls}`}>
+          {summaryBadge.text}
+        </span>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {stages.map((stage) => {
+          const isStagedPending = gate.status === 'staged' && stage.passed === undefined;
+          const barClass =
+            gate.status === 'none'
+              ? 'border-zinc-800 bg-zinc-800/50'
+              : stage.passed === true
+                ? 'border-[#10b981]/80 bg-[#10b981]'
+                : stage.passed === false
+                  ? 'border-[#ef4444]/80 bg-[#ef4444]'
+                  : isStagedPending
+                    ? 'border-[#f59e0b]/50 bg-[#f59e0b]/25'
+                    : 'border-zinc-800 bg-[#090b0f]';
+          const textClass =
+            gate.status === 'none'
+              ? 'text-zinc-600'
+              : stage.passed === true
+                ? 'text-[#10b981]'
+                : stage.passed === false
+                  ? 'text-[#ef4444]'
+                  : isStagedPending
+                    ? 'text-[#f59e0b]'
+                    : 'text-zinc-600';
+          const stateText =
+            gate.status === 'none'
+              ? 'SKIP'
+              : stage.passed === true
+                ? 'PASS'
+                : stage.passed === false
+                  ? 'FAIL'
+                  : isStagedPending
+                    ? 'WAIT'
+                    : 'SKIP';
+
+          return (
+            <div key={stage.key} className="space-y-0.5">
+              <div className={`h-2 rounded-[1px] border ${barClass}`} />
+              <div className={`flex items-center justify-between text-[8.5px] ${textClass}`}>
+                <span>{stage.label}</span>
+                <span>{stateText}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function GateCheckPill({
   label,
   passed,
@@ -354,6 +1052,7 @@ export function HopeExecutionFlowView({
 
   const activeEvent: FlowTraceEvent | null =
     visibleEvents.length > 0 ? visibleEvents[clampedIndex] ?? null : null;
+  const activeTelemetry: FlowTraceEventWithTelemetry | null = activeEvent;
 
   // Replay interval (~320ms) when Play is active
   useEffect(() => {
@@ -762,7 +1461,7 @@ export function HopeExecutionFlowView({
           {/* LEFT PANEL: Selected Test Details */}
           <aside
             aria-label="Selected Test Details"
-            className="min-h-0 lg:h-full max-h-[360px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
+            className="min-h-0 lg:h-full max-h-[460px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
           >
           <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
@@ -777,7 +1476,7 @@ export function HopeExecutionFlowView({
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin divide-y divide-zinc-800/80 text-[11px]">
-            {!activeEvent ? (
+            {!activeEvent || !activeTelemetry ? (
               <div className="h-full min-h-[160px] p-5 flex flex-col items-center justify-center text-center gap-2 text-xs text-zinc-500">
                 <Activity className="h-4 w-4 text-zinc-600" aria-hidden="true" />
                 <span>
@@ -797,397 +1496,439 @@ export function HopeExecutionFlowView({
               </div>
             ) : (
               <>
-                {/* Header Badge & Event Metadata */}
-              <div className="p-3.5 space-y-2 bg-[#0d1016]/50">
-                <div className="flex flex-wrap items-center justify-between gap-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span
-                      className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${
-                        activeEvent.kind === 'redteam_probe'
-                          ? 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b]'
-                          : 'border-zinc-700 bg-zinc-900 text-zinc-300'
-                      }`}
-                    >
-                      {activeEvent.kind === 'redteam_probe'
-                        ? 'REDTEAM PROBE'
-                        : 'TRIAL'}
-                    </span>
-                    <span
-                      className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${outcomeBadgeClasses(
-                        activeEvent.outcome
-                      )}`}
-                    >
-                      {activeEvent.outcome}
-                    </span>
-                  </div>
-                  <span className="text-[10px] text-zinc-500">
-                    {activeEvent.latencyMs !== undefined
-                      ? `${activeEvent.latencyMs}ms`
-                      : '—'}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-semibold text-zinc-50 tracking-tight">
-                    {activeEvent.taskId}
-                  </span>
-                  <span className="text-[10.5px] text-zinc-300 truncate">
-                    {activeEvent.shortName}
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-500">
-                  <span className="truncate">{activeEvent.cartridgeLabel}</span>
-                  <span>{formatEventTime(activeEvent.timestamp)}</span>
-                </div>
-              </div>
-
-              {/* Token Savings Block */}
-              <div className="p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                  <span>TOKEN SAVINGS</span>
-                  <span className="text-[#10b981] font-semibold">
-                    -{activeEvent.promptDelta.reductionPct.toFixed(1)}%
-                  </span>
-                </div>
-
-                <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2.5 space-y-2">
-                  <div className="flex items-center justify-between gap-2 text-[11px]">
-                    <span className="text-zinc-400">
-                      {activeEvent.promptDelta.beforeTokens.toLocaleString()} →{' '}
-                      <span className="text-zinc-100 font-semibold">
-                        {activeEvent.promptDelta.afterTokens.toLocaleString()}
-                      </span>{' '}
-                      tok
-                    </span>
-                    <span className="text-[#10b981]">
-                      -{activeEvent.promptDelta.savedTokens.toLocaleString()} saved
-                    </span>
-                  </div>
-
-                  {activeEvent.promptDelta.beforeTokens > 0 && (
-                    <div className="h-1.5 w-full bg-zinc-900 border border-zinc-800/80 rounded-[1px] overflow-hidden">
-                      <div
-                        className="h-full bg-[#10b981] transition-all duration-200"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            Math.max(
-                              4,
-                              Math.round(
-                                (activeEvent.promptDelta.afterTokens /
-                                  activeEvent.promptDelta.beforeTokens) *
-                                  100
-                              )
-                            )
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
-                    <span>
-                      KEYWORDS KEPT:{' '}
-                      <span className="text-[#10b981]">
-                        {activeEvent.promptDelta.lexicalLockPct.toFixed(1)}%
-                      </span>
-                    </span>
-                    {activeEvent.promptDelta.promptChars !== undefined && (
-                      <span>
-                        PROMPT:{' '}
-                        <span className="text-zinc-200">
-                          {activeEvent.promptDelta.promptChars.toLocaleString()} ch
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Rules Loaded (Top 4) */}
-              <div className="p-3.5 space-y-2">
-                <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                  <span>RULES LOADED (TOP 4)</span>
-                  <span className="text-zinc-500">
-                    {activeEvent.retrievedRuleIds.length}
-                  </span>
-                </div>
-                {activeEvent.retrievedRuleIds.length > 0 ? (
-                  <div className="flex flex-wrap gap-1.5">
-                    {activeEvent.retrievedRuleIds.map((ruleId) => (
+                {/* Compact Selected Event Header */}
+                <div className="p-3 space-y-1.5 bg-[#0d1016]/55">
+                  <div className="flex flex-wrap items-center justify-between gap-1.5">
+                    <div className="flex items-center gap-1.5">
                       <span
-                        key={ruleId}
-                        className="rounded-[2px] border border-zinc-800 bg-[#0d1016] px-2 py-0.5 text-[10px] text-zinc-200"
-                      >
-                        {ruleId}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-1.5 text-[10px] text-zinc-500">
-                    No Top-4 rule bundle (direct loopback probe)
-                  </div>
-                )}
-              </div>
-
-              {/* Required Checks OR Red-Team Probe Route Details */}
-              {activeEvent.kind === 'redteam_probe' && activeEvent.redTeam ? (
-                <div className="p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                    <span className="inline-flex items-center gap-1 text-[#f59e0b]">
-                      <ShieldAlert className="h-3 w-3" aria-hidden="true" />
-                      RED-TEAM PROBE ROUTE
-                    </span>
-                    {activeEvent.redTeam.severity && (
-                      <span
-                        className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] uppercase ${
-                          activeEvent.redTeam.severity.toLowerCase() === 'high'
-                            ? 'border-[#ef4444]/50 bg-[#ef4444]/10 text-[#ef4444]'
-                            : activeEvent.redTeam.severity.toLowerCase() === 'medium'
-                              ? 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b]'
-                              : 'border-zinc-700 bg-zinc-900 text-zinc-300'
+                        className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${
+                          activeEvent.kind === 'redteam_probe'
+                            ? 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b]'
+                            : 'border-zinc-700 bg-zinc-900 text-zinc-300'
                         }`}
                       >
-                        {activeEvent.redTeam.severity}
+                        {activeEvent.kind === 'redteam_probe'
+                          ? 'REDTEAM PROBE'
+                          : 'TRIAL'}
                       </span>
-                    )}
-                  </div>
-
-                  <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2.5 space-y-1.5">
-                    <div className="flex items-start gap-1.5 text-[10.5px] break-all">
-                      <span className="rounded-[2px] border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[9.5px] font-semibold text-zinc-200 flex-shrink-0">
-                        {activeEvent.redTeam.method}
+                      <span
+                        className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${outcomeBadgeClasses(
+                          activeEvent.outcome
+                        )}`}
+                      >
+                        {activeEvent.outcome}
                       </span>
-                      <span className="text-zinc-100">{activeEvent.redTeam.route}</span>
                     </div>
-                    {activeEvent.redTeam.title && (
-                      <div className="font-sans text-[11px] text-zinc-300 leading-snug">
-                        {activeEvent.redTeam.title}
-                      </div>
-                    )}
-                    <div className="text-[10px] text-[#f59e0b]">
-                      TRIGGER: {activeEvent.redTeam.triggerFlag}
-                    </div>
-                  </div>
-
-                  {activeEvent.redTeam.expectedDefense && (
-                    <div className="space-y-1">
-                      <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">
-                        EXPECTED DEFENSE
-                      </div>
-                      <p className="font-sans text-[11px] text-zinc-300 leading-snug">
-                        {activeEvent.redTeam.expectedDefense}
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="space-y-1">
-                    <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">
-                      STAGED CANDIDATE RULE
-                    </div>
-                    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 font-sans text-[11px] text-zinc-200 leading-snug">
-                      {activeEvent.redTeam.proposedRuleText}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] text-zinc-500">
-                    <span>EVIDENCE HASH</span>
-                    <span
-                      className="text-zinc-300"
-                      title={activeEvent.redTeam.evidenceHash}
-                    >
-                      {shortSha(activeEvent.redTeam.evidenceHash, 10, 6)}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                    <span>REQUIRED CHECKS</span>
-                    <span
-                      className={
-                        activeEvent.failedFacts.length === 0
-                          ? 'text-[#10b981]'
-                          : 'text-[#ef4444]'
-                      }
-                    >
-                      {activeEvent.passedFactsCount}/{activeEvent.boundFactsCount} (
-                      {Math.round(activeEvent.factPassRate * 100)}%)
+                    <span className="text-[10px] text-zinc-400">
+                      {activeEvent.latencyMs !== undefined
+                        ? `${activeEvent.latencyMs}ms`
+                        : '—'}
                     </span>
                   </div>
 
-                  {activeEvent.passedFacts.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-[9.5px] uppercase text-zinc-500">
-                        PASSED ({activeEvent.passedFacts.length})
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {activeEvent.passedFacts.map((fact) => (
-                          <span
-                            key={fact}
-                            className="inline-flex items-center gap-1 rounded-[2px] border border-[#10b981]/40 bg-[#10b981]/10 px-1.5 py-0.5 text-[10px] text-[#10b981]"
-                          >
-                            <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
-                            {fact}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeEvent.failedFacts.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-[9.5px] uppercase text-[#ef4444]">
-                        FAILED ({activeEvent.failedFacts.length})
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {activeEvent.failedFacts.map((fact) => (
-                          <span
-                            key={fact}
-                            className="inline-flex items-center gap-1 rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[10px] text-[#ef4444]"
-                          >
-                            <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
-                            {fact}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeEvent.activeForensicFlags.length > 0 && (
-                    <div className="space-y-1">
-                      <div className="text-[9.5px] uppercase text-[#f59e0b]">
-                        FORENSIC FLAGS
-                      </div>
-                      <div className="flex flex-wrap gap-1">
-                        {activeEvent.activeForensicFlags.map((flag) => (
-                          <span
-                            key={flag}
-                            className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-1.5 py-0.5 text-[10px] text-[#f59e0b]"
-                          >
-                            <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-                            {flag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {activeEvent.stderrSummary && (
-                    <div className="space-y-1">
-                      <div className="text-[9.5px] uppercase text-zinc-500">
-                        VERIFIER STDERR
-                      </div>
-                      <pre className="max-h-24 overflow-y-auto whitespace-pre-wrap break-words rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 text-[10px] leading-relaxed text-zinc-300">
-                        {activeEvent.stderrSummary}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Safety Gate Checks Readout */}
-              <div className="p-3.5 space-y-2">
-                <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
-                  <span className="text-zinc-400">SAFETY GATE CHECKS</span>
-                  <span
-                    className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${
-                      activeEvent.slowClockGate.status === 'approved'
-                        ? 'border-[#10b981]/50 bg-[#10b981]/10 text-[#10b981]'
-                        : activeEvent.slowClockGate.status === 'rejected'
-                          ? 'border-[#ef4444]/50 bg-[#ef4444]/10 text-[#ef4444]'
-                          : activeEvent.slowClockGate.status === 'staged'
-                            ? 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b]'
-                            : 'border-zinc-800 bg-[#0d1016] text-zinc-500'
-                    }`}
-                  >
-                    {activeEvent.slowClockGate.status === 'none'
-                      ? 'BYPASSED'
-                      : activeEvent.slowClockGate.status}
-                  </span>
-                </div>
-
-                {activeEvent.slowClockGate.status === 'none' ? (
-                  <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-2 text-[10px] text-zinc-500">
-                    All required checks passed verification — no safety gate review needed.
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-sm font-semibold text-zinc-50 tracking-tight">
+                      {activeEvent.taskId}
+                    </span>
+                    <span className="text-[10.5px] text-zinc-300 truncate">
+                      {activeEvent.shortName}
+                    </span>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    {(activeEvent.slowClockGate.candidateId ||
-                      activeEvent.slowClockGate.factId) && (
-                      <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-400">
-                        <span>
-                          CANDIDATE:{' '}
-                          <span className="text-zinc-200">
-                            {activeEvent.slowClockGate.candidateId ?? '—'}
-                          </span>
+
+                  <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-500">
+                    <span className="truncate">
+                      {activeEvent.cartridgeLabel} ·{' '}
+                      <span className="text-zinc-300">{inferProvider(activeTelemetry)}</span>
+                    </span>
+                    <span>{formatEventTime(activeEvent.timestamp)}</span>
+                  </div>
+                </div>
+
+                {/* Left Panel Hero: Live Call & Verifier Terminal */}
+                <LiveApiVerifierTerminal
+                  event={activeTelemetry}
+                  eventIndex={clampedIndex}
+                  isLiveActive={liveLock || isPlaying}
+                />
+
+                {/* Card 1: Token Savings (Prompt Compression + SVG Radial Lock Gauge) */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-400">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span>TOKEN SAVINGS</span>
+                      <span className="text-[9px] text-zinc-600 normal-case truncate">
+                        Prompt Compression
+                      </span>
+                    </div>
+                    <span className="rounded-[2px] border border-[#10b981]/40 bg-[#10b981]/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-[#10b981] whitespace-nowrap">
+                      -{activeEvent.promptDelta.reductionPct.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2.5 flex items-center gap-3">
+                    <LexicalLockRingGauge pct={activeEvent.promptDelta.lexicalLockPct} />
+
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center justify-between gap-1.5 text-[10.5px]">
+                        <span className="text-zinc-400 truncate">
+                          {activeEvent.promptDelta.beforeTokens.toLocaleString()} →{' '}
+                          <span className="text-zinc-100 font-semibold">
+                            {activeEvent.promptDelta.afterTokens.toLocaleString()}
+                          </span>{' '}
+                          tok
                         </span>
-                        <span>
-                          CHECK:{' '}
-                          <span className="text-zinc-200">
-                            {activeEvent.slowClockGate.factId ?? '—'}
-                          </span>
+                        <span className="text-[#10b981] text-[10px] whitespace-nowrap">
+                          -{activeEvent.promptDelta.savedTokens.toLocaleString()}
                         </span>
                       </div>
-                    )}
 
-                    <div className="grid grid-cols-1 gap-1">
-                      <GateCheckPill
-                        label="G1 Keyword Lock"
-                        passed={activeEvent.slowClockGate.g1LexicalPassed}
-                      />
-                      <GateCheckPill
-                        label="G2 Conflicts"
-                        passed={activeEvent.slowClockGate.g2ConflictPassed}
-                      />
-                      <GateCheckPill
-                        label="G3 Canary"
-                        passed={activeEvent.slowClockGate.g3CanaryPassed}
-                      />
-                    </div>
+                      {activeEvent.promptDelta.beforeTokens > 0 ? (
+                        <div
+                          className="h-2 w-full bg-zinc-900 border border-zinc-800/80 rounded-[1px] overflow-hidden flex"
+                          title={`Retained ${activeEvent.promptDelta.afterTokens} / ${activeEvent.promptDelta.beforeTokens} tokens (${activeEvent.promptDelta.savedTokens} saved)`}
+                        >
+                          <div
+                            className="h-full bg-[#38bdf8] transition-all duration-200"
+                            style={{
+                              width: `${Math.min(
+                                100,
+                                Math.max(
+                                  4,
+                                  Math.round(
+                                    (activeEvent.promptDelta.afterTokens /
+                                      activeEvent.promptDelta.beforeTokens) *
+                                      100
+                                  )
+                                )
+                              )}%`,
+                            }}
+                          />
+                          {activeEvent.promptDelta.savedTokens > 0 && (
+                            <div className="h-full bg-[#10b981]/30 border-l border-[#10b981]/60 flex-1" />
+                          )}
+                        </div>
+                      ) : (
+                        <div className="h-2 w-full bg-zinc-900 border border-zinc-800/80 rounded-[1px] overflow-hidden" />
+                      )}
 
-                    {(activeEvent.slowClockGate.canaryRegressions !== undefined ||
-                      activeEvent.slowClockGate.targetDeltaPp !== undefined) && (
-                      <div className="flex items-center justify-between text-[10px] rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2 py-1.5">
-                        <span className="text-zinc-400">
-                          REGRESSIONS:{' '}
-                          <span
-                            className={
-                              (activeEvent.slowClockGate.canaryRegressions ?? 0) === 0
-                                ? 'text-[#10b981]'
-                                : 'text-[#ef4444]'
-                            }
-                          >
-                            {activeEvent.slowClockGate.canaryRegressions ?? 0}
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 text-[9.5px] text-zinc-400">
+                        <span>
+                          KEPT:{' '}
+                          <span className="text-[#10b981]">
+                            {activeEvent.promptDelta.lexicalLockPct.toFixed(1)}%
                           </span>
                         </span>
-                        {activeEvent.slowClockGate.targetDeltaPp !== undefined && (
-                          <span className="text-zinc-400">
-                            TARGET Δ:{' '}
-                            <span
-                              className={
-                                activeEvent.slowClockGate.targetDeltaPp >= 0
-                                  ? 'text-[#10b981]'
-                                  : 'text-[#ef4444]'
-                              }
-                            >
-                              {activeEvent.slowClockGate.targetDeltaPp >= 0 ? '+' : ''}
-                              {activeEvent.slowClockGate.targetDeltaPp.toFixed(1)} pp
+                        {activeEvent.promptDelta.promptChars !== undefined && (
+                          <span>
+                            PROMPT:{' '}
+                            <span className="text-zinc-200">
+                              {activeEvent.promptDelta.promptChars.toLocaleString()} ch
                             </span>
                           </span>
                         )}
                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card 2: Required Checks OR Red-Team Probe Route */}
+                {activeEvent.kind === 'redteam_probe' && activeEvent.redTeam ? (
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-400">
+                      <span className="inline-flex items-center gap-1 text-[#f59e0b]">
+                        <ShieldAlert className="h-3 w-3" aria-hidden="true" />
+                        PROBE ROUTE
+                      </span>
+                      <span className="rounded-[2px] border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-[#f59e0b] whitespace-nowrap">
+                        {Math.round(activeEvent.factPassRate * 100)}% COMPLETE
+                      </span>
+                    </div>
+
+                    <RedTeamSeverityGauge severity={activeEvent.redTeam.severity} />
+
+                    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2.5 space-y-1.5">
+                      <div className="flex items-start gap-1.5 text-[10.5px] break-all">
+                        <span className="rounded-[2px] border border-zinc-700 bg-zinc-900 px-1.5 py-0.5 text-[9.5px] font-semibold text-zinc-200 flex-shrink-0">
+                          {activeEvent.redTeam.method}
+                        </span>
+                        <span className="text-zinc-100">{activeEvent.redTeam.route}</span>
+                      </div>
+                      {activeEvent.redTeam.title && (
+                        <div className="font-sans text-[11px] text-zinc-300 leading-snug">
+                          {activeEvent.redTeam.title}
+                        </div>
+                      )}
+                      <div className="text-[10px] text-[#f59e0b]">
+                        TRIGGER: {activeEvent.redTeam.triggerFlag}
+                      </div>
+                    </div>
+
+                    {activeEvent.redTeam.expectedDefense && (
+                      <div className="space-y-1">
+                        <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">
+                          EXPECTED DEFENSE
+                        </div>
+                        <p className="font-sans text-[11px] text-zinc-300 leading-snug">
+                          {activeEvent.redTeam.expectedDefense}
+                        </p>
+                      </div>
                     )}
 
-                    {activeEvent.slowClockGate.reason && (
-                      <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 font-sans text-[11px] leading-snug text-zinc-300">
-                        {activeEvent.slowClockGate.reason}
+                    <div className="space-y-1">
+                      <div className="text-[9.5px] uppercase tracking-wider text-zinc-500">
+                        STAGED CANDIDATE RULE
+                      </div>
+                      <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 font-sans text-[11px] text-zinc-200 leading-snug">
+                        {activeEvent.redTeam.proposedRuleText}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[10px] text-zinc-500">
+                      <span>EVIDENCE HASH</span>
+                      <span
+                        className="text-zinc-300"
+                        title={activeEvent.redTeam.evidenceHash}
+                      >
+                        {shortSha(activeEvent.redTeam.evidenceHash, 10, 6)}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-400">
+                      <span>REQUIRED CHECKS</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-zinc-400">
+                          {activeEvent.passedFactsCount}/{activeEvent.boundFactsCount}
+                        </span>
+                        <span
+                          className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold whitespace-nowrap ${
+                            activeEvent.failedFacts.length === 0
+                              ? 'border-[#10b981]/40 bg-[#10b981]/10 text-[#10b981]'
+                              : 'border-[#ef4444]/40 bg-[#ef4444]/10 text-[#ef4444]'
+                          }`}
+                        >
+                          {Math.round(activeEvent.factPassRate * 100)}% COMPLETE
+                        </span>
+                      </div>
+                    </div>
+
+                    <SegmentedCheckMatrix
+                      passedFacts={activeEvent.passedFacts}
+                      failedFacts={activeEvent.failedFacts}
+                      passedFactsCount={activeEvent.passedFactsCount}
+                      boundFactsCount={activeEvent.boundFactsCount}
+                    />
+
+                    {activeEvent.passedFacts.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[9.5px] uppercase text-zinc-500">
+                          PASSED ({activeEvent.passedFacts.length})
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {activeEvent.passedFacts.map((fact) => (
+                            <span
+                              key={fact}
+                              className="inline-flex items-center gap-1 rounded-[2px] border border-[#10b981]/40 bg-[#10b981]/10 px-1.5 py-0.5 text-[10px] text-[#10b981]"
+                            >
+                              <CheckCircle2 className="h-2.5 w-2.5" aria-hidden="true" />
+                              {fact}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeEvent.failedFacts.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[9.5px] uppercase text-[#ef4444]">
+                          FAILED ({activeEvent.failedFacts.length})
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {activeEvent.failedFacts.map((fact) => (
+                            <span
+                              key={fact}
+                              className="inline-flex items-center gap-1 rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[10px] text-[#ef4444]"
+                            >
+                              <XCircle className="h-2.5 w-2.5" aria-hidden="true" />
+                              {fact}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeEvent.activeForensicFlags.length > 0 && (
+                      <div className="space-y-1">
+                        <div className="text-[9.5px] uppercase text-[#f59e0b]">
+                          FORENSIC FLAGS
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {activeEvent.activeForensicFlags.map((flag) => (
+                            <span
+                              key={flag}
+                              className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-1.5 py-0.5 text-[10px] text-[#f59e0b]"
+                            >
+                              <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
+                              {flag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeEvent.stderrSummary && (
+                      <div className="space-y-1">
+                        <div className="text-[9.5px] uppercase text-zinc-500">
+                          VERIFIER STDERR
+                        </div>
+                        <pre className="max-h-20 overflow-y-auto whitespace-pre-wrap break-words rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 text-[10px] leading-relaxed text-zinc-300">
+                          {activeEvent.stderrSummary}
+                        </pre>
                       </div>
                     )}
                   </div>
                 )}
-              </div>
+
+                {/* Card 3: Rules Loaded (Top 4) with Slot Density Bar */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-zinc-400">
+                    <span>RULES LOADED (TOP 4)</span>
+                    <span
+                      className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold whitespace-nowrap ${
+                        activeEvent.retrievedRuleIds.length > 0
+                          ? 'border-[#38bdf8]/40 bg-[#38bdf8]/10 text-[#38bdf8]'
+                          : 'border-zinc-800 bg-[#0d1016] text-zinc-500'
+                      }`}
+                    >
+                      {activeEvent.retrievedRuleIds.length}/4 ·{' '}
+                      {Math.round((activeEvent.retrievedRuleIds.length / 4) * 100)}%
+                    </span>
+                  </div>
+
+                  <RulesSlotDensityBar ruleIds={activeEvent.retrievedRuleIds} />
+
+                  {activeEvent.retrievedRuleIds.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {activeEvent.retrievedRuleIds.map((ruleId) => (
+                        <span
+                          key={ruleId}
+                          className="rounded-[2px] border border-zinc-800 bg-[#0d1016] px-2 py-0.5 text-[10px] text-zinc-200"
+                        >
+                          {ruleId}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-1.5 text-[10px] text-zinc-500">
+                      No Top-4 rule bundle (direct loopback probe)
+                    </div>
+                  )}
+                </div>
+
+                {/* Card 4: Safety Gate Checks with 3-Segment G1 · G2 · G3 Track */}
+                <div className="p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
+                    <span className="text-zinc-400">SAFETY GATE CHECKS</span>
+                    <span
+                      className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${
+                        activeEvent.slowClockGate.status === 'approved'
+                          ? 'border-[#10b981]/50 bg-[#10b981]/10 text-[#10b981]'
+                          : activeEvent.slowClockGate.status === 'rejected'
+                            ? 'border-[#ef4444]/50 bg-[#ef4444]/10 text-[#ef4444]'
+                            : activeEvent.slowClockGate.status === 'staged'
+                              ? 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b]'
+                              : 'border-zinc-800 bg-[#0d1016] text-zinc-500'
+                      }`}
+                    >
+                      {activeEvent.slowClockGate.status === 'none'
+                        ? 'BYPASSED'
+                        : activeEvent.slowClockGate.status}
+                    </span>
+                  </div>
+
+                  <SafetyGateProgressTrack gate={activeEvent.slowClockGate} />
+
+                  {activeEvent.slowClockGate.status === 'none' ? (
+                    <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-2 text-[10px] text-zinc-500">
+                      All required checks passed verification — no safety gate review needed.
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {(activeEvent.slowClockGate.candidateId ||
+                        activeEvent.slowClockGate.factId) && (
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-[10px] text-zinc-400">
+                          <span>
+                            CANDIDATE:{' '}
+                            <span className="text-zinc-200">
+                              {activeEvent.slowClockGate.candidateId ?? '—'}
+                            </span>
+                          </span>
+                          <span>
+                            CHECK:{' '}
+                            <span className="text-zinc-200">
+                              {activeEvent.slowClockGate.factId ?? '—'}
+                            </span>
+                          </span>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 gap-1">
+                        <GateCheckPill
+                          label="G1 Keyword Lock"
+                          passed={activeEvent.slowClockGate.g1LexicalPassed}
+                        />
+                        <GateCheckPill
+                          label="G2 Conflicts"
+                          passed={activeEvent.slowClockGate.g2ConflictPassed}
+                        />
+                        <GateCheckPill
+                          label="G3 Canary"
+                          passed={activeEvent.slowClockGate.g3CanaryPassed}
+                        />
+                      </div>
+
+                      {(activeEvent.slowClockGate.canaryRegressions !== undefined ||
+                        activeEvent.slowClockGate.targetDeltaPp !== undefined) && (
+                        <div className="flex items-center justify-between text-[10px] rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2 py-1.5">
+                          <span className="text-zinc-400">
+                            REGRESSIONS:{' '}
+                            <span
+                              className={
+                                (activeEvent.slowClockGate.canaryRegressions ?? 0) === 0
+                                  ? 'text-[#10b981]'
+                                  : 'text-[#ef4444]'
+                              }
+                            >
+                              {activeEvent.slowClockGate.canaryRegressions ?? 0}
+                            </span>
+                          </span>
+                          {activeEvent.slowClockGate.targetDeltaPp !== undefined && (
+                            <span className="text-zinc-400">
+                              TARGET Δ:{' '}
+                              <span
+                                className={
+                                  activeEvent.slowClockGate.targetDeltaPp >= 0
+                                    ? 'text-[#10b981]'
+                                    : 'text-[#ef4444]'
+                                }
+                              >
+                                {activeEvent.slowClockGate.targetDeltaPp >= 0 ? '+' : ''}
+                                {activeEvent.slowClockGate.targetDeltaPp.toFixed(1)} pp
+                              </span>
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {activeEvent.slowClockGate.reason && (
+                        <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] p-2 font-sans text-[11px] leading-snug text-zinc-300">
+                          {activeEvent.slowClockGate.reason}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </>
             )}
           </div>

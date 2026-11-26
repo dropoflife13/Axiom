@@ -50,6 +50,12 @@ export interface FlowRedTeamProbeInfo {
   readonly status: 'staged' | 'approved' | 'rejected';
 }
 
+export interface FlowTerminalLine {
+  readonly prefix: '$' | '>' | '<' | '[PASS]' | '[FAIL]' | '[GATE]' | '[INFO]';
+  readonly tone: 'neutral' | 'info' | 'pass' | 'fail' | 'quarantine';
+  readonly text: string;
+}
+
 export interface FlowTraceEvent {
   readonly id: string;
   readonly kind: 'trial' | 'redteam_probe';
@@ -76,6 +82,12 @@ export interface FlowTraceEvent {
   readonly promptDelta: FlowPromptDelta;
   readonly slowClockGate: FlowSlowClockGateInfo;
   readonly redTeam?: FlowRedTeamProbeInfo;
+  readonly provider?: string;
+  readonly returnedModel?: string;
+  readonly finishReason?: string;
+  readonly artifactSha256?: string;
+  readonly stderrLines?: readonly string[];
+  readonly terminalLog?: readonly FlowTerminalLine[];
 }
 
 export interface FlowTraceStats {
@@ -229,6 +241,9 @@ export interface RawReplayCacheEntryInput {
   readonly forensicFlags?: unknown;
   readonly stderr?: unknown;
   readonly latencyMs?: unknown;
+  readonly returnedModel?: unknown;
+  readonly finishReason?: unknown;
+  readonly committed?: unknown;
   readonly source?: unknown;
   readonly timestamp?: unknown;
 }
@@ -283,6 +298,33 @@ export function truncateStderrSummary(stderr: unknown, maxLength = 300): string 
   if (normalized.length <= maxLength) return normalized;
   if (maxLength <= 1) return normalized.slice(0, Math.max(0, maxLength));
   return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
+/**
+ * Splits raw verifier stderr into bounded trimmed non-empty lines for terminal logs.
+ */
+export function extractStderrLines(
+  stderr: unknown,
+  maxLines = 5,
+  maxLineLength = 220
+): string[] {
+  if (typeof stderr !== 'string') return [];
+  return stderr
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .slice(0, maxLines)
+    .map((line) => {
+      if (line.length <= maxLineLength) return line;
+      if (maxLineLength <= 1) return line.slice(0, Math.max(0, maxLineLength));
+      return `${line.slice(0, maxLineLength - 1).trimEnd()}…`;
+    });
+}
+
+function formatGateCheckState(passed: boolean | undefined): 'PASS' | 'FAIL' | 'SKIP' {
+  if (passed === true) return 'PASS';
+  if (passed === false) return 'FAIL';
+  return 'SKIP';
 }
 
 /**
@@ -454,6 +496,8 @@ export function buildTrialFlowTraceEvent(params: {
   readonly compaction?: RawCompactionStatsInput | null;
   readonly promptChars?: number;
   readonly candidateDecisions?: readonly RawCandidateDecisionInput[];
+  readonly provider?: string;
+  readonly artifactSha256?: string;
 }): FlowTraceEvent {
   const {
     runId,
@@ -466,6 +510,8 @@ export function buildTrialFlowTraceEvent(params: {
     compaction,
     promptChars,
     candidateDecisions = [],
+    provider,
+    artifactSha256,
   } = params;
 
   const effectiveCacheKey =
@@ -473,17 +519,39 @@ export function buildTrialFlowTraceEvent(params: {
   const taskId = String(entry.taskId ?? '');
   const timestamp = String(entry.timestamp ?? '');
   const fullTaskPass = Boolean(entry.fullTaskPass);
+  const retrievedRuleIds = toStringArray(entry.retrievedRuleIds);
   const passedFacts = toStringArray(entry.passedFacts);
   const failedFacts = toStringArray(entry.failedFacts);
+  const passedFactsCount = toFiniteNumber(entry.passedFactsCount, passedFacts.length);
+  const boundFactsCount = toFiniteNumber(
+    entry.boundFactsCount,
+    passedFacts.length + failedFacts.length
+  );
+  const factPassRate = toFiniteNumber(entry.factPassRate, 0);
   const forensicFlagsObj =
     entry.forensicFlags && typeof entry.forensicFlags === 'object'
       ? (entry.forensicFlags as Readonly<Record<string, unknown>>)
       : undefined;
   const activeForensicFlags = extractActiveForensicFlags(forensicFlagsObj);
   const stderrSummary = truncateStderrSummary(entry.stderr, 300);
+  const stderrLines = extractStderrLines(entry.stderr, 5, 220);
   const latencyMs =
     typeof entry.latencyMs === 'number' && Number.isFinite(entry.latencyMs)
       ? entry.latencyMs
+      : undefined;
+  const resolvedProvider =
+    typeof provider === 'string' && provider.trim().length > 0 ? provider.trim() : undefined;
+  const returnedModel =
+    typeof entry.returnedModel === 'string' && entry.returnedModel.trim().length > 0
+      ? entry.returnedModel.trim()
+      : undefined;
+  const finishReason =
+    typeof entry.finishReason === 'string' && entry.finishReason.trim().length > 0
+      ? entry.finishReason.trim()
+      : undefined;
+  const resolvedArtifactSha256 =
+    typeof artifactSha256 === 'string' && artifactSha256.trim().length > 0
+      ? artifactSha256.trim()
       : undefined;
 
   let outcome: FlowOutcome;
@@ -542,6 +610,73 @@ export function buildTrialFlowTraceEvent(params: {
     }
   }
 
+  const promptDelta = buildFlowPromptDelta(compaction, promptChars);
+  const shaSource = resolvedArtifactSha256 ?? effectiveCacheKey;
+  const shaShort = shaSource.length > 0 ? shaSource.slice(0, 12) : 'none';
+
+  const terminalLog: FlowTerminalLine[] = [
+    {
+      prefix: '$',
+      tone: 'neutral',
+      text: `axiom-v4 verify --cartridge ${cartridgeId} --task ${taskId} --arm C_ID_hope`,
+    },
+    {
+      prefix: '>',
+      tone: 'info',
+      text: `context topK=4 rules=[${retrievedRuleIds.join(',') || 'none'}] prompt=${promptDelta.promptChars ?? '?'}ch (-${promptDelta.reductionPct.toFixed(1)}% tok, ${promptDelta.lexicalLockPct.toFixed(0)}% lock)`,
+    },
+    {
+      prefix: '>',
+      tone: 'info',
+      text: `${resolvedProvider ?? 'provider'} model=${returnedModel ?? modelId} finish=${finishReason ?? 'stop'} latency=${latencyMs !== undefined ? `${latencyMs}ms` : 'cached'} sha=${shaShort}`,
+    },
+    {
+      prefix: '<',
+      tone: fullTaskPass ? 'pass' : 'fail',
+      text: `oracle=${cartridgeId === 'policy-abac-v4' ? 'cedar-abac' : 'ts-api-sandbox'} facts=${passedFactsCount}/${boundFactsCount} (${Math.round(factPassRate * 100)}%)`,
+    },
+  ];
+
+  if (passedFacts.length > 0) {
+    terminalLog.push({
+      prefix: '[PASS]',
+      tone: 'pass',
+      text: `verified: ${passedFacts.join(', ')}`,
+    });
+  }
+
+  if (stderrLines.length > 0) {
+    for (const line of stderrLines.slice(0, 3)) {
+      terminalLog.push({
+        prefix: '[FAIL]',
+        tone: 'fail',
+        text: line,
+      });
+    }
+  } else if (failedFacts.length > 0) {
+    terminalLog.push({
+      prefix: '[FAIL]',
+      tone: 'fail',
+      text: `failed facts: ${failedFacts.join(', ')}`,
+    });
+  }
+
+  if (slowClockGate.status !== 'none') {
+    const g1 = formatGateCheckState(slowClockGate.g1LexicalPassed);
+    const g2 = formatGateCheckState(slowClockGate.g2ConflictPassed);
+    const g3 = formatGateCheckState(slowClockGate.g3CanaryPassed);
+    terminalLog.push({
+      prefix: '[GATE]',
+      tone:
+        slowClockGate.status === 'approved'
+          ? 'pass'
+          : slowClockGate.status === 'rejected'
+            ? 'fail'
+            : 'quarantine',
+      text: `slow-clock ${slowClockGate.candidateId ?? slowClockGate.factId ?? 'candidate'} G1=${g1} G2=${g2} G3=${g3} -> ${slowClockGate.status.toUpperCase()}`,
+    });
+  }
+
   return {
     id: `${runId}:${effectiveCacheKey}`,
     kind: 'trial',
@@ -550,17 +685,14 @@ export function buildTrialFlowTraceEvent(params: {
     modelId,
     shortName,
     taskId,
-    retrievedRuleIds: toStringArray(entry.retrievedRuleIds),
+    retrievedRuleIds,
     fullTaskPass,
     outcome,
     terminalNode,
     pathNodes,
-    passedFactsCount: toFiniteNumber(entry.passedFactsCount, passedFacts.length),
-    boundFactsCount: toFiniteNumber(
-      entry.boundFactsCount,
-      passedFacts.length + failedFacts.length
-    ),
-    factPassRate: toFiniteNumber(entry.factPassRate, 0),
+    passedFactsCount,
+    boundFactsCount,
+    factPassRate,
     passedFacts,
     failedFacts,
     activeForensicFlags,
@@ -568,8 +700,14 @@ export function buildTrialFlowTraceEvent(params: {
     ...(latencyMs !== undefined ? { latencyMs } : {}),
     timestamp,
     source: String(entry.source ?? 'live-replay'),
-    promptDelta: buildFlowPromptDelta(compaction, promptChars),
+    promptDelta,
     slowClockGate,
+    ...(resolvedProvider !== undefined ? { provider: resolvedProvider } : {}),
+    ...(returnedModel !== undefined ? { returnedModel } : {}),
+    ...(finishReason !== undefined ? { finishReason } : {}),
+    ...(resolvedArtifactSha256 !== undefined ? { artifactSha256: resolvedArtifactSha256 } : {}),
+    ...(stderrLines.length > 0 ? { stderrLines } : {}),
+    terminalLog,
   };
 }
 
@@ -581,8 +719,9 @@ export function buildRedTeamFlowTraceEvent(params: {
   readonly threat?: RawRedTeamThreatInput | null;
   readonly modelId?: string;
   readonly dryRun?: boolean;
+  readonly targetBaseUrl?: string;
 }): FlowTraceEvent {
-  const { candidate, threat, modelId, dryRun } = params;
+  const { candidate, threat, modelId, dryRun, targetBaseUrl } = params;
   const candidateId = String(candidate.candidateId ?? '');
   const factId = String(candidate.factId ?? threat?.id ?? '');
   const triggerFlag = String(candidate.triggerFlag ?? threat?.category ?? '');
@@ -645,6 +784,45 @@ export function buildRedTeamFlowTraceEvent(params: {
       ? modelId.trim()
       : 'dry-run-deterministic';
 
+  const resolvedTargetBaseUrl =
+    typeof targetBaseUrl === 'string' && targetBaseUrl.trim().length > 0
+      ? targetBaseUrl.trim()
+      : 'http://127.0.0.1:3000';
+
+  const terminalLog: FlowTerminalLine[] = [
+    {
+      prefix: '$',
+      tone: 'neutral',
+      text: `redteam-v1 probe --target ${resolvedTargetBaseUrl} --id ${factId} --flag ${triggerFlag}`,
+    },
+    {
+      prefix: '>',
+      tone: 'info',
+      text: `HTTP ${method} ${route}`,
+    },
+    {
+      prefix: '<',
+      tone: 'quarantine',
+      text: `quarantine status=${gateStatus} candidate=${candidateId}${severity ? ` severity=${severity}` : ''} hash=${evidenceHash.slice(0, 12)}`,
+    },
+  ];
+
+  if (expectedDefense) {
+    terminalLog.push({
+      prefix: '[INFO]',
+      tone: 'neutral',
+      text: `defense: ${expectedDefense}`,
+    });
+  }
+
+  if (proposedRuleText) {
+    terminalLog.push({
+      prefix: '[GATE]',
+      tone: 'quarantine',
+      text: `staged-rule: ${proposedRuleText}`,
+    });
+  }
+
   return {
     id: `redteam:${candidateId}:${timestamp}`,
     kind: 'redteam_probe',
@@ -694,6 +872,7 @@ export function buildRedTeamFlowTraceEvent(params: {
       evidenceHash,
       status: gateStatus,
     },
+    terminalLog,
   };
 }
 

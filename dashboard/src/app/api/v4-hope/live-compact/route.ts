@@ -209,6 +209,13 @@ export async function GET() {
                 : typeof baselineCTrial?.promptChars === 'number'
                   ? baselineCTrial.promptChars
                   : undefined;
+            const artifactSha256 =
+              typeof hopeTrial?.artifactSha256 === 'string' && hopeTrial.artifactSha256.length > 0
+                ? hopeTrial.artifactSha256
+                : typeof baselineCTrial?.artifactSha256 === 'string' &&
+                    baselineCTrial.artifactSha256.length > 0
+                  ? baselineCTrial.artifactSha256
+                  : undefined;
 
             traceStream.push(
               buildTrialFlowTraceEvent({
@@ -222,6 +229,8 @@ export async function GET() {
                 compaction,
                 promptChars,
                 candidateDecisions: decisions,
+                provider: model.provider,
+                artifactSha256,
               })
             );
           }
@@ -354,12 +363,23 @@ export async function GET() {
     const redTeamThreatsPath = resolveRepoFile('.axiom-state/redteam-v1/threat-matrix.json');
     const redTeamCandidatesDoc = readJsonSafe<{
       readonly dryRun?: boolean;
+      readonly targetBaseUrl?: string;
       readonly candidates?: readonly RawRedTeamCandidateInput[];
     }>(redTeamCandidatesPath);
     const redTeamThreatsDoc = readJsonSafe<{
       readonly model?: string;
+      readonly targetBaseUrl?: string;
       readonly threats?: readonly RawRedTeamThreatInput[];
     }>(redTeamThreatsPath);
+
+    const redTeamTargetBaseUrl =
+      typeof redTeamCandidatesDoc?.targetBaseUrl === 'string' &&
+      redTeamCandidatesDoc.targetBaseUrl.trim().length > 0
+        ? redTeamCandidatesDoc.targetBaseUrl.trim()
+        : typeof redTeamThreatsDoc?.targetBaseUrl === 'string' &&
+            redTeamThreatsDoc.targetBaseUrl.trim().length > 0
+          ? redTeamThreatsDoc.targetBaseUrl.trim()
+          : undefined;
 
     const threatById = new Map<string, RawRedTeamThreatInput>();
     if (Array.isArray(redTeamThreatsDoc?.threats)) {
@@ -385,6 +405,7 @@ export async function GET() {
               threat,
               modelId: redTeamThreatsDoc?.model,
               dryRun: redTeamCandidatesDoc.dryRun,
+              targetBaseUrl: redTeamTargetBaseUrl,
             })
           );
         }
