@@ -270,50 +270,72 @@ function computeDagLayout(width: number, height: number): DagLayout {
   const bottomPad = 20;
   const usableH = Math.max(240, h - topPad - bottomPad);
 
-  const isCompact = w < 520;
-  const spineW = isCompact
-    ? clamp(w * 0.29, 96, 140)
-    : clamp(w * 0.245, 134, 196);
+  const isCompact = w < 560;
+  const sidePad = isCompact ? 10 : 20;
+
+  const nodeW = isCompact
+    ? clamp(w * 0.215, 72, 114)
+    : clamp(w * 0.19, 118, 178);
   const gateW = isCompact
-    ? clamp(w * 0.195, 70, 106)
-    : clamp(w * 0.165, 92, 146);
+    ? clamp(w * 0.145, 56, 86)
+    : clamp(w * 0.138, 86, 134);
 
-  const nodeH = clamp(usableH * 0.145, 44, 58);
-  const gateH = clamp(usableH * 0.138, 42, 54);
+  // Maintain 4 clean rows on Column 3 with clear vertical breathing room
+  const nodeH = clamp(usableH * 0.145, 42, 56);
+  const gateH = clamp(usableH * 0.136, 40, 52);
 
-  const leftX = clamp(w * 0.225, spineW / 2 + 12, w * 0.32);
-  const minRightX = leftX + spineW / 2 + (isCompact ? 30 : 62) + spineW / 2;
-  const maxRightX = w - gateW - (isCompact ? 12 : 24);
-  const rightCenterX = clamp(w * 0.715, Math.min(minRightX, maxRightX), maxRightX);
+  // Column 3 horizontal geometry (rightmost column holds QUARANTINE, SAFETY GATE, APPROVED|BLOCKED, PASSED)
+  const minSplitHalf = gateW / 2 + (isCompact ? 4 : 8);
+  const splitHalf = clamp(gateW * 0.56 + (isCompact ? 4 : 10), minSplitHalf, gateW * 0.72 + 12);
+  const col3HalfSpan = Math.max(nodeW / 2, splitHalf + gateW / 2);
 
-  const minSplitHalf = gateW / 2 + (isCompact ? 5 : 10);
-  const maxSplitByRightEdge = w - rightCenterX - gateW / 2 - (isCompact ? 8 : 16);
-  const maxSplitByLeftSpine =
-    rightCenterX - (leftX + spineW / 2 + (isCompact ? 14 : 28) + gateW / 2);
-  const splitHalf = clamp(
-    gateW * 0.62 + (isCompact ? 5 : 10),
-    minSplitHalf,
-    Math.max(minSplitHalf, Math.min(maxSplitByRightEdge, maxSplitByLeftSpine))
+  // Column 1 (far left): TASK / PROBE
+  const col1X = sidePad + nodeW / 2;
+
+  // Column 3 anchored on right with room for APPROVED/BLOCKED pair
+  const minCol12Gap = isCompact ? 22 : 44;
+  const minCol23Gap = isCompact ? 28 : 54;
+  const minCol3X =
+    col1X + nodeW / 2 + minCol12Gap + nodeW + minCol23Gap + col3HalfSpan;
+  const maxCol3X = w - sidePad - col3HalfSpan;
+  const col3X = clamp(
+    w * (isCompact ? 0.75 : 0.775),
+    Math.min(minCol3X, maxCol3X),
+    maxCol3X
   );
 
-  const leftY0 = topPad + usableH * 0.13;
-  const leftY1 = topPad + usableH * 0.49;
-  const leftY2 = topPad + usableH * 0.85;
+  // Column 2 (middle): FAST CLOCK & TEST VERIFIER placed closer to Column 1 so Column 2 -> 3 curves have wide horizontal stage
+  const minCol2X = col1X + nodeW / 2 + minCol12Gap + nodeW / 2;
+  const col3OuterLeft = col3X - col3HalfSpan;
+  const maxCol2X = Math.max(minCol2X, col3OuterLeft - minCol23Gap - nodeW / 2);
+  const col2X = clamp(w * (isCompact ? 0.42 : 0.395), minCol2X, maxCol2X);
 
-  const rightY0 = topPad + usableH * 0.11;
-  const rightY1 = topPad + usableH * 0.39;
-  const rightY2 = topPad + usableH * 0.66;
-  const rightY3 = topPad + usableH * 0.91;
+  // Vertical rows:
+  // Col 1: TASK / PROBE centered mid-left framing FAST CLOCK & TEST VERIFIER
+  const col1Y = topPad + usableH * 0.46;
+
+  // Col 2: 2 stacked middle cards
+  const col2YTop = topPad + usableH * 0.25;
+  const col2YBot = topPad + usableH * 0.67;
+
+  // Col 3: 4 vertical tiers — QUARANTINE -> SAFETY GATE -> APPROVED|BLOCKED -> PASSED underneath
+  const col3Y0 = topPad + usableH * 0.11;
+  const col3Y1 = topPad + usableH * 0.37;
+  const col3Y2 = topPad + usableH * 0.63;
+  const col3Y3 = topPad + usableH * 0.89;
+
+  // Give PASSED generous horizontal presence cleanly beneath APPROVED & BLOCKED
+  const passedW = Math.max(nodeW, Math.round(gateW * 1.48));
 
   const nodes: Record<FlowNodeId, NodeRect> = {
-    TASK_IN: createNodeRect('TASK_IN', leftX, leftY0, spineW, nodeH),
-    FAST_CLOCK: createNodeRect('FAST_CLOCK', leftX, leftY1, spineW, nodeH),
-    ORACLE_VERIFIER: createNodeRect('ORACLE_VERIFIER', leftX, leftY2, spineW, nodeH),
-    VERIFIED_OUTPUT: createNodeRect('VERIFIED_OUTPUT', rightCenterX, rightY0, spineW, nodeH),
-    QUARANTINE_VAULT: createNodeRect('QUARANTINE_VAULT', rightCenterX, rightY1, spineW, nodeH),
-    SLOW_CLOCK_GATE: createNodeRect('SLOW_CLOCK_GATE', rightCenterX, rightY2, spineW, nodeH),
-    GATE_APPROVED: createNodeRect('GATE_APPROVED', rightCenterX - splitHalf, rightY3, gateW, gateH),
-    GATE_REJECTED: createNodeRect('GATE_REJECTED', rightCenterX + splitHalf, rightY3, gateW, gateH),
+    TASK_IN: createNodeRect('TASK_IN', col1X, col1Y, nodeW, nodeH),
+    FAST_CLOCK: createNodeRect('FAST_CLOCK', col2X, col2YTop, nodeW, nodeH),
+    ORACLE_VERIFIER: createNodeRect('ORACLE_VERIFIER', col2X, col2YBot, nodeW, nodeH),
+    QUARANTINE_VAULT: createNodeRect('QUARANTINE_VAULT', col3X, col3Y0, nodeW, nodeH),
+    SLOW_CLOCK_GATE: createNodeRect('SLOW_CLOCK_GATE', col3X, col3Y1, nodeW, nodeH),
+    GATE_APPROVED: createNodeRect('GATE_APPROVED', col3X - splitHalf, col3Y2, gateW, gateH),
+    GATE_REJECTED: createNodeRect('GATE_REJECTED', col3X + splitHalf, col3Y2, gateW, gateH),
+    VERIFIED_OUTPUT: createNodeRect('VERIFIED_OUTPUT', col3X, col3Y3, passedW, nodeH),
   };
 
   return {
@@ -385,42 +407,88 @@ function buildEdgeCurve(
   const from = layout.nodes[fromId];
   const to = layout.nodes[toId];
 
-  // ORACLE_VERIFIER (upper-right) -> VERIFIED_OUTPUT (left): sweeping emerald PASS arc
-  if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
+  // Column 1 (TASK_IN.right) -> Column 2 top (FAST_CLOCK.left): horizontal-upward Bezier bundle
+  if (fromId === 'TASK_IN' && toId === 'FAST_CLOCK') {
     const p0: Point = {
       x: from.right,
-      y: from.cy - from.h * 0.22 + laneNorm * (from.h * 0.12),
+      y: from.cy + laneNorm * (from.h * 0.34),
+    };
+    const p1: Point = {
+      x: to.left,
+      y: to.cy + laneNorm * (to.h * 0.34),
+    };
+    const dx = p1.x - p0.x;
+    const spreadY = laneNorm * clamp(layout.height * 0.045, 10, 20);
+    return {
+      p0,
+      cp1: { x: p0.x + dx * 0.48, y: p0.y + spreadY },
+      cp2: { x: p1.x - dx * 0.48, y: p1.y + spreadY },
+      p1,
+    };
+  }
+
+  // ORACLE_VERIFIER (upper-right) -> QUARANTINE_VAULT (left): climbs cleanly in open Col 2->3 corridor above APPROVED & SAFETY GATE
+  if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
+    const p0: Point = {
+      x: from.right,
+      y: from.cy - from.h * 0.22 + laneNorm * (from.h * 0.13),
     };
     const p1: Point = {
       x: to.left,
       y: to.cy + laneNorm * (to.h * 0.28),
     };
+    const approvedLeft = layout.nodes.GATE_APPROVED.left;
+    const corridorX = Math.max(p0.x + 18, approvedLeft - 14);
+    const colGap = corridorX - p0.x;
     const dx = p1.x - p0.x;
-    const lift = clamp(layout.height * 0.05, 10, 22);
+    const spreadY = laneNorm * clamp(layout.height * 0.06, 14, 30);
+    const gateTopTarget = Math.min(
+      layout.nodes.SLOW_CLOCK_GATE.top - clamp(layout.height * 0.035, 10, 20),
+      layout.nodes.QUARANTINE_VAULT.bottom + 14
+    );
     return {
       p0,
-      cp1: { x: p0.x + dx * 0.46, y: p0.y - lift + laneNorm * 14 },
-      cp2: { x: p1.x - dx * 0.48, y: p1.y + laneNorm * 18 },
+      cp1: {
+        x: Math.min(p0.x + colGap * 0.72, p0.x + dx * 0.36),
+        y: gateTopTarget + spreadY,
+      },
+      cp2: {
+        x: p1.x - dx * 0.48,
+        y: p1.y + spreadY * 0.65,
+      },
       p1,
     };
   }
 
-  // ORACLE_VERIFIER (lower-right) -> QUARANTINE_VAULT (left): strictly below PASS arc
-  if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
+  // ORACLE_VERIFIER (lower-right) -> VERIFIED_OUTPUT / PASSED (left): sweeps below APPROVED & BLOCKED into bottom-right card
+  if (fromId === 'ORACLE_VERIFIER' && toId === 'VERIFIED_OUTPUT') {
     const p0: Point = {
       x: from.right,
-      y: from.cy + from.h * 0.22 + laneNorm * (from.h * 0.14),
+      y: from.cy + from.h * 0.22 + laneNorm * (from.h * 0.13),
     };
     const p1: Point = {
       x: to.left,
-      y: to.cy + laneNorm * (to.h * 0.30),
+      y: to.cy + laneNorm * (to.h * 0.28),
     };
+    const approvedLeft = layout.nodes.GATE_APPROVED.left;
+    const corridorX = Math.max(p0.x + 18, approvedLeft - 12);
+    const colGap = corridorX - p0.x;
     const dx = p1.x - p0.x;
-    const arcSpread = laneNorm * clamp(layout.height * 0.085, 22, 42);
+    const spreadY = laneNorm * clamp(layout.height * 0.04, 10, 20);
+    const underApprovedY = Math.max(
+      layout.nodes.GATE_APPROVED.bottom + clamp(layout.height * 0.04, 12, 22),
+      p1.y - clamp(layout.height * 0.025, 6, 14)
+    );
     return {
       p0,
-      cp1: { x: p0.x + dx * 0.52, y: p0.y + arcSpread },
-      cp2: { x: p1.x - dx * 0.52, y: p1.y + arcSpread },
+      cp1: {
+        x: Math.min(p0.x + colGap * 0.68, p0.x + dx * 0.34),
+        y: underApprovedY + spreadY,
+      },
+      cp2: {
+        x: p1.x - dx * 0.42,
+        y: p1.y + spreadY * 0.75,
+      },
       p1,
     };
   }
@@ -453,7 +521,7 @@ function buildEdgeCurve(
     };
   }
 
-  // Vertical spine conduits (TASK_IN -> FAST_CLOCK, FAST_CLOCK -> ORACLE_VERIFIER)
+  // Column 2 vertical spine conduit (FAST_CLOCK -> ORACLE_VERIFIER)
   const p0: Point = { x: from.cx + laneNorm * (from.w * 0.42), y: from.bottom };
   const p1: Point = { x: to.cx + laneNorm * (to.w * 0.42), y: to.top };
   const dy = p1.y - p0.y;
@@ -718,16 +786,16 @@ function drawStaticLayer(
   ctx.textBaseline = 'middle';
 
   const passCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'VERIFIED_OUTPUT', 0);
-  const passMid = evalCubic(passCurve, 0.56);
-  ctx.textAlign = 'right';
+  const passMid = evalCubic(passCurve, 0.34);
+  ctx.textAlign = 'center';
   ctx.fillStyle = hexToRgba(PALETTE.pass, 0.72);
-  ctx.fillText('PASS', passMid.x - 14, passMid.y - 10);
+  ctx.fillText('PASS', passMid.x, passMid.y + 14);
 
   const stageCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const stageStart = evalCubic(stageCurve, 0.22);
-  ctx.textAlign = 'left';
+  const stageMid = evalCubic(stageCurve, 0.48);
+  ctx.textAlign = 'right';
   ctx.fillStyle = hexToRgba(PALETTE.fail, 0.72);
-  ctx.fillText('STAGE', stageStart.x + 8, stageStart.y + 22);
+  ctx.fillText('STAGE', stageMid.x - 10, stageMid.y - 10);
 
   const appCurve = buildEdgeCurve(layout, 'SLOW_CLOCK_GATE', 'GATE_APPROVED', 0);
   const appMid = evalCubic(appCurve, 0.52);
@@ -828,14 +896,16 @@ function drawActiveFailureBadge(
   if (!badgeText) return;
 
   const curve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const mid = evalCubic(curve, 0.52);
+  const mid = evalCubic(curve, 0.44);
 
   ctx.font = `600 9.5px ${FONT_MONO}`;
   const textW = ctx.measureText(badgeText).width;
-  const boxW = Math.min(layout.width * 0.34, textW + 16);
+  const boxW = Math.min(layout.width * 0.32, textW + 16);
   const boxH = 20;
-  const bx = clamp(mid.x - boxW / 2, 8, layout.width - boxW - 8);
-  const by = clamp(mid.y - boxH - 16, 26, layout.height - boxH - 8);
+  const minRightEdge = layout.nodes.GATE_APPROVED.left - 8;
+  const maxAllowedBx = Math.max(8, minRightEdge - boxW);
+  const bx = clamp(mid.x - boxW / 2, 8, Math.min(layout.width - boxW - 8, maxAllowedBx));
+  const by = clamp(mid.y - boxH - 12, 26, layout.height - boxH - 8);
 
   const isQuarantine = event.outcome === 'QUARANTINE' || event.kind === 'redteam_probe';
   const strokeColor = isQuarantine ? PALETTE.quarantine : PALETTE.fail;
@@ -1550,7 +1620,6 @@ function drawNodeCards(
     // Port connection collars (crisp terminal pins)
     ctx.fillStyle = isOnActivePath ? meta.accent : PALETTE.borderHover;
     if (
-      nodeId === 'FAST_CLOCK' ||
       nodeId === 'ORACLE_VERIFIER' ||
       nodeId === 'SLOW_CLOCK_GATE' ||
       nodeId === 'GATE_APPROVED' ||
@@ -1558,14 +1627,20 @@ function drawNodeCards(
     ) {
       ctx.fillRect(rect.cx - 2, rect.top - 1.5, 4, 3);
     }
-    if (nodeId === 'VERIFIED_OUTPUT' || nodeId === 'QUARANTINE_VAULT') {
+    if (
+      nodeId === 'FAST_CLOCK' ||
+      nodeId === 'VERIFIED_OUTPUT' ||
+      nodeId === 'QUARANTINE_VAULT'
+    ) {
       ctx.fillRect(rect.left - 1.5, rect.cy - 2, 3, 4);
+    }
+    if (nodeId === 'TASK_IN') {
+      ctx.fillRect(rect.right - 1.5, rect.cy - 2, 3, 4);
     }
     if (nodeId === 'ORACLE_VERIFIER') {
       ctx.fillRect(rect.right - 1.5, rect.cy - rect.h * 0.22 - 2, 3, 4);
       ctx.fillRect(rect.right - 1.5, rect.cy + rect.h * 0.22 - 2, 3, 4);
     } else if (
-      nodeId === 'TASK_IN' ||
       nodeId === 'FAST_CLOCK' ||
       nodeId === 'QUARANTINE_VAULT' ||
       nodeId === 'SLOW_CLOCK_GATE'
