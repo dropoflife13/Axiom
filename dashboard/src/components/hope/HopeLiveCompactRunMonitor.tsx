@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -10,7 +10,6 @@ import {
   Pause,
   Play,
   RefreshCw,
-  ShieldCheck,
   Sparkles,
   X,
   XCircle,
@@ -26,6 +25,10 @@ import {
   YAxis,
 } from 'recharts';
 import { formatPct1, formatSignedPp } from '@/lib/v4-hope';
+import type { FlowTraceEvent, FlowTraceStats } from '@/lib/v4-hope-flow';
+import { HopeExecutionFlowView } from './HopeExecutionFlowView';
+
+type MonitorViewMode = 'flow' | 'matrix';
 
 interface LiveCompactRun {
   readonly id: string;
@@ -114,6 +117,8 @@ interface LiveCompactPayload {
   readonly runs: readonly LiveCompactRun[];
   readonly recentReplayEvents: readonly LiveReplayEvent[];
   readonly compiledSummaryAvailable: boolean;
+  readonly traceStream?: readonly FlowTraceEvent[];
+  readonly traceStats?: FlowTraceStats;
 }
 
 function statusPill(run: LiveCompactRun) {
@@ -161,10 +166,13 @@ function progressPercent(run: LiveCompactRun): number {
 }
 
 export function HopeLiveCompactRunMonitor() {
+  const [viewMode, setViewMode] = useState<MonitorViewMode>('flow');
   const [data, setData] = useState<LiveCompactPayload | null>(null);
   const [autoPoll, setAutoPoll] = useState<boolean>(true);
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [selectedRunFilter, setSelectedRunFilter] = useState<string | null>(null);
+  const viewTabRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const hasInitialFetchRef = useRef<boolean>(false);
 
   const fetchLive = useCallback(async () => {
     setIsFetching(true);
@@ -181,7 +189,10 @@ export function HopeLiveCompactRunMonitor() {
   }, []);
 
   useEffect(() => {
-    void fetchLive();
+    if (autoPoll || !hasInitialFetchRef.current) {
+      hasInitialFetchRef.current = true;
+      void fetchLive();
+    }
     if (!autoPoll) return;
     const id = window.setInterval(() => {
       void fetchLive();
@@ -260,8 +271,59 @@ export function HopeLiveCompactRunMonitor() {
           </p>
         </div>
 
-        {/* Polling Controls */}
-        <div className="flex items-center gap-2 flex-shrink-0">
+        {/* Polling Controls & View Mode Switch */}
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          <div
+            role="tablist"
+            aria-label="Live Monitor View Mode"
+            onKeyDown={(e) => {
+              const modes: readonly MonitorViewMode[] = ['flow', 'matrix'];
+              const idx = modes.indexOf(viewMode);
+              let nextIdx = idx;
+              if (e.key === 'ArrowRight') nextIdx = (idx + 1) % modes.length;
+              else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + modes.length) % modes.length;
+              else if (e.key === 'Home') nextIdx = 0;
+              else if (e.key === 'End') nextIdx = modes.length - 1;
+              else return;
+              e.preventDefault();
+              setViewMode(modes[nextIdx]);
+              viewTabRefs.current[nextIdx]?.focus();
+            }}
+            className="inline-flex items-center rounded-[2px] border border-zinc-800/80 bg-[#08090c] divide-x divide-zinc-800/80 font-mono"
+          >
+            {(
+              [
+                { value: 'flow', label: 'Flow Trace' },
+                { value: 'matrix', label: 'Matrix' },
+              ] as const
+            ).map((opt, idx) => {
+              const isSelected = viewMode === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  ref={(el) => {
+                    viewTabRefs.current[idx] = el;
+                  }}
+                  type="button"
+                  role="tab"
+                  aria-selected={isSelected}
+                  tabIndex={isSelected ? 0 : -1}
+                  onClick={() => setViewMode(opt.value)}
+                  className={`relative px-3 py-1.5 text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
+                    isSelected
+                      ? 'bg-zinc-900/90 text-zinc-50'
+                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60'
+                  }`}
+                >
+                  <span>{opt.label}</span>
+                  {isSelected && (
+                    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-emerald-500" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
           <button
             type="button"
             onClick={() => setAutoPoll((p) => !p)}
@@ -285,7 +347,19 @@ export function HopeLiveCompactRunMonitor() {
         </div>
       </div>
 
-      {/* 4 Clear Summary Counters */}
+      {viewMode === 'flow' && (
+        <HopeExecutionFlowView
+          liveData={data}
+          liveLock={autoPoll}
+          onLiveLockChange={setAutoPoll}
+          onRequestRefresh={fetchLive}
+          isRefreshingExternal={isFetching}
+        />
+      )}
+
+      {viewMode === 'matrix' && (
+        <>
+          {/* 4 Clear Summary Counters */}
       {data && (
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#0b0c10] font-mono tabular-nums">
           <div className="p-4 transition-colors hover:bg-zinc-900/35">
@@ -679,6 +753,8 @@ export function HopeLiveCompactRunMonitor() {
             </div>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

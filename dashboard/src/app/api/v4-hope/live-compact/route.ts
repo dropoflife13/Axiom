@@ -1,6 +1,16 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { NextResponse } from 'next/server';
+import {
+  buildRedTeamFlowTraceEvent,
+  buildTrialFlowTraceEvent,
+  computeFlowTraceStats,
+  type FlowTraceEvent,
+  type RawCandidateDecisionInput,
+  type RawRedTeamCandidateInput,
+  type RawRedTeamThreatInput,
+  type RawReplayCacheEntryInput,
+} from '@/lib/v4-hope-flow';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,6 +127,7 @@ export async function GET() {
   try {
     const runs: Array<Record<string, unknown>> = [];
     const allReplayEvents: LiveReplayEvent[] = [];
+    const traceStream: FlowTraceEvent[] = [];
 
     let completedRuns = 0;
     let activeRuns = 0;
@@ -148,13 +159,30 @@ export async function GET() {
         const compactSummary = readJsonSafe<any>(compactSummaryPath);
         const compactReceipt = readJsonSafe<any>(compactReceiptPath);
         const compactCheckpoint = readJsonSafe<any>(compactCheckpointPath);
-        const compactReplay = readJsonSafe<Record<string, any>>(compactReplayPath);
+        const compactReplay = readJsonSafe<Record<string, RawReplayCacheEntryInput>>(
+          compactReplayPath
+        );
 
-        const replayEntries = compactReplay ? Object.values(compactReplay) : [];
+        const compaction = compactSummary?.compaction ?? compactReceipt?.compaction ?? null;
+        if (compaction) {
+          totalBeforeTokens += Number(compaction.beforeTokens ?? 0);
+          totalAfterTokens += Number(compaction.afterTokens ?? 0);
+          totalPreservedTokens += Number(compaction.preservedTokenCount ?? 0);
+          totalRequiredTokens += Number(compaction.totalRequiredTokens ?? 0);
+        }
+
+        const decisions: RawCandidateDecisionInput[] = Array.isArray(
+          compactReceipt?.candidateDecisions
+        )
+          ? compactReceipt.candidateDecisions
+          : [];
+
+        const replayObjectEntries = compactReplay ? Object.entries(compactReplay) : [];
+        const replayEntries = replayObjectEntries.map(([, entry]) => entry);
         const liveReplayCount = replayEntries.filter((e) => e?.source === 'live-replay').length;
 
-        // Collect recent live-replay events for the streaming feed
-        for (const e of replayEntries) {
+        // Collect recent live-replay events and structured FlowTraceEvents
+        for (const [cacheKey, e] of replayObjectEntries) {
           if (e && typeof e.taskId === 'string' && typeof e.timestamp === 'string') {
             allReplayEvents.push({
               cartridgeId: cart.cartridgeId,
@@ -172,6 +200,30 @@ export async function GET() {
               source: String(e.source ?? 'live-replay'),
               timestamp: e.timestamp,
             });
+
+            const hopeTrial = compactCheckpoint?.trials?.[`${e.taskId}::C_ID_hope`];
+            const baselineCTrial = compactCheckpoint?.trials?.[`${e.taskId}::C`];
+            const promptChars =
+              typeof hopeTrial?.promptChars === 'number'
+                ? hopeTrial.promptChars
+                : typeof baselineCTrial?.promptChars === 'number'
+                  ? baselineCTrial.promptChars
+                  : undefined;
+
+            traceStream.push(
+              buildTrialFlowTraceEvent({
+                runId: compactKey,
+                cacheKey,
+                cartridgeId: cart.cartridgeId,
+                cartridgeLabel: cart.label,
+                modelId: model.modelId,
+                shortName: model.shortName,
+                entry: e,
+                compaction,
+                promptChars,
+                candidateDecisions: decisions,
+              })
+            );
           }
         }
 
@@ -235,17 +287,6 @@ export async function GET() {
             ? Number(((compactMeanFactRate - baselineMeanFactRate) * 100).toFixed(2))
             : null;
 
-        const compaction = compactSummary?.compaction ?? compactReceipt?.compaction ?? null;
-        if (compaction) {
-          totalBeforeTokens += Number(compaction.beforeTokens ?? 0);
-          totalAfterTokens += Number(compaction.afterTokens ?? 0);
-          totalPreservedTokens += Number(compaction.preservedTokenCount ?? 0);
-          totalRequiredTokens += Number(compaction.totalRequiredTokens ?? 0);
-        }
-
-        const decisions = Array.isArray(compactReceipt?.candidateDecisions)
-          ? compactReceipt.candidateDecisions
-          : [];
         const approvedCount = decisions.filter((d: any) => d?.status === 'approved').length;
         const rejectedCount = decisions.filter((d: any) => d?.status === 'rejected').length;
         const promotedRegressions = decisions
@@ -308,8 +349,56 @@ export async function GET() {
       }
     }
 
-    // Sort live replay stream newest first
+    // Collect staged Red-Team Loopback v1 candidates (safe when absent in standalone environments)
+    const redTeamCandidatesPath = resolveRepoFile('.axiom-state/redteam-v1/quarantine-candidates.json');
+    const redTeamThreatsPath = resolveRepoFile('.axiom-state/redteam-v1/threat-matrix.json');
+    const redTeamCandidatesDoc = readJsonSafe<{
+      readonly dryRun?: boolean;
+      readonly candidates?: readonly RawRedTeamCandidateInput[];
+    }>(redTeamCandidatesPath);
+    const redTeamThreatsDoc = readJsonSafe<{
+      readonly model?: string;
+      readonly threats?: readonly RawRedTeamThreatInput[];
+    }>(redTeamThreatsPath);
+
+    const threatById = new Map<string, RawRedTeamThreatInput>();
+    if (Array.isArray(redTeamThreatsDoc?.threats)) {
+      for (const threat of redTeamThreatsDoc.threats) {
+        if (threat && typeof threat.id === 'string') {
+          threatById.set(threat.id, threat);
+        }
+      }
+    }
+
+    if (Array.isArray(redTeamCandidatesDoc?.candidates)) {
+      for (const candidate of redTeamCandidatesDoc.candidates) {
+        if (
+          candidate &&
+          typeof candidate.candidateId === 'string' &&
+          typeof candidate.factId === 'string' &&
+          typeof candidate.stagedAt === 'string'
+        ) {
+          const threat = threatById.get(candidate.factId) ?? null;
+          traceStream.push(
+            buildRedTeamFlowTraceEvent({
+              candidate,
+              threat,
+              modelId: redTeamThreatsDoc?.model,
+              dryRun: redTeamCandidatesDoc.dryRun,
+            })
+          );
+        }
+      }
+    }
+
+    // Sort live replay stream newest first (preserved for existing Matrix / feed)
     allReplayEvents.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+    // Sort traceStream chronologically ascending (index 0 = earliest, end = latest / LIVE)
+    traceStream.sort((a, b) => {
+      const cmp = a.timestamp.localeCompare(b.timestamp);
+      return cmp !== 0 ? cmp : a.id.localeCompare(b.id);
+    });
 
     // Also include compiled summary if available
     const compiledSummaryPath = resolveRepoFile('out/v4/compact-benchmark-summary.json');
@@ -324,6 +413,16 @@ export async function GET() {
       totalRequiredTokens > 0
         ? Number(((totalPreservedTokens / totalRequiredTokens) * 100).toFixed(2))
         : 100;
+
+    const traceStats = computeFlowTraceStats(traceStream, {
+      savedTokens,
+      weightedReductionPct,
+      lexicalRetentionPct,
+      totalBeforeTokens,
+      totalAfterTokens,
+      totalPreservedTokens,
+      totalRequiredTokens,
+    });
 
     return NextResponse.json({
       polledAt: new Date().toISOString(),
@@ -346,6 +445,8 @@ export async function GET() {
       runs,
       recentReplayEvents: allReplayEvents.slice(0, 14),
       compiledSummaryAvailable: Boolean(compiledSummary),
+      traceStream,
+      traceStats,
     });
   } catch (err) {
     return NextResponse.json(
