@@ -83,6 +83,7 @@ export interface LoopbackAuditEntry {
   readonly method: string;
   readonly url: string;
   readonly status: number | null;
+  readonly redirectLocation: string | null;
   readonly durationMs: number;
   readonly responseBytes: number;
   readonly responseSha256: string | null;
@@ -101,16 +102,40 @@ export interface SafeLoopbackFetchOptions {
 export interface SafeLoopbackFetchResult {
   readonly url: string;
   readonly status: number;
+  readonly redirectLocation: string | null;
   readonly headers: Record<string, string>;
   readonly bodyText: string;
   readonly audit: LoopbackAuditEntry;
 }
 
 /**
+ * Checks whether an HTTP redirect `Location` header stays strictly within loopback.
+ * Returns `true` only if `location` is null, a safe relative path (rejecting
+ * `//evil.com` protocol-relative bypasses), or resolves strictly to
+ * `['127.0.0.1', '::1', 'localhost']`.
+ */
+export function isSafeLoopbackRedirect(location: string | null, baseUrl: URL): boolean {
+  if (location === null) return true;
+  const trimmed = location.trim();
+  if (!trimmed) return false;
+  if (/^\/\//.test(trimmed) || /^\\\\/.test(trimmed)) {
+    return false;
+  }
+  try {
+    const resolved = new URL(trimmed, baseUrl);
+    assertLoopbackTarget(resolved.toString());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Executes an HTTP request strictly to a validated loopback target with:
  * - Hard pre-socket allowlist enforcement (`assertLoopbackTarget`)
  * - Strict timeout (default 5000ms)
- * - Zero redirects (`redirect: 'error'`) to prevent open-redirect SSRF
+ * - Zero redirects followed (`redirect: 'manual'`) so 3xx responses and their
+ *   `Location` headers can be inspected safely without following them
  * - Immutable audit logging
  */
 export async function safeLoopbackFetch(
@@ -131,18 +156,11 @@ export async function safeLoopbackFetch(
       method,
       headers: options.headers,
       body: options.body,
-      redirect: 'error',
+      redirect: 'manual',
       signal: controller.signal,
     });
 
-    if (res.status >= 300 && res.status < 400) {
-      throw new LoopbackGuardError(
-        'REDIRECT_BLOCKED',
-        validated.toString(),
-        `HTTP redirect (${res.status}) is forbidden in loopback-locked probes.`
-      );
-    }
-
+    const redirectLocation = res.headers.get('location') ?? null;
     const bodyText = await res.text();
     const headers: Record<string, string> = {};
     res.headers.forEach((value, key) => {
@@ -154,6 +172,7 @@ export async function safeLoopbackFetch(
       method,
       url: validated.toString(),
       status: res.status,
+      redirectLocation,
       durationMs: Date.now() - startedAt,
       responseBytes: Buffer.byteLength(bodyText, 'utf8'),
       responseSha256: crypto.createHash('sha256').update(bodyText, 'utf8').digest('hex'),
@@ -163,6 +182,7 @@ export async function safeLoopbackFetch(
     return {
       url: validated.toString(),
       status: res.status,
+      redirectLocation,
       headers,
       bodyText,
       audit,
@@ -173,6 +193,7 @@ export async function safeLoopbackFetch(
       method,
       url: validated.toString(),
       status: null,
+      redirectLocation: null,
       durationMs: Date.now() - startedAt,
       responseBytes: 0,
       responseSha256: null,

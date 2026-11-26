@@ -898,6 +898,7 @@ export function HopeExecutionFlowView({
     null
   );
   const [hopeError, setHopeError] = useState<boolean>(false);
+  const [redTeamEvents, setRedTeamEvents] = useState<readonly FlowTraceEvent[]>([]);
 
   const [cartridgeFilter, setCartridgeFilter] = useState<CartridgeFilter>('all');
   const [selectedNode, setSelectedNode] = useState<FlowNodeId | null>(null);
@@ -983,10 +984,25 @@ export function HopeExecutionFlowView({
     }
   }, []);
 
-  // Load /api/v4-hope vault baseline & receipt snapshot telemetry on mount
+  // Load /api/v4-hope vault baseline & receipt snapshot + /api/v4-hope/redteam feed on mount
   useEffect(() => {
     const controller = new AbortController();
     void fetchVaultBaseline(controller.signal);
+    void (async () => {
+      try {
+        const res = await fetch('/api/v4-hope/redteam', {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!res.ok) return;
+        const json = (await res.json()) as { traceEvents?: readonly FlowTraceEvent[] };
+        if (mountedRef.current && Array.isArray(json.traceEvents)) {
+          setRedTeamEvents(json.traceEvents);
+        }
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return;
+      }
+    })();
     return () => controller.abort();
   }, [fetchVaultBaseline]);
 
@@ -1010,10 +1026,13 @@ export function HopeExecutionFlowView({
     };
   }, [isControlledData, liveLock, fetchStandaloneLive]);
 
-  const allEvents = useMemo<readonly FlowTraceEvent[]>(
-    () => liveData?.traceStream ?? [],
-    [liveData]
-  );
+  const allEvents = useMemo<readonly FlowTraceEvent[]>(() => {
+    const base = liveData?.traceStream ?? [];
+    if (redTeamEvents.length === 0) return base;
+    const seen = new Set(base.map((ev) => ev.id));
+    const extra = redTeamEvents.filter((ev) => !seen.has(ev.id));
+    return extra.length > 0 ? [...base, ...extra] : base;
+  }, [liveData, redTeamEvents]);
 
   const filterCounts = useMemo(() => {
     const counts: Record<CartridgeFilter, number> = {
