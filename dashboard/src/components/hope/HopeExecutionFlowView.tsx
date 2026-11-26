@@ -502,100 +502,73 @@ export function HopeExecutionFlowView({
   return (
     <section
       aria-label="HOPE v4 Live Execution Flow Trace"
-      className="w-full bg-[#090b0f] text-zinc-100 font-mono tabular-nums flex flex-col divide-y divide-zinc-800/80"
+      className="w-full flex-1 min-h-0 lg:h-full overflow-hidden bg-[#090b0f] text-zinc-100 font-mono tabular-nums flex flex-col divide-y divide-zinc-800/80"
     >
-      {/* Top Vault Baseline, Snapshot SHA & Domain Filter Bar */}
-      <div className="bg-[#0d1016] px-4 py-2.5 flex flex-col gap-2.5">
-        <div className="flex flex-wrap items-center justify-between gap-2 text-[10.5px]">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
-              <ShieldCheck className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
-              <span>EXECUTION DAG TRACE</span>
-            </span>
+      {/* Merged Single-Row Vault Baseline, Snapshot SHA & Domain Stream Filter Bar */}
+      <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
+            <ShieldCheck className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
+            <span>EXECUTION DAG</span>
+            <span className="hidden xl:inline">TRACE</span>
+          </span>
 
-            {vaultSummary ? (
-              <>
-                <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                  <Lock className="h-2.5 w-2.5 text-[#10b981]" aria-hidden="true" />
-                  <span>
-                    VAULT:{' '}
-                    <span className="text-zinc-200">
-                      {vaultSummary.source === 'live-artifacts'
-                        ? 'LIVE ARTIFACTS'
-                        : 'STATIC SNAPSHOT'}
-                    </span>
-                  </span>
-                </span>
-                <span
-                  className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400"
-                  title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
-                >
-                  <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
-                  <span>SHA</span>
+          {vaultSummary ? (
+            <>
+              <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
+                <Lock className="h-2.5 w-2.5 text-[#10b981]" aria-hidden="true" />
+                <span>
+                  <span className="hidden xl:inline">VAULT: </span>
                   <span className="text-zinc-200">
-                    {shortSha(vaultSummary.initialSha, 7, 4)}
-                  </span>
-                  <span className="text-zinc-600">→</span>
-                  <span className="text-[#10b981]">
-                    {shortSha(vaultSummary.finalSha, 7, 4)}
+                    {vaultSummary.source === 'live-artifacts'
+                      ? 'LIVE ARTIFACTS'
+                      : 'STATIC SNAPSHOT'}
                   </span>
                 </span>
-                <span className="hidden lg:inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                  <span>
-                    BASE LOCK ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
-                    {vaultSummary.tsApiRetentionPct.toFixed(0)}%
-                  </span>
-                  <span className="text-zinc-700">|</span>
-                  <span className="text-[#10b981]">{vaultSummary.approved} PROMOTED</span>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-[#f59e0b]">{vaultSummary.rejected} BLOCKED</span>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-zinc-300">
-                    {vaultSummary.regressions} REGRESSIONS
-                  </span>
-                </span>
-              </>
-            ) : (
-              <span className="rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-500">
-                {hopeError ? 'VAULT BASELINE UNAVAILABLE' : 'LOADING VAULT TELEMETRY...'}
               </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 text-[10px]">
-            {liveData?.polledAt && (
-              <span className="text-zinc-500">
-                POLLED {formatEventTime(liveData.polledAt)}
-              </span>
-            )}
-            {liveError && (
-              <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[#ef4444]">
-                {liveError}
-              </span>
-            )}
-            {!isControlledData && (
-              <button
-                type="button"
-                onClick={handleManualRefresh}
-                className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors cursor-pointer"
+              <span
+                className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400"
+                title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
               >
-                <RefreshCw
-                  className={`h-2.5 w-2.5 ${isFetching ? 'animate-spin text-zinc-200' : ''}`}
-                />
-                <span>SYNC</span>
-              </button>
-            )}
-          </div>
+                <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
+                <span className="hidden sm:inline">SHA</span>
+                <span className="text-zinc-200">
+                  {shortSha(vaultSummary.initialSha, 6, 4)}
+                </span>
+                <span className="text-zinc-600">→</span>
+                <span className="text-[#10b981]">
+                  {shortSha(vaultSummary.finalSha, 6, 4)}
+                </span>
+              </span>
+              <span className="hidden 2xl:inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
+                <span>
+                  BASE LOCK ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
+                  {vaultSummary.tsApiRetentionPct.toFixed(0)}%
+                </span>
+                <span className="text-zinc-700">|</span>
+                <span className="text-[#10b981]">{vaultSummary.approved} PROMOTED</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-[#f59e0b]">{vaultSummary.rejected} BLOCKED</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-zinc-300">
+                  {vaultSummary.regressions} REGRESSIONS
+                </span>
+              </span>
+            </>
+          ) : (
+            <span className="rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-500">
+              {hopeError ? 'VAULT BASELINE UNAVAILABLE' : 'LOADING VAULT...'}
+            </span>
+          )}
         </div>
 
-        {/* Filter Strip */}
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-zinc-800/70">
+        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
           <div
             role="group"
             aria-label="Filter trace stream by domain"
-            className="inline-flex flex-wrap items-center gap-1.5"
+            className="inline-flex flex-wrap items-center gap-1"
           >
-            <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 mr-1">
+            <span className="hidden xl:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 mr-0.5">
               <Filter className="h-3 w-3" aria-hidden="true" />
               STREAM
             </span>
@@ -612,7 +585,7 @@ export function HopeExecutionFlowView({
                     setCartridgeFilter(opt.value);
                   }}
                   aria-pressed={isActive}
-                  className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2.5 py-1 text-[10.5px] transition-colors cursor-pointer ${
+                  className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer ${
                     isActive
                       ? 'border-zinc-600 bg-zinc-900 text-zinc-50'
                       : 'border-zinc-800/80 bg-[#090b0f] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
@@ -631,32 +604,57 @@ export function HopeExecutionFlowView({
             })}
           </div>
 
-          <div className="flex items-center gap-2 text-[10px]">
-            {selectedNode && (
-              <button
-                type="button"
-                onClick={() => handleSelectNode(null)}
-                className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
-              >
-                <span>NODE: {selectedNode}</span>
-                <X className="h-3 w-3" aria-hidden="true" />
-              </button>
-            )}
-            <span className="text-zinc-500">
-              {visibleEvents.length} / {allEvents.length} EVENTS
+          {selectedNode && (
+            <button
+              type="button"
+              onClick={() => handleSelectNode(null)}
+              className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
+            >
+              <span>NODE: {selectedNode}</span>
+              <X className="h-3 w-3" aria-hidden="true" />
+            </button>
+          )}
+
+          <span className="text-zinc-500 whitespace-nowrap">
+            {visibleEvents.length}/{allEvents.length}
+            <span className="hidden xl:inline"> EVENTS</span>
+          </span>
+
+          {liveError && (
+            <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[#ef4444]">
+              {liveError}
             </span>
-          </div>
+          )}
+
+          {!isControlledData && liveData?.polledAt && (
+            <span className="hidden xl:inline text-zinc-500 whitespace-nowrap">
+              POLLED {formatEventTime(liveData.polledAt)}
+            </span>
+          )}
+
+          {!isControlledData && (
+            <button
+              type="button"
+              onClick={handleManualRefresh}
+              className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors cursor-pointer"
+            >
+              <RefreshCw
+                className={`h-2.5 w-2.5 ${isFetching ? 'animate-spin text-zinc-200' : ''}`}
+              />
+              <span>SYNC</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* 3-Column Stage: Left Inspector | Center Canvas | Right Counters & Verdict Feed */}
-      <div className="grid grid-cols-1 xl:grid-cols-[310px_minmax(0,1fr)_310px] divide-y xl:divide-y-0 xl:divide-x divide-zinc-800/80 bg-[#090b0f]">
+      <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_275px] xl:grid-cols-[295px_minmax(0,1fr)_295px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#090b0f]">
         {/* LEFT PANEL: Live Payload / Rule Inspector */}
         <aside
           aria-label="Live Payload and Rule Inspector"
-          className="bg-[#090b0f] flex flex-col xl:max-h-[580px] overflow-y-auto scrollbar-thin divide-y divide-zinc-800/80"
+          className="min-h-0 lg:h-full max-h-[340px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
         >
-          <div className="bg-[#0d1016] px-3.5 py-2 flex items-center justify-between gap-2">
+          <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <Terminal className="h-3 w-3 text-zinc-400" aria-hidden="true" />
               PAYLOAD / RULE INSPECTOR
@@ -668,27 +666,28 @@ export function HopeExecutionFlowView({
             )}
           </div>
 
-          {!activeEvent ? (
-            <div className="p-5 flex-1 flex flex-col items-center justify-center text-center gap-2 text-xs text-zinc-500">
-              <Activity className="h-4 w-4 text-zinc-600" aria-hidden="true" />
-              <span>
-                {liveData === null
-                  ? 'Loading live trace telemetry...'
-                  : 'No trace events match the active filter.'}
-              </span>
-              {selectedNode && (
-                <button
-                  type="button"
-                  onClick={() => handleSelectNode(null)}
-                  className="mt-1 rounded-[2px] border border-zinc-700 bg-[#0d1016] px-2.5 py-1 text-[10px] text-zinc-300 hover:border-zinc-500 cursor-pointer"
-                >
-                  Clear node filter ({selectedNode})
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="divide-y divide-zinc-800/80 text-[11px]">
-              {/* Header Badge & Event Metadata */}
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin divide-y divide-zinc-800/80 text-[11px]">
+            {!activeEvent ? (
+              <div className="h-full min-h-[160px] p-5 flex flex-col items-center justify-center text-center gap-2 text-xs text-zinc-500">
+                <Activity className="h-4 w-4 text-zinc-600" aria-hidden="true" />
+                <span>
+                  {liveData === null
+                    ? 'Loading live trace telemetry...'
+                    : 'No trace events match the active filter.'}
+                </span>
+                {selectedNode && (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectNode(null)}
+                    className="mt-1 rounded-[2px] border border-zinc-700 bg-[#0d1016] px-2.5 py-1 text-[10px] text-zinc-300 hover:border-zinc-500 cursor-pointer"
+                  >
+                    Clear node filter ({selectedNode})
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Header Badge & Event Metadata */}
               <div className="p-3.5 space-y-2 bg-[#0d1016]/50">
                 <div className="flex flex-wrap items-center justify-between gap-1.5">
                   <div className="flex items-center gap-1.5">
@@ -1080,14 +1079,15 @@ export function HopeExecutionFlowView({
                   </div>
                 )}
               </div>
-            </div>
-          )}
+              </>
+            )}
+          </div>
         </aside>
 
         {/* CENTER PANEL: Animated Bezier Filament Flow */}
-        <div className="flex flex-col bg-[#090b0f] min-w-0">
+        <div className="min-h-0 lg:h-full flex flex-col bg-[#090b0f] min-w-0 overflow-hidden">
           {/* Top Stage Bar: Active Path Breadcrumb & Node Filter Clear Pill */}
-          <div className="bg-[#0d1016] border-b border-zinc-800/80 px-3.5 py-2 flex flex-wrap items-center justify-between gap-2 min-h-[38px]">
+          <div className="flex-shrink-0 bg-[#0d1016] border-b border-zinc-800/80 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 min-h-[32px]">
             <div className="flex flex-wrap items-center gap-1 text-[10px] min-w-0">
               <span className="text-zinc-500 uppercase tracking-wider mr-1">
                 PATH:
@@ -1144,7 +1144,7 @@ export function HopeExecutionFlowView({
           </div>
 
           {/* Full-Height Filament Canvas Stage */}
-          <div className="relative flex-1 min-h-[420px] xl:min-h-[540px] w-full bg-[#090b0f]">
+          <div className="relative flex-1 min-h-[320px] lg:min-h-0 w-full bg-[#090b0f] overflow-hidden">
             <HopeFilamentCanvas
               events={visibleEvents}
               activeIndex={clampedIndex}
@@ -1159,29 +1159,29 @@ export function HopeExecutionFlowView({
         {/* RIGHT PANEL: Live Counters & Verdict Feed */}
         <aside
           aria-label="Live Counters and Verdict Feed"
-          className="bg-[#090b0f] flex flex-col xl:max-h-[580px] divide-y divide-zinc-800/80"
+          className="min-h-0 lg:h-full max-h-[360px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
         >
           {/* Compact Tabular-Nums Counters */}
-          <div className="bg-[#0d1016] p-3 space-y-2 flex-shrink-0">
+          <div className="flex-shrink-0 bg-[#0d1016] p-2.5 space-y-1.5">
             <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
               <span>LIVE VERDICT COUNTERS</span>
               <span className="text-zinc-500">{visibleEvents.length} SHOWN</span>
             </div>
 
             <div className="grid grid-cols-3 gap-1.5">
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1.5">
+              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
                 <div className="text-[9px] uppercase text-zinc-500">Passed</div>
                 <div className="text-sm font-semibold text-[#10b981]">
                   {telemetryCounters.passed}
                 </div>
               </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1.5">
+              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
                 <div className="text-[9px] uppercase text-zinc-500">Failed</div>
                 <div className="text-sm font-semibold text-[#ef4444]">
                   {telemetryCounters.failed}
                 </div>
               </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1.5">
+              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
                 <div className="text-[9px] uppercase text-zinc-500">Quarantined</div>
                 <div className="text-sm font-semibold text-[#f59e0b]">
                   {telemetryCounters.quarantined}
@@ -1190,7 +1190,7 @@ export function HopeExecutionFlowView({
             </div>
 
             <div className="grid grid-cols-2 gap-1.5">
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1.5">
+              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
                 <div className="text-[9px] uppercase text-zinc-500">Token Δ</div>
                 <div className="text-xs font-semibold text-[#10b981] truncate">
                   {telemetryCounters.savedTokens > 0
@@ -1198,7 +1198,7 @@ export function HopeExecutionFlowView({
                     : '0 (0.0%)'}
                 </div>
               </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1.5">
+              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
                 <div className="text-[9px] uppercase text-zinc-500">Lock %</div>
                 <div className="text-xs font-semibold text-zinc-100">
                   {telemetryCounters.lexicalRetentionPct.toFixed(1)}%
@@ -1208,15 +1208,15 @@ export function HopeExecutionFlowView({
           </div>
 
           {/* Scrolling Live Verdict Feed */}
-          <div className="flex-1 min-h-0 flex flex-col">
-            <div className="bg-[#0d1016]/60 border-b border-zinc-800/80 px-3 py-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="flex-shrink-0 bg-[#0d1016]/60 border-b border-zinc-800/80 px-2.5 py-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
               <span>VERDICT STREAM</span>
               <span className="text-zinc-500">CLICK TO INSPECT</span>
             </div>
 
             <div
               ref={feedListRef}
-              className="relative flex-1 min-h-[260px] max-h-[420px] xl:max-h-none overflow-y-auto scrollbar-thin divide-y divide-zinc-800/60"
+              className="relative flex-1 min-h-0 max-h-[240px] lg:max-h-none overflow-y-auto scrollbar-thin divide-y divide-zinc-800/60"
             >
               {visibleEvents.length === 0 ? (
                 <div className="p-6 text-center text-[11px] text-zinc-500">
@@ -1238,7 +1238,7 @@ export function HopeExecutionFlowView({
                       ref={isActive ? activeRowRef : undefined}
                       type="button"
                       onClick={() => handleSelectEvent(idx)}
-                      className={`w-full text-left px-3 py-2 flex flex-col gap-1 transition-colors cursor-pointer ${
+                      className={`w-full text-left px-2.5 py-1.5 flex flex-col gap-0.5 transition-colors cursor-pointer ${
                         isActive
                           ? 'bg-[#121722] border-l-2 border-l-[#10b981]'
                           : 'bg-[#090b0f] hover:bg-[#0d1016]'
@@ -1286,7 +1286,7 @@ export function HopeExecutionFlowView({
       </div>
 
       {/* BOTTOM DOCK: Interactive Replay & Live Scrubber */}
-      <div className="bg-[#0d1016] border-t border-zinc-800/80 px-3.5 py-2.5 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="flex-shrink-0 bg-[#0d1016] border-t border-zinc-800/80 px-3.5 py-2 flex flex-col lg:flex-row lg:items-center gap-2.5 lg:gap-3">
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             type="button"

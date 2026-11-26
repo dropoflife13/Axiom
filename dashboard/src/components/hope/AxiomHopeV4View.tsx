@@ -37,7 +37,10 @@ import {
   type V4PilotArm,
 } from '@/lib/v4-hope';
 import { ThreeClockCore3D, type ThreeClockRingId } from './ThreeClockCore3D';
-import { HopeLiveCompactRunMonitor } from './HopeLiveCompactRunMonitor';
+import {
+  HopeLiveCompactRunMonitor,
+  type MonitorViewMode,
+} from './HopeLiveCompactRunMonitor';
 
 type HopeSubTab = 'overview' | 'live' | 'proof';
 type CartridgeKey = 'policyAbac' | 'tsApiSecurity' | 'postgresV3';
@@ -464,6 +467,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
   const [payload, setPayload] = useState<V4HopeDashboardPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<HopeSubTab>('overview');
+  const [liveViewMode, setLiveViewMode] = useState<MonitorViewMode>('flow');
   const [cartridgeKey, setCartridgeKey] = useState<CartridgeKey>('policyAbac');
   const [metric, setMetric] = useState<ComparisonMetric>('fullTask');
   const [selectedModelId, setSelectedModelId] = useState<string>('gemini-3.1-flash-lite');
@@ -769,10 +773,13 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
     return 'border-emerald-500/60 bg-[#0a1410]';
   };
 
+  const isViewportLocked =
+    activeTab === 'overview' || (activeTab === 'live' && liveViewMode === 'flow');
+
   return (
     <div
       className={`w-full flex-1 bg-[#08090c] text-zinc-100 flex flex-col ${
-        activeTab === 'overview' ? 'xl:h-[calc(100vh-52px)] xl:overflow-hidden' : ''
+        isViewportLocked ? 'lg:h-[calc(100vh-52px)] lg:overflow-hidden' : ''
       }`}
     >
       {/* ================================================================
@@ -841,7 +848,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
           {/* 1. TOP KINETIC TELEMETRY STRIP (4 Instrument Cells with Live Micro-Visuals) */}
           <section
             aria-label="Live telemetry summary"
-            className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800/80 bg-[#0b0c10] font-mono tabular-nums"
+            className="w-full flex-shrink-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800/80 bg-[#0b0c10] font-mono tabular-nums"
           >
             {/* Cell 1: Full-Task Pass + 12-Bar Distribution Histogram */}
             <div
@@ -1024,7 +1031,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
               viewBox="0 0 1200 460"
               preserveAspectRatio="none"
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 w-full h-full hidden xl:block"
+              className="pointer-events-none absolute inset-0 w-full h-full hidden lg:block"
             >
               <defs>
                 <path id="fiber-l1" d="M 300,78 C 410,78 440,185 520,205" />
@@ -1076,7 +1083,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
               </circle>
             </svg>
 
-            <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-[275px_minmax(0,1fr)_275px] gap-3 items-stretch">
+            <div className="relative z-10 flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[245px_minmax(0,1fr)_245px] xl:grid-cols-[275px_minmax(0,1fr)_275px] gap-3 items-stretch">
               {/* LEFT 3 LIVE INSTRUMENT MODULES */}
               <div className="flex flex-col justify-between gap-2 font-mono min-h-0">
                 {/* Module 01: FAST CLOCK */}
@@ -1205,7 +1212,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
               </div>
 
               {/* CENTER: SPINNING 3D THREE-CLOCK CORE */}
-              <div className="relative flex flex-col min-h-[300px] xl:min-h-0">
+              <div className="relative flex flex-col min-h-[300px] lg:min-h-0">
                 <ThreeClockCore3D
                   glbUrl={glbUrl}
                   fastClockProgress={liveSignal.progress}
@@ -1462,9 +1469,16 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="w-full flex-1 p-4 sm:p-5"
+          className={
+            liveViewMode === 'flow'
+              ? 'w-full flex-1 min-h-0 flex flex-col p-2 lg:p-2.5 overflow-hidden'
+              : 'w-full flex-1 p-4 sm:p-5'
+          }
         >
-          <HopeLiveCompactRunMonitor />
+          <HopeLiveCompactRunMonitor
+            viewMode={liveViewMode}
+            onViewModeChange={setLiveViewMode}
+          />
         </motion.div>
       )}
 

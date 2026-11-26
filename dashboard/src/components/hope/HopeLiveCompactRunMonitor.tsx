@@ -28,7 +28,12 @@ import { formatPct1, formatSignedPp } from '@/lib/v4-hope';
 import type { FlowTraceEvent, FlowTraceStats } from '@/lib/v4-hope-flow';
 import { HopeExecutionFlowView } from './HopeExecutionFlowView';
 
-type MonitorViewMode = 'flow' | 'matrix';
+export type MonitorViewMode = 'flow' | 'matrix';
+
+export interface HopeLiveCompactRunMonitorProps {
+  readonly viewMode?: MonitorViewMode;
+  readonly onViewModeChange?: (mode: MonitorViewMode) => void;
+}
 
 interface LiveCompactRun {
   readonly id: string;
@@ -165,8 +170,22 @@ function progressPercent(run: LiveCompactRun): number {
   return 0;
 }
 
-export function HopeLiveCompactRunMonitor() {
-  const [viewMode, setViewMode] = useState<MonitorViewMode>('flow');
+export function HopeLiveCompactRunMonitor({
+  viewMode: controlledViewMode,
+  onViewModeChange,
+}: HopeLiveCompactRunMonitorProps = {}) {
+  const [internalViewMode, setInternalViewMode] = useState<MonitorViewMode>('flow');
+  const viewMode = controlledViewMode ?? internalViewMode;
+  const setViewMode = useCallback(
+    (next: MonitorViewMode) => {
+      if (controlledViewMode === undefined) {
+        setInternalViewMode(next);
+      }
+      onViewModeChange?.(next);
+    },
+    [controlledViewMode, onViewModeChange]
+  );
+
   const [data, setData] = useState<LiveCompactPayload | null>(null);
   const [autoPoll, setAutoPoll] = useState<boolean>(true);
   const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -225,17 +244,98 @@ export function HopeLiveCompactRunMonitor() {
   }, [data, selectedRunFilter]);
 
   const isAnyRunning = (data?.totals.activeRuns ?? 0) > 0;
+  const isFlowMode = viewMode === 'flow';
+
+  const headerControls = (
+    <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+      <div
+        role="tablist"
+        aria-label="Live Monitor View Mode"
+        onKeyDown={(e) => {
+          const modes: readonly MonitorViewMode[] = ['flow', 'matrix'];
+          const idx = modes.indexOf(viewMode);
+          let nextIdx = idx;
+          if (e.key === 'ArrowRight') nextIdx = (idx + 1) % modes.length;
+          else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + modes.length) % modes.length;
+          else if (e.key === 'Home') nextIdx = 0;
+          else if (e.key === 'End') nextIdx = modes.length - 1;
+          else return;
+          e.preventDefault();
+          setViewMode(modes[nextIdx]);
+          viewTabRefs.current[nextIdx]?.focus();
+        }}
+        className="inline-flex items-center rounded-[2px] border border-zinc-800/80 bg-[#08090c] divide-x divide-zinc-800/80 font-mono"
+      >
+        {(
+          [
+            { value: 'flow', label: 'Flow Trace' },
+            { value: 'matrix', label: 'Matrix' },
+          ] as const
+        ).map((opt, idx) => {
+          const isSelected = viewMode === opt.value;
+          return (
+            <button
+              key={opt.value}
+              ref={(el) => {
+                viewTabRefs.current[idx] = el;
+              }}
+              type="button"
+              role="tab"
+              aria-selected={isSelected}
+              tabIndex={isSelected ? 0 : -1}
+              onClick={() => setViewMode(opt.value)}
+              className={`relative px-3 py-1.5 text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
+                isSelected
+                  ? 'bg-zinc-900/90 text-zinc-50'
+                  : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60'
+              }`}
+            >
+              <span>{opt.label}</span>
+              {isSelected && (
+                <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-emerald-500" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => setAutoPoll((p) => !p)}
+        className={`inline-flex items-center gap-1.5 rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition-colors cursor-pointer ${
+          autoPoll
+            ? 'border-emerald-700/60 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50'
+            : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
+        }`}
+      >
+        {autoPoll ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
+        <span>{autoPoll ? 'Live Updates: On (3s)' : 'Live Updates: Paused'}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => void fetchLive()}
+        className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#08090c] px-3 py-1.5 font-mono text-[11px] text-zinc-200 hover:border-zinc-600 hover:bg-zinc-900 transition-colors cursor-pointer"
+      >
+        <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin text-sky-400' : ''}`} />
+        <span>Refresh</span>
+      </button>
+    </div>
+  );
 
   return (
     <div
       id="hope-live-compact-monitor"
       aria-labelledby="hope-live-compact-heading"
-      className="w-full border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] overflow-hidden divide-y divide-zinc-800/80"
+      className={
+        isFlowMode
+          ? 'w-full flex-1 min-h-0 flex flex-col border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] overflow-hidden divide-y divide-zinc-800/80'
+          : 'w-full border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] overflow-hidden divide-y divide-zinc-800/80'
+      }
     >
-      {/* Clear Plain-English Introduction & Live Controls */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-[#0d0e13] px-5 py-4">
-        <div className="space-y-1.5 max-w-3xl">
-          <div className="flex flex-wrap items-center gap-2 font-mono">
+      {isFlowMode ? (
+        /* Slim Single-Row Flow Toolbar */
+        <div className="bg-[#0d0e13] px-3.5 py-2 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5 min-w-0 font-mono">
             <span
               className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                 isAnyRunning
@@ -248,104 +348,66 @@ export function HopeLiveCompactRunMonitor() {
                   isAnyRunning ? 'bg-sky-400 animate-ping' : 'bg-emerald-400'
                 }`}
               />
-              {isAnyRunning ? 'LIVE BENCHMARK RUNNING' : 'LIVE BENCHMARK COMPLETE'}
+              {isAnyRunning ? 'RUNNING' : 'LIVE BENCHMARK COMPLETE'}
             </span>
             {data && (
-              <span className="text-[10px] text-zinc-500 tabular-nums">
-                Updated {new Date(data.polledAt).toLocaleTimeString()}
+              <span className="text-[10px] text-zinc-500 tabular-nums whitespace-nowrap">
+                {new Date(data.polledAt).toLocaleTimeString()}
               </span>
             )}
+            <h2
+              id="hope-live-compact-heading"
+              className="font-sans text-xs sm:text-sm font-semibold tracking-tight text-zinc-100 truncate"
+            >
+              HOPE v4 Live Execution Trace
+            </h2>
           </div>
 
-          <h2
-            id="hope-live-compact-heading"
-            className="text-base font-semibold tracking-tight text-zinc-50"
-          >
-            Live Prompt-Compression Test (Standard vs. Shortened Rules)
-          </h2>
-          <p className="text-xs leading-relaxed text-zinc-400">
-            This live test checks whether trimming extra filler words out of our safety rules saves
-            prompt tokens <strong className="text-zinc-200 font-medium">without losing accuracy</strong>.
-            Every shortened rule is required to keep 100% of its exact code keywords and pass all
-            existing safety checks across 3 AI models and 2 real-world coding domains (99 total tasks).
-          </p>
+          {headerControls}
         </div>
-
-        {/* Polling Controls & View Mode Switch */}
-        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-          <div
-            role="tablist"
-            aria-label="Live Monitor View Mode"
-            onKeyDown={(e) => {
-              const modes: readonly MonitorViewMode[] = ['flow', 'matrix'];
-              const idx = modes.indexOf(viewMode);
-              let nextIdx = idx;
-              if (e.key === 'ArrowRight') nextIdx = (idx + 1) % modes.length;
-              else if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + modes.length) % modes.length;
-              else if (e.key === 'Home') nextIdx = 0;
-              else if (e.key === 'End') nextIdx = modes.length - 1;
-              else return;
-              e.preventDefault();
-              setViewMode(modes[nextIdx]);
-              viewTabRefs.current[nextIdx]?.focus();
-            }}
-            className="inline-flex items-center rounded-[2px] border border-zinc-800/80 bg-[#08090c] divide-x divide-zinc-800/80 font-mono"
-          >
-            {(
-              [
-                { value: 'flow', label: 'Flow Trace' },
-                { value: 'matrix', label: 'Matrix' },
-              ] as const
-            ).map((opt, idx) => {
-              const isSelected = viewMode === opt.value;
-              return (
-                <button
-                  key={opt.value}
-                  ref={(el) => {
-                    viewTabRefs.current[idx] = el;
-                  }}
-                  type="button"
-                  role="tab"
-                  aria-selected={isSelected}
-                  tabIndex={isSelected ? 0 : -1}
-                  onClick={() => setViewMode(opt.value)}
-                  className={`relative px-3 py-1.5 text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
-                    isSelected
-                      ? 'bg-zinc-900/90 text-zinc-50'
-                      : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60'
+      ) : (
+        /* Clear Plain-English Introduction & Live Controls (Matrix Mode) */
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-[#0d0e13] px-5 py-4">
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2 font-mono">
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                  isAnyRunning
+                    ? 'border-sky-700/60 bg-sky-950/40 text-sky-300'
+                    : 'border-emerald-700/60 bg-emerald-950/35 text-emerald-400'
+                }`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${
+                    isAnyRunning ? 'bg-sky-400 animate-ping' : 'bg-emerald-400'
                   }`}
-                >
-                  <span>{opt.label}</span>
-                  {isSelected && (
-                    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-emerald-500" />
-                  )}
-                </button>
-              );
-            })}
+                />
+                {isAnyRunning ? 'LIVE BENCHMARK RUNNING' : 'LIVE BENCHMARK COMPLETE'}
+              </span>
+              {data && (
+                <span className="text-[10px] text-zinc-500 tabular-nums">
+                  Updated {new Date(data.polledAt).toLocaleTimeString()}
+                </span>
+              )}
+            </div>
+
+            <h2
+              id="hope-live-compact-heading"
+              className="text-base font-semibold tracking-tight text-zinc-50"
+            >
+              Live Prompt-Compression Test (Standard vs. Shortened Rules)
+            </h2>
+            <p className="text-xs leading-relaxed text-zinc-400">
+              This live test checks whether trimming extra filler words out of our safety rules saves
+              prompt tokens <strong className="text-zinc-200 font-medium">without losing accuracy</strong>.
+              Every shortened rule is required to keep 100% of its exact code keywords and pass all
+              existing safety checks across 3 AI models and 2 real-world coding domains (99 total tasks).
+            </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setAutoPoll((p) => !p)}
-            className={`inline-flex items-center gap-1.5 rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition-colors cursor-pointer ${
-              autoPoll
-                ? 'border-emerald-700/60 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50'
-                : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            {autoPoll ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-            <span>{autoPoll ? 'Live Updates: On (3s)' : 'Live Updates: Paused'}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => void fetchLive()}
-            className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#08090c] px-3 py-1.5 font-mono text-[11px] text-zinc-200 hover:border-zinc-600 hover:bg-zinc-900 transition-colors cursor-pointer"
-          >
-            <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin text-sky-400' : ''}`} />
-            <span>Refresh</span>
-          </button>
+          {headerControls}
         </div>
-      </div>
+      )}
 
       {viewMode === 'flow' && (
         <HopeExecutionFlowView
