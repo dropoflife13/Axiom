@@ -262,6 +262,8 @@ export interface RawRedTeamCandidateInput {
   readonly stagedAt?: unknown;
   readonly liveVerdict?: unknown;
   readonly durationMs?: unknown;
+  /** Read-only decision from .axiom-state/redteam-v1/slow-cook-receipts.json. */
+  readonly slowCookDecision?: RawCandidateDecisionInput;
 }
 
 export interface RawRedTeamThreatInput {
@@ -735,10 +737,23 @@ export function buildRedTeamFlowTraceEvent(params: {
   const evidenceHashes = toStringArray(candidate.evidenceHashes);
   const evidenceHash = evidenceHashes[0] ?? '';
   const timestamp = String(candidate.stagedAt ?? '');
+  const title = typeof threat?.title === 'string' ? threat.title : undefined;
+  const severity = typeof threat?.severity === 'string' ? threat.severity : undefined;
+  const expectedDefense =
+    typeof threat?.expectedDefense === 'string' ? threat.expectedDefense : undefined;
   const gateStatus: 'staged' | 'approved' | 'rejected' =
     candidate.status === 'approved' || candidate.status === 'rejected'
       ? candidate.status
       : 'staged';
+  const slowClockGate = candidate.slowCookDecision
+    ? buildSlowClockGateInfo(candidate.slowCookDecision)
+    : {
+        status: gateStatus,
+        candidateId,
+        factId,
+        triggerFlag,
+        ...(expectedDefense !== undefined ? { reason: expectedDefense } : {}),
+      };
   const liveVerdict: 'pass' | 'fail' | 'staged' =
     candidate.liveVerdict === 'pass' || candidate.liveVerdict === 'fail'
       ? candidate.liveVerdict
@@ -799,10 +814,6 @@ export function buildRedTeamFlowTraceEvent(params: {
     ];
   }
 
-  const title = typeof threat?.title === 'string' ? threat.title : undefined;
-  const severity = typeof threat?.severity === 'string' ? threat.severity : undefined;
-  const expectedDefense =
-    typeof threat?.expectedDefense === 'string' ? threat.expectedDefense : undefined;
   const stderrSummary = truncateStderrSummary(
     title ? `${method} ${route} — ${title}` : proposedRuleText,
     300
@@ -852,6 +863,17 @@ export function buildRedTeamFlowTraceEvent(params: {
     });
   }
 
+  if (candidate.slowCookDecision) {
+    const g1 = formatGateCheckState(slowClockGate.g1LexicalPassed);
+    const g2 = formatGateCheckState(slowClockGate.g2ConflictPassed);
+    const g3 = formatGateCheckState(slowClockGate.g3CanaryPassed);
+    terminalLog.push({
+      prefix: '[GATE]',
+      tone: slowClockGate.status === 'approved' ? 'pass' : 'fail',
+      text: `slow-clock ${candidateId} G1=${g1} G2=${g2} G3=${g3} -> ${slowClockGate.status.toUpperCase()}`,
+    });
+  }
+
   return {
     id: `redteam:${candidateId}:${timestamp}`,
     kind: 'redteam_probe',
@@ -882,13 +904,7 @@ export function buildRedTeamFlowTraceEvent(params: {
       reductionPct: 0,
       lexicalLockPct: 100,
     },
-    slowClockGate: {
-      status: gateStatus,
-      candidateId,
-      factId,
-      triggerFlag,
-      ...(expectedDefense !== undefined ? { reason: expectedDefense } : {}),
-    },
+    slowClockGate,
     redTeam: {
       candidateId,
       factId,

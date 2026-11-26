@@ -52,6 +52,34 @@ interface RawLiveProbeSummary {
   readonly executedAt?: unknown;
 }
 
+interface RawSlowCookReceipt {
+  readonly candidateId?: unknown;
+  readonly factId?: unknown;
+  readonly status?: unknown;
+  readonly rejectedByGate?: unknown;
+  readonly receiptSha256?: unknown;
+  readonly gateAudit?: unknown;
+}
+
+function indexSlowCookReceipts(
+  receipts: readonly RawSlowCookReceipt[]
+): ReadonlyMap<string, RawSlowCookReceipt> {
+  const byCandidateId = new Map<string, RawSlowCookReceipt>();
+  for (const receipt of receipts) {
+    if (
+      receipt &&
+      typeof receipt.candidateId === 'string' &&
+      typeof receipt.factId === 'string' &&
+      (receipt.status === 'approved' || receipt.status === 'rejected') &&
+      receipt.gateAudit &&
+      typeof receipt.gateAudit === 'object'
+    ) {
+      byCandidateId.set(receipt.candidateId, receipt);
+    }
+  }
+  return byCandidateId;
+}
+
 function readLiveProbeVerdict(
   candidate: RawRedTeamCandidateInput,
   summaries: Readonly<Record<string, RawLiveProbeSummary>> | null
@@ -109,6 +137,7 @@ export async function GET() {
     const candidatesPath = resolveRepoFile('.axiom-state/redteam-v1/quarantine-candidates.json');
     const threatsPath = resolveRepoFile('.axiom-state/redteam-v1/threat-matrix.json');
     const summariesPath = resolveRepoFile('.axiom-state/redteam-v1/probe-results-summary.json');
+    const slowCookPath = resolveRepoFile('.axiom-state/redteam-v1/slow-cook-receipts.json');
 
     const candidatesDoc = readJsonSafe<{
       readonly dryRun?: boolean;
@@ -121,12 +150,23 @@ export async function GET() {
       readonly threats?: readonly RawRedTeamThreatInput[];
     }>(threatsPath);
     const summariesDoc = readJsonSafe<Record<string, RawLiveProbeSummary>>(summariesPath);
+    const slowCookDoc = readJsonSafe<{
+      readonly schemaVersion?: unknown;
+      readonly generatedAt?: unknown;
+      readonly receipts?: readonly RawSlowCookReceipt[];
+    }>(slowCookPath);
+    const slowCookReceipts = Array.isArray(slowCookDoc?.receipts) ? slowCookDoc.receipts : [];
+    const slowCookByCandidateId = indexSlowCookReceipts(slowCookReceipts);
 
     const threats = Array.isArray(threatsDoc?.threats) ? threatsDoc.threats : [];
     const candidates = Array.isArray(candidatesDoc?.candidates)
       ? candidatesDoc.candidates.map((candidate) => ({
           ...candidate,
           ...readLiveProbeVerdict(candidate, summariesDoc),
+          ...(typeof candidate.candidateId === 'string' &&
+          slowCookByCandidateId.get(candidate.candidateId)?.factId === candidate.factId
+            ? { slowCookDecision: slowCookByCandidateId.get(candidate.candidateId) }
+            : {}),
         }))
       : [];
 
@@ -139,6 +179,11 @@ export async function GET() {
           threats,
           candidates: [],
           traceEvents: [],
+          slowCook: {
+            available: slowCookReceipts.length > 0,
+            generatedAt: typeof slowCookDoc?.generatedAt === 'string' ? slowCookDoc.generatedAt : null,
+            decisions: slowCookReceipts,
+          },
         },
         { status: 200, headers: { 'Cache-Control': 'no-store' } }
       );
@@ -184,6 +229,11 @@ export async function GET() {
         threats,
         candidates,
         traceEvents,
+        slowCook: {
+          available: slowCookReceipts.length > 0,
+          generatedAt: typeof slowCookDoc?.generatedAt === 'string' ? slowCookDoc.generatedAt : null,
+          decisions: slowCookReceipts,
+        },
       },
       { status: 200, headers: { 'Cache-Control': 'no-store' } }
     );
