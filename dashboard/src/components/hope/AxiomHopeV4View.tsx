@@ -773,8 +773,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
     return 'border-emerald-500/60 bg-[#0a1410]';
   };
 
-  const isViewportLocked =
-    activeTab === 'overview' || (activeTab === 'live' && liveViewMode === 'flow');
+  const isViewportLocked = activeTab === 'overview';
 
   return (
     <div
@@ -1471,7 +1470,7 @@ export function AxiomHopeV4View({ onOpenV3Research, glbUrl }: AxiomHopeV4ViewPro
           transition={{ duration: 0.18, ease: 'easeOut' }}
           className={
             liveViewMode === 'flow'
-              ? 'w-full flex-1 min-h-0 flex flex-col p-2 lg:p-2.5 overflow-hidden'
+              ? 'w-full flex-1 flex flex-col p-2 lg:px-2.5 lg:py-2'
               : 'w-full flex-1 p-4 sm:p-5'
           }
         >

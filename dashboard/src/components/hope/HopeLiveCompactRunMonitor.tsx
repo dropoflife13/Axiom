@@ -328,13 +328,13 @@ export function HopeLiveCompactRunMonitor({
       aria-labelledby="hope-live-compact-heading"
       className={
         isFlowMode
-          ? 'w-full flex-1 min-h-0 flex flex-col border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] overflow-hidden divide-y divide-zinc-800/80'
+          ? 'w-full flex flex-col border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] divide-y divide-zinc-800/80'
           : 'w-full border border-zinc-800/80 bg-[#0b0c10] rounded-[2px] overflow-hidden divide-y divide-zinc-800/80'
       }
     >
       {isFlowMode ? (
         /* Slim Single-Row Flow Toolbar */
-        <div className="bg-[#0d0e13] px-3.5 py-2 flex flex-wrap items-center justify-between gap-3 flex-shrink-0">
+        <div className="bg-[#0d0e13] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 flex-shrink-0">
           <div className="flex flex-wrap items-center gap-2.5 min-w-0 font-mono">
             <span
               className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${

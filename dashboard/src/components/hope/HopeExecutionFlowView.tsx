@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
+  ArrowDown,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -14,6 +15,7 @@ import {
   Play,
   Radio,
   RefreshCw,
+  Search,
   ShieldAlert,
   ShieldCheck,
   Terminal,
@@ -72,6 +74,10 @@ type CartridgeFilter =
   | 'policy-abac-v4'
   | 'ts-api-security-v4'
   | 'redteam-v1-loopback';
+
+type VerdictOutcomeFilter = 'ALL' | FlowOutcome;
+
+const VERDICT_PAGE_SIZE = 20;
 
 const FILTER_OPTIONS: ReadonlyArray<{
   readonly value: CartridgeFilter;
@@ -202,10 +208,18 @@ export function HopeExecutionFlowView({
   const [replayIndex, setReplayIndex] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
+  const [verdictOutcomeFilter, setVerdictOutcomeFilter] =
+    useState<VerdictOutcomeFilter>('ALL');
+  const [verdictSearch, setVerdictSearch] = useState<string>('');
+  const [verdictPage, setVerdictPage] = useState<number>(0);
+  const [scrollActiveNonce, setScrollActiveNonce] = useState<number>(0);
+
   const mountedRef = useRef<boolean>(true);
   const hasStandaloneFetchRef = useRef<boolean>(false);
-  const feedListRef = useRef<HTMLDivElement | null>(null);
-  const activeRowRef = useRef<HTMLButtonElement | null>(null);
+  const mainStageRef = useRef<HTMLDivElement | null>(null);
+  const verdictLogRef = useRef<HTMLElement | null>(null);
+  const verdictTableScrollRef = useRef<HTMLDivElement | null>(null);
+  const activeVerdictRowRef = useRef<HTMLTableRowElement | null>(null);
 
   const liveData = isControlledData ? externalLiveData : internalLiveData;
   const liveLock = isControlledLock ? externalLiveLock : internalLiveLock;
@@ -358,21 +372,18 @@ export function HopeExecutionFlowView({
     return () => window.clearTimeout(timer);
   }, [isPlaying, clampedIndex, visibleEvents.length]);
 
-  // Keep active row visible inside the right-hand Verdict Feed container only (never scrolls window)
+  // Scroll active row cleanly inside the bounded Verdict Log table only when requested (never scrolls window)
   useEffect(() => {
-    const container = feedListRef.current;
-    const row = activeRowRef.current;
+    if (scrollActiveNonce === 0) return;
+    const container = verdictTableScrollRef.current;
+    const row = activeVerdictRowRef.current;
     if (!container || !row) return;
     const rowTop = row.offsetTop;
-    const rowBottom = rowTop + row.offsetHeight;
-    const viewTop = container.scrollTop;
-    const viewBottom = viewTop + container.clientHeight;
-    if (rowTop < viewTop) {
-      container.scrollTop = rowTop;
-    } else if (rowBottom > viewBottom) {
-      container.scrollTop = rowBottom - container.clientHeight;
-    }
-  }, [clampedIndex, visibleEvents.length]);
+    const rowHeight = row.offsetHeight;
+    const viewHeight = container.clientHeight;
+    const targetTop = Math.max(0, rowTop - viewHeight / 2 + rowHeight / 2);
+    container.scrollTo({ top: targetTop, behavior: 'smooth' });
+  }, [scrollActiveNonce, verdictPage]);
 
   const unlockToIndex = useCallback(
     (index: number) => {
@@ -397,6 +408,7 @@ export function HopeExecutionFlowView({
   const handleSelectNode = useCallback((nodeId: FlowNodeId | null) => {
     setIsPlaying(false);
     setReplayIndex(0);
+    setVerdictPage(0);
     setSelectedNode(nodeId);
   }, []);
 
@@ -499,161 +511,285 @@ export function HopeExecutionFlowView({
     return ((clampedIndex + 0.5) / visibleEvents.length) * 100;
   }, [clampedIndex, visibleEvents.length]);
 
+  const verdictOutcomeCounts = useMemo(() => {
+    let passed = 0;
+    let failed = 0;
+    let quarantined = 0;
+    for (const ev of visibleEvents) {
+      if (ev.outcome === 'PASS') passed++;
+      else if (ev.outcome === 'FAIL') failed++;
+      else quarantined++;
+    }
+    return {
+      all: visibleEvents.length,
+      passed,
+      failed,
+      quarantined,
+    };
+  }, [visibleEvents]);
+
+  const verdictFilteredEntries = useMemo(() => {
+    const q = verdictSearch.trim().toLowerCase();
+    const out: Array<{ readonly event: FlowTraceEvent; readonly streamIndex: number }> = [];
+    for (let idx = visibleEvents.length - 1; idx >= 0; idx--) {
+      const ev = visibleEvents[idx];
+      if (verdictOutcomeFilter !== 'ALL' && ev.outcome !== verdictOutcomeFilter) {
+        continue;
+      }
+      if (q.length > 0) {
+        const matchesTask = ev.taskId.toLowerCase().includes(q);
+        const matchesModel =
+          ev.shortName.toLowerCase().includes(q) ||
+          ev.modelId.toLowerCase().includes(q);
+        const matchesDomain = ev.cartridgeLabel.toLowerCase().includes(q);
+        const matchesRules = ev.retrievedRuleIds.some((r) =>
+          r.toLowerCase().includes(q)
+        );
+        const matchesRoute =
+          ev.redTeam?.route.toLowerCase().includes(q) ||
+          ev.redTeam?.method.toLowerCase().includes(q) ||
+          ev.redTeam?.triggerFlag.toLowerCase().includes(q);
+        const matchesIndex = `#${idx + 1}`.includes(q) || String(idx + 1) === q;
+        if (
+          !matchesTask &&
+          !matchesModel &&
+          !matchesDomain &&
+          !matchesRules &&
+          !matchesRoute &&
+          !matchesIndex
+        ) {
+          continue;
+        }
+      }
+      out.push({ event: ev, streamIndex: idx });
+    }
+    return out;
+  }, [visibleEvents, verdictOutcomeFilter, verdictSearch]);
+
+  const totalVerdictPages = Math.max(
+    1,
+    Math.ceil(verdictFilteredEntries.length / VERDICT_PAGE_SIZE)
+  );
+  const safeVerdictPage = Math.min(verdictPage, totalVerdictPages - 1);
+
+  const pagedVerdictEntries = useMemo(() => {
+    const start = safeVerdictPage * VERDICT_PAGE_SIZE;
+    return verdictFilteredEntries.slice(start, start + VERDICT_PAGE_SIZE);
+  }, [verdictFilteredEntries, safeVerdictPage]);
+
+  const activePosInFiltered = useMemo(
+    () => verdictFilteredEntries.findIndex((entry) => entry.streamIndex === clampedIndex),
+    [verdictFilteredEntries, clampedIndex]
+  );
+
+  const isActiveVisibleOnCurrentPage =
+    activePosInFiltered >= 0 &&
+    Math.floor(activePosInFiltered / VERDICT_PAGE_SIZE) === safeVerdictPage;
+
+  const handleScrollToVerdictLog = useCallback(() => {
+    verdictLogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
+  const handleVerdictRowClick = useCallback(
+    (streamIndex: number) => {
+      unlockToIndex(streamIndex);
+      mainStageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    [unlockToIndex]
+  );
+
+  const handleJumpToActive = useCallback(() => {
+    if (visibleEvents.length === 0) return;
+    if (activePosInFiltered >= 0) {
+      setVerdictPage(Math.floor(activePosInFiltered / VERDICT_PAGE_SIZE));
+    } else {
+      setVerdictOutcomeFilter('ALL');
+      setVerdictSearch('');
+      const newestFirstPos = Math.max(0, visibleEvents.length - 1 - clampedIndex);
+      setVerdictPage(Math.floor(newestFirstPos / VERDICT_PAGE_SIZE));
+    }
+    setScrollActiveNonce((n) => n + 1);
+  }, [activePosInFiltered, clampedIndex, visibleEvents.length]);
+
+  const pageRangeStart =
+    verdictFilteredEntries.length === 0
+      ? 0
+      : safeVerdictPage * VERDICT_PAGE_SIZE + 1;
+  const pageRangeEnd = Math.min(
+    verdictFilteredEntries.length,
+    (safeVerdictPage + 1) * VERDICT_PAGE_SIZE
+  );
+
   return (
-    <section
+    <div
       aria-label="HOPE v4 Live Execution Flow Trace"
-      className="w-full flex-1 min-h-0 lg:h-full overflow-hidden bg-[#090b0f] text-zinc-100 font-mono tabular-nums flex flex-col divide-y divide-zinc-800/80"
+      className="w-full bg-[#090b0f] text-zinc-100 font-mono tabular-nums flex flex-col divide-y divide-zinc-800/80"
     >
-      {/* Merged Single-Row Vault Baseline, Snapshot SHA & Domain Stream Filter Bar */}
-      <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-          <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
-            <ShieldCheck className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
-            <span>EXECUTION DAG</span>
-            <span className="hidden xl:inline">TRACE</span>
-          </span>
+      {/* ABOVE-THE-FOLD MAIN STAGE + REPLAY SCRUBBER */}
+      <div
+        ref={mainStageRef}
+        className="flex flex-col divide-y divide-zinc-800/80 scroll-mt-2"
+      >
+        {/* Merged Single-Row Vault Baseline, Snapshot SHA, Domain Stream Filter & Verdict Anchor */}
+        <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10px]">
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
+              <ShieldCheck className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
+              <span>EXECUTION DAG</span>
+              <span className="hidden xl:inline">TRACE</span>
+            </span>
 
-          {vaultSummary ? (
-            <>
-              <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                <Lock className="h-2.5 w-2.5 text-[#10b981]" aria-hidden="true" />
-                <span>
-                  <span className="hidden xl:inline">VAULT: </span>
-                  <span className="text-zinc-200">
-                    {vaultSummary.source === 'live-artifacts'
-                      ? 'LIVE ARTIFACTS'
-                      : 'STATIC SNAPSHOT'}
+            {vaultSummary ? (
+              <>
+                <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
+                  <Lock className="h-2.5 w-2.5 text-[#10b981]" aria-hidden="true" />
+                  <span>
+                    <span className="hidden xl:inline">VAULT: </span>
+                    <span className="text-zinc-200">
+                      {vaultSummary.source === 'live-artifacts'
+                        ? 'LIVE ARTIFACTS'
+                        : 'STATIC SNAPSHOT'}
+                    </span>
                   </span>
                 </span>
-              </span>
-              <span
-                className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400"
-                title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
-              >
-                <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
-                <span className="hidden sm:inline">SHA</span>
-                <span className="text-zinc-200">
-                  {shortSha(vaultSummary.initialSha, 6, 4)}
-                </span>
-                <span className="text-zinc-600">→</span>
-                <span className="text-[#10b981]">
-                  {shortSha(vaultSummary.finalSha, 6, 4)}
-                </span>
-              </span>
-              <span className="hidden 2xl:inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                <span>
-                  BASE LOCK ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
-                  {vaultSummary.tsApiRetentionPct.toFixed(0)}%
-                </span>
-                <span className="text-zinc-700">|</span>
-                <span className="text-[#10b981]">{vaultSummary.approved} PROMOTED</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-[#f59e0b]">{vaultSummary.rejected} BLOCKED</span>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-300">
-                  {vaultSummary.regressions} REGRESSIONS
-                </span>
-              </span>
-            </>
-          ) : (
-            <span className="rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-500">
-              {hopeError ? 'VAULT BASELINE UNAVAILABLE' : 'LOADING VAULT...'}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-          <div
-            role="group"
-            aria-label="Filter trace stream by domain"
-            className="inline-flex flex-wrap items-center gap-1"
-          >
-            <span className="hidden xl:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 mr-0.5">
-              <Filter className="h-3 w-3" aria-hidden="true" />
-              STREAM
-            </span>
-            {FILTER_OPTIONS.map((opt) => {
-              const isActive = cartridgeFilter === opt.value;
-              const count = filterCounts[opt.value];
-              return (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    setIsPlaying(false);
-                    setReplayIndex(0);
-                    setCartridgeFilter(opt.value);
-                  }}
-                  aria-pressed={isActive}
-                  className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer ${
-                    isActive
-                      ? 'border-zinc-600 bg-zinc-900 text-zinc-50'
-                      : 'border-zinc-800/80 bg-[#090b0f] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
-                  }`}
+                <span
+                  className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400"
+                  title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
                 >
-                  <span>{opt.label}</span>
-                  <span
-                    className={`text-[9.5px] ${
-                      isActive ? 'text-[#10b981]' : 'text-zinc-500'
-                    }`}
-                  >
-                    {count}
+                  <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
+                  <span className="hidden sm:inline">SHA</span>
+                  <span className="text-zinc-200">
+                    {shortSha(vaultSummary.initialSha, 6, 4)}
                   </span>
-                </button>
-              );
-            })}
+                  <span className="text-zinc-600">→</span>
+                  <span className="text-[#10b981]">
+                    {shortSha(vaultSummary.finalSha, 6, 4)}
+                  </span>
+                </span>
+                <span className="hidden 2xl:inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
+                  <span>
+                    BASE LOCK ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
+                    {vaultSummary.tsApiRetentionPct.toFixed(0)}%
+                  </span>
+                  <span className="text-zinc-700">|</span>
+                  <span className="text-[#10b981]">{vaultSummary.approved} PROMOTED</span>
+                  <span className="text-zinc-600">·</span>
+                  <span className="text-[#f59e0b]">{vaultSummary.rejected} BLOCKED</span>
+                  <span className="text-zinc-600">·</span>
+                  <span className="text-zinc-300">
+                    {vaultSummary.regressions} REGRESSIONS
+                  </span>
+                </span>
+              </>
+            ) : (
+              <span className="rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-500">
+                {hopeError ? 'VAULT BASELINE UNAVAILABLE' : 'LOADING VAULT...'}
+              </span>
+            )}
           </div>
 
-          {selectedNode && (
+          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
+            <div
+              role="group"
+              aria-label="Filter trace stream by domain"
+              className="inline-flex flex-wrap items-center gap-1"
+            >
+              <span className="hidden xl:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 mr-0.5">
+                <Filter className="h-3 w-3" aria-hidden="true" />
+                STREAM
+              </span>
+              {FILTER_OPTIONS.map((opt) => {
+                const isActive = cartridgeFilter === opt.value;
+                const count = filterCounts[opt.value];
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setIsPlaying(false);
+                      setReplayIndex(0);
+                      setVerdictPage(0);
+                      setCartridgeFilter(opt.value);
+                    }}
+                    aria-pressed={isActive}
+                    className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer ${
+                      isActive
+                        ? 'border-zinc-600 bg-zinc-900 text-zinc-50'
+                        : 'border-zinc-800/80 bg-[#090b0f] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                    <span
+                      className={`text-[9.5px] ${
+                        isActive ? 'text-[#10b981]' : 'text-zinc-500'
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {selectedNode && (
+              <button
+                type="button"
+                onClick={() => handleSelectNode(null)}
+                className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
+              >
+                <span>NODE: {selectedNode}</span>
+                <X className="h-3 w-3" aria-hidden="true" />
+              </button>
+            )}
+
+            <span className="text-zinc-500 whitespace-nowrap">
+              {visibleEvents.length}/{allEvents.length}
+              <span className="hidden xl:inline"> EVENTS</span>
+            </span>
+
             <button
               type="button"
-              onClick={() => handleSelectNode(null)}
-              className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
+              onClick={handleScrollToVerdictLog}
+              className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-700/80 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-200 hover:border-[#10b981]/60 hover:text-[#10b981] transition-colors cursor-pointer whitespace-nowrap"
             >
-              <span>NODE: {selectedNode}</span>
-              <X className="h-3 w-3" aria-hidden="true" />
+              <span>Verdict Log ({visibleEvents.length})</span>
+              <ArrowDown className="h-2.5 w-2.5" aria-hidden="true" />
             </button>
-          )}
 
-          <span className="text-zinc-500 whitespace-nowrap">
-            {visibleEvents.length}/{allEvents.length}
-            <span className="hidden xl:inline"> EVENTS</span>
-          </span>
+            {liveError && (
+              <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[#ef4444]">
+                {liveError}
+              </span>
+            )}
 
-          {liveError && (
-            <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[#ef4444]">
-              {liveError}
-            </span>
-          )}
+            {!isControlledData && liveData?.polledAt && (
+              <span className="hidden xl:inline text-zinc-500 whitespace-nowrap">
+                POLLED {formatEventTime(liveData.polledAt)}
+              </span>
+            )}
 
-          {!isControlledData && liveData?.polledAt && (
-            <span className="hidden xl:inline text-zinc-500 whitespace-nowrap">
-              POLLED {formatEventTime(liveData.polledAt)}
-            </span>
-          )}
-
-          {!isControlledData && (
-            <button
-              type="button"
-              onClick={handleManualRefresh}
-              className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors cursor-pointer"
-            >
-              <RefreshCw
-                className={`h-2.5 w-2.5 ${isFetching ? 'animate-spin text-zinc-200' : ''}`}
-              />
-              <span>SYNC</span>
-            </button>
-          )}
+            {!isControlledData && (
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-300 hover:border-zinc-600 hover:text-zinc-100 transition-colors cursor-pointer"
+              >
+                <RefreshCw
+                  className={`h-2.5 w-2.5 ${isFetching ? 'animate-spin text-zinc-200' : ''}`}
+                />
+                <span>SYNC</span>
+              </button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* 3-Column Stage: Left Inspector | Center Canvas | Right Counters & Verdict Feed */}
-      <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)_275px] xl:grid-cols-[295px_minmax(0,1fr)_295px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#090b0f]">
-        {/* LEFT PANEL: Live Payload / Rule Inspector */}
-        <aside
-          aria-label="Live Payload and Rule Inspector"
-          className="min-h-0 lg:h-full max-h-[340px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
-        >
+        {/* 2-Column Live Test Stage: Left Inspector | Main Focus Center-Right Filament Canvas */}
+        <div className="grid grid-cols-1 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:h-[calc(100vh-215px)] lg:min-h-[380px] lg:max-h-[620px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#090b0f]">
+          {/* LEFT PANEL: Live Payload / Rule Inspector */}
+          <aside
+            aria-label="Live Payload and Rule Inspector"
+            className="min-h-0 lg:h-full max-h-[360px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
+          >
           <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <Terminal className="h-3 w-3 text-zinc-400" aria-hidden="true" />
@@ -1084,359 +1220,622 @@ export function HopeExecutionFlowView({
           </div>
         </aside>
 
-        {/* CENTER PANEL: Animated Bezier Filament Flow */}
-        <div className="min-h-0 lg:h-full flex flex-col bg-[#090b0f] min-w-0 overflow-hidden">
-          {/* Top Stage Bar: Active Path Breadcrumb & Node Filter Clear Pill */}
-          <div className="flex-shrink-0 bg-[#0d1016] border-b border-zinc-800/80 px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 min-h-[32px]">
-            <div className="flex flex-wrap items-center gap-1 text-[10px] min-w-0">
-              <span className="text-zinc-500 uppercase tracking-wider mr-1">
-                PATH:
-              </span>
-              {activeEvent ? (
-                activeEvent.pathNodes.map((nodeId, idx) => {
-                  const isTerminal = nodeId === activeEvent.terminalNode;
-                  const isNodeSelected = selectedNode === nodeId;
-                  return (
-                    <React.Fragment key={`${nodeId}-${idx}`}>
-                      {idx > 0 && <span className="text-zinc-600">→</span>}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleSelectNode(selectedNode === nodeId ? null : nodeId)
-                        }
-                        className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] transition-colors cursor-pointer ${
-                          isNodeSelected
-                            ? 'border-[#f59e0b]/60 bg-[#f59e0b]/15 text-[#f59e0b]'
-                            : isTerminal
-                              ? outcomeBadgeClasses(activeEvent.outcome)
-                              : 'border-zinc-800 bg-[#090b0f] text-zinc-300 hover:border-zinc-600'
-                        }`}
-                      >
-                        {NODE_SHORT_LABELS[nodeId]}
-                      </button>
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                <span className="text-zinc-600">Awaiting trace path...</span>
-              )}
+          {/* CENTER-RIGHT MAIN FOCUS PANEL: Live Counters + Path + Animated Bezier Filament Flow */}
+          <div className="min-h-0 lg:h-full flex flex-col overflow-hidden bg-[#090b0f] min-w-0">
+            {/* Compact Inline Live Counters + Active Path Breadcrumb Strip */}
+            <div className="flex-shrink-0 border-b border-zinc-800/80 bg-[#0d1016] divide-y divide-zinc-800/70">
+              <div className="px-3 py-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[10px]">
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Passed
+                    </span>
+                    <span className="font-semibold text-[#10b981]">
+                      {telemetryCounters.passed}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Failed
+                    </span>
+                    <span className="font-semibold text-[#ef4444]">
+                      {telemetryCounters.failed}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Quarantined
+                    </span>
+                    <span className="font-semibold text-[#f59e0b]">
+                      {telemetryCounters.quarantined}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Token Δ
+                    </span>
+                    <span className="font-semibold text-[#10b981]">
+                      {telemetryCounters.savedTokens > 0
+                        ? `-${telemetryCounters.savedTokens.toLocaleString()} (-${telemetryCounters.weightedReductionPct.toFixed(1)}%)`
+                        : '0 (0.0%)'}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Lock %
+                    </span>
+                    <span className="font-semibold text-zinc-100">
+                      {telemetryCounters.lexicalRetentionPct.toFixed(1)}%
+                    </span>
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-zinc-400">
+                  {activeEvent && (
+                    <span className="hidden sm:inline text-zinc-400">
+                      #{clampedIndex + 1} · {activeEvent.shortName}
+                    </span>
+                  )}
+                  <span className="text-zinc-500">
+                    {visibleEvents.length} SHOWN
+                  </span>
+                </div>
+              </div>
+
+              {/* Slim PATH: Breadcrumb & Node Filter Clear Pill */}
+              <div className="bg-[#0b0e14] px-3 py-1 flex flex-wrap items-center justify-between gap-2 min-h-[28px]">
+                <div className="flex flex-wrap items-center gap-1 text-[10px] min-w-0">
+                  <span className="text-zinc-500 uppercase tracking-wider mr-1">
+                    PATH:
+                  </span>
+                  {activeEvent ? (
+                    activeEvent.pathNodes.map((nodeId, idx) => {
+                      const isTerminal = nodeId === activeEvent.terminalNode;
+                      const isNodeSelected = selectedNode === nodeId;
+                      return (
+                        <React.Fragment key={`${nodeId}-${idx}`}>
+                          {idx > 0 && <span className="text-zinc-600">→</span>}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleSelectNode(selectedNode === nodeId ? null : nodeId)
+                            }
+                            className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] transition-colors cursor-pointer ${
+                              isNodeSelected
+                                ? 'border-[#f59e0b]/60 bg-[#f59e0b]/15 text-[#f59e0b]'
+                                : isTerminal
+                                  ? outcomeBadgeClasses(activeEvent.outcome)
+                                  : 'border-zinc-800 bg-[#090b0f] text-zinc-300 hover:border-zinc-600'
+                            }`}
+                          >
+                            {NODE_SHORT_LABELS[nodeId]}
+                          </button>
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <span className="text-zinc-600">Awaiting trace path...</span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 flex-shrink-0 text-[10px]">
+                  {selectedNode && (
+                    <button
+                      type="button"
+                      onClick={() => handleSelectNode(null)}
+                      className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-700 bg-[#090b0f] px-2 py-0.5 text-zinc-200 hover:border-zinc-500 transition-colors cursor-pointer"
+                    >
+                      <span>Clear node: {NODE_SHORT_LABELS[selectedNode]}</span>
+                      <X className="h-3 w-3 text-zinc-400" aria-hidden="true" />
+                    </button>
+                  )}
+                  {activeEvent && (
+                    <span
+                      className={`font-semibold ${outcomeColorText(activeEvent.outcome)}`}
+                    >
+                      {activeEvent.taskId}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0 text-[10px]">
-              {selectedNode && (
-                <button
-                  type="button"
-                  onClick={() => handleSelectNode(null)}
-                  className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-700 bg-[#090b0f] px-2 py-0.5 text-zinc-200 hover:border-zinc-500 transition-colors cursor-pointer"
-                >
-                  <span>Clear node: {NODE_SHORT_LABELS[selectedNode]}</span>
-                  <X className="h-3 w-3 text-zinc-400" aria-hidden="true" />
-                </button>
-              )}
-              {activeEvent && (
-                <span
-                  className={`font-semibold ${outcomeColorText(activeEvent.outcome)}`}
-                >
-                  {activeEvent.taskId}
-                </span>
-              )}
+            {/* Full-Width & Full-Height Filament Canvas Stage */}
+            <div className="relative flex-1 min-h-[360px] lg:min-h-0 h-full w-full overflow-hidden bg-[#090b0f]">
+              <HopeFilamentCanvas
+                events={visibleEvents}
+                activeIndex={clampedIndex}
+                selectedNode={selectedNode}
+                onSelectEventIndex={handleSelectEvent}
+                onSelectNode={handleSelectNode}
+                isPlaying={isPlaying}
+              />
             </div>
-          </div>
-
-          {/* Full-Height Filament Canvas Stage */}
-          <div className="relative flex-1 min-h-[320px] lg:min-h-0 w-full bg-[#090b0f] overflow-hidden">
-            <HopeFilamentCanvas
-              events={visibleEvents}
-              activeIndex={clampedIndex}
-              selectedNode={selectedNode}
-              onSelectEventIndex={handleSelectEvent}
-              onSelectNode={handleSelectNode}
-              isPlaying={isPlaying}
-            />
           </div>
         </div>
 
-        {/* RIGHT PANEL: Live Counters & Verdict Feed */}
-        <aside
-          aria-label="Live Counters and Verdict Feed"
-          className="min-h-0 lg:h-full max-h-[360px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
-        >
-          {/* Compact Tabular-Nums Counters */}
-          <div className="flex-shrink-0 bg-[#0d1016] p-2.5 space-y-1.5">
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-              <span>LIVE VERDICT COUNTERS</span>
-              <span className="text-zinc-500">{visibleEvents.length} SHOWN</span>
-            </div>
+        {/* PINNED SCRUBBER DOCK directly below the 2-Column Stage */}
+        <div className="flex-shrink-0 bg-[#0d1016] px-3.5 py-1.5 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              type="button"
+              onClick={handleToggleLiveLock}
+              aria-pressed={liveLock}
+              className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2.5 py-1 text-[10.5px] font-semibold transition-colors cursor-pointer ${
+                liveLock
+                  ? 'border-[#10b981]/60 bg-[#10b981]/10 text-[#10b981] hover:bg-[#10b981]/20'
+                  : 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b] hover:bg-[#f59e0b]/20'
+              }`}
+            >
+              {liveLock ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
+                  <span>LIVE</span>
+                  <span className="text-[9.5px] font-normal text-zinc-300 border-l border-[#10b981]/30 pl-1.5">
+                    3s
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Radio className="h-3 w-3" aria-hidden="true" />
+                  <span>REPLAY</span>
+                  <span className="text-[9.5px] font-normal text-zinc-400 border-l border-[#f59e0b]/30 pl-1.5">
+                    LOCK LIVE
+                  </span>
+                </>
+              )}
+            </button>
 
-            <div className="grid grid-cols-3 gap-1.5">
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
-                <div className="text-[9px] uppercase text-zinc-500">Passed</div>
-                <div className="text-sm font-semibold text-[#10b981]">
-                  {telemetryCounters.passed}
-                </div>
-              </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
-                <div className="text-[9px] uppercase text-zinc-500">Failed</div>
-                <div className="text-sm font-semibold text-[#ef4444]">
-                  {telemetryCounters.failed}
-                </div>
-              </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
-                <div className="text-[9px] uppercase text-zinc-500">Quarantined</div>
-                <div className="text-sm font-semibold text-[#f59e0b]">
-                  {telemetryCounters.quarantined}
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-1.5">
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
-                <div className="text-[9px] uppercase text-zinc-500">Token Δ</div>
-                <div className="text-xs font-semibold text-[#10b981] truncate">
-                  {telemetryCounters.savedTokens > 0
-                    ? `-${telemetryCounters.savedTokens.toLocaleString()} (-${telemetryCounters.weightedReductionPct.toFixed(1)}%)`
-                    : '0 (0.0%)'}
-                </div>
-              </div>
-              <div className="rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-2 py-1">
-                <div className="text-[9px] uppercase text-zinc-500">Lock %</div>
-                <div className="text-xs font-semibold text-zinc-100">
-                  {telemetryCounters.lexicalRetentionPct.toFixed(1)}%
-                </div>
-              </div>
+            {/* Playback Controls */}
+            <div className="inline-flex items-center rounded-[2px] border border-zinc-800 bg-[#090b0f] divide-x divide-zinc-800">
+              <button
+                type="button"
+                onClick={handleStepBack}
+                disabled={visibleEvents.length === 0 || clampedIndex <= 0}
+                aria-label="Step back one event"
+                title="Step Back"
+                className="p-1.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={handleTogglePlay}
+                disabled={visibleEvents.length <= 1}
+                aria-label={isPlaying ? 'Pause trace replay' : 'Play trace replay'}
+                title={isPlaying ? 'Pause' : 'Play Replay'}
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] text-zinc-200 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                {isPlaying ? (
+                  <>
+                    <Pause className="h-3 w-3 text-[#f59e0b]" />
+                    <span>PAUSE</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-3 w-3 text-[#10b981]" />
+                    <span>PLAY</span>
+                  </>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleStepForward}
+                disabled={
+                  visibleEvents.length === 0 || clampedIndex >= visibleEvents.length - 1
+                }
+                aria-label="Step forward one event"
+                title="Step Forward"
+                className="p-1.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </button>
             </div>
           </div>
 
-          {/* Scrolling Live Verdict Feed */}
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="flex-shrink-0 bg-[#0d1016]/60 border-b border-zinc-800/80 px-2.5 py-1.5 flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-              <span>VERDICT STREAM</span>
-              <span className="text-zinc-500">CLICK TO INSPECT</span>
-            </div>
-
-            <div
-              ref={feedListRef}
-              className="relative flex-1 min-h-0 max-h-[240px] lg:max-h-none overflow-y-auto scrollbar-thin divide-y divide-zinc-800/60"
-            >
+          {/* Visual Event Tick Strip + Range Scrubber */}
+          <div className="flex-1 min-w-0 flex items-center gap-3">
+            <div className="relative flex-1 h-7 rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-1 flex items-center overflow-hidden">
               {visibleEvents.length === 0 ? (
-                <div className="p-6 text-center text-[11px] text-zinc-500">
-                  No verdict events available for this selection.
+                <div className="w-full text-center text-[10px] text-zinc-600">
+                  NO EVENTS IN STREAM
                 </div>
               ) : (
-                visibleEvents.map((ev, idx) => {
-                  const isActive = idx === clampedIndex;
+                <>
+                  <svg
+                    viewBox="0 0 1000 20"
+                    preserveAspectRatio="none"
+                    className="w-full h-4 block"
+                    aria-hidden="true"
+                  >
+                    {visibleEvents.map((ev, idx) => {
+                      const count = visibleEvents.length;
+                      const slot = 1000 / count;
+                      const gap = count > 200 ? 0.45 : count > 40 ? 1.2 : 3;
+                      const width = Math.max(0.9, slot - gap);
+                      const x = idx * slot + gap * 0.5;
+                      const isCursor = idx === clampedIndex;
+                      const h = isCursor ? 18 : 11;
+                      const y = isCursor ? 1 : 4.5;
+                      return (
+                        <rect
+                          key={ev.id}
+                          x={x}
+                          y={y}
+                          width={width}
+                          height={h}
+                          rx={0.5}
+                          fill={outcomeTickColor(ev.outcome)}
+                          opacity={isCursor ? 1 : idx <= clampedIndex ? 0.78 : 0.28}
+                        />
+                      );
+                    })}
+                  </svg>
+
+                  {/* Crisp Playhead Marker */}
+                  <div
+                    aria-hidden="true"
+                    style={{ left: `${scrubberPercent}%` }}
+                    className="pointer-events-none absolute top-0 bottom-0 w-[2px] -translate-x-1/2 bg-zinc-100"
+                  />
+
+                  {/* Accessible Scrubbing Range Input */}
+                  <input
+                    type="range"
+                    min={0}
+                    max={Math.max(0, visibleEvents.length - 1)}
+                    step={1}
+                    value={clampedIndex}
+                    disabled={visibleEvents.length <= 1}
+                    aria-label="Replay timeline scrubber"
+                    aria-valuetext={
+                      activeEvent
+                        ? `Event ${clampedIndex + 1} of ${visibleEvents.length}: ${activeEvent.taskId} ${activeEvent.outcome}`
+                        : 'Empty trace stream'
+                    }
+                    onChange={(e) => unlockToIndex(Number(e.target.value))}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-default"
+                  />
+                </>
+              )}
+            </div>
+
+            <div className="flex-shrink-0 text-right text-[11px] text-zinc-300 min-w-[74px]">
+              {visibleEvents.length > 0 ? clampedIndex + 1 : 0} / {visibleEvents.length}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* BOTTOM SECTION: Bounded & Paginated Verdict Log */}
+      <section
+        id="hope-verdict-log"
+        ref={verdictLogRef}
+        aria-label="Verdict Log"
+        className="w-full bg-[#090b0f] flex flex-col scroll-mt-2"
+      >
+        {/* Verdict Log Controls: Summary Counters + Outcome Filter + Search + Pagination */}
+        <div className="bg-[#0d1016] border-b border-zinc-800/80 px-3.5 py-2 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-[10.5px] font-semibold uppercase tracking-wider text-zinc-200">
+              VERDICT LOG
+            </span>
+            <span className="text-[10px] text-zinc-500 hidden sm:inline">
+              Click a row to replay in stage ↑
+            </span>
+
+            {/* Summary Counter Pills + Outcome Filter */}
+            <div
+              role="group"
+              aria-label="Filter verdict log by outcome"
+              className="inline-flex flex-wrap items-center gap-1"
+            >
+              {(
+                [
+                  {
+                    value: 'ALL',
+                    label: 'All',
+                    count: verdictOutcomeCounts.all,
+                    activeClass: 'border-zinc-500 bg-zinc-900 text-zinc-50',
+                    countClass: 'text-zinc-300',
+                  },
+                  {
+                    value: 'PASS',
+                    label: 'Passed',
+                    count: verdictOutcomeCounts.passed,
+                    activeClass:
+                      'border-[#10b981]/60 bg-[#10b981]/15 text-[#10b981]',
+                    countClass: 'text-[#10b981]',
+                  },
+                  {
+                    value: 'FAIL',
+                    label: 'Failed',
+                    count: verdictOutcomeCounts.failed,
+                    activeClass:
+                      'border-[#ef4444]/60 bg-[#ef4444]/15 text-[#ef4444]',
+                    countClass: 'text-[#ef4444]',
+                  },
+                  {
+                    value: 'QUARANTINE',
+                    label: 'Quarantined',
+                    count: verdictOutcomeCounts.quarantined,
+                    activeClass:
+                      'border-[#f59e0b]/60 bg-[#f59e0b]/15 text-[#f59e0b]',
+                    countClass: 'text-[#f59e0b]',
+                  },
+                ] as const
+              ).map((pill) => {
+                const isActive = verdictOutcomeFilter === pill.value;
+                return (
+                  <button
+                    key={pill.value}
+                    type="button"
+                    aria-pressed={isActive}
+                    onClick={() => {
+                      setVerdictOutcomeFilter(pill.value);
+                      setVerdictPage(0);
+                    }}
+                    className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer ${
+                      isActive
+                        ? pill.activeClass
+                        : 'border-zinc-800/80 bg-[#090b0f] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
+                    }`}
+                  >
+                    <span>{pill.label}</span>
+                    <span className={isActive ? '' : pill.countClass}>
+                      {pill.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Quick Task / Model / Rule Search Input */}
+            <div className="relative flex items-center">
+              <Search
+                className="pointer-events-none absolute left-2 h-3 w-3 text-zinc-500"
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                value={verdictSearch}
+                onChange={(e) => {
+                  setVerdictSearch(e.target.value);
+                  setVerdictPage(0);
+                }}
+                placeholder="Filter task, model, rule..."
+                aria-label="Filter verdict log by task, model, or rule"
+                className="h-6 w-44 sm:w-52 rounded-[2px] border border-zinc-800/80 bg-[#090b0f] pl-6 pr-6 text-[10px] text-zinc-200 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
+              />
+              {verdictSearch && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVerdictSearch('');
+                    setVerdictPage(0);
+                  }}
+                  aria-label="Clear verdict search filter"
+                  className="absolute right-1.5 text-zinc-500 hover:text-zinc-200 cursor-pointer"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleJumpToActive}
+              disabled={visibleEvents.length === 0}
+              className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed ${
+                isActiveVisibleOnCurrentPage
+                  ? 'border-[#10b981]/50 bg-[#10b981]/10 text-[#10b981]'
+                  : 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b] hover:bg-[#f59e0b]/20'
+              }`}
+            >
+              <span>
+                Jump to Active{visibleEvents.length > 0 ? ` (#${clampedIndex + 1})` : ''}
+              </span>
+            </button>
+
+            <span className="text-[10px] text-zinc-500 whitespace-nowrap">
+              {pageRangeStart}–{pageRangeEnd} of {verdictFilteredEntries.length}
+            </span>
+
+            {/* Pagination Controls */}
+            <div className="inline-flex items-center rounded-[2px] border border-zinc-800/80 bg-[#090b0f] divide-x divide-zinc-800/80 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setVerdictPage(Math.max(0, safeVerdictPage - 1))}
+                disabled={safeVerdictPage <= 0}
+                className="inline-flex items-center gap-0.5 px-2 py-0.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <ChevronLeft className="h-3 w-3" aria-hidden="true" />
+                <span>Prev</span>
+              </button>
+              <span className="px-2 py-0.5 text-zinc-400 whitespace-nowrap">
+                Page {safeVerdictPage + 1} of {totalVerdictPages}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setVerdictPage(Math.min(totalVerdictPages - 1, safeVerdictPage + 1))
+                }
+                disabled={safeVerdictPage >= totalVerdictPages - 1}
+                className="inline-flex items-center gap-0.5 px-2 py-0.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-3 w-3" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Bounded Structured Table (max-h-[380px] overflow-y-auto, 20 rows/page) */}
+        <div
+          ref={verdictTableScrollRef}
+          className="max-h-[380px] overflow-y-auto overflow-x-auto scrollbar-thin bg-[#090b0f]"
+        >
+          <table className="w-full border-separate border-spacing-0 text-left text-[10.5px] font-mono tabular-nums">
+            <thead className="sticky top-0 z-10 bg-[#0d1016] text-[9.5px] uppercase tracking-wider text-zinc-400 [&_th]:border-b [&_th]:border-zinc-800/80">
+              <tr>
+                <th scope="col" className="px-3 py-1.5 font-medium whitespace-nowrap">
+                  #
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Verdict
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Task / Probe
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Domain
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Model
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Rules
+                </th>
+                <th scope="col" className="px-2.5 py-1.5 font-medium whitespace-nowrap">
+                  Checks / Route
+                </th>
+                <th
+                  scope="col"
+                  className="px-2.5 py-1.5 font-medium text-right whitespace-nowrap"
+                >
+                  Latency
+                </th>
+                <th
+                  scope="col"
+                  className="px-3 py-1.5 font-medium text-right whitespace-nowrap"
+                >
+                  Time
+                </th>
+              </tr>
+            </thead>
+            <tbody className="[&_td]:border-b [&_td]:border-zinc-800/60">
+              {pagedVerdictEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-8 text-center text-zinc-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <span>No verdict entries match this filter.</span>
+                      {(verdictOutcomeFilter !== 'ALL' || verdictSearch !== '') && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setVerdictOutcomeFilter('ALL');
+                            setVerdictSearch('');
+                            setVerdictPage(0);
+                          }}
+                          className="rounded-[2px] border border-zinc-700 bg-[#0d1016] px-2.5 py-1 text-[10px] text-zinc-300 hover:border-zinc-500 cursor-pointer"
+                        >
+                          Clear verdict filters
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                pagedVerdictEntries.map(({ event: ev, streamIndex }) => {
+                  const isActive = streamIndex === clampedIndex;
                   const shortOutcome =
                     ev.outcome === 'QUARANTINE' ? 'QUAR' : ev.outcome;
-                  const detailText =
+                  const rulesText =
+                    ev.retrievedRuleIds.length > 0
+                      ? ev.retrievedRuleIds.join(', ')
+                      : ev.kind === 'redteam_probe'
+                        ? 'Direct Probe'
+                        : '—';
+                  const checksOrRoute =
                     ev.kind === 'redteam_probe' && ev.redTeam
                       ? `${ev.redTeam.method} ${ev.redTeam.route}`
                       : `${ev.passedFactsCount}/${ev.boundFactsCount} facts`;
 
                   return (
-                    <button
+                    <tr
                       key={ev.id}
-                      ref={isActive ? activeRowRef : undefined}
-                      type="button"
-                      onClick={() => handleSelectEvent(idx)}
-                      className={`w-full text-left px-2.5 py-1.5 flex flex-col gap-0.5 transition-colors cursor-pointer ${
+                      ref={isActive ? activeVerdictRowRef : undefined}
+                      tabIndex={0}
+                      onClick={() => handleVerdictRowClick(streamIndex)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleVerdictRowClick(streamIndex);
+                        }
+                      }}
+                      className={`cursor-pointer transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-zinc-400 ${
                         isActive
-                          ? 'bg-[#121722] border-l-2 border-l-[#10b981]'
-                          : 'bg-[#090b0f] hover:bg-[#0d1016]'
+                          ? 'bg-[#121722] text-zinc-50'
+                          : 'bg-[#090b0f] hover:bg-[#0d1016] text-zinc-300'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                          <span
-                            className={`rounded-[2px] border px-1.5 py-0.5 text-[9px] font-semibold uppercase flex-shrink-0 ${outcomeBadgeClasses(
-                              ev.outcome
-                            )}`}
-                          >
-                            {shortOutcome}
-                          </span>
-                          <span className="text-[11px] font-semibold text-zinc-100 truncate">
-                            {ev.taskId}
-                          </span>
-                        </div>
-                        <span className="text-[9.5px] text-zinc-500 flex-shrink-0">
-                          {ev.latencyMs !== undefined ? `${ev.latencyMs}ms` : `#${idx + 1}`}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 text-[10px]">
-                        <span className="text-zinc-400 truncate">{ev.shortName}</span>
+                      <td
+                        className={`px-3 py-1.5 whitespace-nowrap ${
+                          isActive
+                            ? 'border-l-2 border-l-[#10b981] text-[#10b981] font-semibold'
+                            : 'text-zinc-500'
+                        }`}
+                      >
+                        #{streamIndex + 1}
+                      </td>
+                      <td className="px-2.5 py-1.5 whitespace-nowrap">
                         <span
-                          className={`truncate ${
-                            ev.kind === 'redteam_probe'
-                              ? 'text-[#f59e0b]'
-                              : ev.fullTaskPass
-                                ? 'text-[#10b981]'
-                                : 'text-[#ef4444]'
-                          }`}
+                          className={`inline-flex items-center rounded-[2px] border px-1.5 py-0.5 text-[9px] font-semibold uppercase ${outcomeBadgeClasses(
+                            ev.outcome
+                          )}`}
                         >
-                          {detailText}
+                          {shortOutcome}
                         </span>
-                      </div>
-                    </button>
+                      </td>
+                      <td className="px-2.5 py-1.5 whitespace-nowrap font-semibold text-zinc-100">
+                        <span>{ev.taskId}</span>
+                        {ev.kind === 'redteam_probe' && (
+                          <span className="ml-1.5 rounded-[2px] border border-[#f59e0b]/40 bg-[#f59e0b]/10 px-1 py-0.2 text-[8.5px] font-medium text-[#f59e0b]">
+                            PROBE
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-2.5 py-1.5 whitespace-nowrap text-zinc-400">
+                        {ev.cartridgeLabel}
+                      </td>
+                      <td className="px-2.5 py-1.5 whitespace-nowrap text-zinc-300">
+                        {ev.shortName}
+                      </td>
+                      <td
+                        className="px-2.5 py-1.5 max-w-[180px] truncate text-zinc-400"
+                        title={rulesText}
+                      >
+                        {rulesText}
+                      </td>
+                      <td
+                        className={`px-2.5 py-1.5 max-w-[220px] truncate ${
+                          ev.kind === 'redteam_probe'
+                            ? 'text-[#f59e0b]'
+                            : ev.fullTaskPass
+                              ? 'text-[#10b981]'
+                              : 'text-[#ef4444]'
+                        }`}
+                        title={checksOrRoute}
+                      >
+                        {checksOrRoute}
+                      </td>
+                      <td className="px-2.5 py-1.5 text-right whitespace-nowrap text-zinc-400">
+                        {ev.latencyMs !== undefined ? `${ev.latencyMs}ms` : '—'}
+                      </td>
+                      <td className="px-3 py-1.5 text-right whitespace-nowrap text-zinc-500">
+                        {formatEventTime(ev.timestamp)}
+                      </td>
+                    </tr>
                   );
                 })
               )}
-            </div>
-          </div>
-        </aside>
-      </div>
-
-      {/* BOTTOM DOCK: Interactive Replay & Live Scrubber */}
-      <div className="flex-shrink-0 bg-[#0d1016] border-t border-zinc-800/80 px-3.5 py-2 flex flex-col lg:flex-row lg:items-center gap-2.5 lg:gap-3">
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            type="button"
-            onClick={handleToggleLiveLock}
-            aria-pressed={liveLock}
-            className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2.5 py-1 text-[10.5px] font-semibold transition-colors cursor-pointer ${
-              liveLock
-                ? 'border-[#10b981]/60 bg-[#10b981]/10 text-[#10b981] hover:bg-[#10b981]/20'
-                : 'border-[#f59e0b]/50 bg-[#f59e0b]/10 text-[#f59e0b] hover:bg-[#f59e0b]/20'
-            }`}
-          >
-            {liveLock ? (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-[#10b981]" />
-                <span>LIVE</span>
-                <span className="text-[9.5px] font-normal text-zinc-300 border-l border-[#10b981]/30 pl-1.5">
-                  AUTO-POLL: 3s
-                </span>
-              </>
-            ) : (
-              <>
-                <Radio className="h-3 w-3" aria-hidden="true" />
-                <span>REPLAY</span>
-                <span className="text-[9.5px] font-normal text-zinc-400 border-l border-[#f59e0b]/30 pl-1.5">
-                  LOCK LIVE
-                </span>
-              </>
-            )}
-          </button>
-
-          {/* Playback Controls */}
-          <div className="inline-flex items-center rounded-[2px] border border-zinc-800 bg-[#090b0f] divide-x divide-zinc-800">
-            <button
-              type="button"
-              onClick={handleStepBack}
-              disabled={visibleEvents.length === 0 || clampedIndex <= 0}
-              aria-label="Step back one event"
-              title="Step Back"
-              className="p-1.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </button>
-            <button
-              type="button"
-              onClick={handleTogglePlay}
-              disabled={visibleEvents.length <= 1}
-              aria-label={isPlaying ? 'Pause trace replay' : 'Play trace replay'}
-              title={isPlaying ? 'Pause' : 'Play Replay'}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[10px] text-zinc-200 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              {isPlaying ? (
-                <>
-                  <Pause className="h-3 w-3 text-[#f59e0b]" />
-                  <span>PAUSE</span>
-                </>
-              ) : (
-                <>
-                  <Play className="h-3 w-3 text-[#10b981]" />
-                  <span>PLAY</span>
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={handleStepForward}
-              disabled={
-                visibleEvents.length === 0 || clampedIndex >= visibleEvents.length - 1
-              }
-              aria-label="Step forward one event"
-              title="Step Forward"
-              className="p-1.5 text-zinc-300 hover:bg-zinc-900 hover:text-zinc-50 disabled:opacity-35 disabled:cursor-not-allowed transition-colors cursor-pointer"
-            >
-              <ChevronRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
+            </tbody>
+          </table>
         </div>
-
-        {/* Visual Event Tick Strip + Range Scrubber */}
-        <div className="flex-1 min-w-0 flex items-center gap-3">
-          <div className="relative flex-1 h-7 rounded-[2px] border border-zinc-800/80 bg-[#090b0f] px-1 flex items-center overflow-hidden">
-            {visibleEvents.length === 0 ? (
-              <div className="w-full text-center text-[10px] text-zinc-600">
-                NO EVENTS IN STREAM
-              </div>
-            ) : (
-              <>
-                <svg
-                  viewBox="0 0 1000 20"
-                  preserveAspectRatio="none"
-                  className="w-full h-4 block"
-                  aria-hidden="true"
-                >
-                  {visibleEvents.map((ev, idx) => {
-                    const count = visibleEvents.length;
-                    const slot = 1000 / count;
-                    const gap = count > 200 ? 0.45 : count > 40 ? 1.2 : 3;
-                    const width = Math.max(0.9, slot - gap);
-                    const x = idx * slot + gap * 0.5;
-                    const isCursor = idx === clampedIndex;
-                    const h = isCursor ? 18 : 11;
-                    const y = isCursor ? 1 : 4.5;
-                    return (
-                      <rect
-                        key={ev.id}
-                        x={x}
-                        y={y}
-                        width={width}
-                        height={h}
-                        rx={0.5}
-                        fill={outcomeTickColor(ev.outcome)}
-                        opacity={isCursor ? 1 : idx <= clampedIndex ? 0.78 : 0.28}
-                      />
-                    );
-                  })}
-                </svg>
-
-                {/* Crisp Playhead Marker */}
-                <div
-                  aria-hidden="true"
-                  style={{ left: `${scrubberPercent}%` }}
-                  className="pointer-events-none absolute top-0 bottom-0 w-[2px] -translate-x-1/2 bg-zinc-100"
-                />
-
-                {/* Accessible Scrubbing Range Input */}
-                <input
-                  type="range"
-                  min={0}
-                  max={Math.max(0, visibleEvents.length - 1)}
-                  step={1}
-                  value={clampedIndex}
-                  disabled={visibleEvents.length <= 1}
-                  aria-label="Replay timeline scrubber"
-                  aria-valuetext={
-                    activeEvent
-                      ? `Event ${clampedIndex + 1} of ${visibleEvents.length}: ${activeEvent.taskId} ${activeEvent.outcome}`
-                      : 'Empty trace stream'
-                  }
-                  onChange={(e) => unlockToIndex(Number(e.target.value))}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-default"
-                />
-              </>
-            )}
-          </div>
-
-          <div className="flex-shrink-0 text-right text-[11px] text-zinc-300 min-w-[74px]">
-            {visibleEvents.length > 0 ? clampedIndex + 1 : 0} / {visibleEvents.length}
-          </div>
-        </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
 
