@@ -85,50 +85,50 @@ const NODE_ORDER: readonly FlowNodeId[] = [
 const NODE_META: Record<FlowNodeId, NodeMeta> = {
   TASK_IN: {
     id: 'TASK_IN',
-    title: 'TASK / PROBE IN',
-    defaultSub: 'DISPATCH STREAM',
+    title: 'TASK / PROBE',
+    defaultSub: 'INCOMING STREAM',
     accent: '#e4e4e7',
   },
   FAST_CLOCK: {
     id: 'FAST_CLOCK',
     title: 'FAST CLOCK',
-    defaultSub: 'TOP-K=4 · COMPACT LOCK',
+    defaultSub: 'TOP-4 RULES · LOCKED',
     accent: '#e4e4e7',
   },
   ORACLE_VERIFIER: {
     id: 'ORACLE_VERIFIER',
-    title: 'ORACLE / VERIFIER',
-    defaultSub: 'DETERMINISTIC CHECK',
+    title: 'TEST VERIFIER',
+    defaultSub: 'DETERMINISTIC CHECKS',
     accent: '#e4e4e7',
   },
   VERIFIED_OUTPUT: {
     id: 'VERIFIED_OUTPUT',
-    title: 'VERIFIED OUTPUT',
-    defaultSub: 'ALL BOUND FACTS PASS',
+    title: 'PASSED',
+    defaultSub: 'ALL CHECKS PASS',
     accent: '#10b981',
   },
   QUARANTINE_VAULT: {
     id: 'QUARANTINE_VAULT',
-    title: 'QUARANTINE VAULT',
-    defaultSub: 'CANDIDATES STAGED',
+    title: 'QUARANTINE',
+    defaultSub: 'ISOLATED ISSUES',
     accent: '#f59e0b',
   },
   SLOW_CLOCK_GATE: {
     id: 'SLOW_CLOCK_GATE',
-    title: 'SLOW CLOCK GATE',
-    defaultSub: 'G1 LEX · G2 CON · G3 CAN',
+    title: 'SAFETY GATE',
+    defaultSub: 'G1 · G2 · G3 CHECKS',
     accent: '#f59e0b',
   },
   GATE_APPROVED: {
     id: 'GATE_APPROVED',
     title: 'APPROVED',
-    defaultSub: 'PROMOTED FIX',
+    defaultSub: 'SAFE FIX PROMOTED',
     accent: '#10b981',
   },
   GATE_REJECTED: {
     id: 'GATE_REJECTED',
-    title: 'REJECTED',
-    defaultSub: 'BLOCKED REGRESSION',
+    title: 'BLOCKED',
+    defaultSub: 'UNSAFE FIX BLOCKED',
     accent: '#ef4444',
   },
 };
@@ -212,8 +212,8 @@ function computeDagLayout(width: number, height: number): DagLayout {
   const w = Math.max(280, width);
   const h = Math.max(340, height);
 
-  const topPad = 36;
-  const bottomPad = 28;
+  const topPad = 26;
+  const bottomPad = 22;
   const usableH = Math.max(240, h - topPad - bottomPad);
 
   const isCompact = w < 520;
@@ -599,13 +599,7 @@ function drawStaticLayer(
   }
   ctx.stroke();
 
-  // 3. Top header strip inside canvas
-  ctx.font = `600 10px ${FONT_MONO}`;
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillStyle = PALETTE.textMuted;
-  ctx.fillText('HOPE v4 // BEZIER FILAMENT DAG', 14, 17);
-
+  // 3. Sleek top-right outcome legend inside canvas
   if (width >= 430) {
     const legendItems: ReadonlyArray<{ label: string; color: string }> = [
       { label: 'PASS', color: PALETTE.pass },
@@ -614,14 +608,15 @@ function drawStaticLayer(
     ];
     let rx = width - 14;
     ctx.font = `500 9.5px ${FONT_MONO}`;
+    ctx.textBaseline = 'middle';
     ctx.textAlign = 'right';
     for (let i = legendItems.length - 1; i >= 0; i -= 1) {
       const item = legendItems[i];
       ctx.fillStyle = PALETTE.textMuted;
-      ctx.fillText(item.label, rx, 17);
+      ctx.fillText(item.label, rx, 13.5);
       const labelW = ctx.measureText(item.label).width;
       ctx.fillStyle = item.color;
-      ctx.fillRect(rx - labelW - 10, 14.5, 5, 5);
+      ctx.fillRect(rx - labelW - 10, 11, 5, 5);
       rx -= labelW + 22;
     }
   }
@@ -919,18 +914,18 @@ function drawNodeCards(
         subText = `${activeEvent.taskId} · ${clampedActiveIndex + 1}/${totalEvents}`;
         subColor = PALETTE.textSecondary;
       } else if (nodeId === 'FAST_CLOCK') {
-        subText = `K=4 · -${activeEvent.promptDelta.reductionPct.toFixed(0)}% TOK · ${activeEvent.promptDelta.lexicalLockPct.toFixed(0)}% LOCK`;
+        subText = `TOP-4 · -${activeEvent.promptDelta.reductionPct.toFixed(0)}% TOK · ${activeEvent.promptDelta.lexicalLockPct.toFixed(0)}% KEPT`;
         subColor = PALETTE.textSecondary;
       } else if (nodeId === 'ORACLE_VERIFIER') {
         if (activeEvent.kind === 'redteam_probe') {
           subText = `PROBE · ${activeEvent.redTeam?.triggerFlag ?? activeEvent.taskId}`;
           subColor = PALETTE.quarantine;
         } else {
-          subText = `${activeEvent.passedFactsCount}/${activeEvent.boundFactsCount} FACTS · ${activeEvent.fullTaskPass ? 'PASS' : 'FAIL'}`;
+          subText = `${activeEvent.passedFactsCount}/${activeEvent.boundFactsCount} CHECKS · ${activeEvent.fullTaskPass ? 'PASS' : 'FAIL'}`;
           subColor = activeEvent.fullTaskPass ? PALETTE.pass : PALETTE.fail;
         }
       } else if (nodeId === 'VERIFIED_OUTPUT') {
-        subText = `${count} VERIFIED PASS`;
+        subText = `${count} PASSED`;
         subColor = count > 0 ? PALETTE.pass : PALETTE.textMuted;
       } else if (nodeId === 'QUARANTINE_VAULT') {
         const badge = isOnActivePath ? getFailureBranchBadgeText(activeEvent) : null;
@@ -954,7 +949,7 @@ function drawNodeCards(
                 ? PALETTE.fail
                 : PALETTE.quarantine;
         } else {
-          subText = `G1·G2·G3 · ${count} AUDITS`;
+          subText = `G1·G2·G3 · ${count} CHECKS`;
           subColor = count > 0 ? PALETTE.quarantine : PALETTE.textMuted;
         }
       } else if (nodeId === 'GATE_APPROVED') {
@@ -1413,9 +1408,11 @@ export function HopeFilamentCanvas({
       ctx.textAlign = 'left';
       ctx.fillStyle = PALETTE.textDim;
       const footerLeft = activeEvent
-        ? `ACTIVE #${clampedActiveIndex + 1}/${events.length} · ${activeEvent.taskId} · ${activeEvent.pathNodes.join(' → ')}`
+        ? `ACTIVE #${clampedActiveIndex + 1}/${events.length} · ${activeEvent.taskId} · ${activeEvent.pathNodes
+            .map((nodeId) => (isKnownNodeId(nodeId) ? NODE_META[nodeId].title : nodeId))
+            .join(' → ')}`
         : 'WAITING FOR REAL TRACE TELEMETRY';
-      ctx.fillText(truncateText(ctx, footerLeft, layout.width - 28), 14, layout.height - 13);
+      ctx.fillText(truncateText(ctx, footerLeft, layout.width - 28), 14, layout.height - 12);
 
       // Hover tooltip
       if (currentHover) {
@@ -1544,7 +1541,7 @@ export function HopeFilamentCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full min-h-[420px] bg-[#090b0f] select-none overflow-hidden"
+      className="relative w-full h-full min-h-[360px] lg:min-h-0 bg-[#090b0f] select-none overflow-hidden"
     >
       <canvas
         ref={canvasRef}

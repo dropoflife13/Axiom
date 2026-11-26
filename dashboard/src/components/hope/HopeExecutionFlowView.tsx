@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
-  Filter,
   GitCommitHorizontal,
   Lock,
   Pause,
@@ -17,7 +16,6 @@ import {
   RefreshCw,
   Search,
   ShieldAlert,
-  ShieldCheck,
   Terminal,
   X,
   XCircle,
@@ -90,14 +88,14 @@ const FILTER_OPTIONS: ReadonlyArray<{
 ];
 
 const NODE_SHORT_LABELS: Record<FlowNodeId, string> = {
-  TASK_IN: 'TASK IN',
-  FAST_CLOCK: 'FAST CLOCK',
-  ORACLE_VERIFIER: 'ORACLE',
-  VERIFIED_OUTPUT: 'VERIFIED',
-  QUARANTINE_VAULT: 'QUARANTINE',
-  SLOW_CLOCK_GATE: 'SLOW GATE',
-  GATE_APPROVED: 'APPROVED',
-  GATE_REJECTED: 'REJECTED',
+  TASK_IN: 'Task',
+  FAST_CLOCK: 'Fast Clock',
+  ORACLE_VERIFIER: 'Verifier',
+  VERIFIED_OUTPUT: 'Passed',
+  QUARANTINE_VAULT: 'Quarantine',
+  SLOW_CLOCK_GATE: 'Gate',
+  GATE_APPROVED: 'Approved',
+  GATE_REJECTED: 'Blocked',
 };
 
 function outcomeColorText(outcome: FlowOutcome): string {
@@ -630,74 +628,14 @@ export function HopeExecutionFlowView({
         ref={mainStageRef}
         className="flex flex-col divide-y divide-zinc-800/80 scroll-mt-2"
       >
-        {/* Merged Single-Row Vault Baseline, Snapshot SHA, Domain Stream Filter & Verdict Anchor */}
-        <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10px]">
-          <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] uppercase tracking-wider text-zinc-300">
-              <ShieldCheck className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
-              <span>EXECUTION DAG</span>
-              <span className="hidden xl:inline">TRACE</span>
-            </span>
-
-            {vaultSummary ? (
-              <>
-                <span className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                  <Lock className="h-2.5 w-2.5 text-[#10b981]" aria-hidden="true" />
-                  <span>
-                    <span className="hidden xl:inline">VAULT: </span>
-                    <span className="text-zinc-200">
-                      {vaultSummary.source === 'live-artifacts'
-                        ? 'LIVE ARTIFACTS'
-                        : 'STATIC SNAPSHOT'}
-                    </span>
-                  </span>
-                </span>
-                <span
-                  className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400"
-                  title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
-                >
-                  <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
-                  <span className="hidden sm:inline">SHA</span>
-                  <span className="text-zinc-200">
-                    {shortSha(vaultSummary.initialSha, 6, 4)}
-                  </span>
-                  <span className="text-zinc-600">→</span>
-                  <span className="text-[#10b981]">
-                    {shortSha(vaultSummary.finalSha, 6, 4)}
-                  </span>
-                </span>
-                <span className="hidden 2xl:inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-400">
-                  <span>
-                    BASE LOCK ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
-                    {vaultSummary.tsApiRetentionPct.toFixed(0)}%
-                  </span>
-                  <span className="text-zinc-700">|</span>
-                  <span className="text-[#10b981]">{vaultSummary.approved} PROMOTED</span>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-[#f59e0b]">{vaultSummary.rejected} BLOCKED</span>
-                  <span className="text-zinc-600">·</span>
-                  <span className="text-zinc-300">
-                    {vaultSummary.regressions} REGRESSIONS
-                  </span>
-                </span>
-              </>
-            ) : (
-              <span className="rounded-[2px] border border-zinc-800 bg-[#090b0f] px-2 py-0.5 text-[10px] text-zinc-500">
-                {hopeError ? 'VAULT BASELINE UNAVAILABLE' : 'LOADING VAULT...'}
-              </span>
-            )}
-          </div>
-
+        {/* Bar 2: Unified Domain Filter + Live Summary Strip */}
+        <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10.5px]">
           <div className="flex flex-wrap items-center gap-1.5 min-w-0">
             <div
               role="group"
               aria-label="Filter trace stream by domain"
               className="inline-flex flex-wrap items-center gap-1"
             >
-              <span className="hidden xl:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider text-zinc-500 mr-0.5">
-                <Filter className="h-3 w-3" aria-hidden="true" />
-                STREAM
-              </span>
               {FILTER_OPTIONS.map((opt) => {
                 const isActive = cartridgeFilter === opt.value;
                 const count = filterCounts[opt.value];
@@ -712,15 +650,15 @@ export function HopeExecutionFlowView({
                       setCartridgeFilter(opt.value);
                     }}
                     aria-pressed={isActive}
-                    className={`inline-flex items-center gap-1 rounded-[2px] border px-2 py-0.5 text-[10px] transition-colors cursor-pointer ${
+                    className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 text-[10.5px] transition-colors cursor-pointer ${
                       isActive
-                        ? 'border-zinc-600 bg-zinc-900 text-zinc-50'
+                        ? 'border-zinc-600 bg-zinc-900 text-zinc-50 font-medium'
                         : 'border-zinc-800/80 bg-[#090b0f] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200'
                     }`}
                   >
                     <span>{opt.label}</span>
                     <span
-                      className={`text-[9.5px] ${
+                      className={`text-[10px] ${
                         isActive ? 'text-[#10b981]' : 'text-zinc-500'
                       }`}
                     >
@@ -735,17 +673,65 @@ export function HopeExecutionFlowView({
               <button
                 type="button"
                 onClick={() => handleSelectNode(null)}
-                className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1 rounded-[2px] border border-[#f59e0b]/50 bg-[#f59e0b]/10 px-2 py-0.5 text-[10px] text-[#f59e0b] hover:bg-[#f59e0b]/20 transition-colors cursor-pointer"
               >
-                <span>NODE: {selectedNode}</span>
+                <span>Filtered: {NODE_SHORT_LABELS[selectedNode]}</span>
                 <X className="h-3 w-3" aria-hidden="true" />
               </button>
             )}
+          </div>
 
-            <span className="text-zinc-500 whitespace-nowrap">
-              {visibleEvents.length}/{allEvents.length}
-              <span className="hidden xl:inline"> EVENTS</span>
-            </span>
+          <div className="flex flex-wrap items-center gap-2.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10.5px]">
+              <span className="inline-flex items-center gap-1 text-zinc-400">
+                <span>Passed</span>
+                <span className="font-semibold text-[#10b981]">
+                  {telemetryCounters.passed}
+                </span>
+              </span>
+              <span className="text-zinc-700" aria-hidden="true">
+                ·
+              </span>
+              <span className="inline-flex items-center gap-1 text-zinc-400">
+                <span>Quarantined</span>
+                <span className="font-semibold text-[#f59e0b]">
+                  {telemetryCounters.quarantined}
+                </span>
+              </span>
+              <span className="text-zinc-700" aria-hidden="true">
+                ·
+              </span>
+              <span className="inline-flex items-center gap-1 text-zinc-400">
+                <span>Failed</span>
+                <span className="font-semibold text-[#ef4444]">
+                  {telemetryCounters.failed}
+                </span>
+              </span>
+              <span className="text-zinc-700" aria-hidden="true">
+                ·
+              </span>
+              <span
+                title={`-${telemetryCounters.savedTokens.toLocaleString()} tokens · ${
+                  telemetryCounters.lexicalRetentionPct % 1 === 0
+                    ? telemetryCounters.lexicalRetentionPct.toFixed(0)
+                    : telemetryCounters.lexicalRetentionPct.toFixed(1)
+                }% keywords kept`}
+                className="inline-flex items-center gap-1 text-zinc-400 cursor-help"
+              >
+                <span>Tokens</span>
+                <span className="font-semibold text-[#10b981]">
+                  {telemetryCounters.savedTokens > 0
+                    ? `-${telemetryCounters.weightedReductionPct.toFixed(1)}%`
+                    : '0.0%'}
+                </span>
+              </span>
+            </div>
+
+            {liveError && (
+              <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[10px] text-[#ef4444]">
+                {liveError}
+              </span>
+            )}
 
             <button
               type="button"
@@ -756,18 +742,6 @@ export function HopeExecutionFlowView({
               <ArrowDown className="h-2.5 w-2.5" aria-hidden="true" />
             </button>
 
-            {liveError && (
-              <span className="rounded-[2px] border border-[#ef4444]/40 bg-[#ef4444]/10 px-1.5 py-0.5 text-[#ef4444]">
-                {liveError}
-              </span>
-            )}
-
-            {!isControlledData && liveData?.polledAt && (
-              <span className="hidden xl:inline text-zinc-500 whitespace-nowrap">
-                POLLED {formatEventTime(liveData.polledAt)}
-              </span>
-            )}
-
             {!isControlledData && (
               <button
                 type="button"
@@ -777,23 +751,23 @@ export function HopeExecutionFlowView({
                 <RefreshCw
                   className={`h-2.5 w-2.5 ${isFetching ? 'animate-spin text-zinc-200' : ''}`}
                 />
-                <span>SYNC</span>
+                <span>Sync</span>
               </button>
             )}
           </div>
         </div>
 
         {/* 2-Column Live Test Stage: Left Inspector | Main Focus Center-Right Filament Canvas */}
-        <div className="grid grid-cols-1 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:h-[calc(100vh-215px)] lg:min-h-[380px] lg:max-h-[620px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#090b0f]">
-          {/* LEFT PANEL: Live Payload / Rule Inspector */}
+        <div className="grid grid-cols-1 lg:grid-cols-[290px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)] lg:grid-rows-[minmax(0,1fr)] lg:h-[calc(100vh-212px)] lg:min-h-[420px] lg:max-h-[760px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800/80 bg-[#090b0f]">
+          {/* LEFT PANEL: Selected Test Details */}
           <aside
-            aria-label="Live Payload and Rule Inspector"
+            aria-label="Selected Test Details"
             className="min-h-0 lg:h-full max-h-[360px] lg:max-h-none flex flex-col overflow-hidden bg-[#090b0f] divide-y divide-zinc-800/80"
           >
           <div className="flex-shrink-0 bg-[#0d1016] px-3 py-1.5 flex items-center justify-between gap-2">
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
               <Terminal className="h-3 w-3 text-zinc-400" aria-hidden="true" />
-              PAYLOAD / RULE INSPECTOR
+              SELECTED TEST DETAILS
             </span>
             {activeEvent && (
               <span className="text-[10px] text-zinc-500">
@@ -817,7 +791,7 @@ export function HopeExecutionFlowView({
                     onClick={() => handleSelectNode(null)}
                     className="mt-1 rounded-[2px] border border-zinc-700 bg-[#0d1016] px-2.5 py-1 text-[10px] text-zinc-300 hover:border-zinc-500 cursor-pointer"
                   >
-                    Clear node filter ({selectedNode})
+                    Clear node filter ({NODE_SHORT_LABELS[selectedNode]})
                   </button>
                 )}
               </div>
@@ -868,10 +842,10 @@ export function HopeExecutionFlowView({
                 </div>
               </div>
 
-              {/* Prompt Token Delta Block */}
+              {/* Token Savings Block */}
               <div className="p-3.5 space-y-2">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                  <span>PROMPT TOKEN DELTA</span>
+                  <span>TOKEN SAVINGS</span>
                   <span className="text-[#10b981] font-semibold">
                     -{activeEvent.promptDelta.reductionPct.toFixed(1)}%
                   </span>
@@ -914,7 +888,7 @@ export function HopeExecutionFlowView({
 
                   <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-400">
                     <span>
-                      LEXICAL LOCK:{' '}
+                      KEYWORDS KEPT:{' '}
                       <span className="text-[#10b981]">
                         {activeEvent.promptDelta.lexicalLockPct.toFixed(1)}%
                       </span>
@@ -931,10 +905,10 @@ export function HopeExecutionFlowView({
                 </div>
               </div>
 
-              {/* Retrieved Top-K=4 Rule IDs */}
+              {/* Rules Loaded (Top 4) */}
               <div className="p-3.5 space-y-2">
                 <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                  <span>RETRIEVED TOP-K=4 RULES</span>
+                  <span>RULES LOADED (TOP 4)</span>
                   <span className="text-zinc-500">
                     {activeEvent.retrievedRuleIds.length}
                   </span>
@@ -952,12 +926,12 @@ export function HopeExecutionFlowView({
                   </div>
                 ) : (
                   <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-1.5 text-[10px] text-zinc-500">
-                    No Top-K rule bundle (direct loopback probe)
+                    No Top-4 rule bundle (direct loopback probe)
                   </div>
                 )}
               </div>
 
-              {/* Bound-Fact Checklist OR Red-Team Probe Route Details */}
+              {/* Required Checks OR Red-Team Probe Route Details */}
               {activeEvent.kind === 'redteam_probe' && activeEvent.redTeam ? (
                 <div className="p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
@@ -1030,7 +1004,7 @@ export function HopeExecutionFlowView({
               ) : (
                 <div className="p-3.5 space-y-2.5">
                   <div className="flex items-center justify-between text-[10px] uppercase tracking-wider text-zinc-400">
-                    <span>BOUND-FACT CHECKLIST</span>
+                    <span>REQUIRED CHECKS</span>
                     <span
                       className={
                         activeEvent.failedFacts.length === 0
@@ -1113,10 +1087,10 @@ export function HopeExecutionFlowView({
                 </div>
               )}
 
-              {/* Slow Clock Gate Audit Readout */}
+              {/* Safety Gate Checks Readout */}
               <div className="p-3.5 space-y-2">
                 <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider">
-                  <span className="text-zinc-400">SLOW CLOCK GATE AUDIT</span>
+                  <span className="text-zinc-400">SAFETY GATE CHECKS</span>
                   <span
                     className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] font-semibold uppercase ${
                       activeEvent.slowClockGate.status === 'approved'
@@ -1136,8 +1110,7 @@ export function HopeExecutionFlowView({
 
                 {activeEvent.slowClockGate.status === 'none' ? (
                   <div className="rounded-[2px] border border-zinc-800/80 bg-[#0d1016] px-2.5 py-2 text-[10px] text-zinc-500">
-                    All bound facts passed Oracle verification — no quarantine candidate
-                    triggered.
+                    All required checks passed verification — no safety gate review needed.
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -1151,7 +1124,7 @@ export function HopeExecutionFlowView({
                           </span>
                         </span>
                         <span>
-                          FACT:{' '}
+                          CHECK:{' '}
                           <span className="text-zinc-200">
                             {activeEvent.slowClockGate.factId ?? '—'}
                           </span>
@@ -1161,7 +1134,7 @@ export function HopeExecutionFlowView({
 
                     <div className="grid grid-cols-1 gap-1">
                       <GateCheckPill
-                        label="G1 Lexical Lock"
+                        label="G1 Keyword Lock"
                         passed={activeEvent.slowClockGate.g1LexicalPassed}
                       />
                       <GateCheckPill
@@ -1220,123 +1193,57 @@ export function HopeExecutionFlowView({
           </div>
         </aside>
 
-          {/* CENTER-RIGHT MAIN FOCUS PANEL: Live Counters + Path + Animated Bezier Filament Flow */}
+          {/* CENTER-RIGHT MAIN FOCUS PANEL: Slim Active Item Bar + Animated Bezier Filament Flow */}
           <div className="min-h-0 lg:h-full flex flex-col overflow-hidden bg-[#090b0f] min-w-0">
-            {/* Compact Inline Live Counters + Active Path Breadcrumb Strip */}
-            <div className="flex-shrink-0 border-b border-zinc-800/80 bg-[#0d1016] divide-y divide-zinc-800/70">
-              <div className="px-3 py-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-[10px]">
-                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                      Passed
-                    </span>
-                    <span className="font-semibold text-[#10b981]">
-                      {telemetryCounters.passed}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                      Failed
-                    </span>
-                    <span className="font-semibold text-[#ef4444]">
-                      {telemetryCounters.failed}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                      Quarantined
-                    </span>
-                    <span className="font-semibold text-[#f59e0b]">
-                      {telemetryCounters.quarantined}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                      Token Δ
-                    </span>
-                    <span className="font-semibold text-[#10b981]">
-                      {telemetryCounters.savedTokens > 0
-                        ? `-${telemetryCounters.savedTokens.toLocaleString()} (-${telemetryCounters.weightedReductionPct.toFixed(1)}%)`
-                        : '0 (0.0%)'}
-                    </span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] uppercase tracking-wider text-zinc-500">
-                      Lock %
-                    </span>
-                    <span className="font-semibold text-zinc-100">
-                      {telemetryCounters.lexicalRetentionPct.toFixed(1)}%
-                    </span>
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-2 text-zinc-400">
-                  {activeEvent && (
-                    <span className="hidden sm:inline text-zinc-400">
-                      #{clampedIndex + 1} · {activeEvent.shortName}
-                    </span>
-                  )}
-                  <span className="text-zinc-500">
-                    {visibleEvents.length} SHOWN
-                  </span>
-                </div>
-              </div>
-
-              {/* Slim PATH: Breadcrumb & Node Filter Clear Pill */}
-              <div className="bg-[#0b0e14] px-3 py-1 flex flex-wrap items-center justify-between gap-2 min-h-[28px]">
-                <div className="flex flex-wrap items-center gap-1 text-[10px] min-w-0">
-                  <span className="text-zinc-500 uppercase tracking-wider mr-1">
-                    PATH:
-                  </span>
-                  {activeEvent ? (
-                    activeEvent.pathNodes.map((nodeId, idx) => {
-                      const isTerminal = nodeId === activeEvent.terminalNode;
-                      const isNodeSelected = selectedNode === nodeId;
-                      return (
-                        <React.Fragment key={`${nodeId}-${idx}`}>
-                          {idx > 0 && <span className="text-zinc-600">→</span>}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleSelectNode(selectedNode === nodeId ? null : nodeId)
-                            }
-                            className={`rounded-[2px] border px-1.5 py-0.5 text-[9.5px] transition-colors cursor-pointer ${
-                              isNodeSelected
-                                ? 'border-[#f59e0b]/60 bg-[#f59e0b]/15 text-[#f59e0b]'
-                                : isTerminal
-                                  ? outcomeBadgeClasses(activeEvent.outcome)
-                                  : 'border-zinc-800 bg-[#090b0f] text-zinc-300 hover:border-zinc-600'
-                            }`}
-                          >
-                            {NODE_SHORT_LABELS[nodeId]}
-                          </button>
-                        </React.Fragment>
-                      );
-                    })
-                  ) : (
-                    <span className="text-zinc-600">Awaiting trace path...</span>
-                  )}
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0 text-[10px]">
-                  {selectedNode && (
-                    <button
-                      type="button"
-                      onClick={() => handleSelectNode(null)}
-                      className="inline-flex items-center gap-1 rounded-[2px] border border-zinc-700 bg-[#090b0f] px-2 py-0.5 text-zinc-200 hover:border-zinc-500 transition-colors cursor-pointer"
-                    >
-                      <span>Clear node: {NODE_SHORT_LABELS[selectedNode]}</span>
-                      <X className="h-3 w-3 text-zinc-400" aria-hidden="true" />
-                    </button>
-                  )}
-                  {activeEvent && (
+            {/* Slim 26px Active Item & Clickable Stage Pills Bar */}
+            <div className="flex-shrink-0 border-b border-zinc-800/80 bg-[#0b0e14] px-3 py-0.5 min-h-[26px] lg:h-[26px] flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-[10px] min-w-0 truncate">
+                {activeEvent ? (
+                  <>
                     <span
-                      className={`font-semibold ${outcomeColorText(activeEvent.outcome)}`}
+                      className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: outcomeTickColor(activeEvent.outcome) }}
+                      aria-hidden="true"
+                    />
+                    <span
+                      className={`font-semibold whitespace-nowrap ${outcomeColorText(activeEvent.outcome)}`}
                     >
                       {activeEvent.taskId}
                     </span>
-                  )}
-                </div>
+                    <span className="text-zinc-600">·</span>
+                    <span className="text-zinc-300 truncate">{activeEvent.shortName}</span>
+                  </>
+                ) : (
+                  <span className="text-zinc-600">Awaiting trace...</span>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-1 text-[9.5px] min-w-0">
+                {activeEvent &&
+                  activeEvent.pathNodes.map((nodeId, idx) => {
+                    const isTerminal = nodeId === activeEvent.terminalNode;
+                    const isNodeSelected = selectedNode === nodeId;
+                    return (
+                      <React.Fragment key={`${nodeId}-${idx}`}>
+                        {idx > 0 && <span className="text-zinc-600">→</span>}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleSelectNode(selectedNode === nodeId ? null : nodeId)
+                          }
+                          className={`rounded-[2px] border px-1.5 py-[1px] leading-tight transition-colors cursor-pointer ${
+                            isNodeSelected
+                              ? 'border-[#f59e0b]/60 bg-[#f59e0b]/15 text-[#f59e0b]'
+                              : isTerminal
+                                ? outcomeBadgeClasses(activeEvent.outcome)
+                                : 'border-zinc-800 bg-[#090b0f] text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                          }`}
+                        >
+                          {NODE_SHORT_LABELS[nodeId]}
+                        </button>
+                      </React.Fragment>
+                    );
+                  })}
               </div>
             </div>
 
@@ -1833,6 +1740,54 @@ export function HopeExecutionFlowView({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Subtle Vault & Snapshot SHA Audit Footer */}
+        <div className="bg-[#0d1016] border-t border-zinc-800/80 px-3.5 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[10px] text-zinc-500">
+          {vaultSummary ? (
+            <>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex items-center gap-1.5 text-zinc-400">
+                  <Lock className="h-3 w-3 text-[#10b981]" aria-hidden="true" />
+                  <span>
+                    {vaultSummary.source === 'live-artifacts'
+                      ? 'Live Artifacts'
+                      : 'Static Snapshot'}
+                  </span>
+                </span>
+                <span
+                  className="inline-flex items-center gap-1.5"
+                  title={`${vaultSummary.initialSha} -> ${vaultSummary.finalSha}`}
+                >
+                  <GitCommitHorizontal className="h-3 w-3 text-zinc-500" aria-hidden="true" />
+                  <span>Snapshot SHA</span>
+                  <span className="text-zinc-300">
+                    {shortSha(vaultSummary.initialSha, 6, 4)}
+                  </span>
+                  <span className="text-zinc-600">→</span>
+                  <span className="text-[#10b981]">
+                    {shortSha(vaultSummary.finalSha, 6, 4)}
+                  </span>
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span>
+                  Keywords Kept: ABAC {vaultSummary.abacRetentionPct.toFixed(0)}% · API{' '}
+                  {vaultSummary.tsApiRetentionPct.toFixed(0)}%
+                </span>
+                <span className="text-zinc-700">|</span>
+                <span className="text-[#10b981]">{vaultSummary.approved} promoted</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-[#f59e0b]">{vaultSummary.rejected} blocked</span>
+                <span className="text-zinc-600">·</span>
+                <span className="text-zinc-300">{vaultSummary.regressions} regressions</span>
+              </div>
+            </>
+          ) : (
+            <span>
+              {hopeError ? 'Snapshot audit metadata unavailable' : 'Loading snapshot audit metadata...'}
+            </span>
+          )}
         </div>
       </section>
     </div>

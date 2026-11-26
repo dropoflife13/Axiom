@@ -245,6 +245,7 @@ export function HopeLiveCompactRunMonitor({
 
   const isAnyRunning = (data?.totals.activeRuns ?? 0) > 0;
   const isFlowMode = viewMode === 'flow';
+  const controlBtnPad = isFlowMode ? 'px-2.5 py-1' : 'px-3 py-1.5';
 
   const headerControls = (
     <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
@@ -284,7 +285,7 @@ export function HopeLiveCompactRunMonitor({
               aria-selected={isSelected}
               tabIndex={isSelected ? 0 : -1}
               onClick={() => setViewMode(opt.value)}
-              className={`relative px-3 py-1.5 text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
+              className={`relative ${controlBtnPad} text-[11px] font-mono tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
                 isSelected
                   ? 'bg-zinc-900/90 text-zinc-50'
                   : 'text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/60'
@@ -302,7 +303,7 @@ export function HopeLiveCompactRunMonitor({
       <button
         type="button"
         onClick={() => setAutoPoll((p) => !p)}
-        className={`inline-flex items-center gap-1.5 rounded-[2px] border px-3 py-1.5 font-mono text-[11px] font-medium transition-colors cursor-pointer ${
+        className={`inline-flex items-center gap-1.5 rounded-[2px] border ${controlBtnPad} font-mono text-[11px] font-medium transition-colors cursor-pointer ${
           autoPoll
             ? 'border-emerald-700/60 bg-emerald-950/30 text-emerald-300 hover:bg-emerald-950/50'
             : 'border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-zinc-200'
@@ -314,7 +315,7 @@ export function HopeLiveCompactRunMonitor({
       <button
         type="button"
         onClick={() => void fetchLive()}
-        className="inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#08090c] px-3 py-1.5 font-mono text-[11px] text-zinc-200 hover:border-zinc-600 hover:bg-zinc-900 transition-colors cursor-pointer"
+        className={`inline-flex items-center gap-1.5 rounded-[2px] border border-zinc-800 bg-[#08090c] ${controlBtnPad} font-mono text-[11px] text-zinc-200 hover:border-zinc-600 hover:bg-zinc-900 transition-colors cursor-pointer`}
       >
         <RefreshCw className={`h-3 w-3 ${isFetching ? 'animate-spin text-sky-400' : ''}`} />
         <span>Refresh</span>
@@ -348,19 +349,19 @@ export function HopeLiveCompactRunMonitor({
                   isAnyRunning ? 'bg-sky-400 animate-ping' : 'bg-emerald-400'
                 }`}
               />
-              {isAnyRunning ? 'RUNNING' : 'LIVE BENCHMARK COMPLETE'}
+              {isAnyRunning ? 'LIVE RUN' : 'COMPLETE'}
             </span>
-            {data && (
-              <span className="text-[10px] text-zinc-500 tabular-nums whitespace-nowrap">
-                {new Date(data.polledAt).toLocaleTimeString()}
-              </span>
-            )}
             <h2
               id="hope-live-compact-heading"
               className="font-sans text-xs sm:text-sm font-semibold tracking-tight text-zinc-100 truncate"
             >
-              HOPE v4 Live Execution Trace
+              Execution Trace &amp; Safety Routing
             </h2>
+            {data && (
+              <span className="text-[10px] text-zinc-500 tabular-nums whitespace-nowrap">
+                Updated {new Date(data.polledAt).toLocaleTimeString()}
+              </span>
+            )}
           </div>
 
           {headerControls}
