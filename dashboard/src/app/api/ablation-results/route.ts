@@ -1,6 +1,7 @@
-import { NextResponse, type NextRequest } from 'next/server';
+import { servePublicSnapshotJson } from '@/lib/serve-static-snapshot';
 
-export async function GET(request: NextRequest) {
-  const url = new URL('/data/run-ablation-v2.json', request.url);
-  return NextResponse.redirect(url, 307);
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  return servePublicSnapshotJson('run-ablation-v2.json');
 }
