@@ -8,9 +8,22 @@ import {
   assertLoopbackTarget,
   safeLoopbackFetch,
 } from '../../src/v4/redteam/loopback-guard.js';
+import {
+  buildRedTeamFaultInjectionManifest,
+  isRedTeamFaultInjectionEnabled,
+} from '../../src/v4/redteam/fault-injection.js';
 
 export const LIVE_REDTEAM_TARGET = 'http://127.0.0.1:3000';
-export const REDTEAM_PROBE_IDS = ['RT-01', 'RT-02', 'RT-03', 'RT-04', 'RT-05', 'RT-06'] as const;
+export const REDTEAM_PROBE_IDS = [
+  'RT-01',
+  'RT-02',
+  'RT-03',
+  'RT-04',
+  'RT-05',
+  'RT-06',
+  'RT-07',
+  'RT-08',
+] as const;
 
 export type RedTeamProbeId = (typeof REDTEAM_PROBE_IDS)[number];
 export type LiveProbeStatus = 'pass' | 'fail';
@@ -62,7 +75,7 @@ function isProbeId(value: string): value is RedTeamProbeId {
 function extractProbeId(...values: unknown[]): RedTeamProbeId | null {
   for (const value of values) {
     if (typeof value !== 'string') continue;
-    const match = value.match(/\b(RT-0[1-6])\b/i);
+    const match = value.match(/\b(RT-0[1-8])\b/i);
     const normalized = match?.[1]?.toUpperCase() ?? '';
     if (isProbeId(normalized)) return normalized;
   }
@@ -186,6 +199,76 @@ function runVitestLiveProbes(rootDir: string): Promise<number> {
   });
 }
 
+function readJsonObject(filePath: string): Record<string, unknown> {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8')) as unknown;
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+interface ManifestIdentityEntry {
+  readonly factId?: unknown;
+  readonly id?: unknown;
+}
+
+function appendMissingManifestEntries(
+  entries: readonly ManifestIdentityEntry[],
+  additions: readonly ManifestIdentityEntry[]
+): readonly ManifestIdentityEntry[] {
+  const existingFactIds = new Set(
+    entries
+      .map((entry) => entry.factId ?? entry.id)
+      .filter((value): value is string => typeof value === 'string')
+  );
+  return [...entries, ...additions.filter((entry) => !existingFactIds.has(String(entry.factId ?? entry.id)))];
+}
+
+/**
+ * Adds only staged, read-only RT-07/RT-08 entries to existing local Red-Team
+ * telemetry. No canonical rule or domain file is ever written.
+ */
+export function registerFaultInjectionManifest(stateDir: string, stagedAt?: string): void {
+  const candidatesPath = path.join(stateDir, 'quarantine-candidates.json');
+  const threatsPath = path.join(stateDir, 'threat-matrix.json');
+  const candidatesDoc = readJsonObject(candidatesPath);
+  const threatsDoc = readJsonObject(threatsPath);
+  const candidates = Array.isArray(candidatesDoc.candidates)
+    ? candidatesDoc.candidates.filter(
+        (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object'
+      )
+    : null;
+  const threats = Array.isArray(threatsDoc.threats)
+    ? threatsDoc.threats.filter(
+        (entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === 'object'
+      )
+    : null;
+
+  if (!candidates || !threats) {
+    throw new Error(
+      'Fault injection requires existing .axiom-state/redteam-v1 candidate and threat manifests.'
+    );
+  }
+
+  const manifest = buildRedTeamFaultInjectionManifest(stagedAt);
+  const nextCandidates = appendMissingManifestEntries(candidates, manifest.candidates);
+  const nextThreats = appendMissingManifestEntries(threats, manifest.threats);
+
+  fs.writeFileSync(
+    candidatesPath,
+    `${JSON.stringify({ ...candidatesDoc, candidates: nextCandidates }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    threatsPath,
+    `${JSON.stringify({ ...threatsDoc, threats: nextThreats }, null, 2)}\n`,
+    'utf8'
+  );
+}
+
 /**
  * Executes generated probes only after a loopback-only preflight. Both this
  * preflight and the generated probes use safeLoopbackFetch(), which enforces
@@ -205,6 +288,9 @@ export async function runRedTeamLiveVerdicts(
   const reportPath = path.join(stateDir, 'probe-results.json');
   const summaryPath = path.join(stateDir, 'probe-results-summary.json');
   fs.mkdirSync(stateDir, { recursive: true });
+  if (isRedTeamFaultInjectionEnabled()) {
+    registerFaultInjectionManifest(stateDir);
+  }
   // Do not expose a stale verdict when this invocation cannot obtain new JSON.
   fs.rmSync(reportPath, { force: true });
   fs.rmSync(summaryPath, { force: true });

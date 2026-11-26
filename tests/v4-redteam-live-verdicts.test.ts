@@ -47,6 +47,19 @@ describe('Red-Team live verdict telemetry', () => {
             },
           ],
         },
+        {
+          name: 'tests/v4/redteam/generated/rt-07-canary.test.ts',
+          startTime: executionStart,
+          endTime: executionStart + 41,
+          assertionResults: [
+            { title: 'validates target is strictly loopback', status: 'passed', duration: 3 },
+            {
+              title: 'verifies defensive invariant against local server',
+              status: 'failed',
+              duration: 38,
+            },
+          ],
+        },
       ],
     });
 
@@ -65,6 +78,13 @@ describe('Red-Team live verdict telemetry', () => {
       durationMs: 45,
     });
     expect(summaries['RT-03']).toBeUndefined();
+    expect(summaries['RT-07']).toMatchObject({
+      probeId: 'RT-07',
+      status: 'fail',
+      passedAssertions: 1,
+      failedAssertions: 1,
+      durationMs: 41,
+    });
   });
 
   it('renders live probe verdicts as PASS, FAIL, or staged quarantine without changing gate state', () => {
