@@ -24,6 +24,13 @@ interface CubicCurve {
   readonly p1: Point;
 }
 
+interface EdgePath {
+  readonly start: Point;
+  readonly stemEnd?: Point;
+  readonly stemFraction: number;
+  readonly curve: CubicCurve;
+}
+
 interface NodeRect {
   readonly id: FlowNodeId;
   readonly cx: number;
@@ -398,12 +405,46 @@ function isKnownNodeId(nodeId: string): nodeId is FlowNodeId {
   return nodeId in NODE_META;
 }
 
+function wrapCubicEdge(curve: CubicCurve): EdgePath {
+  return {
+    start: curve.p0,
+    stemFraction: 0,
+    curve,
+  };
+}
+
+function buildChandelierDownwardEdge(
+  stemX: number,
+  stemStartY: number,
+  targetX: number,
+  targetY: number,
+  stemRatio: number,
+  stemFraction: number
+): EdgePath {
+  const totalDy = Math.max(8, targetY - stemStartY);
+  const forkY = stemStartY + totalDy * stemRatio;
+  const forkPt: Point = { x: stemX, y: forkY };
+  const fanDx = targetX - stemX;
+  const fanDy = Math.max(4, targetY - forkY);
+  return {
+    start: { x: stemX, y: stemStartY },
+    stemEnd: forkPt,
+    stemFraction,
+    curve: {
+      p0: forkPt,
+      cp1: { x: stemX + fanDx * 0.52, y: forkY + fanDy * 0.05 },
+      cp2: { x: targetX, y: forkY + fanDy * 0.42 },
+      p1: { x: targetX, y: targetY },
+    },
+  };
+}
+
 function buildEdgeCurve(
   layout: DagLayout,
   fromId: FlowNodeId,
   toId: FlowNodeId,
   laneNorm: number
-): CubicCurve {
+): EdgePath {
   const from = layout.nodes[fromId];
   const to = layout.nodes[toId];
 
@@ -419,12 +460,12 @@ function buildEdgeCurve(
     };
     const dx = p1.x - p0.x;
     const spreadY = laneNorm * clamp(layout.height * 0.045, 10, 20);
-    return {
+    return wrapCubicEdge({
       p0,
       cp1: { x: p0.x + dx * 0.48, y: p0.y + spreadY },
       cp2: { x: p1.x - dx * 0.48, y: p1.y + spreadY },
       p1,
-    };
+    });
   }
 
   // ORACLE_VERIFIER (upper-right) -> QUARANTINE_VAULT (left): climbs cleanly in open Col 2->3 corridor above APPROVED & SAFETY GATE
@@ -446,7 +487,7 @@ function buildEdgeCurve(
       layout.nodes.SLOW_CLOCK_GATE.top - clamp(layout.height * 0.035, 10, 20),
       layout.nodes.QUARANTINE_VAULT.bottom + 14
     );
-    return {
+    return wrapCubicEdge({
       p0,
       cp1: {
         x: Math.min(p0.x + colGap * 0.72, p0.x + dx * 0.36),
@@ -457,7 +498,7 @@ function buildEdgeCurve(
         y: p1.y + spreadY * 0.65,
       },
       p1,
-    };
+    });
   }
 
   // ORACLE_VERIFIER (lower-right) -> VERIFIED_OUTPUT / PASSED (left): sweeps below APPROVED & BLOCKED into bottom-right card
@@ -479,7 +520,7 @@ function buildEdgeCurve(
       layout.nodes.GATE_APPROVED.bottom + clamp(layout.height * 0.04, 12, 22),
       p1.y - clamp(layout.height * 0.025, 6, 14)
     );
-    return {
+    return wrapCubicEdge({
       p0,
       cp1: {
         x: Math.min(p0.x + colGap * 0.68, p0.x + dx * 0.34),
@@ -490,47 +531,32 @@ function buildEdgeCurve(
         y: p1.y + spreadY * 0.75,
       },
       p1,
-    };
+    });
   }
 
-  // Gate split: fan across ±(gate.w * 0.34) with crisp Bezier separation
+  // Gate split: exits straight down from center bottom pin, then forks & fans into APPROVED / BLOCKED
   if (fromId === 'SLOW_CLOCK_GATE' && (toId === 'GATE_APPROVED' || toId === 'GATE_REJECTED')) {
-    const portSpread = Math.min(18, from.w * 0.14);
-    const portBias = toId === 'GATE_APPROVED' ? -portSpread : portSpread;
-    const p0: Point = { x: from.cx + portBias + laneNorm * (to.w * 0.24), y: from.bottom };
-    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.34), y: to.top };
-    const dy = p1.y - p0.y;
-    return {
-      p0,
-      cp1: { x: p0.x + laneNorm * (to.w * 0.30), y: p0.y + dy * 0.48 },
-      cp2: { x: to.cx + laneNorm * (to.w * 0.38), y: p1.y - dy * 0.48 },
-      p1,
-    };
+    const spreadNorm =
+      laneNorm === 0 ? 0 : clamp((laneNorm - 0.32) / 0.68, -0.92, 0.92);
+    const branchBias = toId === 'GATE_APPROVED' ? -1.4 : 1.4;
+    const stemX = from.cx + branchBias + spreadNorm * 0.8;
+    const targetX = to.cx + spreadNorm * (to.w * 0.36);
+    return buildChandelierDownwardEdge(stemX, from.bottom, targetX, to.top, 0.28, 0.24);
   }
 
-  // QUARANTINE_VAULT -> SLOW_CLOCK_GATE: separate Quarantine & Fail strands
+  // QUARANTINE_VAULT -> SLOW_CLOCK_GATE: straight vertical stem from center pin, then symmetric fan
   if (fromId === 'QUARANTINE_VAULT' && toId === 'SLOW_CLOCK_GATE') {
-    const p0: Point = { x: from.cx + laneNorm * (from.w * 0.38), y: from.bottom };
-    const p1: Point = { x: to.cx + laneNorm * (to.w * 0.38), y: to.top };
-    const dy = p1.y - p0.y;
-    return {
-      p0,
-      cp1: { x: from.cx + laneNorm * (from.w * 0.44), y: p0.y + dy * 0.42 },
-      cp2: { x: to.cx + laneNorm * (to.w * 0.44), y: p1.y - dy * 0.42 },
-      p1,
-    };
+    const quarSpreadNorm =
+      laneNorm === 0 ? 0 : clamp((laneNorm - 0.32) / 0.68, -0.95, 0.95);
+    const stemX = from.cx + quarSpreadNorm * 2.0;
+    const targetX = to.cx + quarSpreadNorm * (to.w * 0.41);
+    return buildChandelierDownwardEdge(stemX, from.bottom, targetX, to.top, 0.32, 0.26);
   }
 
-  // Column 2 vertical spine conduit (FAST_CLOCK -> ORACLE_VERIFIER)
-  const p0: Point = { x: from.cx + laneNorm * (from.w * 0.42), y: from.bottom };
-  const p1: Point = { x: to.cx + laneNorm * (to.w * 0.42), y: to.top };
-  const dy = p1.y - p0.y;
-  return {
-    p0,
-    cp1: { x: from.cx + laneNorm * (from.w * 0.48), y: p0.y + dy * 0.42 },
-    cp2: { x: to.cx + laneNorm * (to.w * 0.48), y: p1.y - dy * 0.42 },
-    p1,
-  };
+  // Column 2 vertical conduit (FAST_CLOCK -> ORACLE_VERIFIER): straight trunk then chandelier fan out
+  const stemX = from.cx + laneNorm * 2.2;
+  const targetX = to.cx + laneNorm * (to.w * 0.43);
+  return buildChandelierDownwardEdge(stemX, from.bottom, targetX, to.top, 0.34, 0.28);
 }
 
 function evalCubic(curve: CubicCurve, t: number): Point {
@@ -562,6 +588,50 @@ function evalCubicTangent(curve: CubicCurve, t: number): Point {
       b * (curve.cp2.y - curve.cp1.y) +
       c * (curve.p1.y - curve.cp2.y),
   };
+}
+
+function evalEdge(edge: EdgePath, t: number): Point {
+  if (edge.stemEnd && edge.stemFraction > 0) {
+    if (t <= edge.stemFraction) {
+      const local = clamp(t / edge.stemFraction, 0, 1);
+      return {
+        x: edge.start.x + (edge.stemEnd.x - edge.start.x) * local,
+        y: edge.start.y + (edge.stemEnd.y - edge.start.y) * local,
+      };
+    }
+    const curveT = clamp((t - edge.stemFraction) / (1 - edge.stemFraction), 0, 1);
+    return evalCubic(edge.curve, curveT);
+  }
+  return evalCubic(edge.curve, t);
+}
+
+function evalEdgeTangent(edge: EdgePath, t: number): Point {
+  if (edge.stemEnd && edge.stemFraction > 0) {
+    if (t <= edge.stemFraction) {
+      return {
+        x: edge.stemEnd.x - edge.start.x,
+        y: edge.stemEnd.y - edge.start.y,
+      };
+    }
+    const curveT = clamp((t - edge.stemFraction) / (1 - edge.stemFraction), 0, 1);
+    return evalCubicTangent(edge.curve, curveT);
+  }
+  return evalCubicTangent(edge.curve, t);
+}
+
+function traceEdgeSubpath(ctx: CanvasRenderingContext2D, edge: EdgePath): void {
+  ctx.moveTo(edge.start.x, edge.start.y);
+  if (edge.stemEnd) {
+    ctx.lineTo(edge.stemEnd.x, edge.stemEnd.y);
+  }
+  ctx.bezierCurveTo(
+    edge.curve.cp1.x,
+    edge.curve.cp1.y,
+    edge.curve.cp2.x,
+    edge.curve.cp2.y,
+    edge.curve.p1.x,
+    edge.curve.p1.y
+  );
 }
 
 function distToSegmentSq(
@@ -658,7 +728,7 @@ function segmentSemanticColor(
 
 function strokeActiveSegment(
   ctx: CanvasRenderingContext2D,
-  curve: CubicCurve,
+  edge: EdgePath,
   fromId: FlowNodeId,
   toId: FlowNodeId,
   event: FlowTraceEvent,
@@ -666,18 +736,15 @@ function strokeActiveSegment(
   alpha: number
 ): void {
   ctx.beginPath();
-  ctx.moveTo(curve.p0.x, curve.p0.y);
-  ctx.bezierCurveTo(
-    curve.cp1.x,
-    curve.cp1.y,
-    curve.cp2.x,
-    curve.cp2.y,
-    curve.p1.x,
-    curve.p1.y
-  );
+  traceEdgeSubpath(ctx, edge);
 
   if (fromId === 'ORACLE_VERIFIER' && toId === 'QUARANTINE_VAULT') {
-    const grad = ctx.createLinearGradient(curve.p0.x, curve.p0.y, curve.p1.x, curve.p1.y);
+    const grad = ctx.createLinearGradient(
+      edge.start.x,
+      edge.start.y,
+      edge.curve.p1.x,
+      edge.curve.p1.y
+    );
     grad.addColorStop(
       0,
       hexToRgba(event.kind === 'redteam_probe' ? PALETTE.probe : PALETTE.fail, alpha)
@@ -766,17 +833,9 @@ function drawStaticLayer(
   ctx.lineWidth = 1;
   ctx.strokeStyle = PALETTE.rail;
   for (const [fromId, toId] of STRUCTURAL_EDGES) {
-    const curve = buildEdgeCurve(layout, fromId, toId, 0);
+    const edge = buildEdgeCurve(layout, fromId, toId, 0);
     ctx.beginPath();
-    ctx.moveTo(curve.p0.x, curve.p0.y);
-    ctx.bezierCurveTo(
-      curve.cp1.x,
-      curve.cp1.y,
-      curve.cp2.x,
-      curve.cp2.y,
-      curve.p1.x,
-      curve.p1.y
-    );
+    traceEdgeSubpath(ctx, edge);
     ctx.stroke();
   }
   ctx.restore();
@@ -786,25 +845,25 @@ function drawStaticLayer(
   ctx.textBaseline = 'middle';
 
   const passCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'VERIFIED_OUTPUT', 0);
-  const passMid = evalCubic(passCurve, 0.34);
+  const passMid = evalEdge(passCurve, 0.34);
   ctx.textAlign = 'center';
   ctx.fillStyle = hexToRgba(PALETTE.pass, 0.72);
   ctx.fillText('PASS', passMid.x, passMid.y + 14);
 
   const stageCurve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const stageMid = evalCubic(stageCurve, 0.48);
+  const stageMid = evalEdge(stageCurve, 0.48);
   ctx.textAlign = 'right';
   ctx.fillStyle = hexToRgba(PALETTE.fail, 0.72);
   ctx.fillText('STAGE', stageMid.x - 10, stageMid.y - 10);
 
   const appCurve = buildEdgeCurve(layout, 'SLOW_CLOCK_GATE', 'GATE_APPROVED', 0);
-  const appMid = evalCubic(appCurve, 0.52);
+  const appMid = evalEdge(appCurve, 0.6);
   ctx.textAlign = 'right';
   ctx.fillStyle = hexToRgba(PALETTE.pass, 0.7);
   ctx.fillText('PROMOTE', appMid.x - 10, appMid.y);
 
   const rejCurve = buildEdgeCurve(layout, 'SLOW_CLOCK_GATE', 'GATE_REJECTED', 0);
-  const rejMid = evalCubic(rejCurve, 0.52);
+  const rejMid = evalEdge(rejCurve, 0.6);
   ctx.textAlign = 'left';
   ctx.fillStyle = hexToRgba(PALETTE.fail, 0.7);
   ctx.fillText('BLOCK', rejMid.x + 10, rejMid.y);
@@ -829,16 +888,8 @@ function drawStaticLayer(
         const fromId = ev.pathNodes[s];
         const toId = ev.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-        const curve = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
-        ctx.moveTo(curve.p0.x, curve.p0.y);
-        ctx.bezierCurveTo(
-          curve.cp1.x,
-          curve.cp1.y,
-          curve.cp2.x,
-          curve.cp2.y,
-          curve.p1.x,
-          curve.p1.y
-        );
+        const edge = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
+        traceEdgeSubpath(ctx, edge);
       }
       ctx.stroke();
     }
@@ -854,16 +905,8 @@ function drawStaticLayer(
         const fromId = activeEv.pathNodes[s];
         const toId = activeEv.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-        const curve = buildEdgeCurve(layout, fromId, toId, laneNorm);
-        ctx.moveTo(curve.p0.x, curve.p0.y);
-        ctx.bezierCurveTo(
-          curve.cp1.x,
-          curve.cp1.y,
-          curve.cp2.x,
-          curve.cp2.y,
-          curve.p1.x,
-          curve.p1.y
-        );
+        const edge = buildEdgeCurve(layout, fromId, toId, laneNorm);
+        traceEdgeSubpath(ctx, edge);
       }
       ctx.stroke();
     }
@@ -896,7 +939,7 @@ function drawActiveFailureBadge(
   if (!badgeText) return;
 
   const curve = buildEdgeCurve(layout, 'ORACLE_VERIFIER', 'QUARANTINE_VAULT', 0);
-  const mid = evalCubic(curve, 0.44);
+  const mid = evalEdge(curve, 0.44);
 
   ctx.font = `600 9.5px ${FONT_MONO}`;
   const textW = ctx.measureText(badgeText).width;
@@ -1805,9 +1848,9 @@ function drawPulses(
       const fromId = pulse.pathNodes[segIdx];
       const toId = pulse.pathNodes[segIdx + 1];
       if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-      const curve = buildEdgeCurve(layout, fromId, toId, pulse.laneNorm);
+      const edge = buildEdgeCurve(layout, fromId, toId, pulse.laneNorm);
       tailPoints.push({
-        pt: evalCubic(curve, localT),
+        pt: evalEdge(edge, localT),
         segIdx,
         frac: i / steps,
       });
@@ -1856,9 +1899,9 @@ function drawPulses(
     const headTo = pulse.pathNodes[headSegIdx + 1];
     if (!isKnownNodeId(headFrom) || !isKnownNodeId(headTo)) continue;
 
-    const headCurve = buildEdgeCurve(layout, headFrom, headTo, pulse.laneNorm);
-    const headPt = evalCubic(headCurve, headLocalT);
-    const tang = evalCubicTangent(headCurve, headLocalT);
+    const headEdge = buildEdgeCurve(layout, headFrom, headTo, pulse.laneNorm);
+    const headPt = evalEdge(headEdge, headLocalT);
+    const tang = evalEdgeTangent(headEdge, headLocalT);
     const angle = Math.atan2(tang.y, tang.x);
 
     ctx.save();
@@ -2031,10 +2074,10 @@ export function HopeFilamentCanvas({
         const fromId = ev.pathNodes[s];
         const toId = ev.pathNodes[s + 1];
         if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-        const curve = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
-        const segSteps = 12;
+        const edge = buildEdgeCurve(layout, fromId, toId, rep.laneNorm);
+        const segSteps = 14;
         for (let k = s === 0 ? 0 : 1; k <= segSteps; k += 1) {
-          pts.push(evalCubic(curve, k / segSteps));
+          pts.push(evalEdge(edge, k / segSteps));
         }
       }
       list.push({ eventIndex: rep.eventIndex, points: pts });
@@ -2177,17 +2220,9 @@ export function HopeFilamentCanvas({
             const fromId = hoveredEv.pathNodes[s];
             const toId = hoveredEv.pathNodes[s + 1];
             if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-            const curve = buildEdgeCurve(layout, fromId, toId, laneNorm);
+            const edge = buildEdgeCurve(layout, fromId, toId, laneNorm);
             ctx.beginPath();
-            ctx.moveTo(curve.p0.x, curve.p0.y);
-            ctx.bezierCurveTo(
-              curve.cp1.x,
-              curve.cp1.y,
-              curve.cp2.x,
-              curve.cp2.y,
-              curve.p1.x,
-              curve.p1.y
-            );
+            traceEdgeSubpath(ctx, edge);
             ctx.strokeStyle = hexToRgba(PALETTE.textPrimary, 0.72);
             ctx.lineWidth = 1.9;
             ctx.stroke();
@@ -2203,9 +2238,9 @@ export function HopeFilamentCanvas({
           const fromId = activeEvent.pathNodes[s];
           const toId = activeEvent.pathNodes[s + 1];
           if (!isKnownNodeId(fromId) || !isKnownNodeId(toId)) continue;
-          const curve = buildEdgeCurve(layout, fromId, toId, activeLaneNorm);
-          strokeActiveSegment(ctx, curve, fromId, toId, activeEvent, 3.4, 0.16);
-          strokeActiveSegment(ctx, curve, fromId, toId, activeEvent, 1.85, 0.94);
+          const edge = buildEdgeCurve(layout, fromId, toId, activeLaneNorm);
+          strokeActiveSegment(ctx, edge, fromId, toId, activeEvent, 3.4, 0.16);
+          strokeActiveSegment(ctx, edge, fromId, toId, activeEvent, 1.85, 0.94);
         }
         drawActiveFailureBadge(ctx, layout, activeEvent);
       }
