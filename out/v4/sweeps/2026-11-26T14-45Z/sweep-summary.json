@@ -1,0 +1,813 @@
+{
+  "schemaVersion": "4.0.0-hope-sweep-summary",
+  "sweepTimestamp": "2026-11-26T14-45Z",
+  "generatedAt": "2026-11-28T04:36:31.374Z",
+  "priorBaselineRef": "out/v4/compact-benchmark-summary.json",
+  "priorOverallCompactFullTaskPassRate": 0.7333333333333334,
+  "rows": [
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "gemini-3.1-flash-lite",
+      "provider": "Google AI Studio",
+      "taskCount": 18,
+      "fullTaskPassCount": 15,
+      "fullTaskPassRate": 0.8333333333333334,
+      "meanFactPassRate": 0.9657407407407407,
+      "lexicalPreserved": 493,
+      "lexicalRequired": 493,
+      "lexicalLockPct": 100,
+      "beforeTokens": 3594,
+      "afterTokens": 3488,
+      "savedTokens": 106,
+      "reductionPct": 2.95,
+      "p50LatencyMs": 1663,
+      "p95LatencyMs": 41525,
+      "priorCompactTaskRate": 0.8333333333333334,
+      "deltaVsPriorRowPp": 0,
+      "deltaVsPriorOverallPp": 10,
+      "auditsTotal": 6,
+      "approvedCount": 2,
+      "rejectedCount": 4,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "1150d533c5e049222f412d177103d0e5a11393ccbb9d9c6ffb88e48e8526b032"
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "taskCount": 18,
+      "fullTaskPassCount": 13,
+      "fullTaskPassRate": 0.7222222222222222,
+      "meanFactPassRate": 0.9541666666666667,
+      "lexicalPreserved": 1730,
+      "lexicalRequired": 1730,
+      "lexicalLockPct": 100,
+      "beforeTokens": 12310,
+      "afterTokens": 11900,
+      "savedTokens": 410,
+      "reductionPct": 3.33,
+      "p50LatencyMs": 42949,
+      "p95LatencyMs": 75817,
+      "priorCompactTaskRate": 0.7222222222222222,
+      "deltaVsPriorRowPp": 0,
+      "deltaVsPriorOverallPp": -1.11,
+      "auditsTotal": 6,
+      "approvedCount": 2,
+      "rejectedCount": 4,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "0836fa58ce29c355a94c1a708064925233d967641f96b877c5d745cfc4e80ef0"
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "cartridgeLabel": "Policy-as-Code ABAC",
+      "modelId": "qwen/qwen3.8-27b",
+      "provider": "Groq",
+      "taskCount": 18,
+      "fullTaskPassCount": 14,
+      "fullTaskPassRate": 0.7777777777777778,
+      "meanFactPassRate": 0.9425264550264552,
+      "lexicalPreserved": 1889,
+      "lexicalRequired": 1889,
+      "lexicalLockPct": 100,
+      "beforeTokens": 13456,
+      "afterTokens": 13009,
+      "savedTokens": 447,
+      "reductionPct": 3.32,
+      "p50LatencyMs": 885,
+      "p95LatencyMs": 1185,
+      "priorCompactTaskRate": 0.7777777777777778,
+      "deltaVsPriorRowPp": 0,
+      "deltaVsPriorOverallPp": 4.44,
+      "auditsTotal": 5,
+      "approvedCount": 2,
+      "rejectedCount": 3,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "0836fa58ce29c355a94c1a708064925233d967641f96b877c5d745cfc4e80ef0"
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "gemini-3.1-flash-lite",
+      "provider": "Google AI Studio",
+      "taskCount": 15,
+      "fullTaskPassCount": 13,
+      "fullTaskPassRate": 0.8666666666666667,
+      "meanFactPassRate": 0.9866666666666667,
+      "lexicalPreserved": 1777,
+      "lexicalRequired": 1777,
+      "lexicalLockPct": 100,
+      "beforeTokens": 20231,
+      "afterTokens": 19367,
+      "savedTokens": 864,
+      "reductionPct": 4.27,
+      "p50LatencyMs": 2057,
+      "p95LatencyMs": 61251,
+      "priorCompactTaskRate": 0.8666666666666667,
+      "deltaVsPriorRowPp": 0,
+      "deltaVsPriorOverallPp": 13.33,
+      "auditsTotal": 10,
+      "approvedCount": 6,
+      "rejectedCount": 4,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "4da1cd48415565c58f209e92b03ac36e7c558c517eed8a8e87ab0ac329d866ee"
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "gemma-4-31b-it",
+      "provider": "Google AI Studio",
+      "taskCount": 15,
+      "fullTaskPassCount": 7,
+      "fullTaskPassRate": 0.4666666666666667,
+      "meanFactPassRate": 0.9444444444444445,
+      "lexicalPreserved": 688,
+      "lexicalRequired": 688,
+      "lexicalLockPct": 100,
+      "beforeTokens": 7509,
+      "afterTokens": 7176,
+      "savedTokens": 333,
+      "reductionPct": 4.43,
+      "p50LatencyMs": 50495,
+      "p95LatencyMs": 84301,
+      "priorCompactTaskRate": 0.5333333333333333,
+      "deltaVsPriorRowPp": -6.67,
+      "deltaVsPriorOverallPp": -26.67,
+      "auditsTotal": 9,
+      "approvedCount": 2,
+      "rejectedCount": 7,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "29df656edfee96d3e85b50dfa09f4d187fb4e436e1a74d39294452c7d1881eae"
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "cartridgeLabel": "TypeScript API Security",
+      "modelId": "qwen/qwen3.8-27b",
+      "provider": "Groq",
+      "taskCount": 15,
+      "fullTaskPassCount": 10,
+      "fullTaskPassRate": 0.6666666666666666,
+      "meanFactPassRate": 0.9166666666666666,
+      "lexicalPreserved": 747,
+      "lexicalRequired": 747,
+      "lexicalLockPct": 100,
+      "beforeTokens": 8124,
+      "afterTokens": 7723,
+      "savedTokens": 401,
+      "reductionPct": 4.94,
+      "p50LatencyMs": 1891,
+      "p95LatencyMs": 11312,
+      "priorCompactTaskRate": 0.6666666666666666,
+      "deltaVsPriorRowPp": 0,
+      "deltaVsPriorOverallPp": -6.67,
+      "auditsTotal": 12,
+      "approvedCount": 4,
+      "rejectedCount": 8,
+      "promotedCanaryRegressions": 0,
+      "finalSnapshotSha256": "05339287057ea4ab63afa1814acd6cdb2c4cdc7ef28d3f5b84b512f0d0f6f22d"
+    }
+  ],
+  "pooledByCartridge": {
+    "policy-abac-v4": {
+      "pairCount": 3,
+      "totalTasks": 54,
+      "fullTaskPassCount": 42,
+      "meanTaskPassRate": 0.7777777777777778,
+      "pooledWeightedTaskRate": 0.7777777777777778,
+      "meanFactPassRate": 0.9541446208112875,
+      "lexicalPreserved": 4112,
+      "lexicalRequired": 4112,
+      "lexicalLockPct": 100,
+      "beforeTokens": 29360,
+      "afterTokens": 28397,
+      "savedTokens": 963,
+      "reductionPct": 3.28,
+      "promotedCanaryRegressions": 0
+    },
+    "ts-api-security-v4": {
+      "pairCount": 3,
+      "totalTasks": 45,
+      "fullTaskPassCount": 30,
+      "meanTaskPassRate": 0.6666666666666666,
+      "pooledWeightedTaskRate": 0.6666666666666666,
+      "meanFactPassRate": 0.9492592592592594,
+      "lexicalPreserved": 3212,
+      "lexicalRequired": 3212,
+      "lexicalLockPct": 100,
+      "beforeTokens": 35864,
+      "afterTokens": 34266,
+      "savedTokens": 1598,
+      "reductionPct": 4.46,
+      "promotedCanaryRegressions": 0
+    }
+  },
+  "overallPooled": {
+    "pairCount": 6,
+    "totalTasks": 99,
+    "fullTaskPassCount": 72,
+    "meanTaskPassRate": 0.7222222222222223,
+    "pooledWeightedTaskRate": 0.7272727272727273,
+    "meanFactPassRate": 0.9517019400352734,
+    "lexicalPreserved": 7324,
+    "lexicalRequired": 7324,
+    "lexicalLockPct": 100,
+    "beforeTokens": 65224,
+    "afterTokens": 62663,
+    "savedTokens": 2561,
+    "reductionPct": 3.93,
+    "promotedCanaryRegressions": 0,
+    "deltaVsPriorOverallPp": -1.11
+  },
+  "candidateGovernance": [
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-STATIC-P-01",
+      "factId": "P-01",
+      "triggerFlag": "staticPrerequisitePrior",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-P-06-P-02",
+      "factId": "P-02",
+      "triggerFlag": "missingForbidSuspended",
+      "approvedModels": [
+        "gemma-4-31b-it",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-P-06-P-01",
+      "factId": "P-01",
+      "triggerFlag": "missingTenantIsolation",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-P-12-P-07",
+      "factId": "P-12",
+      "triggerFlag": "missingSessionFreshnessGuard",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-P-06-CONJUNCT",
+      "factId": "P-06",
+      "triggerFlag": "splitPermitDisjunction",
+      "approvedModels": [
+        "gemini-3.1-flash-lite"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "policy-abac-v4",
+      "candidateId": "Q-P-12-FRESH",
+      "factId": "P-12",
+      "triggerFlag": "missingSessionFreshnessGuard",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "gemma-4-31b-it",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": []
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-STATIC-TS-PREREQ",
+      "factId": "TS-01",
+      "triggerFlag": "staticPrerequisitePrior",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-10-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "missingErrorEnvelope",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-10-TS-05",
+      "factId": "TS-05",
+      "triggerFlag": "missingErrorEnvelope",
+      "approvedModels": [
+        "gemma-4-31b-it"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-11-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "displaced_TS-04",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-12-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "displaced_TS-04",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "gemini-3.1-flash-lite",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        },
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-REFINE-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "retrievedFailure_TS-04",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-REFINE-TS-12",
+      "factId": "TS-12",
+      "triggerFlag": "retrievedFailure_TS-12",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "gemma-4-31b-it"
+      ],
+      "rejectedModels": [
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-REFINE-TS-05",
+      "factId": "TS-05",
+      "triggerFlag": "retrievedFailure_TS-05",
+      "approvedModels": [
+        "gemini-3.1-flash-lite"
+      ],
+      "rejectedModels": [
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-ANCHOR-TS-10",
+      "factId": "TS-10",
+      "triggerFlag": "domainClusterFailure_payouts",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-ANCHOR-TS-11",
+      "factId": "TS-11",
+      "triggerFlag": "domainClusterFailure_admin",
+      "approvedModels": [
+        "gemini-3.1-flash-lite",
+        "qwen/qwen3.8-27b"
+      ],
+      "rejectedModels": [
+        {
+          "model": "gemma-4-31b-it",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-11-TS-09",
+      "factId": "TS-09",
+      "triggerFlag": "missingErrorEnvelope",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    },
+    {
+      "cartridgeId": "ts-api-security-v4",
+      "candidateId": "Q-EDGE-TS-11-TS-01",
+      "factId": "TS-01",
+      "triggerFlag": "missingErrorEnvelope",
+      "approvedModels": [],
+      "rejectedModels": [
+        {
+          "model": "qwen/qwen3.8-27b",
+          "reason": "canary_replay"
+        }
+      ]
+    }
+  ],
+  "topFailingFacts": [
+    {
+      "fact": "ts-api-security-v4::TS-04",
+      "failedOccurrences": 11
+    },
+    {
+      "fact": "ts-api-security-v4::TS-12",
+      "failedOccurrences": 5
+    },
+    {
+      "fact": "policy-abac-v4::P-06",
+      "failedOccurrences": 4
+    },
+    {
+      "fact": "policy-abac-v4::P-10",
+      "failedOccurrences": 3
+    },
+    {
+      "fact": "policy-abac-v4::P-08",
+      "failedOccurrences": 2
+    },
+    {
+      "fact": "policy-abac-v4::P-12",
+      "failedOccurrences": 2
+    },
+    {
+      "fact": "ts-api-security-v4::TS-02",
+      "failedOccurrences": 2
+    },
+    {
+      "fact": "policy-abac-v4::P-02",
+      "failedOccurrences": 1
+    },
+    {
+      "fact": "policy-abac-v4::P-03",
+      "failedOccurrences": 1
+    },
+    {
+      "fact": "policy-abac-v4::P-04",
+      "failedOccurrences": 1
+    },
+    {
+      "fact": "policy-abac-v4::P-07",
+      "failedOccurrences": 1
+    },
+    {
+      "fact": "ts-api-security-v4::TS-07",
+      "failedOccurrences": 1
+    },
+    {
+      "fact": "ts-api-security-v4::TS-06",
+      "failedOccurrences": 1
+    }
+  ],
+  "failingTasks": [
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemini-3.1-flash-lite",
+      "taskId": "ABAC-004",
+      "failedFacts": [
+        "P-02",
+        "P-06"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemini-3.1-flash-lite",
+      "taskId": "ABAC-005",
+      "failedFacts": [
+        "P-06"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemini-3.1-flash-lite",
+      "taskId": "ABAC-012",
+      "failedFacts": [
+        "P-10"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "ABAC-004",
+      "failedFacts": [
+        "P-06"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "ABAC-005",
+      "failedFacts": [
+        "P-08"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "ABAC-006",
+      "failedFacts": [
+        "P-03"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "ABAC-012",
+      "failedFacts": [
+        "P-10"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "ABAC-017",
+      "failedFacts": [
+        "P-12"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "ABAC-004",
+      "failedFacts": [
+        "P-06"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "ABAC-005",
+      "failedFacts": [
+        "P-08"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "ABAC-012",
+      "failedFacts": [
+        "P-04",
+        "P-07",
+        "P-10"
+      ]
+    },
+    {
+      "cartridge": "policy-abac-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "ABAC-018",
+      "failedFacts": [
+        "P-12"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemini-3.1-flash-lite",
+      "taskId": "TSAPI-002",
+      "failedFacts": [
+        "TS-07"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemini-3.1-flash-lite",
+      "taskId": "TSAPI-003",
+      "failedFacts": [
+        "TS-02"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-001",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-002",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-003",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-004",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-005",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-007",
+      "failedFacts": [
+        "TS-02"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-009",
+      "failedFacts": [
+        "TS-06"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "gemma-4-31b-it",
+      "taskId": "TSAPI-010",
+      "failedFacts": [
+        "TS-04"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "TSAPI-011",
+      "failedFacts": [
+        "TS-04",
+        "TS-12"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "TSAPI-012",
+      "failedFacts": [
+        "TS-04",
+        "TS-12"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "TSAPI-013",
+      "failedFacts": [
+        "TS-04",
+        "TS-12"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "TSAPI-014",
+      "failedFacts": [
+        "TS-04",
+        "TS-12"
+      ]
+    },
+    {
+      "cartridge": "ts-api-security-v4",
+      "model": "qwen/qwen3.8-27b",
+      "taskId": "TSAPI-015",
+      "failedFacts": [
+        "TS-04",
+        "TS-12"
+      ]
+    }
+  ]
+}
