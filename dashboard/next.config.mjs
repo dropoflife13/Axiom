@@ -5,6 +5,14 @@ const nextConfig = {
   turbopack: {
     root: import.meta.dirname,
   },
+  webpack(config) {
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      '.js': ['.ts', '.tsx', '.js'],
+      '.mjs': ['.mts', '.mjs'],
+    };
+    return config;
+  },
   async headers() {
     return [
       {

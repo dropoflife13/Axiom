@@ -6,6 +6,7 @@ import {
   type RawRedTeamCandidateInput,
   type RawRedTeamThreatInput,
 } from '@/lib/v4-hope-flow';
+import { loadVerifiedShadowRules } from '../../../../../../src/v4/redteam/shadow-enforcer';
 
 export const dynamic = 'force-dynamic';
 
@@ -159,6 +160,12 @@ export async function GET() {
     }>(slowClockPath);
     const slowClockReceipts = Array.isArray(slowClockDoc?.receipts) ? slowClockDoc.receipts : [];
     const slowClockByCandidateId = indexSlowClockReceipts(slowClockReceipts);
+    const shadowRulesState = loadVerifiedShadowRules(
+      slowClockPath ? { receiptsPath: slowClockPath } : {}
+    );
+    const shadowEnforcementActive = shadowRulesState.active;
+    const enforcedRuleIds = shadowRulesState.enforcedRuleIds;
+    const enforcedRuleIdSet = new Set(enforcedRuleIds);
 
     const threats = Array.isArray(threatsDoc?.threats) ? threatsDoc.threats : [];
     const candidates = Array.isArray(candidatesDoc?.candidates)
@@ -171,12 +178,23 @@ export async function GET() {
             receipt?.decision === 'PROMOTED_SHADOW' || receipt?.decision === 'REJECTED'
               ? receipt.decision
               : 'PENDING';
+          const verdictInfo = readLiveProbeVerdict(candidate, summariesDoc);
+          const candidateId =
+            typeof candidate.candidateId === 'string' ? candidate.candidateId : '';
+          const shadowEnforced =
+            shadowEnforcementActive &&
+            candidateId.length > 0 &&
+            enforcedRuleIdSet.has(candidateId);
+          const mitigated = shadowEnforced && verdictInfo.liveVerdict === 'pass';
           return {
             ...candidate,
-            ...readLiveProbeVerdict(candidate, summariesDoc),
+            ...verdictInfo,
             slowClockDecision,
             gateBreakdown: receipt?.gates ?? null,
             receiptHash: typeof receipt?.receiptHash === 'string' ? receipt.receiptHash : null,
+            shadowEnforced,
+            mitigated,
+            ...(mitigated ? { mitigationStatus: 'MITIGATED' as const } : {}),
           };
         })
       : [];
@@ -187,6 +205,8 @@ export async function GET() {
           available: false,
           targetBaseUrl: candidatesDoc?.targetBaseUrl ?? threatsDoc?.targetBaseUrl ?? null,
           model: threatsDoc?.model ?? null,
+          shadowEnforcementActive,
+          enforcedRuleIds,
           threats,
           candidates: [],
           traceEvents: [],
@@ -229,6 +249,7 @@ export async function GET() {
           modelId: threatsDoc?.model,
           dryRun: candidatesDoc?.dryRun,
           targetBaseUrl,
+          enforcedRuleIds,
         });
         return {
           ...baseEvent,
@@ -243,6 +264,8 @@ export async function GET() {
         available: true,
         targetBaseUrl: targetBaseUrl ?? null,
         model: threatsDoc?.model ?? null,
+        shadowEnforcementActive,
+        enforcedRuleIds,
         threats,
         candidates,
         traceEvents,

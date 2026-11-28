@@ -1,0 +1,1403 @@
+{
+  "schemaVersion": "4.0.0-hope-governance-receipt",
+  "cartridgeId": "ts-api-security-v4",
+  "model": "qwen/qwen3.8-27b",
+  "topK": 4,
+  "temperature": 0,
+  "sourceCheckpointPath": ".axiom-state/runs-v4/ts-api-qwen-qwen3-8-27b/checkpoint.json",
+  "initialSnapshotSha256": "a2651fa4f2e56c2ca364e158153f318cc2a07c42f1d1b6eb6638d037d663afe9",
+  "finalSnapshotSha256": "05339287057ea4ab63afa1814acd6cdb2c4cdc7ef28d3f5b84b512f0d0f6f22d",
+  "promotedPrerequisiteGraph": {
+    "TS-10": [
+      "TS-04"
+    ]
+  },
+  "updatedRuleStatements": {
+    "TS-04": "All 400, 401, and 403 responses must return a standardized JSON envelope containing error code, message, and requestId to ensure consistent API security compliance. Return exact nested JSON body { error: { code: 'ERR_...', message: '...', requestId: req.requestId } } on EVERY 400, 401, and 403 response (never return a flat string { error: '...' }).",
+    "TS-10": "Validate that amountCents is an integer where amountCents > 0 and amountCents <= 10000000; reject invalid financial payouts with HTTP 400. Pair payout routes with: uppercase const ALLOWED_ROLES = [...]; if (!ALLOWED_ROLES.includes(ctx.session.role)) return 403; explicit if (ctx.session.tenantId !== payload.tenantId) return 403; exact nested error body { error: { code, message, requestId: req.requestId } } on all 4xx; and headers { 'Cache-Control': 'no-store' } on all responses.",
+    "TS-11": "Multi-tenant admin export endpoints must project only non-sensitive exportFields and enforce a limit <= 500, returning 400 for any unbounded requests. Pair export routes with: uppercase const ALLOWED_ROLES = [...]; if (!ALLOWED_ROLES.includes(ctx.session.role)) return 403; explicit if (ctx.session.tenantId !== payload.tenantId) return 403; exact nested error body { error: { code, message, requestId: req.requestId } } on all 4xx; headers { 'Cache-Control': 'no-store' } on all responses; and ctx.emitAuditEvent({ action, actorId: ctx.session.userId, requestId: req.requestId }) on success."
+  },
+  "fastClockTraceCount": 15,
+  "canaryCohortTaskIds": [
+    "TSAPI-001",
+    "TSAPI-002",
+    "TSAPI-003",
+    "TSAPI-004",
+    "TSAPI-005",
+    "TSAPI-006",
+    "TSAPI-007",
+    "TSAPI-008",
+    "TSAPI-009",
+    "TSAPI-010"
+  ],
+  "candidateDecisions": [
+    {
+      "candidateId": "Q-STATIC-TS-PREREQ",
+      "factId": "TS-01",
+      "triggerFlag": "staticPrerequisitePrior",
+      "origin": "naive-static-baseline",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-05",
+          "to": "TS-03"
+        },
+        {
+          "from": "TS-05",
+          "to": "TS-04"
+        },
+        {
+          "from": "TS-07",
+          "to": "TS-02"
+        },
+        {
+          "from": "TS-07",
+          "to": "TS-04"
+        },
+        {
+          "from": "TS-09",
+          "to": "TS-03"
+        },
+        {
+          "from": "TS-10",
+          "to": "TS-01"
+        },
+        {
+          "from": "TS-10",
+          "to": "TS-02"
+        },
+        {
+          "from": "TS-10",
+          "to": "TS-07"
+        },
+        {
+          "from": "TS-11",
+          "to": "TS-01"
+        },
+        {
+          "from": "TS-11",
+          "to": "TS-05"
+        },
+        {
+          "from": "TS-11",
+          "to": "TS-08"
+        },
+        {
+          "from": "TS-12",
+          "to": "TS-01"
+        },
+        {
+          "from": "TS-12",
+          "to": "TS-02"
+        },
+        {
+          "from": "TS-12",
+          "to": "TS-06"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:40.832Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "403",
+            "session.tenantId",
+            "payload.tenantId",
+            "tenantId"
+          ],
+          "retainedTokens": [
+            "403",
+            "session.tenantId",
+            "payload.tenantId",
+            "tenantId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 15,
+          "targetCohortDelta": -0.3070370370370371,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": [],
+          "reason": "Canary Replay Gate failed: targetCohortDelta=-0.3070 is not strictly positive."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-10-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "missingErrorEnvelope",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-10",
+          "to": "TS-04"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:40.891Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.05999999999999996,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-EDGE-TS-10-TS-04",
+        "factId": "TS-04",
+        "approvedAt": "2026-11-27T01:19:40.891Z",
+        "beforeSha256": "a2651fa4f2e56c2ca364e158153f318cc2a07c42f1d1b6eb6638d037d663afe9",
+        "afterSha256": "4f542acacbf24befc28ee7db34250a9cbb6ebd8d850598055b16641cb381f27c",
+        "updatedRuleIds": [],
+        "addedPrerequisiteEdges": [
+          {
+            "from": "TS-10",
+            "to": "TS-04"
+          }
+        ],
+        "evidenceHashes": [
+          "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+          "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+          "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+          "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+          "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+          "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+          "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+          "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+          "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+          "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+          "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+          "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+          "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+          "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+          "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-27T01:19:40.891Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "400",
+              "401",
+              "403",
+              "requestId"
+            ],
+            "retainedTokens": [
+              "400",
+              "401",
+              "403",
+              "requestId"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 0,
+            "targetTotal": 5,
+            "targetCohortDelta": 0.05999999999999996,
+            "canaryBeforePassCount": 0,
+            "canaryAfterPassCount": 0,
+            "canaryTotal": 10,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-10-TS-05",
+      "factId": "TS-05",
+      "triggerFlag": "missingErrorEnvelope",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-10",
+          "to": "TS-05"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:40.935Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "403",
+            "ALLOWED_ROLES.includes",
+            "ALLOWED_ROLES",
+            "session.role"
+          ],
+          "retainedTokens": [
+            "403",
+            "ALLOWED_ROLES.includes",
+            "ALLOWED_ROLES",
+            "session.role"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 5,
+          "targetCohortDelta": -0.019999999999999928,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": [],
+          "reason": "Canary Replay Gate failed: targetCohortDelta=-0.0200 is not strictly positive."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-11-TS-09",
+      "factId": "TS-09",
+      "triggerFlag": "missingErrorEnvelope",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-11",
+          "to": "TS-09"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:40.965Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "emitAuditEvent",
+            "actorId",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "emitAuditEvent",
+            "actorId",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 2,
+          "targetCohortDelta": -0.16666666666666663,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 13,
+          "canaryRegressions": 2,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-010"
+          ],
+          "reason": "Canary Replay Gate failed: 2 canary regression(s) detected [TSAPI-006, TSAPI-010] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-11-TS-01",
+      "factId": "TS-01",
+      "triggerFlag": "missingErrorEnvelope",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-11",
+          "to": "TS-01"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.005Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "403",
+            "session.tenantId",
+            "payload.tenantId",
+            "tenantId"
+          ],
+          "retainedTokens": [
+            "403",
+            "session.tenantId",
+            "payload.tenantId",
+            "tenantId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 2,
+          "targetCohortDelta": -0.16666666666666663,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 13,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006"
+          ],
+          "reason": "Canary Replay Gate failed: 1 canary regression(s) detected [TSAPI-006] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-11-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "missingTenantCheck",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-11",
+          "to": "TS-04"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.047Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 2,
+          "targetCohortDelta": -0.611111111111111,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 1,
+          "canaryTotal": 13,
+          "canaryRegressions": 2,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-008"
+          ],
+          "reason": "Canary Replay Gate failed: 2 canary regression(s) detected [TSAPI-006, TSAPI-008] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-EDGE-TS-12-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "displaced_TS-04",
+      "origin": "empirical-domain-cluster",
+      "proposedPrerequisiteEdges": [
+        {
+          "from": "TS-12",
+          "to": "TS-04"
+        }
+      ],
+      "proposedRuleTextChanged": false,
+      "evidenceHashes": [
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.089Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.025,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 4,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006",
+            "TSAPI-007",
+            "TSAPI-008",
+            "TSAPI-009"
+          ],
+          "reason": "Canary Replay Gate failed: 4 canary regression(s) detected [TSAPI-006, TSAPI-007, TSAPI-008, TSAPI-009] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-REFINE-TS-04",
+      "factId": "TS-04",
+      "triggerFlag": "retrievedFailure_TS-04",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.128Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 15,
+          "targetCohortDelta": 0.013333333333333404,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-REFINE-TS-04",
+        "factId": "TS-04",
+        "approvedAt": "2026-11-27T01:19:41.128Z",
+        "beforeSha256": "4f542acacbf24befc28ee7db34250a9cbb6ebd8d850598055b16641cb381f27c",
+        "afterSha256": "b3b72190f60a67cc478e23d480ed1f119e743facd831ffc8119558db39284a54",
+        "updatedRuleIds": [
+          "TS-04"
+        ],
+        "addedPrerequisiteEdges": [],
+        "evidenceHashes": [
+          "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+          "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+          "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+          "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+          "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+          "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+          "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+          "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+          "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+          "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+          "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+          "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+          "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+          "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+          "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-27T01:19:41.128Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "400",
+              "401",
+              "403",
+              "requestId"
+            ],
+            "retainedTokens": [
+              "400",
+              "401",
+              "403",
+              "requestId"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 0,
+            "targetTotal": 15,
+            "targetCohortDelta": 0.013333333333333404,
+            "canaryBeforePassCount": 0,
+            "canaryAfterPassCount": 0,
+            "canaryTotal": 0,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    },
+    {
+      "candidateId": "Q-REFINE-TS-12",
+      "factId": "TS-12",
+      "triggerFlag": "retrievedFailure_TS-12",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.182Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "tenant_admin",
+            "role",
+            "tenantId",
+            "session.userId",
+            "payload.targetUserId",
+            "session.role",
+            "userId",
+            "targetUserId"
+          ],
+          "retainedTokens": [
+            "tenant_admin",
+            "role",
+            "tenantId",
+            "session.userId",
+            "payload.targetUserId",
+            "session.role",
+            "userId",
+            "targetUserId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 5,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.25,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 1,
+          "canaryTotal": 10,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-009"
+          ],
+          "reason": "Canary Replay Gate failed: 1 canary regression(s) detected [TSAPI-009] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-REFINE-TS-05",
+      "factId": "TS-05",
+      "triggerFlag": "retrievedFailure_TS-05",
+      "origin": "fast-clock-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96"
+      ],
+      "status": "rejected",
+      "rejectedByGate": "canary_replay",
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.227Z",
+        "passed": false,
+        "rejectedByGate": "canary_replay",
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "403",
+            "ALLOWED_ROLES.includes",
+            "ALLOWED_ROLES",
+            "session.role"
+          ],
+          "retainedTokens": [
+            "403",
+            "ALLOWED_ROLES.includes",
+            "ALLOWED_ROLES",
+            "session.role"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": false,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 2,
+          "targetCohortDelta": -0.05555555555555558,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 13,
+          "canaryRegressions": 1,
+          "regressedCanaryTaskIds": [
+            "TSAPI-006"
+          ],
+          "reason": "Canary Replay Gate failed: 1 canary regression(s) detected [TSAPI-006] (zero-regression policy violated)."
+        }
+      }
+    },
+    {
+      "candidateId": "Q-ANCHOR-TS-10",
+      "factId": "TS-10",
+      "triggerFlag": "domainClusterFailure_payouts",
+      "origin": "empirical-domain-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:20:17.462Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "> 0",
+            "<= 10000000",
+            "amountCents",
+            "integer"
+          ],
+          "retainedTokens": [
+            "400",
+            "> 0",
+            "<= 10000000",
+            "amountCents",
+            "integer"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 5,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.1,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-ANCHOR-TS-10",
+        "factId": "TS-10",
+        "approvedAt": "2026-11-27T01:20:17.462Z",
+        "beforeSha256": "b3b72190f60a67cc478e23d480ed1f119e743facd831ffc8119558db39284a54",
+        "afterSha256": "3bab7b5cbd0c73f178fff2972fecf7aea8716092fdac0061d6cfb10ae9037dce",
+        "updatedRuleIds": [
+          "TS-10"
+        ],
+        "addedPrerequisiteEdges": [],
+        "evidenceHashes": [
+          "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+          "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+          "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+          "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+          "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-27T01:20:17.462Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "400",
+              "> 0",
+              "<= 10000000",
+              "amountCents",
+              "integer"
+            ],
+            "retainedTokens": [
+              "400",
+              "> 0",
+              "<= 10000000",
+              "amountCents",
+              "integer"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 5,
+            "targetTotal": 5,
+            "targetCohortDelta": 0.1,
+            "canaryBeforePassCount": 0,
+            "canaryAfterPassCount": 0,
+            "canaryTotal": 10,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    },
+    {
+      "candidateId": "Q-ANCHOR-TS-11",
+      "factId": "TS-11",
+      "triggerFlag": "domainClusterFailure_admin",
+      "origin": "empirical-domain-cluster",
+      "proposedPrerequisiteEdges": [],
+      "proposedRuleTextChanged": true,
+      "evidenceHashes": [
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0"
+      ],
+      "status": "approved",
+      "rejectedByGate": null,
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:25:25.339Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "<= 500",
+            "exportFields"
+          ],
+          "retainedTokens": [
+            "400",
+            "<= 500",
+            "exportFields"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 5,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.17777777777777787,
+          "canaryBeforePassCount": 5,
+          "canaryAfterPassCount": 5,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      },
+      "receipt": {
+        "candidateId": "Q-ANCHOR-TS-11",
+        "factId": "TS-11",
+        "approvedAt": "2026-11-27T01:25:25.339Z",
+        "beforeSha256": "3bab7b5cbd0c73f178fff2972fecf7aea8716092fdac0061d6cfb10ae9037dce",
+        "afterSha256": "05339287057ea4ab63afa1814acd6cdb2c4cdc7ef28d3f5b84b512f0d0f6f22d",
+        "updatedRuleIds": [
+          "TS-11"
+        ],
+        "addedPrerequisiteEdges": [],
+        "evidenceHashes": [
+          "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+          "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+          "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+          "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+          "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0"
+        ],
+        "gateAudit": {
+          "evaluatedAt": "2026-11-27T01:25:25.339Z",
+          "passed": true,
+          "rejectedByGate": null,
+          "lexicalLock": {
+            "executed": true,
+            "passed": true,
+            "requiredTokens": [
+              "400",
+              "<= 500",
+              "exportFields"
+            ],
+            "retainedTokens": [
+              "400",
+              "<= 500",
+              "exportFields"
+            ],
+            "missingTokens": [],
+            "retentionRate": 1
+          },
+          "contradictionLinter": {
+            "executed": true,
+            "passed": true,
+            "violations": []
+          },
+          "canaryReplay": {
+            "executed": true,
+            "passed": true,
+            "targetBeforePassCount": 0,
+            "targetAfterPassCount": 5,
+            "targetTotal": 5,
+            "targetCohortDelta": 0.17777777777777787,
+            "canaryBeforePassCount": 5,
+            "canaryAfterPassCount": 5,
+            "canaryTotal": 10,
+            "canaryRegressions": 0,
+            "regressedCanaryTaskIds": []
+          }
+        }
+      }
+    }
+  ],
+  "promotionReceipts": [
+    {
+      "candidateId": "Q-EDGE-TS-10-TS-04",
+      "factId": "TS-04",
+      "approvedAt": "2026-11-27T01:19:40.891Z",
+      "beforeSha256": "a2651fa4f2e56c2ca364e158153f318cc2a07c42f1d1b6eb6638d037d663afe9",
+      "afterSha256": "4f542acacbf24befc28ee7db34250a9cbb6ebd8d850598055b16641cb381f27c",
+      "updatedRuleIds": [],
+      "addedPrerequisiteEdges": [
+        {
+          "from": "TS-10",
+          "to": "TS-04"
+        }
+      ],
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:40.891Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.05999999999999996,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    },
+    {
+      "candidateId": "Q-REFINE-TS-04",
+      "factId": "TS-04",
+      "approvedAt": "2026-11-27T01:19:41.128Z",
+      "beforeSha256": "4f542acacbf24befc28ee7db34250a9cbb6ebd8d850598055b16641cb381f27c",
+      "afterSha256": "b3b72190f60a67cc478e23d480ed1f119e743facd831ffc8119558db39284a54",
+      "updatedRuleIds": [
+        "TS-04"
+      ],
+      "addedPrerequisiteEdges": [],
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c",
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0",
+        "47c82ba4458b49a09f5b6a75b7cad9339f482d428a71f2d3e617d1d3f2e35904",
+        "69ddca0c54c307e74ce4c8bd873fa0663a86547600d00cf86182aa6dc9031eb6",
+        "4a5a65dce19d10ecdb89d36b4779dcfe56ce1ffc99f29e4c60045155a9210c88",
+        "9cb2c9eef3f6a43ff583e59b98ad25e4210fa0d306334796e5c3df3231b01295",
+        "c24e26031af6f3bcd8282b2ec33288550510c21c6d17ab42a5e00fc596f78473"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:19:41.128Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "retainedTokens": [
+            "400",
+            "401",
+            "403",
+            "requestId"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 0,
+          "targetTotal": 15,
+          "targetCohortDelta": 0.013333333333333404,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 0,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    },
+    {
+      "candidateId": "Q-ANCHOR-TS-10",
+      "factId": "TS-10",
+      "approvedAt": "2026-11-27T01:20:17.462Z",
+      "beforeSha256": "b3b72190f60a67cc478e23d480ed1f119e743facd831ffc8119558db39284a54",
+      "afterSha256": "3bab7b5cbd0c73f178fff2972fecf7aea8716092fdac0061d6cfb10ae9037dce",
+      "updatedRuleIds": [
+        "TS-10"
+      ],
+      "addedPrerequisiteEdges": [],
+      "evidenceHashes": [
+        "d95c9dcbf626f280bbc654f4209ac46dd8594cc11e7b41c91c4728accba8ddf0",
+        "05407df001f01e009c8be66a6457f1813e91d7e57d00dad3bbde690ab5ccb091",
+        "de7c7f123efb43a546032e8ee05796ac38477c6f324dad6a144953b25985d531",
+        "9028e581d95996f4876183e17c8609eb21891b435c416f2fa93dcf2ce4504ea3",
+        "ce5539116d96c8cbe4767f1403445406b430a0fffb1098f08467b6cba2c76a5c"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:20:17.462Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "> 0",
+            "<= 10000000",
+            "amountCents",
+            "integer"
+          ],
+          "retainedTokens": [
+            "400",
+            "> 0",
+            "<= 10000000",
+            "amountCents",
+            "integer"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 5,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.1,
+          "canaryBeforePassCount": 0,
+          "canaryAfterPassCount": 0,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    },
+    {
+      "candidateId": "Q-ANCHOR-TS-11",
+      "factId": "TS-11",
+      "approvedAt": "2026-11-27T01:25:25.339Z",
+      "beforeSha256": "3bab7b5cbd0c73f178fff2972fecf7aea8716092fdac0061d6cfb10ae9037dce",
+      "afterSha256": "05339287057ea4ab63afa1814acd6cdb2c4cdc7ef28d3f5b84b512f0d0f6f22d",
+      "updatedRuleIds": [
+        "TS-11"
+      ],
+      "addedPrerequisiteEdges": [],
+      "evidenceHashes": [
+        "9ed1a6da06f16c2424beee1ccbbf461c96663cbb6d8dfcaa7d5f964dd838895f",
+        "c76b8957da623c9e2ba150d8ba200c97de750a9cf8a93574e6ecde4d563f730a",
+        "ddf4b26ca6e7a6815d5e5a834579194ebba6cd569e2a23ec1b771ac766444746",
+        "52c0bcaa51ef6d77241cbdb92bedadb7828474989f729c6dfd03b3670d212d96",
+        "648786a33a9697b97a92f68c3a6db3f8da5287173d7c1b8dd3f01d448d6bb7c0"
+      ],
+      "gateAudit": {
+        "evaluatedAt": "2026-11-27T01:25:25.339Z",
+        "passed": true,
+        "rejectedByGate": null,
+        "lexicalLock": {
+          "executed": true,
+          "passed": true,
+          "requiredTokens": [
+            "400",
+            "<= 500",
+            "exportFields"
+          ],
+          "retainedTokens": [
+            "400",
+            "<= 500",
+            "exportFields"
+          ],
+          "missingTokens": [],
+          "retentionRate": 1
+        },
+        "contradictionLinter": {
+          "executed": true,
+          "passed": true,
+          "violations": []
+        },
+        "canaryReplay": {
+          "executed": true,
+          "passed": true,
+          "targetBeforePassCount": 0,
+          "targetAfterPassCount": 5,
+          "targetTotal": 5,
+          "targetCohortDelta": 0.17777777777777787,
+          "canaryBeforePassCount": 5,
+          "canaryAfterPassCount": 5,
+          "canaryTotal": 10,
+          "canaryRegressions": 0,
+          "regressedCanaryTaskIds": []
+        }
+      }
+    }
+  ],
+  "generatedAt": "2026-11-27T01:40:08.700Z",
+  "compaction": {
+    "enabled": true,
+    "bundlesCompacted": 28,
+    "beforeTokens": 8124,
+    "afterTokens": 7723,
+    "savedTokens": 401,
+    "reductionPct": 4.94,
+    "preservedTokenCount": 747,
+    "totalRequiredTokens": 747,
+    "droppedRuleCount": 0
+  }
+}

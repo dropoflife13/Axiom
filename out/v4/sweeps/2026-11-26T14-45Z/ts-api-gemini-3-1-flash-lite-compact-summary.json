@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "4.0.0-ts-api-pilot-summary",
+  "cartridgeId": "ts-api-security-v4",
+  "model": "gemini-3.1-flash-lite",
+  "modelSlug": "gemini-3-1-flash-lite",
+  "topK": 4,
+  "temperature": 0,
+  "totalTrials": 75,
+  "compaction": {
+    "enabled": true,
+    "bundlesCompacted": 64,
+    "beforeTokens": 20231,
+    "afterTokens": 19367,
+    "savedTokens": 864,
+    "reductionPct": 4.27,
+    "preservedTokenCount": 1777,
+    "totalRequiredTokens": 1777,
+    "droppedRuleCount": 0
+  },
+  "arms": {
+    "A": {
+      "arm": "A",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.42370370370370375,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 0,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 0,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 4,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 5,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C": {
+      "arm": "C",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.7100000000000001,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_auto": {
+      "arm": "C_ID_auto",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.7759259259259259,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 11,
+      "ts04RetrievedCount": 0,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 1,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 15,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_prereq": {
+      "arm": "C_ID_prereq",
+      "totalTasks": 15,
+      "fullTaskPassCount": 0,
+      "fullTaskPassRate": 0,
+      "meanFactPassRate": 0.6838888888888889,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 14,
+      "ts04RetrievedCount": 10,
+      "ts08RetrievedCount": 1,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 0,
+        "missingTenantCheck": 1,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 10,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    },
+    "C_ID_hope": {
+      "arm": "C_ID_hope",
+      "totalTasks": 15,
+      "fullTaskPassCount": 13,
+      "fullTaskPassRate": 0.8666666666666667,
+      "meanFactPassRate": 0.9866666666666667,
+      "committedCount": 15,
+      "committedRate": 1,
+      "ts01RetrievedCount": 6,
+      "ts04RetrievedCount": 5,
+      "ts08RetrievedCount": 15,
+      "forensicDefectCounts": {
+        "syntaxError": 0,
+        "missingSafeParse": 1,
+        "missingTenantCheck": 0,
+        "leakedSecretIdentifier": 0,
+        "missingErrorEnvelope": 0,
+        "missingIdempotencyKey": 0,
+        "missingNoStoreHeader": 0
+      }
+    }
+  },
+  "contrastsPp": {
+    "C_ID_auto_minus_C_task": 0,
+    "C_ID_auto_minus_C_fact": 6.59,
+    "C_ID_prereq_minus_C_ID_auto_task": 0,
+    "C_ID_prereq_minus_C_ID_auto_fact": -9.2,
+    "C_ID_prereq_minus_C_task": 0,
+    "C_ID_prereq_minus_C_fact": -2.61,
+    "C_ID_prereq_minus_A_task": 0,
+    "C_ID_prereq_minus_A_fact": 26.02,
+    "C_ID_hope_minus_C_task": 86.67,
+    "C_ID_hope_minus_C_fact": 27.67,
+    "C_ID_hope_minus_C_ID_auto_task": 86.67,
+    "C_ID_hope_minus_C_ID_auto_fact": 21.07,
+    "C_ID_hope_minus_C_ID_prereq_task": 86.67,
+    "C_ID_hope_minus_C_ID_prereq_fact": 30.28,
+    "C_ID_hope_minus_A_task": 86.67,
+    "C_ID_hope_minus_A_fact": 56.3
+  },
+  "generatedAt": "2026-11-27T00:43:57.286Z"
+}
