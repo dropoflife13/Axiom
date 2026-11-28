@@ -127,6 +127,24 @@ describe('Red-Team live verdict telemetry', () => {
     expect(staged.outcome).toBe('QUARANTINE');
     expect(staged.terminalNode).toBe('SLOW_CLOCK_GATE');
     expect(staged.redTeam?.liveVerdict).toBe('staged');
+
+    const mitigated = buildRedTeamFlowTraceEvent({
+      candidate: {
+        ...baseCandidate,
+        candidateId: 'Q-RT-RT-07',
+        factId: 'RT-07',
+        route: '/api/v4-hope/redteam-canary',
+        liveVerdict: 'pass',
+      },
+      enforcedRuleIds: ['Q-RT-RT-07'],
+    });
+    expect(mitigated.outcome).toBe('PASS');
+    expect(mitigated.terminalNode).toBe('VERIFIED_OUTPUT');
+    expect(mitigated.shadowStatus).toBe('MITIGATED');
+    expect(mitigated.redTeam?.shadowEnforced).toBe(true);
+    expect(mitigated.redTeam?.mitigated).toBe(true);
+    expect(mitigated.redTeam?.mitigationStatus).toBe('MITIGATED');
+    expect(mitigated.terminalLog?.some((line) => line.text.includes('MITIGATED'))).toBe(true);
   });
 
   it('extracts RT-09 through RT-12 verdicts and registers staged SHA-256 manifests idempotently', () => {

@@ -50,6 +50,9 @@ export interface FlowRedTeamProbeInfo {
   readonly status: 'staged' | 'approved' | 'rejected';
   readonly liveVerdict: 'pass' | 'fail' | 'staged';
   readonly durationMs?: number;
+  readonly shadowEnforced?: boolean;
+  readonly mitigated?: boolean;
+  readonly mitigationStatus?: 'MITIGATED';
 }
 
 export interface FlowTerminalLine {
@@ -84,6 +87,7 @@ export interface FlowTraceEvent {
   readonly promptDelta: FlowPromptDelta;
   readonly slowClockGate: FlowSlowClockGateInfo;
   readonly redTeam?: FlowRedTeamProbeInfo;
+  readonly shadowStatus?: 'MITIGATED' | 'ENFORCED';
   readonly provider?: string;
   readonly returnedModel?: string;
   readonly finishReason?: string;
@@ -262,6 +266,8 @@ export interface RawRedTeamCandidateInput {
   readonly stagedAt?: unknown;
   readonly liveVerdict?: unknown;
   readonly durationMs?: unknown;
+  readonly shadowEnforced?: unknown;
+  readonly shadowMitigated?: unknown;
   /** Read-only decision from .axiom-state/redteam-v1/slow-cook-receipts.json. */
   readonly slowCookDecision?: RawCandidateDecisionInput;
 }
@@ -726,8 +732,9 @@ export function buildRedTeamFlowTraceEvent(params: {
   readonly modelId?: string;
   readonly dryRun?: boolean;
   readonly targetBaseUrl?: string;
+  readonly enforcedRuleIds?: readonly string[];
 }): FlowTraceEvent {
-  const { candidate, threat, modelId, dryRun, targetBaseUrl } = params;
+  const { candidate, threat, modelId, dryRun, targetBaseUrl, enforcedRuleIds } = params;
   const candidateId = String(candidate.candidateId ?? '');
   const factId = String(candidate.factId ?? threat?.id ?? '');
   const triggerFlag = String(candidate.triggerFlag ?? threat?.category ?? '');
@@ -764,6 +771,14 @@ export function buildRedTeamFlowTraceEvent(params: {
     candidate.durationMs >= 0
       ? candidate.durationMs
       : undefined;
+  const shadowEnforced =
+    candidate.shadowEnforced === true ||
+    (Array.isArray(enforcedRuleIds) &&
+      candidateId.length > 0 &&
+      enforcedRuleIds.includes(candidateId));
+  const shadowMitigated =
+    candidate.shadowMitigated === true ||
+    (shadowEnforced && liveVerdict === 'pass');
 
   let outcome: FlowOutcome = 'QUARANTINE';
   let terminalNode: FlowNodeId = 'SLOW_CLOCK_GATE';
@@ -874,6 +889,14 @@ export function buildRedTeamFlowTraceEvent(params: {
     });
   }
 
+  if (shadowMitigated) {
+    terminalLog.push({
+      prefix: '[PASS]',
+      tone: 'pass',
+      text: `shadow-rule ${candidateId} MITIGATED fault on ${route}`,
+    });
+  }
+
   return {
     id: `redteam:${candidateId}:${timestamp}`,
     kind: 'redteam_probe',
@@ -905,6 +928,11 @@ export function buildRedTeamFlowTraceEvent(params: {
       lexicalLockPct: 100,
     },
     slowClockGate,
+    ...(shadowMitigated
+      ? { shadowStatus: 'MITIGATED' as const }
+      : shadowEnforced
+        ? { shadowStatus: 'ENFORCED' as const }
+        : {}),
     redTeam: {
       candidateId,
       factId,
@@ -919,6 +947,8 @@ export function buildRedTeamFlowTraceEvent(params: {
       status: gateStatus,
       liveVerdict,
       ...(durationMs !== undefined ? { durationMs } : {}),
+      ...(shadowEnforced ? { shadowEnforced: true, mitigated: shadowMitigated } : {}),
+      ...(shadowMitigated ? { mitigationStatus: 'MITIGATED' as const } : {}),
     },
     terminalLog,
   };
